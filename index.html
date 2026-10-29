@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control Operativo - Estafeta</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ============================================================
+           VARIABLES Y ESTILOS GLOBALES
+           ============================================================ */
+        :root {
+            --estafeta-red: #DA291C;
+            --sidebar-width-collapsed: 70px;
+            --sidebar-width-expanded: 260px;
+            --header-height: 64px;
+            --transition-speed: 0.3s;
+            --ease-cubic: cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Tema Claro (por defecto) */
+            --bg-body: #f4f6f9;
+            --bg-sidebar: #ffffff;
+            --bg-header: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-inverse: #ffffff;
+            --border-color: #e2e8f0;
+            --hover-bg: #f1f5f9;
+            --active-item-bg: #fee2e2;
+            --active-item-text: #b91c1c;
+        }
+
+        /* Tema Oscuro */
+        body.dark-mode {
+            --bg-body: #0f172a;
+            --bg-sidebar: #1e293b;
+            --bg-header: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --hover-bg: #334155;
+            --active-item-bg: #7f1d1d;
+            --active-item-text: #fca5a5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden; /* Evita scroll en el body, cada iframe lo maneja */
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+        }
+
+        /* ============================================================
+           LAYOUT PRINCIPAL
+           ============================================================ */
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ============================================================
+           SIDEBAR
+           ============================================================ */
+        .sidebar {
+            width: var(--sidebar-width-collapsed);
+            height: 100%;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: width var(--transition-speed) var(--ease-cubic);
+            position: relative;
+            z-index: 100;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .sidebar.expanded {
+            width: var(--sidebar-width-expanded);
+        }
+
+        /* Header del sidebar (contiene el botón de menú) */
+        .sidebar-header {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0;
+        }
+
+        .menu-toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: background var(--transition-speed) ease;
+        }
+
+        .menu-toggle-btn:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .sidebar-nav {
+            flex-grow: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 15px 0;
+            list-style: none;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .nav-section-title {
+            padding: 10px 20px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 700;
+            opacity: 0;
+            white-space: nowrap;
+            transition: opacity var(--transition-speed) ease;
+            margin-top: 10px;
+            pointer-events: none; /* Evita que el mouse active el sidebar desde aquí */
+        }
+        .sidebar.expanded .nav-section-title {
+            opacity: 1;
+            transition-delay: 0.15s;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
+            position: relative;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background-color: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background-color: var(--active-item-bg);
+            color: var(--active-item-text);
+            font-weight: 600;
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: var(--estafeta-red);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .nav-icon {
+            width: 70px;
+            min-width: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .nav-text {
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity var(--transition-speed) ease;
+            font-size: 0.9rem;
+        }
+
+        .sidebar.expanded .nav-text {
+            opacity: 1;
+            transition-delay: 0.1s;
+        }
+
+        .sidebar-footer {
+            padding: 15px 0;
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
+           CONTENIDO PRINCIPAL
+           ============================================================ */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .top-header {
+            height: var(--header-height);
+            background: var(--bg-header);
+            background-size: 300% 100%;
+            animation: gradientShift 15s ease infinite;
+            color: var(--text-inverse);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* Alinea todo a la derecha */
+            padding: 0 25px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 90;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .datetime-display {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            font-size: 0.85rem;
+            line-height: 1.3;
+            opacity: 0.9;
+        }
+
+        .datetime-display .time {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .datetime-display .date {
+            font-size: 0.75rem;
+            text-transform: capitalize;
+        }
+
+        .theme-toggle-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: background var(--transition-speed) ease;
+        }
+
+        .theme-toggle-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .iframe-container {
+            flex-grow: 1;
+            position: relative;
+            background-color: var(--bg-body);
+            overflow: hidden;
+        }
+
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+
+        .iframe-container iframe.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button class="menu-toggle-btn" id="menuToggleBtn" aria-label="Alternar menú">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+
+            <ul class="sidebar-nav" id="sidebarNav">
+                <div class="nav-section-title">Operaciones</div>
+                <li class="nav-item active" data-iframe="plataformaoperativatax.html" data-title="Plataforma Operativa">
+                    <span class="nav-icon"><i class="fa-solid fa-chart-pie"></i></span>
+                    <span class="nav-text">Plataforma Operativa</span>
+                </li>
+                <li class="nav-item" data-iframe="tiemposmuertosoperativotax.html" data-title="Tiempos Muertos">
+                    <span class="nav-icon"><i class="fa-solid fa-clock"></i></span>
+                    <span class="nav-text">Tiempos Muertos</span>
+                </li>
+                <li class="nav-item" data-iframe="resumenoperativotax.html" data-title="Resumen Operativo">
+                    <span class="nav-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+                    <span class="nav-text">Resumen Operativo</span>
+                </li>
+                <li class="nav-item" data-iframe="afectacionmensualoperativotax.html" data-title="Afectación Mensual">
+                    <span class="nav-icon"><i class="fa-solid fa-calendar-xmark"></i></span>
+                    <span class="nav-text">Afectación Mensual</span>
+                </li>
+
+                <div class="nav-section-title">Entregas y Recolección</div>
+                <li class="nav-item" data-iframe="entregasadomicilio.html" data-title="Entregas a Domicilio">
+                    <span class="nav-icon"><i class="fa-solid fa-truck-fast"></i></span>
+                    <span class="nav-text">Entregas a Domicilio</span>
+                </li>
+                <li class="nav-item" data-iframe="recoleccionestax.html" data-title="Recolecciones">
+                    <span class="nav-icon"><i class="fa-solid fa-boxes-packing"></i></span>
+                    <span class="nav-text">Recolecciones</span>
+                </li>
+                <li class="nav-item" data-iframe="monitoreodeordenesderecoleccióntax.html" data-title="Monitoreo de Recolección">
+                    <span class="nav-icon"><i class="fa-solid fa-map-location-dot"></i></span>
+                    <span class="nav-text">Monitoreo de Recolección</span>
+                </li>
+                 <li class="nav-item" data-iframe="entr1operativatax.html" data-title="Embarque TR1">
+                    <span class="nav-icon"><i class="fa-solid fa-warehouse"></i></span>
+                    <span class="nav-text">Embarque TR1</span>
+                </li>
+
+                <div class="nav-section-title">Análisis y Rendimiento</div>
+                <li class="nav-item" data-iframe="cargadegasolinaoperativatax.html" data-title="Desempeño TR2">
+                    <span class="nav-icon"><i class="fa-solid fa-gas-pump"></i></span>
+                    <span class="nav-text">Desempeño TR2</span>
+                </li>
+                <li class="nav-item" data-iframe="calculadorabonotax.html" data-title="Calculadora de Bonos">
+                    <span class="nav-icon"><i class="fa-solid fa-calculator"></i></span>
+                    <span class="nav-text">Calculadora de Bonos</span>
+                </li>
+                <li class="nav-item" data-iframe="archivomaestrotax.html" data-title="Dashboard Maestro">
+                    <span class="nav-icon"><i class="fa-solid fa-database"></i></span>
+                    <span class="nav-text">Dashboard Maestro</span>
+                </li>
+                <li class="nav-item" data-iframe="presentacion.html" data-title="Presentación del Sistema">
+                    <span class="nav-icon"><i class="fa-solid fa-circle-info"></i></span>
+                    <span class="nav-text">Presentación del Sistema</span>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <!-- Espacio reservado -->
+            </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <div class="main-content">
+            <header class="top-header">
+                <div class="header-right">
+                    <div class="datetime-display">
+                        <span id="timeDisplay" class="time">00:00:00</span>
+                        <span id="dateDisplay" class="date">...</span>
+                    </div>
+                    <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Alternar tema">
+                        <i class="fa-solid fa-moon" id="themeIcon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="iframe-container" id="iframeContainer">
+                <!-- Los iframes se generan dinámicamente con JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarNav = document.getElementById('sidebarNav');
+            const menuToggleBtn = document.getElementById('menuToggleBtn');
+            const iframeContainer = document.getElementById('iframeContainer');
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const themeIcon = document.getElementById('themeIcon');
+            const timeDisplay = document.getElementById('timeDisplay');
+            const dateDisplay = document.getElementById('dateDisplay');
+
+            // --- 1. GESTIÓN DE IFRAMES ---
+            const navItems = sidebarNav.querySelectorAll('.nav-item');
+            let currentIframeSrc = null;
+
+            function loadIframe(iframeSrc) {
+                // Ocultar todos los iframes
+                iframeContainer.querySelectorAll('iframe').forEach(iframe => {
+                    iframe.classList.remove('active');
+                });
+
+                // Si el iframe ya existe, lo mostramos
+                let targetIframe = iframeContainer.querySelector(`iframe[src="${iframeSrc}"]`);
+                if (targetIframe) {
+                    targetIframe.classList.add('active');
+                } else {
+                    // Si no existe, lo creamos
+                    const newIframe = document.createElement('iframe');
+                    newIframe.src = iframeSrc;
+                    newIframe.classList.add('active');
+                    iframeContainer.appendChild(newIframe);
+                }
+                currentIframeSrc = iframeSrc;
+            }
+
+            // --- 2. LÓGICA DE INTERACCIÓN (EXPANDIR / COLAPSAR) ---
+            
+            // Variable para controlar el temporizador de cierre automático
+            let closeTimeout;
+
+            // Función para abrir el menú
+            function openSidebar() {
+                clearTimeout(closeTimeout); // Cancelamos cualquier intento de cierre pendiente
+                sidebar.classList.add('expanded');
+            }
+
+            // Función para cerrar el menú con un pequeño retraso
+            function closeSidebar() {
+                closeTimeout = setTimeout(() => {
+                    // Solo cerramos si el mouse no está encima del menú
+                    if (!sidebar.matches(':hover')) {
+                        sidebar.classList.remove('expanded');
+                    }
+                }, 300); // Retraso de 300ms para que el usuario pueda reaccionar
+            }
+
+            // --- Comportamiento del mouse ---
+            sidebar.addEventListener('mouseenter', openSidebar);
+            sidebar.addEventListener('mouseleave', closeSidebar);
+
+            // --- Comportamiento del botón de hamburguesa ---
+            menuToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Evita que el clic se propague
+                if (sidebar.classList.contains('expanded')) {
+                    sidebar.classList.remove('expanded');
+                    clearTimeout(closeTimeout);
+                } else {
+                    openSidebar();
+                }
+            });
+
+            // --- Comportamiento de los clics en los elementos del menú ---
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    // 1. Si el menú está colapsado, un clic en un icono lo expande y NO navega aún.
+                    if (!sidebar.classList.contains('expanded')) {
+                        openSidebar();
+                        return; // Salimos para no cargar el iframe en este primer clic
+                    }
+
+                    // 2. Si el menú ya está expandido, navega y luego lo cierra.
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    item.classList.add('active');
+
+                    const iframeSrc = item.dataset.iframe;
+                    loadIframe(iframeSrc);
+
+                    // Cerramos el menú automáticamente tras la selección
+                    sidebar.classList.remove('expanded');
+                });
+            });
+
+            // Cargar el primer iframe al inicio
+            const initialActive = sidebarNav.querySelector('.nav-item.active');
+            if (initialActive) {
+                const initialSrc = initialActive.dataset.iframe;
+                loadIframe(initialSrc);
+            }
+
+            // --- 3. MODO OSCURO PERSISTENTE ---
+            const THEME_KEY = 'estafeta-index-theme';
+
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.body.classList.add('dark-mode');
+                    themeIcon.className = 'fa-solid fa-sun';
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    themeIcon.className = 'fa-solid fa-moon';
+                }
+                propagateThemeToIframes(theme);
+            }
+
+            function toggleTheme() {
+                const isDark = document.body.classList.contains('dark-mode');
+                const newTheme = isDark ? 'light' : 'dark';
+                localStorage.setItem(THEME_KEY, newTheme);
+                applyTheme(newTheme);
+            }
+            
+            function propagateThemeToIframes(theme) {
+                const iframes = iframeContainer.querySelectorAll('iframe');
+                iframes.forEach(iframe => {
+                    try {
+                        iframe.contentWindow.postMessage({ theme: theme }, '*');
+                    } catch (e) {
+                        console.warn("No se pudo enviar mensaje al iframe:", e);
+                    }
+                });
+            }
+
+            // Aplicar tema inicial
+            const savedTheme = localStorage.getItem(THEME_KEY) ||
+                               (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(savedTheme);
+
+            themeToggleBtn.addEventListener('click', toggleTheme);
+
+            // Escuchar mensajes de los iframes para sincronizar el tema
+            window.addEventListener('message', (e) => {
+                if (e.data && e.data.theme) {
+                    const newTheme = e.data.theme;
+                    if (document.body.classList.contains('dark-mode') && newTheme === 'light') {
+                        document.body.classList.remove('dark-mode');
+                        localStorage.setItem(THEME_KEY, 'light');
+                    } else if (!document.body.classList.contains('dark-mode') && newTheme === 'dark') {
+                        document.body.classList.add('dark-mode');
+                        localStorage.setItem(THEME_KEY, 'dark');
+                    }
+                    applyTheme(newTheme);
+                }
+            });
+
+
+            // --- 4. FECHA Y HORA EN TIEMPO REAL ---
+            function updateDateTime() {
+                const now = new Date();
+                const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+                timeDisplay.textContent = now.toLocaleTimeString('es-MX', timeOptions);
+                dateDisplay.textContent = now.toLocaleDateString('es-MX', dateOptions);
+            }
+
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+        });
+    </script>
+</body>
+</html>

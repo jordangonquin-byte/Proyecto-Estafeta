@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Operativa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        estafeta: {
+                            red: '#DA291C',
+                            darkRed: '#B51E12',
+                            dark: '#1F2937',
+                            light: '#F8FAFC'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .drag-over { border: 2px dashed #DA291C; background-color: #FEF2F2; }
+        .sortable-th { cursor: pointer; user-select: none; transition: background-color 0.2s; }
+        .sortable-th:hover { background-color: #e2e8f0; }
+
+        header {
+            background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C) !important;
+            background-size: 300% 100% !important;
+            animation: gradientShift 15s ease infinite;
+        }
+        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+        .kpi-card-glow { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .kpi-card-glow:hover {
+            box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.15), 0 12px 24px -8px rgba(218, 41, 28, 0.25) !important;
+        }
+
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(20px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
+
+        @keyframes numberBounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); color: #DA291C; }
+            100% { transform: scale(1); }
+        }
+        .number-updated { animation: numberBounce 0.5s ease-out; }
+
+        .ripple-host { position: relative; overflow: hidden; }
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.55);
+            transform: scale(0);
+            animation: rippleAnim 0.6s ease-out;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+        @keyframes pulseCritical {
+            0%, 100% { background-color: rgba(220, 38, 38, 0.08); }
+            50%      { background-color: rgba(220, 38, 38, 0.28); }
+        }
+        .critical-pulse {
+            animation: pulseCritical 2s ease-in-out infinite;
+            font-weight: 800;
+            color: #dc2626 !important;
+            border-radius: 4px;
+            padding: 2px 6px;
+            display: inline-block;
+        }
+
+        @keyframes rowFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        #data-table-body tr {
+            animation: rowFadeIn 0.35s ease-out backwards;
+        }
+        #data-table-body tr:nth-child(1) { animation-delay: 0ms; }
+        #data-table-body tr:nth-child(2) { animation-delay: 25ms; }
+        #data-table-body tr:nth-child(3) { animation-delay: 50ms; }
+        #data-table-body tr:nth-child(4) { animation-delay: 75ms; }
+        #data-table-body tr:nth-child(5) { animation-delay: 100ms; }
+        #data-table-body tr:nth-child(6) { animation-delay: 125ms; }
+        #data-table-body tr:nth-child(7) { animation-delay: 150ms; }
+        #data-table-body tr:nth-child(8) { animation-delay: 175ms; }
+        #data-table-body tr:nth-child(9) { animation-delay: 200ms; }
+        #data-table-body tr:nth-child(10) { animation-delay: 225ms; }
+        #data-table-body tr:nth-child(11) { animation-delay: 250ms; }
+        #data-table-body tr:nth-child(12) { animation-delay: 275ms; }
+
+        @keyframes filterHighlight {
+            0%   { box-shadow: 0 0 0 0 rgba(218, 41, 28, 0.55); }
+            100% { box-shadow: 0 0 0 12px rgba(218, 41, 28, 0); }
+        }
+        .filter-highlight { animation: filterHighlight 0.8s ease-out; }
+
+        @keyframes shimmer {
+            0%   { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 1000px 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: 12px;
+        }
+        body.dark-mode .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 1000px 100%;
+        }
+
+        #theme-toggle {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 41;
+            width: 48px;
+            height: 48px;
+            border-radius: 999px;
+            background: #1e293b;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        #theme-toggle:hover { transform: scale(1.08) rotate(15deg); background: #334155; }
+        body.dark-mode #theme-toggle { background: #fbbf24; color: #1e293b; }
+
+        #floating-reset-btn {
+            position: fixed !important;
+            bottom: 24px !important;
+            right: 85px !important;
+            left: auto !important;
+            top: auto !important;
+            z-index: 40;
+            width: 200px !important;
+            min-width: 200px !important;
+            max-width: 200px !important;
+            box-sizing: border-box;
+            justify-content: center !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            background-color: #0f172a !important;
+            color: white !important;
+            padding: 12px 20px !important;
+            border-radius: 999px !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4) !important;
+            border: 1px solid #334155 !important;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease !important;
+            cursor: pointer;
+            align-items: center;
+            gap: 8px;
+        }
+        #floating-reset-btn:hover {
+            background-color: #1e293b !important;
+            transform: none !important;
+        }
+
+        #floating-plaza-btn {
+            position: fixed !important;
+            bottom: 24px !important;
+            left: 24px !important;
+            z-index: 40;
+        }
+
+        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0 !important; }
+        body.dark-mode header { background: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B) !important; background-size: 300% 100% !important; }
+        body.dark-mode .bg-white { background-color: #1e293b !important; }
+        body.dark-mode .bg-slate-50,
+        body.dark-mode .bg-slate-100 { background-color: #0f172a !important; }
+        body.dark-mode .text-slate-800,
+        body.dark-mode .text-slate-700,
+        body.dark-mode .text-slate-600 { color: #e2e8f0 !important; }
+        body.dark-mode .text-slate-500,
+        body.dark-mode .text-slate-400 { color: #94a3b8 !important; }
+        body.dark-mode .border-slate-200,
+        body.dark-mode .border-slate-300 { border-color: #334155 !important; }
+        body.dark-mode table thead { background-color: #0f172a !important; color: #94a3b8 !important; }
+        body.dark-mode table tbody tr:hover { background-color: #334155 !important; }
+        body.dark-mode input,
+        body.dark-mode select { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        body.dark-mode .card-shadow { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important; }
+        body.dark-mode .bg-red-50\/50 { background-color: rgba(127, 29, 29, 0.2) !important; }
+        body.dark-mode .bg-amber-50\/50 { background-color: rgba(120, 53, 15, 0.2) !important; }
+        body.dark-mode .bg-blue-50\/50 { background-color: rgba(30, 58, 138, 0.2) !important; }
+        body.dark-mode .bg-purple-50\/50 { background-color: rgba(88, 28, 135, 0.2) !important; }
+        body.dark-mode .bg-emerald-50\/50 { background-color: rgba(20, 83, 45, 0.2) !important; }
+        body.dark-mode .bg-slate-100 { background-color: #334155 !important; }
+        body.dark-mode .hover\:bg-slate-200:hover { background-color: #475569 !important; }
+        body.dark-mode .hover\:bg-slate-100:hover { background-color: #334155 !important; }
+        body.dark-mode .hover\:bg-slate-50:hover { background-color: #334155 !important; }
+        body.dark-mode #filter-modal > div,
+        body.dark-mode #plaza-modal > div { background-color: #1e293b !important; }
+        body.dark-mode .modal-checkbox-label:hover,
+        body.dark-mode .plaza-checkbox-label:hover { background-color: #334155 !important; }
+        body.dark-mode #modal-checkboxes-container,
+        body.dark-mode #plaza-modal-checkboxes-container { background-color: #0f172a !important; border-color: #334155 !important; }
+        body.dark-mode .bg-slate-900 { background-color: #0f172a !important; }
+
+        /* ============================================
+           CAMPANA DE NOTIFICACIONES — Estilos
+           ============================================ */
+        #notif-bell {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.35);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.25s ease, transform 0.2s ease;
+            flex-shrink: 0;
+        }
+        #notif-bell:hover { background: rgba(255,255,255,0.3); transform: translateY(-1px); }
+        #notif-bell i { font-size: 16px; }
+
+        #notif-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: #dc2626;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            pointer-events: none;
+        }
+        #notif-badge.hidden { display: none; }
+        #notif-badge.badgePulse { animation: badgePulse 0.6s ease-out; }
+        @keyframes badgePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.35); box-shadow: 0 0 0 6px rgba(220,38,38,0.35); }
+            100% { transform: scale(1); }
+        }
+
+        #notif-toast-container {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+            width: calc(100vw - 40px);
+            pointer-events: none;
+        }
+
+        .notif-toast {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 12px 32px -8px rgba(0,0,0,0.25), 0 4px 10px -4px rgba(0,0,0,0.15);
+            border-left: 4px solid #64748b;
+            padding: 12px 14px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            pointer-events: auto;
+            animation: notifToastIn 0.35s cubic-bezier(0.4,0,0.2,1);
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes notifToastIn {
+            from { opacity: 0; transform: translateX(40px) scale(0.95); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        .notif-toast.notif-toast-out {
+            animation: notifToastOut 0.3s ease-in forwards;
+        }
+        @keyframes notifToastOut {
+            to { opacity: 0; transform: translateX(40px); }
+        }
+        .notif-toast-icon {
+            font-size: 18px;
+            line-height: 1;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        .notif-toast-body { flex-grow: 1; min-width: 0; }
+        .notif-toast-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 2px;
+        }
+        .notif-toast-msg {
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .notif-toast-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 2px;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .notif-toast-close:hover { color: #475569; }
+
+        .notif-toast.notif-danger  { border-left-color: #dc2626; }
+        .notif-toast.notif-danger .notif-toast-icon  { color: #dc2626; }
+        .notif-toast.notif-warning { border-left-color: #f59e0b; }
+        .notif-toast.notif-warning .notif-toast-icon { color: #f59e0b; }
+        .notif-toast.notif-info    { border-left-color: #3b82f6; }
+        .notif-toast.notif-info .notif-toast-icon    { color: #3b82f6; }
+        .notif-toast.notif-success { border-left-color: #10b981; }
+        .notif-toast.notif-success .notif-toast-icon { color: #10b981; }
+
+        #notif-panel {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            width: 400px;
+            max-width: calc(100vw - 24px);
+            max-height: 70vh;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px -12px rgba(0,0,0,0.35), 0 8px 20px -8px rgba(0,0,0,0.2);
+            z-index: 91;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: notifPanelIn 0.28s cubic-bezier(0.4,0,0.2,1);
+            border: 1px solid #e2e8f0;
+        }
+        #notif-panel.hidden { display: none; }
+        @keyframes notifPanelIn {
+            from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .notif-panel-header {
+            background: linear-gradient(135deg, #DA291C, #b81810);
+            color: #fff;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .notif-panel-header button {
+            background: transparent;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .notif-panel-header button:hover { background: rgba(255,255,255,0.2); }
+        .notif-panel-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: calc(70vh - 110px);
+        }
+        .notif-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .notif-empty i { font-size: 32px; margin-bottom: 10px; opacity: 0.4; display: block; }
+        .notif-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            border-left: 3px solid transparent;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            transition: background 0.15s;
+        }
+        .notif-item:hover { background: #f8fafc; }
+        .notif-item.unread { background: #fef2f2; }
+        .notif-item.unread:hover { background: #fee2e2; }
+        .notif-item.notif-danger  { border-left-color: #dc2626; }
+        .notif-item.notif-warning { border-left-color: #f59e0b; }
+        .notif-item.notif-info    { border-left-color: #3b82f6; }
+        .notif-item.notif-success { border-left-color: #10b981; }
+        .notif-item-icon { font-size: 16px; line-height: 1; margin-top: 2px; flex-shrink: 0; }
+        .notif-item-body { flex-grow: 1; min-width: 0; }
+        .notif-item-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 3px;
+        }
+        .notif-item-msg {
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.45;
+            word-wrap: break-word;
+        }
+        .notif-item-time {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .notif-panel-footer {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 10px 12px;
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        .notif-panel-footer button {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .notif-panel-footer .btn-mark-read {
+            background: #e2e8f0;
+            color: #334155;
+        }
+        .notif-panel-footer .btn-mark-read:hover { background: #cbd5e1; }
+        .notif-panel-footer .btn-clear {
+            background: #dc2626;
+            color: #fff;
+        }
+        .notif-panel-footer .btn-clear:hover { background: #b91c1c; }
+
+        /* Dark mode para notificaciones */
+        body.dark-mode #notif-panel { background: #1e293b; border-color: #334155; }
+        body.dark-mode .notif-panel-header { background: linear-gradient(135deg, #991B1B, #7f1d1d); }
+        body.dark-mode .notif-panel-body { background: #1e293b; }
+        body.dark-mode .notif-item { border-bottom-color: #334155; }
+        body.dark-mode .notif-item:hover { background: #334155; }
+        body.dark-mode .notif-item.unread { background: rgba(127,29,29,0.25); }
+        body.dark-mode .notif-item.unread:hover { background: rgba(127,29,29,0.4); }
+        body.dark-mode .notif-item-title { color: #e2e8f0; }
+        body.dark-mode .notif-item-msg { color: #cbd5e1; }
+        body.dark-mode .notif-item-time { color: #94a3b8; }
+        body.dark-mode .notif-panel-footer { background: #0f172a; border-top-color: #334155; }
+        body.dark-mode .notif-panel-footer .btn-mark-read { background: #334155; color: #e2e8f0; }
+        body.dark-mode .notif-panel-footer .btn-mark-read:hover { background: #475569; }
+        body.dark-mode .notif-empty { color: #94a3b8; }
+
+        body.dark-mode .notif-toast { background: #1e293b; }
+        body.dark-mode .notif-toast-title { color: #e2e8f0; }
+        body.dark-mode .notif-toast-msg { color: #cbd5e1; }
+        body.dark-mode .notif-toast-close { color: #94a3b8; }
+        body.dark-mode .notif-toast-close:hover { color: #cbd5e1; }
+
+        @media (max-width: 640px) {
+            #notif-toast-container {
+                top: auto;
+                bottom: 90px;
+                right: 12px;
+                left: 12px;
+                max-width: none;
+                width: auto;
+            }
+            #notif-panel {
+                top: 80px;
+                right: 12px;
+                left: 12px;
+                width: auto;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <header class="text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-estafeta-red font-black text-xl px-3 py-1 rounded shadow">
+                    Estafeta<span class="text-xs align-super">®</span>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">Plataforma Operativa</h1>
+                    <p class="text-xs text-red-100">Dashboard de Monitoreo y Análisis Logístico</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <div id="drop-zone" class="border border-white/40 bg-red-800/40 hover:bg-red-800/60 px-4 py-2 rounded-lg text-sm flex items-center gap-2 cursor-pointer transition">
+                    <i class="fas fa-file-excel text-green-300"></i>
+                    <span id="file-name-display" class="truncate max-w-[200px]" title="">Cargar / Arrastrar Excel</span>
+                    <input type="file" id="excel-file-input" accept=".xlsx, .xls" class="hidden">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+
+        <div id="skeletonLoader" class="hidden space-y-6">
+            <div class="bg-white p-4 rounded-xl card-shadow"><div class="skeleton h-10"></div></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                <div class="skeleton h-24"></div><div class="skeleton h-24"></div><div class="skeleton h-24"></div>
+                <div class="skeleton h-24"></div><div class="skeleton h-24"></div><div class="skeleton h-24"></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="skeleton h-64"></div><div class="skeleton h-64"></div><div class="skeleton h-64"></div>
+            </div>
+            <div class="skeleton h-96"></div>
+        </div>
+
+        <div id="dashboard-content" class="space-y-6 hidden">
+            <div id="active-filters-container" class="bg-white p-3 rounded-xl card-shadow flex flex-wrap items-center gap-2 text-sm hidden">
+                <span class="font-semibold text-slate-600 mr-2"><i class="fas fa-filter text-estafeta-red"></i> Filtros activos:</span>
+                <div id="filter-badges" class="flex flex-wrap gap-2 items-center"></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                <div class="bg-white p-4 rounded-xl card-shadow border-l-4 border-slate-700 flex items-center justify-between kpi-card-glow">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Guías</p>
+                        <h3 id="kpi-total" class="text-2xl font-black text-slate-800 mt-1">0</h3>
+                    </div>
+                    <div class="bg-slate-100 p-3 rounded-2xl text-slate-600 shadow-inner"><i class="fas fa-boxes text-lg"></i></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl card-shadow border-l-4 border-red-500 flex items-center justify-between cursor-pointer kpi-card-glow" onclick="toggleSemaphor('Vencido')">
+                    <div>
+                        <p class="text-xs font-medium text-red-600 uppercase tracking-wider">Vencidos</p>
+                        <h3 id="kpi-vencido" class="text-2xl font-black text-red-600 mt-1">0</h3>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-2xl text-red-500 shadow-inner"><i class="fas fa-exclamation-triangle text-lg"></i></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl card-shadow border-l-4 border-amber-500 flex items-center justify-between cursor-pointer kpi-card-glow" onclick="toggleSemaphor('Vence hoy')">
+                    <div>
+                        <p class="text-xs font-medium text-amber-600 uppercase tracking-wider">Vence Hoy</p>
+                        <h3 id="kpi-hoy" class="text-2xl font-black text-amber-600 mt-1">0</h3>
+                    </div>
+                    <div class="bg-amber-100 p-3 rounded-2xl text-amber-500 shadow-inner"><i class="fas fa-calendar-day text-lg"></i></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl card-shadow border-l-4 border-blue-500 flex items-center justify-between cursor-pointer kpi-card-glow" onclick="toggleSemaphor('Vence mañana')">
+                    <div>
+                        <p class="text-xs font-medium text-blue-600 uppercase tracking-wider">Vence Mañana</p>
+                        <h3 id="kpi-mañana" class="text-2xl font-black text-blue-600 mt-1">0</h3>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-2xl text-blue-500 shadow-inner"><i class="fas fa-clock text-lg"></i></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl card-shadow border-l-4 border-purple-500 flex items-center justify-between cursor-pointer kpi-card-glow" onclick="toggleSemaphor('Vence en 2 días')">
+                    <div>
+                        <p class="text-xs font-medium text-purple-600 uppercase tracking-wider">Vence en 2 Días</p>
+                        <h3 id="kpi-2dias" class="text-2xl font-black text-purple-600 mt-1">0</h3>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-2xl text-purple-500 shadow-inner"><i class="fas fa-calendar-alt text-lg"></i></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl card-shadow border-l-4 border-emerald-500 flex items-center justify-between cursor-pointer kpi-card-glow" onclick="toggleSemaphor('En tiempo')">
+                    <div>
+                        <p class="text-xs font-medium text-emerald-600 uppercase tracking-wider">En Tiempo</p>
+                        <h3 id="kpi-tiempo" class="text-2xl font-black text-emerald-600 mt-1">0</h3>
+                    </div>
+                    <div class="bg-emerald-100 p-3 rounded-2xl text-emerald-500 shadow-inner"><i class="fas fa-check-circle text-lg"></i></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div id="card-chartSemaforo" class="bg-white p-5 rounded-xl card-shadow flex flex-col justify-between transition-all duration-300">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-700"><i class="fas fa-chart-bar text-estafeta-red mr-2"></i> Estado (Semáforo)</h3>
+                        <button onclick="toggleCardFullscreen('chartSemaforo')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+                            <i id="icon-fullscreen-chartSemaforo" class="fas fa-expand"></i> <span id="text-fullscreen-chartSemaforo">Expandir</span>
+                        </button>
+                    </div>
+                    <div id="wrapper-chartSemaforo" class="relative h-64 flex items-center justify-center"><canvas id="chartSemaforo"></canvas></div>
+                </div>
+                <div id="card-chartGarantia" class="bg-white p-5 rounded-xl card-shadow flex flex-col justify-between transition-all duration-300">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-700"><i class="fas fa-chart-bar text-estafeta-red mr-2"></i> Tipo de Garantía</h3>
+                        <button onclick="toggleCardFullscreen('chartGarantia')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+                            <i id="icon-fullscreen-chartGarantia" class="fas fa-expand"></i> <span id="text-fullscreen-chartGarantia">Expandir</span>
+                        </button>
+                    </div>
+                    <div id="wrapper-chartGarantia" class="relative h-64 flex items-center justify-center"><canvas id="chartGarantia"></canvas></div>
+                </div>
+                <div id="card-chartPlazas" class="bg-white p-5 rounded-xl card-shadow flex flex-col justify-between transition-all duration-300">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-700"><i class="fas fa-map-marker-alt text-estafeta-red mr-2"></i> Plazas de Destino</h3>
+                        <button onclick="toggleCardFullscreen('chartPlazas')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+                            <i id="icon-fullscreen-chartPlazas" class="fas fa-expand"></i> <span id="text-fullscreen-chartPlazas">Expandir</span>
+                        </button>
+                    </div>
+                    <div id="wrapper-chartPlazas" class="relative h-64 flex items-center justify-center"><canvas id="chartPlazas"></canvas></div>
+                </div>
+            </div>
+
+            <div id="table-card-container" class="bg-white rounded-xl card-shadow overflow-hidden transition-all duration-300">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <h3 class="font-bold text-slate-700"><i class="fas fa-table text-estafeta-red mr-2"></i> Detalle de Guías</h3>
+                        <span id="table-record-counter" class="bg-red-100 text-estafeta-red text-xs font-bold px-2.5 py-1 rounded-full">0 paquetes</span>
+                    </div>
+                    <div class="flex items-center gap-3 w-full sm:w-auto flex-wrap">
+                        <div class="relative w-full sm:w-64">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400"><i class="fas fa-search"></i></span>
+                            <input type="text" id="table-search" placeholder="Buscar guía, cliente, C.P., plaza..." class="w-full pl-9 pr-4 py-1.5 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-estafeta-red">
+                        </div>
+                        <button onclick="downloadFilteredExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3.5 py-1.5 rounded-lg text-sm transition shadow flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="fas fa-file-excel"></i> Descargar Excel
+                        </button>
+                        <button id="fullscreen-table-btn" onclick="toggleTableFullscreen()" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold px-3.5 py-1.5 rounded-lg text-sm transition shadow flex items-center gap-1.5 whitespace-nowrap">
+                            <i id="fullscreen-icon" class="fas fa-expand"></i> <span id="fullscreen-text">Expandir</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto max-h-[500px] relative">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead class="bg-slate-100 text-slate-600 uppercase text-xs sticky top-0 z-10">
+                            <tr>
+                                <th class="p-3 sortable-th relative" onclick="handleTableSort('Movimiento')">
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span>Movimiento <span id="sort-icon-Movimiento" class="text-slate-400 ml-1">↕</span></span>
+                                        <button type="button" onclick="event.stopPropagation(); openModalFilter('Movimiento')" class="text-slate-500 hover:text-estafeta-red p-1 rounded hover:bg-slate-200 transition"><i class="fas fa-filter text-xs"></i></button>
+                                    </div>
+                                </th>
+                                <th class="p-3 sortable-th" onclick="handleTableSort('Guía')">Guía <span id="sort-icon-Guía" class="text-slate-400 ml-1">↕</span></th>
+                                <th class="p-3 sortable-th relative" onclick="handleTableSort('Semáforo')">
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span>Semáforo <span id="sort-icon-Semáforo" class="text-slate-400 ml-1">↕</span></span>
+                                        <button type="button" onclick="event.stopPropagation(); openModalFilter('Semáforo')" class="text-slate-500 hover:text-estafeta-red p-1 rounded hover:bg-slate-200 transition"><i class="fas fa-filter text-xs"></i></button>
+                                    </div>
+                                </th>
+                                <th class="p-3 sortable-th relative" onclick="handleTableSort('Garantía')">
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span>Garantía <span id="sort-icon-Garantía" class="text-slate-400 ml-1">↕</span></span>
+                                        <button type="button" onclick="event.stopPropagation(); openModalFilter('Garantía')" class="text-slate-500 hover:text-estafeta-red p-1 rounded hover:bg-slate-200 transition"><i class="fas fa-filter text-xs"></i></button>
+                                    </div>
+                                </th>
+                                <th class="p-3 sortable-th relative" onclick="handleTableSort('C:P')">
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span>C.P. <span id="sort-icon-C:P" class="text-slate-400 ml-1">↕</span></span>
+                                        <button type="button" onclick="event.stopPropagation(); openModalFilter('C:P')" class="text-slate-500 hover:text-estafeta-red p-1 rounded hover:bg-slate-200 transition"><i class="fas fa-filter text-xs"></i></button>
+                                    </div>
+                                </th>
+                                <th class="p-3 sortable-th" onclick="handleTableSort('Plaza origen')">Origen <span id="sort-icon-Plaza origen" class="text-slate-400 ml-1">↕</span></th>
+                                <th class="p-3 sortable-th" onclick="handleTableSort('Plaza Destino')">Destino <span id="sort-icon-Plaza Destino" class="text-slate-400 ml-1">↕</span></th>
+                                <th class="p-3 sortable-th" onclick="handleTableSort('Nom cliente')">Cliente <span id="sort-icon-Nom cliente" class="text-slate-400 ml-1">↕</span></th>
+                                <th class="p-3 sortable-th relative" onclick="handleTableSort('Fecha último movimiento')">
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span>Último Movimiento <span id="sort-icon-Fecha último movimiento" class="text-slate-400 ml-1">↕</span></span>
+                                        <button type="button" onclick="event.stopPropagation(); openModalFilter('Fecha último movimiento')" class="text-slate-500 hover:text-estafeta-red p-1 rounded hover:bg-slate-200 transition"><i class="fas fa-filter text-xs"></i></button>
+                                    </div>
+                                </th>
+                                <th class="p-3 sortable-th" onclick="handleTableSort('Fecha compromiso de entrega')">Compromiso <span id="sort-icon-Fecha compromiso de entrega" class="text-slate-400 ml-1">↕</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-600 gap-2" id="table-pagination-info"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="filter-modal" class="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
+            <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i class="fas fa-filter text-estafeta-red"></i>
+                    <h3 id="modal-title" class="font-bold text-base">Filtrar Columna</h3>
+                </div>
+                <button type="button" onclick="closeModalFilter()" class="text-slate-400 hover:text-white p-1 rounded-lg transition"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <div class="p-5 space-y-4 flex-grow overflow-hidden flex flex-col">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400"><i class="fas fa-search text-xs"></i></span>
+                    <input type="text" id="modal-search-input" placeholder="Buscar valor..." class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-estafeta-red">
+                </div>
+                <div class="flex justify-between items-center text-xs px-1">
+                    <span class="text-slate-500 font-medium">Seleccionar valores:</span>
+                    <div class="space-x-2 font-semibold">
+                        <button type="button" onclick="selectAllModalCheckboxes()" class="text-estafeta-red hover:underline">Todos</button>
+                        <span class="text-slate-300">|</span>
+                        <button type="button" onclick="deselectAllModalCheckboxes()" class="text-slate-500 hover:underline">Ninguno</button>
+                    </div>
+                </div>
+                <div class="border border-slate-200 rounded-lg p-3 overflow-y-auto flex-grow max-h-60 space-y-2 text-sm" id="modal-checkboxes-container"></div>
+            </div>
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end gap-3">
+                <button type="button" onclick="closeModalFilter()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg text-sm transition">Cancelar</button>
+                <button type="button" onclick="applyModalFilter()" class="px-4 py-2 bg-estafeta-red hover:bg-estafeta-darkRed text-white font-semibold rounded-lg text-sm shadow transition">Aplicar Filtro</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="plaza-modal" class="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
+            <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i class="fas fa-filter text-estafeta-red"></i>
+                    <h3 class="font-bold text-base" id="plaza-modal-title-text">Filtrar por Plaza</h3>
+                </div>
+                <button type="button" onclick="closePlazaModal()" class="text-slate-400 hover:text-white p-1 rounded-lg transition"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <div class="p-5 space-y-4 flex-grow overflow-hidden flex flex-col">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400"><i class="fas fa-search text-xs"></i></span>
+                    <input type="text" id="plaza-modal-search" placeholder="Buscar valor..." class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-estafeta-red">
+                </div>
+                <div class="flex justify-between items-center text-xs px-1">
+                    <span class="text-slate-500 font-medium">Seleccionar valores:</span>
+                    <div class="space-x-2 font-semibold">
+                        <button type="button" onclick="selectAllPlazaCheckboxes()" class="text-estafeta-red hover:underline">Todos</button>
+                        <span class="text-slate-300">|</span>
+                        <button type="button" onclick="deselectAllPlazaCheckboxes()" class="text-slate-500 hover:underline">Ninguno</button>
+                    </div>
+                </div>
+                <div class="border border-slate-200 rounded-lg p-3 overflow-y-auto flex-grow max-h-60 space-y-2 text-sm" id="plaza-modal-checkboxes-container"></div>
+            </div>
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end gap-3">
+                <button type="button" onclick="closePlazaModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg text-sm transition">Cancelar</button>
+                <button type="button" onclick="applyPlazaModalFilter()" class="px-4 py-2 bg-estafeta-red hover:bg-estafeta-darkRed text-white font-semibold rounded-lg text-sm shadow transition">Aplicar Filtro</button>
+            </div>
+        </div>
+    </div>
+
+    <button id="floating-plaza-btn" onclick="openPlazaModal()" class="fixed bottom-6 left-6 z-[70] bg-estafeta-red text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-sm font-semibold hover:bg-estafeta-darkRed transition-all hidden">
+        <i class="fas fa-map-marked-alt"></i>
+        <span id="floating-plaza-btn-text">Plazas (Todas)</span>
+    </button>
+
+    <button id="floating-reset-btn" onclick="resetFilters()" class="fixed bottom-6 right-24 z-[70] bg-slate-900 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-sm font-semibold hover:bg-slate-800 transition-all hidden">
+        <i class="fas fa-undo"></i>
+        <span id="floating-reset-text">Limpiar Filtros (0)</span>
+    </button>
+
+    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+    </button>
+
+    <!-- Contenedor de toasts y panel de notificaciones -->
+    <div id="notif-toast-container"></div>
+    <div id="notif-panel" class="hidden">
+        <div class="notif-panel-header">
+            <span><i class="fas fa-bell mr-2"></i><span id="notif-panel-title">Notificaciones</span></span>
+            <button type="button" onclick="closeNotifPanel()" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="notif-panel-body" id="notif-panel-body"></div>
+        <div class="notif-panel-footer">
+            <button type="button" class="btn-mark-read" onclick="markAllAsRead()">Marcar leídas</button>
+            <button type="button" class="btn-clear" onclick="clearNotifHistory()">Limpiar</button>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const encodedRole = localStorage.getItem('auth_role');
+            if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
+            let rol = '';
+            try {
+                const decoded = atob(encodedRole);
+                const parts = decoded.split('|');
+                if (parts.length >= 1) rol = parts[0];
+            } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
+            if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
+
+            let inactivityTimer;
+            const maxInactivityMinutes = 30;
+            function resetInactivityTimer() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(() => {
+                    alert("Su sesión ha expirado por inactividad.");
+                    localStorage.removeItem('auth_role');
+                    window.location.href = 'Panel de Control Operativo.html';
+                }, maxInactivityMinutes * 60 * 1000);
+            }
+            ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
+                window.addEventListener(event, resetInactivityTimer);
+            });
+            resetInactivityTimer();
+            if (rol === 'admin') console.warn("Modo Administrador activo.");
+            else console.log("Modo Usuario activo.");
+        });
+
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        }[c]));
+
+        function debounce(fn, ms = 250) {
+            let t;
+            return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+        }
+
+        function withViewTransition(fn) {
+            if (document.startViewTransition) document.startViewTransition(fn);
+            else fn();
+        }
+
+        function pulseElement(el) {
+            if (!el) return;
+            el.classList.remove('filter-highlight');
+            void el.offsetWidth;
+            el.classList.add('filter-highlight');
+            setTimeout(() => el.classList.remove('filter-highlight'), 900);
+        }
+
+        let globalData = [];
+        let filteredData = [];
+        let plazaColumnName = 'Plaza';
+        const allSemaphorOptions = ['Vencido', 'Vence hoy', 'Vence mañana', 'Vence en 2 días', 'En tiempo'];
+
+        let currentTablePage = 0;
+        const ITEMS_PER_PAGE = 12;
+
+        let activeFilters = {
+            semaphors: [], garantias: [], cp: [], plazaDestino: null, plazaColC: [],
+            movimientos: [], ultimosMovimientos: [],
+            search: '', sortColumn: null, sortDirection: 'asc'
+        };
+
+        let currentModalColumn = null;
+        let chartSemaforoInst = null;
+        let chartGarantiaInst = null;
+        let chartPlazasInst = null;
+        let lastChartsHash = '';
+
+        const semaphorColors = {
+            'Vencido': '#EF4444',
+            'Vence hoy': '#F59E0B',
+            'Vence mañana': '#3B82F6',
+            'Vence en 2 días': '#A855F7',
+            'En tiempo': '#10B981'
+        };
+
+        const _norm = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+        function validarArchivo(headers) {
+            if (!headers || headers.length === 0) return false;
+            const n = headers.map(_norm);
+            return n.some(h => h.includes('movimiento')) &&
+                   n.some(h => h.includes('tipo')) &&
+                   n.some(h => h.includes('semaforo') || h.includes('semáforo'));
+        }
+
+        function normalizeSemaphor(val) {
+            const v = String(val || '').trim().toLowerCase();
+            if (v.includes('vencido')) return 'Vencido';
+            if (v.includes('vence hoy') || v === 'hoy') return 'Vence hoy';
+            if (v.includes('mañana') || v.includes('manana')) return 'Vence mañana';
+            if (v.includes('2 días') || v.includes('2 dias')) return 'Vence en 2 días';
+            if (v.includes('tiempo') || v.includes('verde')) return 'En tiempo';
+            return val;
+        }
+
+        /* ============================================================
+           CAMPANA DE NOTIFICACIONES — CONFIG Y LÓGICA
+           ============================================================ */
+        const CONFIG = {
+            dashboardId: 'plataforma-operativa',
+            storageKey: 'notif_history_plataforma-operativa',
+            maxHistory: 50
+        };
+
+        const NOTIF_ICONS = {
+            danger: '🚨',
+            warning: '⚠️',
+            info: 'ℹ️',
+            success: '✅'
+        };
+
+        function loadNotifHistory() {
+            try {
+                const raw = localStorage.getItem(CONFIG.storageKey);
+                if (!raw) return [];
+                const arr = JSON.parse(raw);
+                return Array.isArray(arr) ? arr : [];
+            } catch (e) { return []; }
+        }
+
+        function saveNotifHistory(list) {
+            try {
+                const trimmed = list.slice(0, CONFIG.maxHistory);
+                localStorage.setItem(CONFIG.storageKey, JSON.stringify(trimmed));
+            } catch (e) { console.warn('No se pudo guardar historial de notificaciones', e); }
+        }
+
+        function injectBell() {
+            const headerActions = document.querySelector('header .flex.flex-wrap.items-center.gap-3');
+            if (!headerActions || document.getElementById('notif-bell')) return;
+
+            const bell = document.createElement('button');
+            bell.id = 'notif-bell';
+            bell.type = 'button';
+            bell.setAttribute('aria-label', 'Notificaciones');
+            bell.innerHTML = `<i class="fa-solid fa-bell"></i><span id="notif-badge" class="hidden">0</span>`;
+            bell.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleNotifPanel();
+            });
+
+            headerActions.appendChild(bell);
+            updateBadge();
+        }
+
+        function updateBadge() {
+            const badge = document.getElementById('notif-badge');
+            if (!badge) return;
+            const history = loadNotifHistory();
+            const unread = history.filter(n => !n.read).length;
+            if (unread > 0) {
+                badge.textContent = unread > 99 ? '99+' : String(unread);
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function pulseBadge() {
+            const badge = document.getElementById('notif-badge');
+            if (!badge) return;
+            badge.classList.remove('badgePulse');
+            void badge.offsetWidth;
+            badge.classList.add('badgePulse');
+            setTimeout(() => badge.classList.remove('badgePulse'), 700);
+        }
+
+        function timeAgo(ts) {
+            const diff = Date.now() - ts;
+            const min = Math.floor(diff / 60000);
+            if (min < 1) return 'Hace unos segundos';
+            if (min < 60) return `Hace ${min} min`;
+            const hrs = Math.floor(min / 60);
+            if (hrs < 24) return `Hace ${hrs} h`;
+            const days = Math.floor(hrs / 24);
+            return `Hace ${days} d`;
+        }
+
+        function showToast(notif, duration = 6000) {
+            const container = document.getElementById('notif-toast-container');
+            if (!container) return;
+
+            // Máximo 3 toasts visibles
+            while (container.children.length >= 3) {
+                container.removeChild(container.firstChild);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `notif-toast notif-${notif.type}`;
+            toast.innerHTML = `
+                <span class="notif-toast-icon">${NOTIF_ICONS[notif.type] || 'ℹ️'}</span>
+                <div class="notif-toast-body">
+                    <div class="notif-toast-title">${esc(notif.title)}</div>
+                    <div class="notif-toast-msg">${notif.message}</div>
+                </div>
+                <button class="notif-toast-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+            `;
+            toast.querySelector('.notif-toast-close').addEventListener('click', () => {
+                toast.classList.add('notif-toast-out');
+                setTimeout(() => toast.remove(), 320);
+            });
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                if (!toast.parentNode) return;
+                toast.classList.add('notif-toast-out');
+                setTimeout(() => toast.remove(), 320);
+            }, duration);
+        }
+
+        function addNotifications(notifs) {
+            if (!notifs || notifs.length === 0) return;
+
+            // Ordenar por prioridad: danger > warning > info > success
+            const priority = { danger: 0, warning: 1, info: 2, success: 3 };
+            const sorted = [...notifs].sort((a, b) => (priority[a.type] ?? 99) - (priority[b.type] ?? 99));
+
+            const now = Date.now();
+            const enriched = sorted.map((n, i) => ({
+                id: `${CONFIG.dashboardId}-${now}-${i}`,
+                timestamp: now,
+                read: false,
+                type: n.type || 'info',
+                title: n.title || 'Notificación',
+                message: n.message || '',
+                duration: n.duration || 6000
+            }));
+
+            // Guardar en historial (más nuevas primero)
+            const history = loadNotifHistory();
+            const updated = [...enriched, ...history].slice(0, CONFIG.maxHistory);
+            saveNotifHistory(updated);
+
+            // Toasts: solo los 2 más críticos
+            enriched.slice(0, 2).forEach(n => showToast(n, n.duration));
+
+            // Badge y panel
+            updateBadge();
+            pulseBadge();
+            renderPanel();
+        }
+
+        function renderPanel() {
+            const body = document.getElementById('notif-panel-body');
+            const title = document.getElementById('notif-panel-title');
+            if (!body) return;
+
+            const history = loadNotifHistory();
+            const unread = history.filter(n => !n.read).length;
+            if (title) title.textContent = `Notificaciones (${history.length}${unread > 0 ? ' · ' + unread + ' sin leer' : ''})`;
+
+            if (history.length === 0) {
+                body.innerHTML = `<div class="notif-empty"><i class="fas fa-bell-slash"></i>No hay notificaciones</div>`;
+                return;
+            }
+
+            let html = '';
+            history.forEach(n => {
+                html += `
+                    <div class="notif-item notif-${n.type} ${n.read ? '' : 'unread'}">
+                        <span class="notif-item-icon">${NOTIF_ICONS[n.type] || 'ℹ️'}</span>
+                        <div class="notif-item-body">
+                            <div class="notif-item-title">${esc(n.title)}</div>
+                            <div class="notif-item-msg">${n.message}</div>
+                            <div class="notif-item-time">${timeAgo(n.timestamp)}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            body.innerHTML = html;
+        }
+
+        function toggleNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            if (!panel) return;
+            if (panel.classList.contains('hidden')) openNotifPanel();
+            else closeNotifPanel();
+        }
+
+        function openNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            if (!panel) return;
+            renderPanel();
+            panel.classList.remove('hidden');
+        }
+
+        function closeNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            if (!panel) return;
+            panel.classList.add('hidden');
+        }
+
+        function markAllAsRead() {
+            const history = loadNotifHistory();
+            history.forEach(n => n.read = true);
+            saveNotifHistory(history);
+            updateBadge();
+            renderPanel();
+        }
+
+        function clearNotifHistory() {
+            if (!confirm('¿Eliminar todo el historial de notificaciones?')) return;
+            localStorage.removeItem(CONFIG.storageKey);
+            updateBadge();
+            renderPanel();
+        }
+
+        // Cerrar panel al hacer clic fuera o ESC
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('notif-panel');
+            const bell = document.getElementById('notif-bell');
+            if (!panel || panel.classList.contains('hidden')) return;
+            if (panel.contains(e.target)) return;
+            if (bell && bell.contains(e.target)) return;
+            closeNotifPanel();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeNotifPanel();
+        });
+
+        /* ============================================================
+           ANÁLISIS DE DATOS → NOTIFICACIONES
+           Se ejecuta SOLO al cargar Excel
+           ============================================================ */
+        function analyzeAndAlert(data) {
+            if (!data || data.length === 0) return;
+            const total = data.length;
+            const vencido = data.filter(r => r['Semáforo'] === 'Vencido').length;
+            const hoy = data.filter(r => r['Semáforo'] === 'Vence hoy').length;
+            const manana = data.filter(r => r['Semáforo'] === 'Vence mañana').length;
+            const dosDias = data.filter(r => r['Semáforo'] === 'Vence en 2 días').length;
+            const tiempo = data.filter(r => r['Semáforo'] === 'En tiempo').length;
+
+            const notifs = [];
+
+            // 1. 🚨 Guías vencidas
+            if (vencido > 0) {
+                const pct = ((vencido / total) * 100).toFixed(1);
+                notifs.push({
+                    type: 'danger',
+                    title: '🚨 Guías Vencidas Detectadas',
+                    message: `<b>${vencido}</b> guías con compromiso de entrega vencido (<b>${pct}%</b> del total). Requieren atención inmediata.`,
+                    duration: 6000
+                });
+            }
+
+            // 2. ⏰ Vencen HOY
+            if (hoy > 0) {
+                notifs.push({
+                    type: 'warning',
+                    title: '⏰ Guías que Vencen Hoy',
+                    message: `<b>${hoy}</b> guías con fecha compromiso = hoy. Riesgo de convertirse en vencidas si no se entregan.`,
+                    duration: 6000
+                });
+            }
+
+            // 3. 📍 Top 3 Plazas de Destino
+            const plazaCounts = {};
+            data.forEach(r => {
+                const p = r['Plaza Destino'] || 'N/A';
+                plazaCounts[p] = (plazaCounts[p] || 0) + 1;
+            });
+            const topPlazas = Object.entries(plazaCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+            if (topPlazas.length >= 3) {
+                const medallas = ['🥇', '🥈', '🥉'];
+                const lines = topPlazas.map((p, i) => `${medallas[i]} ${esc(p[0])} (${p[1]} guías)`).join('<br>');
+                const topSum = topPlazas.reduce((a, b) => a + b[1], 0);
+                const pctTop = ((topSum / total) * 100).toFixed(1);
+                notifs.push({
+                    type: 'warning',
+                    title: '📍 Top 3 Plazas de Destino',
+                    message: `${lines}<br>Concentran el <b>${pctTop}%</b> del volumen total.`,
+                    duration: 6000
+                });
+            }
+
+            // 4. 🏷️ Tipos de Garantía
+            const garCounts = {};
+            data.forEach(r => {
+                const g = r['Garantía'] || 'No especificada';
+                garCounts[g] = (garCounts[g] || 0) + 1;
+            });
+            const garEntries = Object.entries(garCounts).sort((a, b) => b[1] - a[1]);
+            if (garEntries.length > 0) {
+                const lines = garEntries.slice(0, 4).map(([g, c]) => `${esc(g)}: <b>${c}</b>`).join(' · ');
+                notifs.push({
+                    type: 'info',
+                    title: '🏷️ Tipos de Garantía en Tránsito',
+                    message: `${lines}. Total: <b>${total}</b> guías activas.`,
+                    duration: 6000
+                });
+            }
+
+            // 5. 🔴 Cliente con más vencidas (≥5 o ≥20% de vencidas)
+            if (vencido > 0) {
+                const vencidasPorCliente = {};
+                data.filter(r => r['Semáforo'] === 'Vencido').forEach(r => {
+                    const c = r['Nom cliente'] || 'N/A';
+                    vencidasPorCliente[c] = (vencidasPorCliente[c] || 0) + 1;
+                });
+                const topCliente = Object.entries(vencidasPorCliente).sort((a, b) => b[1] - a[1])[0];
+                if (topCliente && (topCliente[1] >= 5 || (topCliente[1] / vencido) >= 0.2)) {
+                    const pct = ((topCliente[1] / vencido) * 100).toFixed(1);
+                    notifs.push({
+                        type: 'danger',
+                        title: '🔴 Cliente con Mayor Riesgo',
+                        message: `<b>${esc(topCliente[0])}</b> acumula <b>${topCliente[1]}</b> guías vencidas (<b>${pct}%</b> del total de vencidas). Priorizar contacto.`,
+                        duration: 6000
+                    });
+                }
+            }
+
+            // 6. 🗺️ Cobertura de Destinos
+            const plazasUnicas = Object.keys(plazaCounts).length;
+            const plazasOrdenadas = Object.entries(plazaCounts).sort((a, b) => b[1] - a[1]);
+            if (plazasUnicas > 0) {
+                notifs.push({
+                    type: 'info',
+                    title: '🗺️ Cobertura de Destinos',
+                    message: `<b>${plazasUnicas}</b> plazas destino activas. Mayor volumen: <b>${esc(plazasOrdenadas[0][0])}</b> (${plazasOrdenadas[0][1]} guías).`,
+                    duration: 6000
+                });
+            }
+
+            // 7. ✅ Carga exitosa
+            notifs.push({
+                type: 'success',
+                title: '✅ Excel Cargado Correctamente',
+                message: `<b>${total}</b> guías procesadas · <b>${vencido}</b> vencidas · <b>${tiempo}</b> en tiempo. Panel listo.`,
+                duration: 4000
+            });
+
+            addNotifications(notifs);
+        }
+        /* ============================================================
+           FIN CAMPANA
+           ============================================================ */
+
+        function handleFileSelect(e) {
+            const files = e.target.files || e.dataTransfer.files;
+            if (!files.length) return;
+            const file = files[0];
+            const display = document.getElementById('file-name-display');
+            display.textContent = file.name;
+            display.title = file.name;
+
+            document.getElementById('skeletonLoader').classList.remove('hidden');
+            document.getElementById('dashboard-content').classList.add('hidden');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+
+                    if (rawRows.length > 1) {
+                        const headers = rawRows[0].map(h => String(h || '').trim());
+
+                        if (!validarArchivo(headers)) {
+                            document.getElementById('skeletonLoader').classList.add('hidden');
+                            alert("El archivo no tiene la estructura válida. Debe contener las columnas: Movimiento, Tipo y Semáforo.");
+                            return;
+                        }
+
+                        if (headers.length > 2 && headers[2]) plazaColumnName = headers[2];
+
+                        const cpIndex = headers.findIndex(h => {
+                            const cleanHeader = h.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                            return cleanHeader === 'CPDESTINO' || cleanHeader === 'CP' || cleanHeader === 'CODIGOPOSTAL';
+                        });
+
+                        globalData = rawRows.slice(1).map(row => {
+                            let obj = {};
+                            headers.forEach((h, index) => {
+                                if (h) obj[h] = row[index] !== undefined ? row[index] : '';
+                            });
+
+                            let cpVal = 'N/A';
+                            if (cpIndex !== -1 && row[cpIndex] !== undefined && row[cpIndex] !== null && String(row[cpIndex]).trim() !== '') {
+                                cpVal = String(row[cpIndex]).trim();
+                            } else {
+                                for (let key in obj) {
+                                    const cleanKey = key.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                                    if ((cleanKey === 'CPDESTINO' || cleanKey === 'CP' || cleanKey === 'CODIGOPOSTAL') && obj[key]) {
+                                        cpVal = String(obj[key]).trim();
+                                        break;
+                                    }
+                                }
+                            }
+
+                            obj['C:P'] = cpVal;
+                            if (obj['Semáforo']) obj['Semáforo'] = normalizeSemaphor(obj['Semáforo']);
+                            return obj;
+                        }).filter(obj => Object.keys(obj).length > 0 && obj['Guía']);
+
+                        document.getElementById('skeletonLoader').classList.add('hidden');
+                        document.getElementById('dashboard-content').classList.remove('hidden');
+                        document.getElementById('floating-plaza-btn').classList.remove('hidden');
+
+                        activeFilters = { semaphors: [], garantias: [], cp: [], plazaDestino: null, plazaColC: [], movimientos: [], ultimosMovimientos: [], search: '', sortColumn: null, sortDirection: 'asc' };
+                        currentTablePage = 0;
+                        const searchInput = document.getElementById('table-search');
+                        if (searchInput) searchInput.value = '';
+
+                        applyFilters();
+                        runVisualEffects();
+
+                        // 🔔 Disparar análisis y notificaciones SOLO al cargar Excel
+                        analyzeAndAlert(globalData);
+                    } else {
+                        document.getElementById('skeletonLoader').classList.add('hidden');
+                        alert('El archivo Excel no contiene registros válidos.');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    document.getElementById('skeletonLoader').classList.add('hidden');
+                    alert('Error al procesar el archivo Excel. Verifique el formato.');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        const dropZone = document.getElementById('drop-zone');
+        dropZone.addEventListener('click', () => document.getElementById('excel-file-input').click());
+        document.getElementById('excel-file-input').addEventListener('change', handleFileSelect);
+
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) {
+                document.getElementById('excel-file-input').files = e.dataTransfer.files;
+                handleFileSelect({ target: { files: e.dataTransfer.files } });
+            }
+        });
+
+        function openPlazaModal() {
+            const modal = document.getElementById('plaza-modal');
+            document.getElementById('plaza-modal-title-text').textContent = `Filtrar por ${plazaColumnName}`;
+            document.getElementById('plaza-modal-search').value = '';
+            populatePlazaModalCheckboxes();
+            modal.classList.remove('hidden');
+            pulseElement(document.getElementById('floating-plaza-btn'));
+        }
+
+        function closePlazaModal() { document.getElementById('plaza-modal').classList.add('hidden'); }
+
+        function populatePlazaModalCheckboxes() {
+            const container = document.getElementById('plaza-modal-checkboxes-container');
+            container.innerHTML = '';
+
+            const baseData = getFilteredDataExcept('plazaColC');
+            const uniqueValues = [...new Set(baseData.map(r => r[plazaColumnName] !== undefined && r[plazaColumnName] !== '' ? String(r[plazaColumnName]) : 'N/A'))].sort();
+
+            if (uniqueValues.length === 0) {
+                container.innerHTML = '<span class="text-slate-400 text-sm">No hay valores disponibles</span>';
+                return;
+            }
+
+            let htmlString = '';
+            uniqueValues.forEach(val => {
+                const isChecked = activeFilters.plazaColC.includes(val);
+                htmlString += `
+                    <label class="flex items-center gap-2.5 cursor-pointer hover:bg-slate-50 p-1.5 rounded plaza-checkbox-label">
+                        <input type="checkbox" value="${esc(val)}" ${isChecked ? 'checked' : ''} class="plaza-item-checkbox rounded text-estafeta-red focus:ring-estafeta-red w-4 h-4">
+                        <span class="truncate text-slate-700 font-medium">${esc(val)}</span>
+                    </label>
+                `;
+            });
+            container.innerHTML = htmlString;
+        }
+
+        const plazaModalSearch = document.getElementById('plaza-modal-search');
+        if (plazaModalSearch) {
+            plazaModalSearch.addEventListener('input', debounce(() => {
+                const searchVal = plazaModalSearch.value.toLowerCase();
+                document.querySelectorAll('.plaza-checkbox-label').forEach(label => {
+                    const text = label.querySelector('span').textContent.toLowerCase();
+                    label.style.display = text.includes(searchVal) ? 'flex' : 'none';
+                });
+            }, 200));
+        }
+
+        function selectAllPlazaCheckboxes() {
+            document.querySelectorAll('.plaza-item-checkbox').forEach(cb => {
+                if (cb.closest('label').style.display !== 'none') cb.checked = true;
+            });
+        }
+        function deselectAllPlazaCheckboxes() {
+            document.querySelectorAll('.plaza-item-checkbox').forEach(cb => {
+                if (cb.closest('label').style.display !== 'none') cb.checked = false;
+            });
+        }
+
+        function applyPlazaModalFilter() {
+            const selected = [];
+            document.querySelectorAll('.plaza-item-checkbox').forEach(cb => { if (cb.checked) selected.push(cb.value); });
+            activeFilters.plazaColC = selected;
+            closePlazaModal();
+            applyFilters();
+        }
+
+        function updateFloatingPlazaButtonText() {
+            const btnText = document.getElementById('floating-plaza-btn-text');
+            if (activeFilters.plazaColC.length === 0) btnText.textContent = `${plazaColumnName} (Todas)`;
+            else if (activeFilters.plazaColC.length === 1) btnText.textContent = `${plazaColumnName}: ${activeFilters.plazaColC[0]}`;
+            else btnText.textContent = `${plazaColumnName} (${activeFilters.plazaColC.length} sel.)`;
+        }
+
+        function toggleTableFullscreen() {
+            const container = document.getElementById('table-card-container');
+            const icon = document.getElementById('fullscreen-icon');
+            const text = document.getElementById('fullscreen-text');
+            const tableWrapper = container.querySelector('.overflow-x-auto');
+
+            if (!container.classList.contains('fixed')) {
+                container.classList.remove('rounded-xl', 'card-shadow');
+                container.classList.add('fixed', 'inset-0', 'z-50', 'rounded-none', 'flex', 'flex-col', 'p-4', 'overflow-hidden');
+                tableWrapper.classList.remove('max-h-[500px]');
+                tableWrapper.classList.add('flex-grow', 'max-h-[calc(100vh-140px)]');
+                icon.className = 'fas fa-compress';
+                text.textContent = 'Contraer';
+                document.body.style.overflow = 'hidden';
+            } else {
+                container.classList.remove('fixed', 'inset-0', 'z-50', 'rounded-none', 'flex', 'flex-col', 'p-4', 'overflow-hidden');
+                container.classList.add('rounded-xl', 'card-shadow');
+                tableWrapper.classList.remove('flex-grow', 'max-h-[calc(100vh-140px)]');
+                tableWrapper.classList.add('max-h-[500px]');
+                icon.className = 'fas fa-expand';
+                text.textContent = 'Expandir';
+                document.body.style.overflow = '';
+            }
+        }
+
+        function toggleCardFullscreen(chartId) {
+            const card = document.getElementById(`card-${chartId}`);
+            const wrapper = document.getElementById(`wrapper-${chartId}`);
+            const icon = document.getElementById(`icon-fullscreen-${chartId}`);
+            const text = document.getElementById(`text-fullscreen-${chartId}`);
+
+            if (!card.classList.contains('fixed')) {
+                card.classList.remove('rounded-xl', 'card-shadow');
+                card.classList.add('fixed', 'inset-0', 'z-50', 'rounded-none', 'flex', 'flex-col', 'p-6', 'overflow-hidden', 'm-0');
+                wrapper.classList.remove('h-64');
+                wrapper.classList.add('flex-grow', 'h-[calc(100vh-120px)]');
+                icon.className = 'fas fa-compress';
+                text.textContent = 'Contraer';
+                document.body.style.overflow = 'hidden';
+            } else {
+                card.classList.remove('fixed', 'inset-0', 'z-50', 'rounded-none', 'flex', 'flex-col', 'p-6', 'overflow-hidden', 'm-0');
+                card.classList.add('rounded-xl', 'card-shadow');
+                wrapper.classList.remove('flex-grow', 'h-[calc(100vh-120px)]');
+                wrapper.classList.add('h-64');
+                icon.className = 'fas fa-expand';
+                text.textContent = 'Expandir';
+                document.body.style.overflow = '';
+            }
+
+            setTimeout(() => {
+                if (chartId === 'chartSemaforo' && chartSemaforoInst) chartSemaforoInst.resize();
+                if (chartId === 'chartGarantia' && chartGarantiaInst) chartGarantiaInst.resize();
+                if (chartId === 'chartPlazas' && chartPlazasInst) chartPlazasInst.resize();
+            }, 50);
+        }
+
+        function toggleSemaphor(semaphor) {
+            const idx = activeFilters.semaphors.indexOf(semaphor);
+            if (idx > -1) activeFilters.semaphors.splice(idx, 1);
+            else activeFilters.semaphors.push(semaphor);
+            applyFilters();
+        }
+
+        function getFilteredDataExcept(excludeKey) {
+            return globalData.filter(row => {
+                let matchSem = excludeKey === 'semaphors' || activeFilters.semaphors.length === 0 || activeFilters.semaphors.includes(row['Semáforo']);
+                let rowGar = row['Garantía'] || 'No especificada';
+                let matchGar = excludeKey === 'garantias' || activeFilters.garantias.length === 0 || activeFilters.garantias.includes(rowGar);
+                let rowCP = row['C:P'] !== undefined && row['C:P'] !== '' ? String(row['C:P']) : 'N/A';
+                let matchCP = excludeKey === 'cp' || activeFilters.cp.length === 0 || activeFilters.cp.includes(rowCP);
+                let matchPlaza = excludeKey === 'plazaDestino' || !activeFilters.plazaDestino || row['Plaza Destino'] === activeFilters.plazaDestino;
+                let rowPlazaC = row[plazaColumnName] !== undefined && row[plazaColumnName] !== '' ? String(row[plazaColumnName]) : 'N/A';
+                let matchPlazaColC = excludeKey === 'plazaColC' || activeFilters.plazaColC.length === 0 || activeFilters.plazaColC.includes(rowPlazaC);
+                let matchMov = excludeKey === 'movimientos' || activeFilters.movimientos.length === 0 || activeFilters.movimientos.includes(row['Movimiento'] || 'N/A');
+                let rowUlt = row['Fecha último movimiento'] !== undefined && row['Fecha último movimiento'] !== '' ? String(row['Fecha último movimiento']) : 'N/A';
+                let matchUlt = excludeKey === 'ultimosMovimientos' || activeFilters.ultimosMovimientos.length === 0 || activeFilters.ultimosMovimientos.includes(rowUlt);
+
+                let searchVal = activeFilters.search.toLowerCase();
+                let matchSearch = excludeKey === 'search' || !searchVal ||
+                    (String(row['Guía'] || '').toLowerCase().includes(searchVal)) ||
+                    (String(row['Nom cliente'] || '').toLowerCase().includes(searchVal)) ||
+                    (String(row['Plaza Destino'] || '').toLowerCase().includes(searchVal)) ||
+                    (String(row[plazaColumnName] || '').toLowerCase().includes(searchVal)) ||
+                    (String(row['Contenido'] || '').toLowerCase().includes(searchVal)) ||
+                    (String(row['Movimiento'] || '').toLowerCase().includes(searchVal)) ||
+                    (String(row['C:P'] || '').toLowerCase().includes(searchVal));
+
+                return matchSem && matchGar && matchCP && matchPlaza && matchPlazaColC && matchMov && matchUlt && matchSearch;
+            });
+        }
+
+        function openModalFilter(column) {
+            currentModalColumn = column;
+            const modal = document.getElementById('filter-modal');
+            let displayColName = column;
+            if (column === 'C:P') displayColName = 'C.P.';
+            if (column === 'Fecha último movimiento') displayColName = 'Último Movimiento';
+
+            document.getElementById('modal-title').textContent = `Filtrar Columna: ${displayColName}`;
+            document.getElementById('modal-search-input').value = '';
+
+            populateModalCheckboxes();
+            modal.classList.remove('hidden');
+        }
+
+        function closeModalFilter() {
+            document.getElementById('filter-modal').classList.add('hidden');
+            currentModalColumn = null;
+        }
+
+        function populateModalCheckboxes() {
+            const container = document.getElementById('modal-checkboxes-container');
+            container.innerHTML = '';
+            if (!currentModalColumn) return;
+
+            let excludeKey = null;
+            if (currentModalColumn === 'Movimiento') excludeKey = 'movimientos';
+            else if (currentModalColumn === 'Semáforo') excludeKey = 'semaphors';
+            else if (currentModalColumn === 'Garantía') excludeKey = 'garantias';
+            else if (currentModalColumn === 'C:P') excludeKey = 'cp';
+            else if (currentModalColumn === 'Fecha último movimiento') excludeKey = 'ultimosMovimientos';
+
+            const baseData = getFilteredDataExcept(excludeKey);
+            const uniqueValues = [...new Set(baseData.map(r => r[currentModalColumn] !== undefined && r[currentModalColumn] !== '' ? String(r[currentModalColumn]) : 'N/A'))].sort();
+
+            if (uniqueValues.length === 0) {
+                container.innerHTML = '<span class="text-slate-400 text-sm">No hay valores disponibles</span>';
+                return;
+            }
+
+            let currentActiveValues = [];
+            if (currentModalColumn === 'Movimiento') currentActiveValues = activeFilters.movimientos;
+            else if (currentModalColumn === 'Semáforo') currentActiveValues = activeFilters.semaphors;
+            else if (currentModalColumn === 'Garantía') currentActiveValues = activeFilters.garantias;
+            else if (currentModalColumn === 'C:P') currentActiveValues = activeFilters.cp;
+            else if (currentModalColumn === 'Fecha último movimiento') currentActiveValues = activeFilters.ultimosMovimientos;
+
+            let htmlString = '';
+            uniqueValues.forEach(val => {
+                const isChecked = currentActiveValues.includes(val);
+                htmlString += `
+                    <label class="flex items-center gap-2.5 cursor-pointer hover:bg-slate-50 p-1.5 rounded modal-checkbox-label">
+                        <input type="checkbox" value="${esc(val)}" ${isChecked ? 'checked' : ''} class="modal-item-checkbox rounded text-estafeta-red focus:ring-estafeta-red w-4 h-4">
+                        <span class="truncate text-slate-700 font-medium">${esc(val)}</span>
+                    </label>
+                `;
+            });
+            container.innerHTML = htmlString;
+        }
+
+        const modalSearchInput = document.getElementById('modal-search-input');
+        if (modalSearchInput) {
+            modalSearchInput.addEventListener('input', debounce(() => {
+                const searchVal = modalSearchInput.value.toLowerCase();
+                document.querySelectorAll('.modal-checkbox-label').forEach(label => {
+                    const text = label.querySelector('span').textContent.toLowerCase();
+                    label.style.display = text.includes(searchVal) ? 'flex' : 'none';
+                });
+            }, 200));
+        }
+
+        function selectAllModalCheckboxes() {
+            document.querySelectorAll('.modal-item-checkbox').forEach(cb => {
+                if (cb.closest('label').style.display !== 'none') cb.checked = true;
+            });
+        }
+        function deselectAllModalCheckboxes() {
+            document.querySelectorAll('.modal-item-checkbox').forEach(cb => {
+                if (cb.closest('label').style.display !== 'none') cb.checked = false;
+            });
+        }
+
+        function applyModalFilter() {
+            if (!currentModalColumn) return;
+            const selected = [];
+            document.querySelectorAll('.modal-item-checkbox').forEach(cb => { if (cb.checked) selected.push(cb.value); });
+
+            if (currentModalColumn === 'Movimiento') activeFilters.movimientos = selected;
+            else if (currentModalColumn === 'Semáforo') activeFilters.semaphors = selected;
+            else if (currentModalColumn === 'Garantía') activeFilters.garantias = selected;
+            else if (currentModalColumn === 'C:P') activeFilters.cp = selected;
+            else if (currentModalColumn === 'Fecha último movimiento') activeFilters.ultimosMovimientos = selected;
+
+            closeModalFilter();
+            applyFilters();
+        }
+
+        function resetFilters() {
+            activeFilters = { semaphors: [], garantias: [], cp: [], plazaDestino: null, plazaColC: [], movimientos: [], ultimosMovimientos: [], search: '', sortColumn: null, sortDirection: 'asc' };
+            currentTablePage = 0;
+            const searchInput = document.getElementById('table-search');
+            if (searchInput) searchInput.value = '';
+            applyFilters();
+        }
+
+        function handleTableSort(column) {
+            if (activeFilters.sortColumn === column) {
+                activeFilters.sortDirection = activeFilters.sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                activeFilters.sortColumn = column;
+                activeFilters.sortDirection = 'asc';
+            }
+            applyFilters();
+        }
+
+        function updateSortIcons() {
+            const columns = ['Movimiento', 'Guía', 'Semáforo', 'Garantía', 'C:P', 'Plaza origen', 'Plaza Destino', 'Nom cliente', 'Fecha último movimiento', 'Fecha compromiso de entrega'];
+            columns.forEach(col => {
+                const iconEl = document.getElementById(`sort-icon-${col}`);
+                if (!iconEl) return;
+                if (activeFilters.sortColumn === col) {
+                    iconEl.textContent = activeFilters.sortDirection === 'asc' ? '↑' : '↓';
+                    iconEl.className = 'text-estafeta-red font-bold ml-1';
+                } else {
+                    iconEl.textContent = '↕';
+                    iconEl.className = 'text-slate-400 ml-1';
+                }
+            });
+        }
+
+        function applyFilters() {
+            if (globalData.length === 0) return;
+            filteredData = getFilteredDataExcept(null);
+            currentTablePage = 0;
+
+            if (activeFilters.sortColumn) {
+                const col = activeFilters.sortColumn;
+                const dir = activeFilters.sortDirection === 'asc' ? 1 : -1;
+                filteredData.sort((a, b) => {
+                    let valA = a[col] !== undefined && a[col] !== null ? String(a[col]).toLowerCase() : '';
+                    let valB = b[col] !== undefined && b[col] !== null ? String(b[col]).toLowerCase() : '';
+                    return valA.localeCompare(valB, undefined, { numeric: true }) * dir;
+                });
+            }
+
+            withViewTransition(() => { updateUI(); });
+        }
+
+        function updateUI() {
+            updateKPIs();
+            updateFilterBadges();
+            updateChartsIfNeeded();
+            updateSortIcons();
+            updateTable();
+            updateFloatingButton();
+            updateFloatingPlazaButtonText();
+        }
+
+        function updateFloatingButton() {
+            let activeCount = 0;
+            if (activeFilters.semaphors.length > 0) activeCount++;
+            if (activeFilters.garantias.length > 0) activeCount++;
+            if (activeFilters.cp.length > 0) activeCount++;
+            if (activeFilters.plazaDestino) activeCount++;
+            if (activeFilters.plazaColC.length > 0) activeCount++;
+            if (activeFilters.movimientos.length > 0) activeCount++;
+            if (activeFilters.ultimosMovimientos.length > 0) activeCount++;
+            if (activeFilters.search) activeCount++;
+
+            const floatBtn = document.getElementById('floating-reset-btn');
+            const floatText = document.getElementById('floating-reset-text');
+
+            if (activeCount > 0) {
+                floatText.textContent = `Limpiar Filtros (${activeCount})`;
+                floatBtn.classList.remove('hidden');
+            } else {
+                floatBtn.classList.add('hidden');
+            }
+        }
+
+        function updateChartsIfNeeded() {
+            const hash = filteredData.map(r => r['Guía'] || '').join('|') + '|' + activeFilters.semaphors.join(',') + '|' + activeFilters.garantias.join(',') + '|' + activeFilters.plazaDestino;
+            if (hash === lastChartsHash) return;
+            lastChartsHash = hash;
+            updateCharts();
+        }
+
+        function animateNumber(el, to, duration = 900) {
+            if (!el) return;
+            const from = parseInt(el.textContent.replace(/,/g, ''), 10) || 0;
+            if (from === to) return;
+            el.classList.remove('number-updated');
+            void el.offsetWidth;
+            el.classList.add('number-updated');
+            const start = performance.now();
+            const step = (now) => {
+                const p = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.floor(from + (to - from) * eased).toLocaleString();
+                if (p < 1) requestAnimationFrame(step);
+                else el.textContent = to.toLocaleString();
+            };
+            requestAnimationFrame(step);
+        }
+
+        function updateKPIs() {
+            const total = filteredData.length;
+            const vencido = filteredData.filter(r => r['Semáforo'] === 'Vencido').length;
+            const hoy = filteredData.filter(r => r['Semáforo'] === 'Vence hoy').length;
+            const manana = filteredData.filter(r => r['Semáforo'] === 'Vence mañana').length;
+            const dosDias = filteredData.filter(r => r['Semáforo'] === 'Vence en 2 días').length;
+            const tiempo = filteredData.filter(r => r['Semáforo'] === 'En tiempo').length;
+
+            animateNumber(document.getElementById('kpi-total'), total);
+            animateNumber(document.getElementById('kpi-vencido'), vencido);
+            animateNumber(document.getElementById('kpi-hoy'), hoy);
+            animateNumber(document.getElementById('kpi-mañana'), manana);
+            animateNumber(document.getElementById('kpi-2dias'), dosDias);
+            animateNumber(document.getElementById('kpi-tiempo'), tiempo);
+
+            const pctVencido = total > 0 ? (vencido / total) * 100 : 0;
+            const kpiV = document.getElementById('kpi-vencido');
+            kpiV.classList.remove('critical-pulse');
+            if (pctVencido > 20) kpiV.classList.add('critical-pulse');
+        }
+
+        function updateFilterBadges() {
+            const container = document.getElementById('active-filters-container');
+            const badges = document.getElementById('filter-badges');
+            badges.innerHTML = '';
+
+            let hasActive = activeFilters.semaphors.length > 0 || activeFilters.garantias.length > 0 || activeFilters.cp.length > 0 || activeFilters.plazaDestino || activeFilters.plazaColC.length > 0 || activeFilters.movimientos.length > 0 || activeFilters.ultimosMovimientos.length > 0 || activeFilters.search || activeFilters.sortColumn;
+            if (!hasActive) { container.classList.add('hidden'); return; }
+
+            container.classList.remove('hidden');
+
+            if (activeFilters.semaphors.length > 0) {
+                badges.innerHTML += `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1">Semáforo: ${esc(activeFilters.semaphors.join(', '))} <button onclick="activeFilters.semaphors=[]; applyFilters()"><i class="fas fa-times ml-1"></i></button></span>`;
+            }
+            if (activeFilters.garantias.length > 0) {
+                badges.innerHTML += `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1">Garantía: ${esc(activeFilters.garantias.join(', '))} <button onclick="activeFilters.garantias=[]; applyFilters()"><i class="fas fa-times ml-1"></i></button></span>`;
+            }
+            if (activeFilters.cp.length > 0) {
+                badges.innerHTML += `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1">C.P.: ${esc(activeFilters.cp.join(', '))} <button onclick="activeFilters.cp=[]; applyFilters()"><i class="fas fa-times ml-1"></i></button></span>`;
+            }
+            if (activeFilters.plazaDestino) {
+                badges.innerHTML += `<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1">Destino: ${esc(activeFilters.plazaDestino)} <button onclick="activeFilters.plazaDestino=null; applyFilters()"><i class="fas fa-times ml-1"></i></button></span>`;
+            }
+            if (activeFilters.plazaColC.length > 0) {
+                badges.innerHTML += `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1">${esc(plazaColumnName)}: ${esc(activeFilters.plazaColC.join(', '))} <button onclick="activeFilters.plazaColC=[]; applyFilters()"><i class="fas fa-times ml-1"></i></button></span>`;
+            }
+            if (activeFilters.movimientos.length > 0) {
+                badges.innerHTML += `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1">Movimiento: ${esc(activeFilters.movimientos.join(', '))} <button onclick="activeFilters.movimientos=[]; applyFilters()"><i class="fas fa-times ml-1"></i></button></span>`;
+            }
+            if (activeFilters.ultimosMovimientos.length > 0) {
+                badges.innerHTML += `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1">Último Movimiento: ${esc(activeFilters.ultimosMovimientos.join(', '))} <button onclick="activeFilters.ultimosMovimientos=[]; applyFilters()"><i class="fas fa-times ml-1"></i></button></span>`;
+            }
+            if (activeFilters.search) {
+                badges.innerHTML += `<span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1">Búsqueda: "${esc(activeFilters.search)}" <button onclick="activeFilters.search=''; document.getElementById('table-search').value=''; applyFilters()"><i class="fas fa-times ml-1"></i></button></span>`;
+            }
+            if (activeFilters.sortColumn) {
+                let sortColName = activeFilters.sortColumn;
+                if (sortColName === 'C:P') sortColName = 'C.P.';
+                if (sortColName === 'Fecha último movimiento') sortColName = 'Último Movimiento';
+                let sortText = `${sortColName} (${activeFilters.sortDirection === 'asc' ? 'A-Z' : 'Z-A'})`;
+                badges.innerHTML += `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1">Orden: ${esc(sortText)} <button onclick="activeFilters.sortColumn=null; applyFilters()"><i class="fas fa-times ml-1"></i></button></span>`;
+            }
+        }
+
+        function updateCharts() {
+            const semCounts = {
+                'Vencido': filteredData.filter(r => r['Semáforo'] === 'Vencido').length,
+                'Vence hoy': filteredData.filter(r => r['Semáforo'] === 'Vence hoy').length,
+                'Vence mañana': filteredData.filter(r => r['Semáforo'] === 'Vence mañana').length,
+                'Vence en 2 días': filteredData.filter(r => r['Semáforo'] === 'Vence en 2 días').length,
+                'En tiempo': filteredData.filter(r => r['Semáforo'] === 'En tiempo').length,
+            };
+
+            const ctxSem = document.getElementById('chartSemaforo').getContext('2d');
+            if (chartSemaforoInst) chartSemaforoInst.destroy();
+            chartSemaforoInst = new Chart(ctxSem, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(semCounts),
+                    datasets: [{
+                        label: 'Guías',
+                        data: Object.values(semCounts),
+                        backgroundColor: Object.keys(semCounts).map(k => {
+                            const isSelected = activeFilters.semaphors.length === 0 || activeFilters.semaphors.includes(k);
+                            return isSelected ? semaphorColors[k] : '#CBD5E1';
+                        }),
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((ctx.parsed.y / total) * 100).toFixed(1) : 0;
+                                    return ` ${ctx.label}: ${ctx.parsed.y} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { ticks: { font: { size: 10 } } } },
+                    onClick: (e, items) => { if (items.length) toggleSemaphor(Object.keys(semCounts)[items[0].index]); }
+                }
+            });
+
+            const garCounts = {};
+            filteredData.forEach(r => {
+                let g = r['Garantía'] || 'No especificada';
+                garCounts[g] = (garCounts[g] || 0) + 1;
+            });
+
+            const ctxGar = document.getElementById('chartGarantia').getContext('2d');
+            if (chartGarantiaInst) chartGarantiaInst.destroy();
+            chartGarantiaInst = new Chart(ctxGar, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(garCounts),
+                    datasets: [{ label: 'Guías', data: Object.values(garCounts), backgroundColor: '#DA291C', borderRadius: 6 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((ctx.parsed.y / total) * 100).toFixed(1) : 0;
+                                    return ` ${ctx.label}: ${ctx.parsed.y} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                    onClick: (e, items) => {
+                        if (items.length) {
+                            const label = Object.keys(garCounts)[items[0].index];
+                            activeFilters.garantias = (activeFilters.garantias.length === 1 && activeFilters.garantias[0] === label) ? [] : [label];
+                            applyFilters();
+                        }
+                    }
+                }
+            });
+
+            const plazaCounts = {};
+            filteredData.forEach(r => {
+                let p = r['Plaza Destino'] || 'N/A';
+                plazaCounts[p] = (plazaCounts[p] || 0) + 1;
+            });
+            const sortedPlazas = Object.entries(plazaCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            const isDark = document.body.classList.contains('dark-mode');
+            const plazaBarColor = isDark ? '#60A5FA' : '#3B82F6';
+
+            const ctxPlaza = document.getElementById('chartPlazas').getContext('2d');
+            if (chartPlazasInst) chartPlazasInst.destroy();
+            chartPlazasInst = new Chart(ctxPlaza, {
+                type: 'bar',
+                data: {
+                    labels: sortedPlazas.map(x => x[0]),
+                    datasets: [{ label: 'Guías', data: sortedPlazas.map(x => x[1]), backgroundColor: plazaBarColor, borderRadius: 6 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((ctx.parsed.y / total) * 100).toFixed(1) : 0;
+                                    return ` ${ctx.label}: ${ctx.parsed.y} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                    onClick: (e, items) => {
+                        if (items.length) {
+                            const label = sortedPlazas[items[0].index][0];
+                            activeFilters.plazaDestino = activeFilters.plazaDestino === label ? null : label;
+                            applyFilters();
+                        }
+                    }
+                }
+            });
+        }
+
+        function changeTablePage(targetPage, totalPages) {
+            if (totalPages <= 0) { currentTablePage = 0; return; }
+            if (targetPage < 0) currentTablePage = totalPages - 1;
+            else if (targetPage >= totalPages) currentTablePage = 0;
+            else currentTablePage = targetPage;
+            updateTable();
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('data-table-body');
+            const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE) || 1;
+
+            if (currentTablePage >= totalPages) currentTablePage = totalPages - 1;
+            if (currentTablePage < 0) currentTablePage = 0;
+
+            const startIdx = currentTablePage * ITEMS_PER_PAGE;
+            const endIdx = startIdx + ITEMS_PER_PAGE;
+            const displayData = filteredData.slice(startIdx, endIdx);
+
+            document.getElementById('table-record-counter').textContent = `${filteredData.length} paquetes`;
+
+            if (displayData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="p-4 text-center text-slate-400">No se encontraron registros con los filtros actuales.</td></tr>`;
+                document.getElementById('table-pagination-info').innerHTML = `<span>Mostrando 0 de ${filteredData.length} registros</span><div></div>`;
+                return;
+            }
+
+            let rowsHtml = '';
+            displayData.forEach(row => {
+                let color = semaphorColors[row['Semáforo']] || '#64748B';
+                let cpVal = row['C:P'] !== undefined && row['C:P'] !== '' ? row['C:P'] : 'N/A';
+                rowsHtml += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 font-semibold text-slate-700">${esc(row['Movimiento'] || 'N/A')}</td>
+                        <td class="p-3 font-mono text-xs font-semibold text-slate-700">${esc(row['Guía'] || 'N/A')}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-semibold text-white" style="background-color: ${color}">${esc(row['Semáforo'] || 'Sin estado')}</span></td>
+                        <td class="p-3">${esc(row['Garantía'] || 'No especificada')}</td>
+                        <td class="p-3 font-mono text-xs text-slate-600">${esc(cpVal)}</td>
+                        <td class="p-3 font-semibold text-slate-600">${esc(row['Plaza origen'] || 'N/A')}</td>
+                        <td class="p-3 font-semibold text-slate-600">${esc(row['Plaza Destino'] || 'N/A')}</td>
+                        <td class="p-3 truncate max-w-[150px]" title="${esc(row['Nom cliente'] || '')}">${esc(row['Nom cliente'] || 'N/A')}</td>
+                        <td class="p-3 text-xs text-slate-500">${esc(row['Fecha último movimiento'] || 'N/A')}</td>
+                        <td class="p-3 text-xs text-slate-500">${esc(row['Fecha compromiso de entrega'] || 'N/A')}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = rowsHtml;
+
+            const paginationInfo = document.getElementById('table-pagination-info');
+            paginationInfo.innerHTML = `
+                <span>Mostrando del ${startIdx + 1} al ${Math.min(endIdx, filteredData.length)} de ${filteredData.length} registros</span>
+                <div class="flex items-center gap-2">
+                    <button onclick="changeTablePage(${currentTablePage - 1}, ${totalPages})" class="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold transition flex items-center gap-1 shadow-sm">
+                        <i class="fas fa-chevron-left"></i> Anterior
+                    </button>
+                    <span class="font-bold text-slate-700 px-2">Página ${currentTablePage + 1} de ${totalPages}</span>
+                    <button onclick="changeTablePage(${currentTablePage + 1}, ${totalPages})" class="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold transition flex items-center gap-1 shadow-sm">
+                        Siguiente <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        function downloadFilteredExcel() {
+            if (!filteredData || filteredData.length === 0) { alert('No hay datos disponibles para exportar.'); return; }
+            try {
+                const worksheet = XLSX.utils.json_to_sheet(filteredData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Detalle de Guías");
+                XLSX.writeFile(workbook, "Detalle_Guias_Filtradas.xlsx");
+            } catch (err) { console.error(err); alert('Ocurrió un error al generar el archivo Excel.'); }
+        }
+
+        const tableSearchInput = document.getElementById('table-search');
+        if (tableSearchInput) {
+            tableSearchInput.addEventListener('input', debounce((e) => {
+                activeFilters.search = e.target.value.trim();
+                applyFilters();
+            }, 250));
+        }
+
+        function initRipple() {
+            document.body.addEventListener('click', (e) => {
+                const btn = e.target.closest('button');
+                if (!btn || btn.disabled) return;
+                if (btn.id === 'theme-toggle') return;
+                if (!btn.classList.contains('ripple-host')) btn.classList.add('ripple-host');
+                const rect = btn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple-effect';
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 650);
+            }, true);
+        }
+
+        function runVisualEffects() {
+            document.querySelectorAll('.kpi-card-glow').forEach((card, i) => {
+                card.classList.remove('card-enter');
+                void card.offsetWidth;
+                card.classList.add('card-enter');
+                card.style.animationDelay = (i * 60) + 'ms';
+            });
+        }
+
+        function aplicarTema(tema) {
+            const icon = document.getElementById('theme-toggle-icon');
+            if (tema === 'dark') { document.body.classList.add('dark-mode'); if (icon) icon.className = 'fa-solid fa-sun'; }
+            else { document.body.classList.remove('dark-mode'); if (icon) icon.className = 'fa-solid fa-moon'; }
+
+            if (typeof filteredData !== 'undefined' && filteredData.length > 0) {
+                lastChartsHash = '';
+                updateChartsIfNeeded();
+            }
+
+            try { if (window.parent && window.parent !== window) window.parent.postMessage({ theme: tema }, '*'); } catch (e) {}
+        }
+
+        function initTema() {
+            const stored = localStorage.getItem('plataforma-theme');
+            if (stored === 'dark' || stored === 'light') aplicarTema(stored);
+            else {
+                const parentTheme = localStorage.getItem('panel-theme');
+                if (parentTheme === 'dark' || parentTheme === 'light') aplicarTema(parentTheme);
+                else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) aplicarTema('dark');
+            }
+            const btn = document.getElementById('theme-toggle');
+            if (btn) {
+                btn.onclick = () => {
+                    const isDark = document.body.classList.contains('dark-mode');
+                    const next = isDark ? 'light' : 'dark';
+                    aplicarTema(next);
+                    localStorage.setItem('plataforma-theme', next);
+                    try { if (window.parent && window.parent !== window) window.parent.postMessage({ theme: next }, '*'); } catch (e) {}
+                };
+            }
+            window.addEventListener('message', (e) => {
+                if (e.data && e.data.theme === 'dark') { aplicarTema('dark'); localStorage.setItem('plataforma-theme', 'dark'); }
+                else if (e.data && e.data.theme === 'light') { aplicarTema('light'); localStorage.setItem('plataforma-theme', 'light'); }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTema();
+            initRipple();
+            injectBell();      // 🔔 Inyectar campana en el header
+            updateBadge();     // Mostrar badge si hay notificaciones previas en localStorage
+        });
+    </script>
+</body>
+</html>

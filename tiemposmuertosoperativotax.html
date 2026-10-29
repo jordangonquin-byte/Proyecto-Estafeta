@@ -1,0 +1,2766 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Gerencial de Logística - Estafeta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <style>
+        .estafeta-red { background-color: #DA291C; }
+        .estafeta-red-text { color: #DA291C; }
+        .estafeta-border { border-color: #DA291C; }
+        #crono-map, #map, #gps-map { height: 420px; width: 100%; border-radius: 0.75rem; z-index: 10; }
+        #gps-map { height: 650px; }
+        .horizontal-scroll-container::-webkit-scrollbar { height: 8px; }
+        .horizontal-scroll-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .horizontal-scroll-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .horizontal-scroll-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .fullscreen-section { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; margin: 0 !important; border-radius: 0 !important; overflow-y: auto !important; background-color: #ffffff !important; box-shadow: none !important; padding: 2rem !important; }
+        .fullscreen-section #gps-map { height: calc(100vh - 220px) !important; }
+        #map-card.fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; border-radius: 0 !important; padding: 16px !important; background-color: white !important; box-shadow: none !important; display: flex; flex-direction: column; }
+        #map-card.fullscreen #map { flex-grow: 1 !important; height: auto !important; }
+        #custom-filter-modal { z-index: 10000 !important; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased min-h-screen flex flex-col relative pb-20">
+    <header class="estafeta-red text-white shadow-md z-20">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3"><i class="fa-solid fa-truck-fast text-3xl"></i><h1 class="text-lg font-bold tracking-wide">Tiempos Muertos en Ruta</h1></div>
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-3 bg-red-800 bg-opacity-60 px-4 py-2 rounded-xl border border-red-600 hover:bg-opacity-80 transition-all cursor-pointer shadow-inner" id="banner-drop-zone" onclick="document.getElementById('file-input').click()">
+                    <input type="file" id="file-input" class="hidden" accept=".csv, .xlsx, .xls">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-white"></i>
+                    <div class="text-left"><p id="file-status" class="text-sm font-semibold">Cargar Archivo Excel</p><p class="text-xs text-red-200">Arrastra o haz clic aquí</p></div>
+                </div>
+                <div id="header-actions-container" class="flex items-center space-x-3"></div>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+        <div id="dashboard-content" class="hidden space-y-6 w-full">
+            <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-gray-100"><h3 class="text-lg font-bold text-gray-800 flex items-center"><i class="fa-solid fa-chart-pie estafeta-red-text mr-2"></i> Avance General</h3><div class="text-xs font-semibold text-gray-500">Total Registros: <span id="status-board-total" class="font-bold text-gray-800">0</span></div></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-green-50/60 border border-green-200 rounded-xl p-4 space-y-3 shadow-xs"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-green-800 flex items-center"><i class="fa-solid fa-circle-check text-green-600 mr-1.5"></i> Confirmados</span><span id="badge-total-confirmados" class="bg-green-200 text-green-900 text-xs font-bold px-2.5 py-1 rounded-lg">0</span></div><div class="text-xs text-green-700">Proporción: <span id="percent-confirmados" class="font-bold">0%</span></div></div>
+                    <div class="bg-red-50/60 border border-red-200 rounded-xl p-4 space-y-3 shadow-xs"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-red-800 flex items-center"><i class="fa-solid fa-circle-exclamation estafeta-red-text mr-1.5"></i> Excepcionados</span><span id="badge-total-excepcionados" class="bg-red-200 text-red-900 text-xs font-bold px-2.5 py-1 rounded-lg">0</span></div><div class="text-xs text-red-700">Proporción: <span id="percent-excepcionados" class="font-bold">0%</span></div></div>
+                    <div class="bg-blue-50/60 border border-blue-200 rounded-xl p-4 space-y-3 shadow-xs"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-blue-800 flex items-center"><i class="fa-solid fa-barcode text-blue-600 mr-1.5"></i> Órdenes de Recolección (OR)</span><span id="badge-total-or" class="bg-blue-200 text-blue-900 text-xs font-bold px-2.5 py-1 rounded-lg">0</span></div><div class="text-xs text-blue-700">Proporción: <span id="percent-or" class="font-bold">0%</span></div></div>
+                    <div class="bg-yellow-50/60 border border-yellow-200 rounded-xl p-4 space-y-3 shadow-xs"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-yellow-800 flex items-center"><i class="fa-solid fa-clock-rotate-left text-yellow-600 mr-1.5"></i> Pendientes</span><span id="badge-total-pendientes" class="bg-yellow-200 text-yellow-900 text-xs font-bold px-2.5 py-1 rounded-lg">0</span></div><div class="text-xs text-yellow-700">Proporción: <span id="percent-pendientes" class="font-bold">0%</span></div></div>
+                </div>
+                <div class="pt-3 border-t border-gray-100">
+                    <div class="flex justify-between items-center cursor-pointer select-none bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all" onclick="toggleStatusTableSection()">
+                        <div class="flex items-center space-x-2.5"><i id="status-table-collapse-icon" class="fa-solid fa-chevron-down text-xs text-gray-500 transition-transform duration-300" style="transform: rotate(-90deg);"></i><span class="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-table-list estafeta-red-text mr-1.5"></i> Tabla Detallada: Categoría / Estatus Detallado</span></div>
+                        <span class="text-[10px] text-gray-400 font-medium">Clic para expandir / minimizar</span>
+                    </div>
+                    <div id="status-table-section-body" class="overflow-x-auto pt-3" style="display: none;">
+                        <table class="w-full text-left text-xs text-gray-600 border-collapse">
+                            <thead><tr class="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase"><th class="p-3">Categoría / Estatus Detallado</th><th class="p-3 text-center">Cantidad de Registros</th><th class="p-3 text-center">Proporción (%)</th></tr></thead>
+                            <tbody id="status-board-tbody" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-gray-100 cursor-pointer select-none bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all" onclick="toggleCardsSection()">
+                    <div class="flex items-center space-x-2.5"><i id="cards-collapse-icon" class="fa-solid fa-chevron-down text-xs text-gray-500 transition-transform duration-300" style="transform: rotate(-90deg);"></i><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-address-card estafeta-red-text mr-1.5"></i> Tarjetas de Registro</h3></div>
+                    <span class="text-[10px] text-gray-400 font-medium">Clic para expandir / minimizar</span>
+                </div>
+                <div id="cards-section-body" class="space-y-4 pt-2" style="display: none;">
+                    <div class="bg-gray-50 border border-gray-200/60 rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-500">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="text-gray-600 font-medium">Filtros:</span>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="openCustomFilterModal('ruta')" title="Filtrar Ruta" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                                <button onclick="openCustomFilterModal('garantia')" title="Filtrar Garantía" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                            </div>
+                            <div id="status-filters-container" class="flex flex-wrap items-center gap-1.5 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
+                                <button onclick="setStatusFilter('ALL')" id="btn-status-all" class="px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm">Todos</button>
+                                <button onclick="setStatusFilter('CONFIRMADO')" id="btn-status-confirmado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Confirmados</button>
+                                <button onclick="setStatusFilter('EXCEPCIONADO')" id="btn-status-excepcionado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Excepcionados</button>
+                                <button onclick="setStatusFilter('PENDIENTE')" id="btn-status-pendiente" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Pendientes</button>
+                            </div>
+                            <button onclick="toggleProgramadaVisibility()" id="btn-toggle-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="prog-toggle-icon"></i><span id="prog-toggle-text">Ocultar Programadas</span></button>
+                            <div class="relative w-full sm:w-56"><span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span><input type="text" id="table-advanced-search" placeholder="Buscador avanzado..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm"></div>
+                        </div>
+                        <div><span class="font-semibold text-gray-700" id="table-row-count">0</span> tarjetas visibles</div>
+                    </div>
+                    <div id="cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-1"></div>
+                    <div id="pagination-container" class="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-600 gap-3">
+                        <div id="pagination-info" class="font-medium">Mostrando página <span id="current-page-num" class="font-bold text-gray-800">1</span> de <span id="total-pages-num" class="font-bold text-gray-800">1</span></div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changePage(-1)" class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 font-semibold text-gray-700 shadow-sm transition-all flex items-center space-x-1"><i class="fa-solid fa-chevron-left text-[10px]"></i><span>Anterior</span></button>
+                            <button onclick="changePage(1)" class="px-3 py-1.5 estafeta-red text-white rounded-lg hover:bg-red-700 font-semibold shadow-sm transition-all flex items-center space-x-1"><span>Siguiente</span><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-gray-100 cursor-pointer select-none bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all" onclick="toggleDeadTimesSection()">
+                    <div class="flex items-center space-x-2.5"><i id="dead-times-collapse-icon" class="fa-solid fa-chevron-down text-xs text-gray-500 transition-transform duration-300" style="transform: rotate(-90deg);"></i><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-clock estafeta-red-text mr-1.5"></i> Tiempos Muertos entre Entregas</h3></div>
+                    <span class="text-[10px] text-gray-400 font-medium">Clic para expandir / minimizar</span>
+                </div>
+                <div id="dead-times-section-body" class="space-y-4 pt-2" style="display: none;">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-gray-600 border-collapse">
+                            <thead><tr class="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase"><th class="p-3">#</th><th class="p-3">Ruta</th><th class="p-3 text-center">Total Eventos</th><th class="p-3 text-center">Tiempo Muerto Promedio</th><th class="p-3 text-center">Tiempo Muerto Máximo</th><th class="p-3 text-center">Tiempo Muerto Total (Suma)</th></tr></thead>
+                            <tbody id="dead-times-tbody" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                    <div id="dead-times-pagination-container" class="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-600 gap-3">
+                        <div id="dead-times-pagination-info" class="font-medium">Mostrando página <span id="dt-current-page-num" class="font-bold text-gray-800">1</span> de <span id="dt-total-pages-num" class="font-bold text-gray-800">1</span></div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changeDeadTimesPage(-1)" class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 font-semibold text-gray-700 shadow-sm transition-all flex items-center space-x-1"><i class="fa-solid fa-chevron-left text-[10px]"></i><span>Anterior</span></button>
+                            <button onclick="changeDeadTimesPage(1)" class="px-3 py-1.5 estafeta-red text-white rounded-lg hover:bg-red-700 font-semibold shadow-sm transition-all flex items-center space-x-1"><span>Siguiente</span><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-gray-100 cursor-pointer select-none bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all" onclick="toggleCronoSection()">
+                    <div class="flex items-center space-x-2.5"><i id="crono-collapse-icon" class="fa-solid fa-chevron-down text-xs text-gray-500 transition-transform duration-300" style="transform: rotate(-90deg);"></i><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-clock-rotate-left estafeta-red-text mr-1.5"></i> Detalle Cronológico de Tiempos Muertos</h3></div>
+                    <div class="flex items-center space-x-3"><span class="font-semibold text-gray-700 text-xs"><span id="crono-row-count">0</span> registros visibles</span><span class="text-[10px] text-gray-400 font-medium">Clic para expandir / minimizar</span></div>
+                </div>
+                <div id="crono-section-body" class="space-y-4 pt-2" style="display: none;">
+                    <div class="bg-gray-50 border border-gray-200/60 rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-500">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="text-gray-600 font-medium">Filtros:</span>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="openCustomFilterModal('crono-ruta')" title="Filtrar Ruta" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                                <button onclick="openCustomFilterModal('crono-garantia')" title="Filtrar Garantía" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                            </div>
+                            <div id="crono-status-filters-container" class="flex flex-wrap items-center gap-1.5 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
+                                <button onclick="setCronoStatusFilter('ALL')" id="btn-crono-status-all" class="px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm">Todos</button>
+                                <button onclick="setCronoStatusFilter('CONFIRMADO')" id="btn-crono-status-confirmado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Confirmados</button>
+                                <button onclick="setCronoStatusFilter('EXCEPCIONADO')" id="btn-crono-status-excepcionado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Excepcionados</button>
+                                <button onclick="setCronoStatusFilter('PENDIENTE')" id="btn-crono-status-pendiente" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Pendientes</button>
+                            </div>
+                            <button onclick="toggleCronoProgramadaVisibility()" id="btn-toggle-crono-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="crono-prog-toggle-icon"></i><span id="crono-prog-toggle-text">Ocultar Programadas</span></button>
+                            <div class="relative w-full sm:w-56"><span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span><input type="text" id="crono-advanced-search" placeholder="Buscador cronológico (ej. guía, OR)..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm"></div>
+                            <div class="flex items-center space-x-2 bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs shadow-sm"><label for="crono-sort-select" class="font-semibold text-gray-600 flex items-center"><i class="fa-solid fa-arrow-down-wide-short estafeta-red-text mr-1.5"></i>Ordenar:</label><select id="crono-sort-select" onchange="onCronoSortChange()" class="bg-transparent font-medium text-gray-800 focus:outline-none cursor-pointer"><option value="desc">Mayor a Menor</option><option value="asc">Menor a Mayor</option></select></div>
+                        </div>
+                    </div>
+                    <div id="crono-search-kpis-container" class="hidden space-y-4 pt-1 pb-3 border-b border-gray-100"><div class="text-xs font-bold text-gray-700 flex items-center"><i class="fa-solid fa-circle-info estafeta-red-text mr-1.5"></i> Resultado de búsqueda (Guía Anterior y Guía Actual):</div><div id="crono-kpis-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-gray-600 border-collapse">
+                            <thead><tr class="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase"><th class="p-3">#</th><th class="p-3">Ruta</th><th class="p-3 text-center">Hora Anterior</th><th class="p-3">Guía / OR Actual</th><th class="p-3 text-center">Hora Actual</th><th class="p-3 text-center">Tiempo Muerto</th></tr></thead>
+                            <tbody id="crono-dead-times-tbody" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                    <div id="crono-pagination-container" class="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-600 gap-3">
+                        <div id="crono-pagination-info" class="font-medium">Mostrando página <span id="crono-current-page-num" class="font-bold text-gray-800">1</span> de <span id="crono-total-pages-num" class="font-bold text-gray-800">1</span></div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changeCronoPage(-1)" class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 font-semibold text-gray-700 shadow-sm transition-all flex items-center space-x-1"><i class="fa-solid fa-chevron-left text-[10px]"></i><span>Anterior</span></button>
+                            <button onclick="changeCronoPage(1)" class="px-3 py-1.5 estafeta-red text-white rounded-lg hover:bg-red-700 font-semibold shadow-sm transition-all flex items-center space-x-1"><span>Siguiente</span><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                        </div>
+                    </div>
+                    <div id="crono-map-wrapper" class="hidden bg-gray-50 border border-gray-200/90 rounded-xl p-4 space-y-2.5 shadow-sm mt-6">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-bold text-gray-800 flex items-center"><i class="fa-solid fa-map-location-dot estafeta-red-text mr-1.5"></i> Geolocalización de Guía Anterior vs Guía Actual</span>
+                            <span class="text-[10px] text-gray-500 bg-white px-2.5 py-1 rounded-md border border-gray-200 shadow-xs"><i class="fa-solid fa-circle text-[8px] text-gray-500 mr-1"></i> Anterior (Gris) &nbsp;|&nbsp; <i class="fa-solid fa-circle text-[8px] text-red-600 mr-1"></i> Actual (Rojo)</span>
+                        </div>
+                        <div id="crono-map"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="timeline-section-card" class="bg-white p-6 rounded-xl shadow-sm space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
+                    <div class="flex items-center space-x-2.5 cursor-pointer select-none flex-grow" onclick="toggleTimelineSection()"><i id="timeline-collapse-icon" class="fa-solid fa-chevron-down text-xs text-gray-500 transition-transform duration-300" style="transform: rotate(-90deg);"></i><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-timeline estafeta-red-text mr-1.5"></i> Línea de Tiempo de Eventos Ejecutados</h3></div>
+                    <div class="flex items-center space-x-3">
+                        <span class="font-semibold text-gray-700 text-xs bg-red-50 estafeta-red-text px-3 py-1 rounded-full"><span id="timeline-row-count">0</span> eventos</span>
+                        <button onclick="toggleTimelineFullscreen(event)" id="timeline-fullscreen-btn" title="Pantalla completa" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i id="timeline-fullscreen-icon" class="fa-solid fa-expand text-xs"></i></button>
+                        <span class="text-[10px] text-gray-400 font-medium cursor-pointer select-none" onclick="toggleTimelineSection()">Clic para expandir / minimizar</span>
+                    </div>
+                </div>
+                <div id="timeline-section-body" class="space-y-4 pt-2" style="display: none;">
+                    <div class="bg-gray-50 border border-gray-200/60 rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-500">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="text-gray-600 font-medium">Filtros:</span>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="openCustomFilterModal('timeline-ruta')" title="Filtrar Ruta" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                                <button onclick="openCustomFilterModal('timeline-garantia')" title="Filtrar Garantía" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                            </div>
+                            <div id="timeline-status-filters-container" class="flex flex-wrap items-center gap-1.5 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
+                                <button onclick="setTimelineStatusFilter('ALL')" id="btn-timeline-status-all" class="px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm">Todos</button>
+                                <button onclick="setTimelineStatusFilter('CONFIRMADO')" id="btn-timeline-status-confirmado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Confirmados</button>
+                                <button onclick="setTimelineStatusFilter('EXCEPCIONADO')" id="btn-timeline-status-excepcionado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Excepcionados</button>
+                                <button onclick="setTimelineStatusFilter('PENDIENTE')" id="btn-timeline-status-pendiente" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Pendientes</button>
+                            </div>
+                            <button onclick="toggleTimelineProgramadaVisibility()" id="btn-toggle-timeline-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="timeline-prog-toggle-icon"></i><span id="timeline-prog-toggle-text">Ocultar Programadas</span></button>
+                            <div class="relative w-full sm:w-48"><span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span><input type="text" id="timeline-advanced-search" placeholder="Buscar texto..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm"></div>
+                        </div>
+                    </div>
+                    <div id="timeline-grid-container" class="horizontal-scroll-container flex space-x-4 overflow-x-auto pb-4 pt-1 w-full"></div>
+                    <div id="timeline-pagination-container" class="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-600 gap-3">
+                        <div id="timeline-pagination-info" class="font-medium">Mostrando página <span id="timeline-current-page-num" class="font-bold text-gray-800">1</span> de <span id="timeline-total-pages-num" class="font-bold text-gray-800">1</span></div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changeTimelinePage(-1)" class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 font-semibold text-gray-700 shadow-sm transition-all flex items-center space-x-1"><i class="fa-solid fa-chevron-left text-[10px]"></i><span>Anterior</span></button>
+                            <button onclick="changeTimelinePage(1)" class="px-3 py-1.5 estafeta-red text-white rounded-lg hover:bg-red-700 font-semibold shadow-sm transition-all flex items-center space-x-1"><span>Siguiente</span><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                        </div>
+                    </div>
+                    <div id="map-card" class="bg-white p-6 rounded-xl shadow-sm transition-all duration-300 mt-6 border border-gray-200/90">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                            <h3 class="text-lg font-bold text-gray-800 flex items-center"><i class="fa-solid fa-map-location-dot estafeta-red-text mr-2"></i> Secuencia Cronológica y Ubicaciones en Mapa</h3>
+                            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                                <div class="relative w-full sm:w-64"><span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-red-500"><i class="fa-solid fa-filter text-sm"></i></span><input type="text" id="sequence-search-input" placeholder="Filtrar secuencia Ej: 1, 3, 5" class="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium transition-all"></div>
+                                <button id="toggle-lines-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm"><i id="lines-icon" class="fa-solid fa-eye-slash"></i><span id="lines-text">Mostrar Líneas</span></button>
+                                <button id="toggle-fullscreen-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm"><i id="fullscreen-icon" class="fa-solid fa-expand"></i><span id="fullscreen-text">Pantalla Completa</span></button>
+                            </div>
+                        </div>
+                        <div id="map" class="h-96 rounded-lg w-full z-10"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="gps-map-section-card" class="bg-white p-6 rounded-xl shadow-sm space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
+                    <div class="flex items-center space-x-2.5 cursor-pointer select-none flex-grow" onclick="toggleGpsMapSection()"><i id="gps-map-collapse-icon" class="fa-solid fa-chevron-down text-xs text-gray-500 transition-transform duration-300" style="transform: rotate(0deg);"></i><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-map-location-dot estafeta-red-text mr-1.5"></i> Mapa GPS</h3></div>
+                    <div class="flex items-center space-x-3">
+                        <span class="font-semibold text-gray-700 text-xs bg-red-50 estafeta-red-text px-3 py-1 rounded-full"><span id="gps-map-row-count">0</span> ubicaciones</span>
+                        <button onclick="toggleGpsMapFullscreen(event)" id="gps-map-fullscreen-btn" title="Pantalla completa" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i id="gps-map-fullscreen-icon" class="fa-solid fa-expand text-xs"></i></button>
+                        <span class="text-[10px] text-gray-400 font-medium cursor-pointer select-none" onclick="toggleGpsMapSection()">Clic para expandir / minimizar</span>
+                    </div>
+                </div>
+                <div id="gps-map-section-body" class="space-y-4 pt-2" style="display: block;">
+                    <div class="bg-gray-50 border border-gray-200/60 rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-500">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="text-gray-600 font-medium">Filtros:</span>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="openCustomFilterModal('map-ruta')" title="Filtrar Ruta" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                                <button onclick="openCustomFilterModal('map-garantia')" title="Filtrar Garantía" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                            </div>
+                            <div id="map-status-filters-container" class="flex flex-wrap items-center gap-1.5 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
+                                <button onclick="setMapStatusFilter('ALL')" id="btn-map-status-all" class="px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm">Todos</button>
+                                <button onclick="setMapStatusFilter('CONFIRMADO')" id="btn-map-status-confirmado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Confirmados</button>
+                                <button onclick="setMapStatusFilter('EXCEPCIONADO')" id="btn-map-status-excepcionado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Excepcionados</button>
+                                <button onclick="setMapStatusFilter('PENDIENTE')" id="btn-map-status-pendiente" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Pendientes</button>
+                            </div>
+                            <button onclick="toggleMapProgramadaVisibility()" id="btn-toggle-map-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="map-prog-toggle-icon"></i><span id="map-prog-toggle-text">Ocultar Programadas</span></button>
+                            <div class="relative w-full sm:w-64"><span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span><input type="text" id="map-advanced-search" placeholder="Buscar texto..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm"></div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 border border-gray-200/90 rounded-xl p-4 shadow-sm"><div id="gps-map"></div></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="card-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 relative animate-in fade-in zoom-in duration-200">
+            <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+                <div class="flex items-center space-x-2"><i class="fa-solid fa-barcode estafeta-red-text text-lg"></i><h3 id="modal-title" class="text-sm font-bold text-gray-800">Guía</h3></div>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 p-1.5 rounded-full transition-all"><i class="fa-solid fa-xmark text-xs"></i></button>
+            </div>
+            <div id="modal-body" class="space-y-2 max-h-[70vh] overflow-y-auto pr-2 text-xs"></div>
+            <div class="pt-2 border-t border-gray-100 flex justify-end"><button onclick="closeModal()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold rounded-lg text-xs transition-all">Cerrar</button></div>
+        </div>
+    </div>
+
+    <div id="custom-filter-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col">
+            <div class="bg-gray-900 text-white px-5 py-3.5 flex justify-between items-center">
+                <div class="flex items-center space-x-2"><i class="fa-solid fa-filter text-red-500 text-sm"></i><h3 id="custom-modal-title" class="text-sm font-bold tracking-wide">Filtrar</h3></div>
+                <button onclick="closeCustomFilterModal()" class="text-gray-400 hover:text-white p-1 rounded-full transition-all"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            <div class="p-5 space-y-4">
+                <div class="relative w-full"><span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span><input type="text" id="custom-modal-search" placeholder="Buscar..." oninput="filterCustomModalList()" class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs"></div>
+                <div class="flex justify-between items-center text-xs"><span class="text-gray-600 font-medium" id="custom-modal-subtitle">Seleccionar opciones:</span><div class="space-x-2 font-semibold"><button onclick="setAllCustomOptions(true)" class="text-red-600 hover:text-red-700 transition-all">Todas</button><span class="text-gray-300">|</span><button onclick="setAllCustomOptions(false)" class="text-red-600 hover:text-red-700 transition-all">Ninguna</button></div></div>
+                <div id="custom-options-container" class="border border-gray-200 rounded-xl p-3 max-h-56 overflow-y-auto space-y-2 text-xs bg-gray-50"></div>
+            </div>
+            <div class="px-5 py-3.5 bg-gray-50 border-t border-gray-100 flex justify-end space-x-2">
+                <button onclick="closeCustomFilterModal()" class="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 font-semibold rounded-xl text-xs transition-all">Cancelar</button>
+                <button onclick="applyCustomFilterModal()" class="px-4 py-2 estafeta-red text-white font-semibold rounded-xl text-xs hover:bg-red-700 transition-all shadow-sm">Aplicar Filtro</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="floating-plaza-filter" class="fixed bottom-6 left-6 bg-white shadow-xl rounded-2xl p-3.5 border border-gray-200 z-30 hidden max-w-[220px] w-full flex flex-col">
+        <div class="flex items-center justify-between pb-2 border-b border-gray-100 cursor-pointer select-none" onclick="togglePlazaCollapse()">
+            <div class="flex items-center space-x-2 overflow-hidden pr-1"><i id="collapse-icon" class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-300 flex-shrink-0" style="transform: rotate(-90deg);"></i><h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider truncate flex items-center"><i class="fa-solid fa-map-location-dot estafeta-red-text mr-1.5 flex-shrink-0"></i> Plazas</h3></div>
+            <span id="plaza-count-badge" class="bg-red-50 estafeta-red-text text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">0</span>
+        </div>
+        <div id="plaza-content-body" class="overflow-y-auto space-y-1 pr-1 text-xs mt-2 max-h-56 transition-all duration-300" style="display: none;"><div id="plaza-list-container" class="space-y-1"></div></div>
+    </div>
+
+    <button id="floating-reset-btn" onclick="resetFilters()" class="fixed bottom-6 right-6 estafeta-red text-white p-4 rounded-full shadow-2xl hover:bg-red-700 transition-all z-30 hidden items-center justify-center space-x-2 group"><i class="fa-solid fa-filter-circle-xmark text-lg"></i><span class="text-xs font-bold uppercase tracking-wider pr-1 hidden group-hover:inline">Limpiar Filtros</span></button>
+
+    <!-- ============ CAMPANA DE NOTIFICACIONES ============ -->
+    <div id="notif-toast-container" aria-live="polite"></div>
+    <div id="notif-panel" role="dialog" aria-label="Panel de notificaciones">
+        <div class="notif-panel-header">
+            <span id="notif-panel-title">Notificaciones</span>
+            <button onclick="closeNotifPanel()" aria-label="Cerrar panel"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="notif-panel-body" id="notif-panel-body"></div>
+        <div class="notif-panel-footer">
+            <button onclick="markAllAsRead()"><i class="fa-solid fa-check-double"></i> Marcar leídas</button>
+            <button class="danger-btn" onclick="clearNotifHistory()"><i class="fa-solid fa-trash"></i> Limpiar</button>
+        </div>
+    </div>
+
+    <style>
+        /* ============================================================ */
+        /* CAMPANA DE NOTIFICACIONES - ESTILOS                          */
+        /* ============================================================ */
+        #notif-bell {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #FFFFFF;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: background 0.2s, transform 0.2s;
+        }
+        #notif-bell:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
+
+        #notif-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 5px;
+            background: #dc2626;
+            color: white;
+            border: 2px solid #DA291C;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        #notif-badge.hidden { display: none; }
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        #notif-badge.pulse { animation: badgePulse 0.6s ease-in-out 2; }
+
+        #notif-toast-container {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+            width: calc(100vw - 40px);
+            pointer-events: none;
+        }
+
+        .notif-toast {
+            background: white;
+            border-radius: 12px;
+            padding: 14px 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2), 0 4px 10px -4px rgba(0,0,0,0.1);
+            border-left: 4px solid #3b82f6;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            pointer-events: auto;
+            animation: notifToastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes notifToastIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .notif-toast.removing { animation: notifToastOut 0.3s ease forwards; }
+        @keyframes notifToastOut { to { opacity: 0; transform: translateX(100%); } }
+        .notif-toast.notif-danger { border-left-color: #dc2626; }
+        .notif-toast.notif-warning { border-left-color: #f59e0b; }
+        .notif-toast.notif-info { border-left-color: #3b82f6; }
+        .notif-toast.notif-success { border-left-color: #10b981; }
+
+        .notif-toast-icon { font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+        .notif-toast.notif-danger .notif-toast-icon { color: #dc2626; }
+        .notif-toast.notif-warning .notif-toast-icon { color: #f59e0b; }
+        .notif-toast.notif-info .notif-toast-icon { color: #3b82f6; }
+        .notif-toast.notif-success .notif-toast-icon { color: #10b981; }
+
+        .notif-toast-content { flex: 1; min-width: 0; }
+        .notif-toast-title { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 3px; line-height: 1.3; }
+        .notif-toast-msg { font-size: 12px; color: #6b7280; line-height: 1.4; word-break: break-word; }
+        .notif-toast-close { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 14px; padding: 0 2px; flex-shrink: 0; }
+        .notif-toast-close:hover { color: #4b5563; }
+
+        .notif-toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: currentColor;
+            opacity: 0.4;
+            animation: notifProgress linear forwards;
+        }
+        @keyframes notifProgress { from { width: 100%; } to { width: 0%; } }
+
+        #notif-panel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 400px;
+            max-width: calc(100vw - 40px);
+            max-height: 70vh;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3), 0 10px 20px -5px rgba(0,0,0,0.15);
+            z-index: 100001;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: notifPanelIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #notif-panel.show { display: flex; }
+        @keyframes notifPanelIn {
+            from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .notif-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 700;
+            font-size: 14px;
+            color: #1f2937;
+        }
+        .notif-panel-header button { background: none; border: none; cursor: pointer; color: #6b7280; font-size: 16px; padding: 4px; border-radius: 6px; }
+        .notif-panel-header button:hover { background: #f3f4f6; color: #1f2937; }
+
+        .notif-panel-body { flex: 1; overflow-y: auto; max-height: calc(70vh - 110px); }
+
+        .notif-empty { padding: 40px 20px; text-align: center; color: #9ca3af; font-size: 13px; }
+        .notif-empty i { font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5; }
+
+        .notif-item {
+            padding: 12px 18px;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            border-left: 3px solid transparent;
+            cursor: default;
+            transition: background 0.15s;
+        }
+        .notif-item:hover { background: #f9fafb; }
+        .notif-item.unread { background: #fef2f2; }
+        .notif-item.unread:hover { background: #fee2e2; }
+        .notif-item.notif-danger { border-left-color: #dc2626; }
+        .notif-item.notif-warning { border-left-color: #f59e0b; }
+        .notif-item.notif-info { border-left-color: #3b82f6; }
+        .notif-item.notif-success { border-left-color: #10b981; }
+
+        .notif-item-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+        .notif-item.notif-danger .notif-item-icon { color: #dc2626; }
+        .notif-item.notif-warning .notif-item-icon { color: #f59e0b; }
+        .notif-item.notif-info .notif-item-icon { color: #3b82f6; }
+        .notif-item.notif-success .notif-item-icon { color: #10b981; }
+
+        .notif-item-body { flex: 1; min-width: 0; }
+        .notif-item-title { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 3px; line-height: 1.3; }
+        .notif-item-msg { font-size: 12px; color: #6b7280; line-height: 1.4; word-break: break-word; }
+        .notif-item-time { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+
+        .notif-panel-footer {
+            display: flex;
+            gap: 8px;
+            padding: 12px 18px;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+        .notif-panel-footer button {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #4b5563;
+            transition: all 0.15s;
+        }
+        .notif-panel-footer button:hover { background: var(--estafeta-red, #DA291C); color: white; border-color: var(--estafeta-red, #DA291C); }
+        .notif-panel-footer button.danger-btn:hover { background: #dc2626; border-color: #dc2626; }
+
+        /* ===== MODO OSCURO ===== */
+        body.dark-mode #notif-bell { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+        body.dark-mode #notif-badge { border-color: #991B1B; }
+        body.dark-mode .notif-toast { background: #1e293b; }
+        body.dark-mode .notif-toast-title { color: #f1f5f9; }
+        body.dark-mode .notif-toast-msg { color: #cbd5e1; }
+        body.dark-mode .notif-toast-close { color: #64748b; }
+        body.dark-mode .notif-toast-close:hover { color: #cbd5e1; }
+        body.dark-mode #notif-panel { background: #1e293b; }
+        body.dark-mode .notif-panel-header { color: #f1f5f9; border-bottom-color: #334155; }
+        body.dark-mode .notif-panel-header button:hover { background: #334155; color: #f1f5f9; }
+        body.dark-mode .notif-item { border-bottom-color: #334155; }
+        body.dark-mode .notif-item:hover { background: #334155; }
+        body.dark-mode .notif-item.unread { background: rgba(220, 38, 38, 0.15); }
+        body.dark-mode .notif-item.unread:hover { background: rgba(220, 38, 38, 0.25); }
+        body.dark-mode .notif-item-title { color: #f1f5f9; }
+        body.dark-mode .notif-item-msg { color: #cbd5e1; }
+        body.dark-mode .notif-item-time { color: #64748b; }
+        body.dark-mode .notif-panel-footer { background: #0f172a; border-top-color: #334155; }
+        body.dark-mode .notif-panel-footer button { background: #1e293b; color: #cbd5e1; border-color: #334155; }
+        body.dark-mode .notif-empty { color: #64748b; }
+
+        @media (max-width: 640px) {
+            #notif-toast-container { top: auto; bottom: 20px; right: 10px; left: 10px; width: auto; max-width: none; }
+            #notif-panel { top: auto; bottom: 10px; right: 10px; left: 10px; width: auto; max-width: none; max-height: 75vh; }
+        }
+    </style>
+
+    <script>
+        function iniciarSesionExitosa(rolSeleccionado) {
+            const tokenSeguro = btoa(rolSeleccionado + "|" + Date.now());
+            localStorage.setItem('auth_role', tokenSeguro);
+            window.location.href = 'Tiempos muertos Operativo TAX.html';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const encodedRole = localStorage.getItem('auth_role');
+            if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
+            let rol = '';
+            try {
+                const decoded = atob(encodedRole);
+                const parts = decoded.split('|');
+                if (parts.length >= 1) rol = parts[0];
+            } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
+            if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
+
+            let inactivityTimer;
+            const maxInactivityMinutes = 30;
+            function resetInactivityTimer() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(() => {
+                    alert("Su sesión ha expirado por inactividad.");
+                    localStorage.removeItem('auth_role');
+                    window.location.href = 'Panel de Control Operativo.html';
+                }, maxInactivityMinutes * 60 * 1000);
+            }
+            ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
+                window.addEventListener(event, resetInactivityTimer);
+            });
+            resetInactivityTimer();
+            if (rol === 'admin') console.warn("Modo Administrador activo.");
+        });
+
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        }[c]));
+
+        function debounce(fn, ms = 250) {
+            let t;
+            return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+        }
+
+        /* 🔧 CRITERIO: "programada" = guía de exactamente 10 dígitos numéricos */
+        function isProgramada(guideVal) {
+            return /^\d{10}$/.test(String(guideVal ?? '').trim());
+        }
+
+        /* ============================================================
+           ESTADO GLOBAL
+           ============================================================ */
+        let rawData = [];
+        let filteredData = [];
+        let plazaKeyName = '';
+        let guideKeyName = '';
+        let dateKeyName = '';
+        let statusKeyName = '';
+        let progKeyName = '';
+        let routeKeyName = '';
+        let garantiaKeyName = '';
+        let eventTimeKeyName = '';
+        let coordKeyName = '';
+        let allKeysFull = [];
+        let isPlazaCollapsed = true;
+        let isCardsCollapsed = true;
+        let isStatusTableCollapsed = true;
+        let isDeadTimesCollapsed = true;
+        let isCronoCollapsed = true;
+        let isTimelineCollapsed = true;
+        let isGpsMapCollapsed = false;
+
+        let activePlazaFilter = null;
+        let activeStatusFilter = 'ALL';
+        let showProgData = true;
+
+        let activeCronoStatusFilter = 'ALL';
+        let showCronoProgData = true;
+        let activeCronoRouteSelections = new Set();
+        let activeCronoGarantiaSelections = new Set();
+
+        let activeTimelineStatusFilter = 'ALL';
+        let showTimelineProgData = true;
+        let activeTimelineRouteSelections = new Set();
+        let activeTimelineGarantiaSelections = new Set();
+        let timelineCurrentPage = 1;
+        const timelinePerPage = 20;
+        let cachedTimelineList = [];
+        let timelineMapInstance = null;
+        let timelineClusterGroup = null;
+        let routeLinesLayer = null;
+        let showRouteLines = false;
+
+        let activeMapStatusFilter = 'ALL';
+        let showMapProgData = true;
+        let activeMapRouteSelections = new Set();
+        let activeMapGarantiaSelections = new Set();
+        let gpsMapInstance = null;
+        let gpsClusterGroup = null;
+        let cachedGpsMapList = [];
+
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let deadTimesCurrentPage = 1;
+        const deadTimesPerPage = 10;
+        let cachedDeadTimesList = [];
+        let cronoCurrentPage = 1;
+        const cronoPerPage = 10;
+        let cachedCronoList = [];
+        let rawCachedCronoList = [];
+
+        let activeRouteSelections = new Set();
+        let activeGarantiaSelections = new Set();
+        let currentModalType = null;
+        let cronoMapInstance = null;
+        let cronoClusterGroup = null;
+        let cronoPolyline = null;
+        let filterBackup = null;
+
+        const hiddenColumns = [
+            'DISTRITO', 'REGIONAL', 'CELULA', 'UNIDAD DE TRANSPORTE',
+            'OPERADOR', 'IMEI', 'NIVEL DE BATERIA', 'NIVEL DE BATERI',
+            'COORDENADA EVENTO', 'COORDENADA EVENTO:', 'COORDENADA'
+        ];
+
+        const fileInput = document.getElementById('file-input');
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        const _norm = s => String(s ?? '')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase().trim();
+
+        const _findKey = (keys, ...fragments) =>
+            keys.find(k => fragments.every(f => _norm(k).includes(_norm(f)))) || '';
+
+        function validarArchivo(encabezados) {
+            if (!encabezados || encabezados.length === 0) return false;
+            const n = encabezados.map(_norm);
+            const has = (...frags) => n.some(h => frags.every(f => h.includes(_norm(f))));
+            return has('guia') && has('coordenada') && has('telefono', 'destinatario');
+        }
+
+        function handleFile(file) {
+            document.getElementById('file-status').innerText = 'Procesando archivo...';
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            if (ext === 'csv') {
+                Papa.parse(file, {
+                    header: true, dynamicTyping: false, skipEmptyLines: true,
+                    complete: function(res) {
+                        const headers = res.meta.fields || (res.data.length > 0 ? Object.keys(res.data[0]) : []);
+                        if (!validarArchivo(headers)) {
+                            alert("El archivo no cuenta con los encabezados requeridos (Guia/OR, Coordenada Evento, Teléfono Destinatario).");
+                            document.getElementById('file-status').innerText = 'Error de validación';
+                            document.getElementById('file-input').value = "";
+                            return;
+                        }
+                        initDashboard(res.data, file.name);
+                    }
+                });
+            } else if (['xlsx', 'xls'].includes(ext)) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+
+                    const headers = XLSX.utils.sheet_to_json(worksheet, {header: 1})[0] || [];
+                    if (!validarArchivo(headers)) {
+                        alert("El archivo no cuenta con los encabezados requeridos (Guia/OR, Coordenada Evento, Teléfono Destinatario).");
+                        document.getElementById('file-status').innerText = 'Error de validación';
+                        document.getElementById('file-input').value = "";
+                        return;
+                    }
+                    const json = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
+                    initDashboard(json, file.name);
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                alert('Formato no soportado.');
+                document.getElementById('file-status').innerText = 'Error de formato';
+                document.getElementById('file-input').value = "";
+            }
+        }
+
+        function initDashboard(data, fileName) {
+            rawData = data.filter(row => Object.keys(row).length > 0);
+
+            if (rawData.length === 0) {
+                alert('El archivo no contiene filas de datos (sólo encabezados).');
+                document.getElementById('file-status').innerText = 'Archivo vacío';
+                document.getElementById('file-input').value = '';
+                return;
+            }
+
+            const allKeys = Object.keys(rawData[0]);
+            allKeysFull = allKeys;
+
+            guideKeyName     = _findKey(allKeys, 'guia') || _findKey(allKeys, 'or') || allKeys[0];
+            statusKeyName    = _findKey(allKeys, 'estatus') || _findKey(allKeys, 'status') || 'Estatus';
+            progKeyName      = _findKey(allKeys, 'programad') || _findKey(allKeys, 'recoleccion') || '';
+            plazaKeyName     = _findKey(allKeys, 'plaza') || _findKey(allKeys, 'distrito') || allKeys[0];
+            routeKeyName     = _findKey(allKeys, 'ruta') || allKeys[0];
+            garantiaKeyName  = _findKey(allKeys, 'garantia') || allKeys[0];
+            eventTimeKeyName = _findKey(allKeys, 'hora', 'evento') || _findKey(allKeys, 'hora') || '';
+            coordKeyName     = _findKey(allKeys, 'coordenada') || '';
+            dateKeyName      = _findKey(allKeys, 'fecha') || _findKey(allKeys, 'hora') || '';
+
+            if (eventTimeKeyName) {
+                rawData.forEach(r => {
+                    const v = r[eventTimeKeyName];
+                    if (v instanceof Date) return;
+                    if (typeof v === 'number' && v > 20000 && v < 80000) {
+                        r[eventTimeKeyName] = new Date(Math.round((v - 25569) * 86400 * 1000));
+                    } else if (typeof v === 'string' && /^\d+(\.\d+)?$/.test(v.trim())) {
+                        const n = parseFloat(v);
+                        if (n > 20000 && n < 80000) {
+                            r[eventTimeKeyName] = new Date(Math.round((n - 25569) * 86400 * 1000));
+                        }
+                    }
+                });
+            }
+
+            console.log('🗺️ Columnas mapeadas:', {
+                guia: guideKeyName, estatus: statusKeyName, ruta: routeKeyName,
+                garantia: garantiaKeyName, hora: eventTimeKeyName, coord: coordKeyName,
+                plaza: plazaKeyName, programada: progKeyName
+            });
+
+            initSelections();
+
+            document.getElementById('file-status').innerText = fileName;
+            document.getElementById('dashboard-content').classList.remove('hidden');
+            document.getElementById('floating-plaza-filter').classList.remove('hidden');
+
+            renderPlazaFilterList();
+            updateDashboard();
+            document.getElementById('file-input').value = '';
+        }
+
+        function initSelections() {
+            activeRouteSelections.clear();
+            activeGarantiaSelections.clear();
+            activeCronoRouteSelections.clear();
+            activeCronoGarantiaSelections.clear();
+            activeTimelineRouteSelections.clear();
+            activeTimelineGarantiaSelections.clear();
+            activeMapRouteSelections.clear();
+            activeMapGarantiaSelections.clear();
+
+            let activeRows = rawData.filter(row => activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true);
+            activeRows.forEach(row => {
+                let r = String(row[routeKeyName] !== undefined ? row[routeKeyName] : 'N/D');
+                let g = String(row[garantiaKeyName] !== undefined ? row[garantiaKeyName] : 'N/D');
+                activeRouteSelections.add(r);
+                activeGarantiaSelections.add(g);
+                activeCronoRouteSelections.add(r);
+                activeCronoGarantiaSelections.add(g);
+                activeTimelineRouteSelections.add(r);
+                activeTimelineGarantiaSelections.add(g);
+                activeMapRouteSelections.add(r);
+                activeMapGarantiaSelections.add(g);
+            });
+        }
+
+        function toggleCardsSection() {
+            isCardsCollapsed = !isCardsCollapsed;
+            document.getElementById('cards-section-body').style.display = isCardsCollapsed ? 'none' : 'block';
+            document.getElementById('cards-collapse-icon').style.transform = isCardsCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+        function toggleStatusTableSection() {
+            isStatusTableCollapsed = !isStatusTableCollapsed;
+            document.getElementById('status-table-section-body').style.display = isStatusTableCollapsed ? 'none' : 'block';
+            document.getElementById('status-table-collapse-icon').style.transform = isStatusTableCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+        function toggleDeadTimesSection() {
+            isDeadTimesCollapsed = !isDeadTimesCollapsed;
+            document.getElementById('dead-times-section-body').style.display = isDeadTimesCollapsed ? 'none' : 'block';
+            document.getElementById('dead-times-collapse-icon').style.transform = isDeadTimesCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+        function toggleCronoSection() {
+            isCronoCollapsed = !isCronoCollapsed;
+            document.getElementById('crono-section-body').style.display = isCronoCollapsed ? 'none' : 'block';
+            document.getElementById('crono-collapse-icon').style.transform = isCronoCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+            if (!isCronoCollapsed && cronoMapInstance) cronoMapInstance.invalidateSize();
+        }
+        function toggleTimelineSection() {
+            isTimelineCollapsed = !isTimelineCollapsed;
+            document.getElementById('timeline-section-body').style.display = isTimelineCollapsed ? 'none' : 'block';
+            document.getElementById('timeline-collapse-icon').style.transform = isTimelineCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+            if (!isTimelineCollapsed && timelineMapInstance) timelineMapInstance.invalidateSize();
+        }
+        function toggleGpsMapSection() {
+            isGpsMapCollapsed = !isGpsMapCollapsed;
+            document.getElementById('gps-map-section-body').style.display = isGpsMapCollapsed ? 'none' : 'block';
+            document.getElementById('gps-map-collapse-icon').style.transform = isGpsMapCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+            if (!isGpsMapCollapsed) {
+                prepareGpsMapEvents();
+                if (gpsMapInstance) gpsMapInstance.invalidateSize();
+            }
+        }
+        function toggleTimelineFullscreen(event) {
+            event.stopPropagation();
+            const card = document.getElementById('timeline-section-card');
+            const icon = document.getElementById('timeline-fullscreen-icon');
+            const btn = document.getElementById('timeline-fullscreen-btn');
+            card.classList.toggle('fullscreen-section');
+            if (card.classList.contains('fullscreen-section')) {
+                icon.className = "fa-solid fa-compress text-xs";
+                btn.title = "Restaurar tamaño";
+                if (isTimelineCollapsed) toggleTimelineSection();
+            } else {
+                icon.className = "fa-solid fa-expand text-xs";
+                btn.title = "Pantalla completa";
+            }
+            if (timelineMapInstance) setTimeout(() => timelineMapInstance.invalidateSize(), 200);
+        }
+        function toggleGpsMapFullscreen(event) {
+            event.stopPropagation();
+            const card = document.getElementById('gps-map-section-card');
+            const icon = document.getElementById('gps-map-fullscreen-icon');
+            const btn = document.getElementById('gps-map-fullscreen-btn');
+            card.classList.toggle('fullscreen-section');
+            if (card.classList.contains('fullscreen-section')) {
+                icon.className = "fa-solid fa-compress text-xs";
+                btn.title = "Restaurar tamaño";
+                if (isGpsMapCollapsed) toggleGpsMapSection();
+            } else {
+                icon.className = "fa-solid fa-expand text-xs";
+                btn.title = "Pantalla completa";
+            }
+            if (gpsMapInstance) setTimeout(() => gpsMapInstance.invalidateSize(), 200);
+        }
+
+        function getActiveSetFor(type) {
+            if (type === 'ruta') return activeRouteSelections;
+            if (type === 'garantia') return activeGarantiaSelections;
+            if (type === 'crono-ruta') return activeCronoRouteSelections;
+            if (type === 'crono-garantia') return activeCronoGarantiaSelections;
+            if (type === 'timeline-ruta') return activeTimelineRouteSelections;
+            if (type === 'timeline-garantia') return activeTimelineGarantiaSelections;
+            if (type === 'map-ruta') return activeMapRouteSelections;
+            if (type === 'map-garantia') return activeMapGarantiaSelections;
+            return null;
+        }
+
+        function openCustomFilterModal(type) {
+            currentModalType = type;
+            const modal = document.getElementById('custom-filter-modal');
+            const title = document.getElementById('custom-modal-title');
+            const subtitle = document.getElementById('custom-modal-subtitle');
+
+            const titles = {
+                'ruta': ['Filtrar Ruta (Tarjetas de Registro)', 'Seleccionar rutas:'],
+                'garantia': ['Filtrar Garantía (Tarjetas de Registro)', 'Seleccionar garantías:'],
+                'crono-ruta': ['Filtrar Ruta (Detalle Cronológico)', 'Seleccionar rutas:'],
+                'crono-garantia': ['Filtrar Garantía (Detalle Cronológico)', 'Seleccionar garantías:'],
+                'timeline-ruta': ['Filtrar Ruta (Línea de Tiempo)', 'Seleccionar rutas:'],
+                'timeline-garantia': ['Filtrar Garantía (Línea de Tiempo)', 'Seleccionar garantías:'],
+                'map-ruta': ['Filtrar Ruta (Mapa GPS)', 'Seleccionar rutas:'],
+                'map-garantia': ['Filtrar Garantía (Mapa GPS)', 'Seleccionar garantías:']
+            };
+            if (titles[type]) { title.innerText = titles[type][0]; subtitle.innerText = titles[type][1]; }
+
+            const activeSet = getActiveSetFor(type);
+            filterBackup = activeSet ? new Set(activeSet) : null;
+
+            document.getElementById('custom-modal-search').value = '';
+            renderCustomOptionsList();
+            modal.classList.remove('hidden');
+        }
+
+        function closeCustomFilterModal(cancelled = true) {
+            if (cancelled && filterBackup && currentModalType) {
+                const activeSet = getActiveSetFor(currentModalType);
+                if (activeSet) {
+                    activeSet.clear();
+                    filterBackup.forEach(v => activeSet.add(v));
+                }
+            }
+            filterBackup = null;
+            document.getElementById('custom-filter-modal').classList.add('hidden');
+            currentModalType = null;
+        }
+
+        function renderCustomOptionsList() {
+            const container = document.getElementById('custom-options-container');
+            container.innerHTML = '';
+            let key = (currentModalType.includes('ruta')) ? routeKeyName : garantiaKeyName;
+            let activeSet = getActiveSetFor(currentModalType);
+            let activeRows = rawData.filter(row => activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true);
+
+            const valuesMap = {};
+            activeRows.forEach(row => {
+                let val = String(row[key] !== undefined && row[key] !== null ? row[key] : 'N/D');
+                valuesMap[val] = (valuesMap[val] || 0) + 1;
+            });
+
+            const sortedValues = Object.keys(valuesMap).sort();
+            const searchVal = document.getElementById('custom-modal-search').value.toLowerCase();
+
+            sortedValues.forEach(val => {
+                if (searchVal && !val.toLowerCase().includes(searchVal)) return;
+                let isChecked = activeSet.has(val);
+                let div = document.createElement('label');
+                div.className = 'flex items-center space-x-2.5 p-1.5 hover:bg-white rounded-lg cursor-pointer transition-all select-none';
+                div.innerHTML = `
+                    <input type="checkbox" value="${esc(val)}" ${isChecked ? 'checked' : ''} onchange="toggleCustomOption('${esc(val).replace(/'/g, "\\'")}', this.checked)" class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
+                    <span class="text-gray-800 font-medium truncate flex-grow" title="${esc(val)}">${esc(val)}</span>
+                    <span class="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">${valuesMap[val]}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function filterCustomModalList() { renderCustomOptionsList(); }
+
+        function toggleCustomOption(val, isChecked) {
+            const activeSet = getActiveSetFor(currentModalType);
+            if (!activeSet) return;
+            if (isChecked) activeSet.add(val);
+            else activeSet.delete(val);
+        }
+
+        function setAllCustomOptions(selectBoolean) {
+            let key = (currentModalType.includes('ruta')) ? routeKeyName : garantiaKeyName;
+            const activeSet = getActiveSetFor(currentModalType);
+            if (!activeSet) return;
+            activeSet.clear();
+            let activeRows = rawData.filter(row => activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true);
+            if (selectBoolean) {
+                activeRows.forEach(row => {
+                    let val = String(row[key] !== undefined && row[key] !== null ? row[key] : 'N/D');
+                    activeSet.add(val);
+                });
+            }
+            renderCustomOptionsList();
+        }
+
+        function applyCustomFilterModal() {
+            closeCustomFilterModal(false);
+            currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
+            updateDashboard();
+        }
+
+        function changePage(direction) {
+            let totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+            currentPage += direction;
+            if (currentPage > totalPages) currentPage = 1;
+            else if (currentPage < 1) currentPage = totalPages;
+            renderCards(filteredData);
+        }
+        function changeDeadTimesPage(direction) {
+            let totalPages = Math.ceil(cachedDeadTimesList.length / deadTimesPerPage) || 1;
+            deadTimesCurrentPage += direction;
+            if (deadTimesCurrentPage > totalPages) deadTimesCurrentPage = 1;
+            else if (deadTimesCurrentPage < 1) deadTimesCurrentPage = totalPages;
+            renderDeadTimesTablePage();
+        }
+        function changeCronoPage(direction) {
+            let totalPages = Math.ceil(cachedCronoList.length / cronoPerPage) || 1;
+            cronoCurrentPage += direction;
+            if (cronoCurrentPage > totalPages) cronoCurrentPage = 1;
+            else if (cronoCurrentPage < 1) cronoCurrentPage = totalPages;
+            renderCronoTablePage();
+        }
+        function changeTimelinePage(direction) {
+            let totalPages = Math.ceil(cachedTimelineList.length / timelinePerPage) || 1;
+            timelineCurrentPage += direction;
+            if (timelineCurrentPage > totalPages) timelineCurrentPage = 1;
+            else if (timelineCurrentPage < 1) timelineCurrentPage = totalPages;
+            renderTimelineTablePage();
+        }
+
+        function togglePlazaCollapse() {
+            isPlazaCollapsed = !isPlazaCollapsed;
+            document.getElementById('plaza-content-body').style.display = isPlazaCollapsed ? 'none' : 'block';
+            document.getElementById('collapse-icon').style.transform = isPlazaCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+
+        function toggleProgramadaVisibility() {
+            showProgData = !showProgData;
+            document.getElementById('prog-toggle-text').innerText = showProgData ? "Ocultar Programadas" : "Mostrar Programadas";
+            document.getElementById('prog-toggle-icon').className = showProgData ? "fa-solid fa-calendar-check text-[11px]" : "fa-solid fa-calendar-xmark text-[11px]";
+            currentPage = 1; updateDashboard();
+        }
+        function toggleCronoProgramadaVisibility() {
+            showCronoProgData = !showCronoProgData;
+            document.getElementById('crono-prog-toggle-text').innerText = showCronoProgData ? "Ocultar Programadas" : "Mostrar Programadas";
+            document.getElementById('crono-prog-toggle-icon').className = showCronoProgData ? "fa-solid fa-calendar-check text-[11px]" : "fa-solid fa-calendar-xmark text-[11px]";
+            deadTimesCurrentPage = 1; cronoCurrentPage = 1; updateDashboard();
+        }
+        function toggleTimelineProgramadaVisibility() {
+            showTimelineProgData = !showTimelineProgData;
+            document.getElementById('timeline-prog-toggle-text').innerText = showTimelineProgData ? "Ocultar Programadas" : "Mostrar Programadas";
+            document.getElementById('timeline-prog-toggle-icon').className = showTimelineProgData ? "fa-solid fa-calendar-check text-[11px]" : "fa-solid fa-calendar-xmark text-[11px]";
+            timelineCurrentPage = 1; prepareTimelineEvents();
+        }
+        function toggleMapProgramadaVisibility() {
+            showMapProgData = !showMapProgData;
+            document.getElementById('map-prog-toggle-text').innerText = showMapProgData ? "Ocultar Programadas" : "Mostrar Programadas";
+            document.getElementById('map-prog-toggle-icon').className = showMapProgData ? "fa-solid fa-calendar-check text-[11px]" : "fa-solid fa-calendar-xmark text-[11px]";
+            prepareGpsMapEvents();
+        }
+
+        function setStatusFilter(status) {
+            activeStatusFilter = status;
+            ['all', 'confirmado', 'excepcionado', 'pendiente'].forEach(s => {
+                const btn = document.getElementById(`btn-status-${s}`);
+                if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
+            });
+            const activeBtn = document.getElementById(status === 'ALL' ? 'btn-status-all' : `btn-status-${status.toLowerCase()}`);
+            if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
+            currentPage = 1; updateDashboard();
+        }
+        function setCronoStatusFilter(status) {
+            activeCronoStatusFilter = status;
+            ['all', 'confirmado', 'excepcionado', 'pendiente'].forEach(s => {
+                const btn = document.getElementById(`btn-crono-status-${s}`);
+                if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
+            });
+            const activeBtn = document.getElementById(status === 'ALL' ? 'btn-crono-status-all' : `btn-crono-status-${status.toLowerCase()}`);
+            if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
+            deadTimesCurrentPage = 1; cronoCurrentPage = 1; updateDashboard();
+        }
+        function setTimelineStatusFilter(status) {
+            activeTimelineStatusFilter = status;
+            ['all', 'confirmado', 'excepcionado', 'pendiente'].forEach(s => {
+                const btn = document.getElementById(`btn-timeline-status-${s}`);
+                if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
+            });
+            const activeBtn = document.getElementById(status === 'ALL' ? 'btn-timeline-status-all' : `btn-timeline-status-${status.toLowerCase()}`);
+            if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
+            timelineCurrentPage = 1; prepareTimelineEvents();
+        }
+        function setMapStatusFilter(status) {
+            activeMapStatusFilter = status;
+            ['all', 'confirmado', 'excepcionado', 'pendiente'].forEach(s => {
+                const btn = document.getElementById(`btn-map-status-${s}`);
+                if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
+            });
+            const activeBtn = document.getElementById(status === 'ALL' ? 'btn-map-status-all' : `btn-map-status-${status.toLowerCase()}`);
+            if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
+            prepareGpsMapEvents();
+        }
+
+        function getStatusBadge(statusVal) {
+            const val = String(statusVal || '').trim().toUpperCase();
+            if (val.includes('CONFIRMADA') || val.includes('CONFIRMADO')) {
+                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-green-100 text-green-800 shadow-sm">Confirmados</span>';
+            } else if (val.includes('PENDIENTE')) {
+                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-yellow-100 text-yellow-800 shadow-sm">Pendientes</span>';
+            } else if (val.includes('EXCEPCIONADO') || val.includes('EXCEPCIONADA')) {
+                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-red-100 text-red-800 shadow-sm">Excepcionados</span>';
+            } else if (val.includes('RECOLECTADO') || val.includes('RECOLECCION')) {
+                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gray-200 text-gray-800 shadow-sm">Recolección</span>';
+            }
+            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gray-100 text-gray-700 shadow-sm">${esc(statusVal || 'N/D')}</span>`;
+        }
+
+        function renderCards(dataToRender) {
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
+            document.getElementById('table-row-count').innerText = dataToRender.length.toLocaleString();
+
+            let totalPages = Math.ceil(dataToRender.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+            document.getElementById('current-page-num').innerText = currentPage;
+            document.getElementById('total-pages-num').innerText = totalPages;
+
+            if (dataToRender.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-400 italic text-xs">No se encontraron registros coincidentes.</div>`;
+                document.getElementById('pagination-container').style.display = 'none';
+                return;
+            }
+            document.getElementById('pagination-container').style.display = 'flex';
+
+            let sortedData = [...dataToRender];
+            if (dateKeyName) sortedData.sort((a, b) => new Date(a[dateKeyName] || 0) - new Date(b[dateKeyName] || 0));
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const pageRows = sortedData.slice(startIndex, startIndex + itemsPerPage);
+            let fragment = document.createDocumentFragment();
+
+            pageRows.forEach((row, idx) => {
+                let absoluteIndex = startIndex + idx + 1;
+                let card = document.createElement('div');
+                card.className = 'bg-white border border-gray-200/90 rounded-xl p-3.5 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-red-400 transition-all duration-300 flex flex-col justify-between space-y-2.5 relative overflow-hidden border-l-4 estafeta-border cursor-pointer';
+                card.onclick = () => openCardModal(row);
+
+                let guideVal = row[guideKeyName] !== undefined && row[guideKeyName] !== null ? row[guideKeyName] : '—';
+                let statusBadgeHtml = getStatusBadge(row[statusKeyName]);
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                        <span class="bg-gray-900 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm">#${absoluteIndex}</span>
+                        <div>${statusBadgeHtml}</div>
+                    </div>
+                    <div class="py-1">
+                        <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wider flex justify-between items-center"><span>Guía / OR</span><span class="text-[10px] estafeta-red-text font-semibold opacity-80"><i class="fa-solid fa-arrow-pointer mr-1"></i>Clic para ver detalle</span></div>
+                        <div class="font-bold text-gray-900 text-sm truncate mt-0.5" title="${esc(guideVal)}"><i class="fa-solid fa-barcode estafeta-red-text mr-1.5"></i>${esc(guideVal)}</div>
+                    </div>
+                `;
+                fragment.appendChild(card);
+            });
+            container.appendChild(fragment);
+        }
+
+        function formatDuration(ms) {
+            if (isNaN(ms) || ms < 0) return '00:00:00';
+            let seconds = Math.floor(ms / 1000);
+            let hours = Math.floor(seconds / 3600);
+            seconds %= 3600;
+            let minutes = Math.floor(seconds / 60);
+            seconds %= 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function formatDateString(dateObj) {
+            if (!dateObj || isNaN(dateObj)) return '—';
+            let yyyy = dateObj.getFullYear();
+            let mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+            let dd = String(dateObj.getDate()).padStart(2, '0');
+            let hh = String(dateObj.getHours()).padStart(2, '0');
+            let min = String(dateObj.getMinutes()).padStart(2, '0');
+            let ss = String(dateObj.getSeconds()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+        }
+
+        function parseCoordinates(coordStr) {
+            if (!coordStr) return null;
+            let str = String(coordStr).trim();
+            let parts = str.split(/[\s,]+/);
+            if (parts.length >= 2) {
+                let lat = parseFloat(parts[0]);
+                let lng = parseFloat(parts[1]);
+                if (!isNaN(lat) && !isNaN(lng)) return [lat, lng];
+            }
+            return null;
+        }
+
+        function prepareDeadTimes() {
+            let cronoFilteredRows = rawData.filter(row => {
+                let matchPlaza = activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true;
+                let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
+                let matchStatus = true;
+                if (activeCronoStatusFilter === 'CONFIRMADO') matchStatus = rowStatus.includes('CONFIRMADA') || rowStatus.includes('CONFIRMADO');
+                else if (activeCronoStatusFilter === 'EXCEPCIONADO') matchStatus = rowStatus.includes('EXCEPCIONADO') || rowStatus.includes('EXCEPCIONADA');
+                else if (activeCronoStatusFilter === 'PENDIENTE') matchStatus = rowStatus.includes('PENDIENTE');
+
+                let matchProg = true;
+                if (!showCronoProgData) {
+                    const guideVal = String(row[guideKeyName] || '').trim();
+                    if (isProgramada(guideVal)) matchProg = false;
+                }
+
+                let rVal = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                let matchRoute = activeCronoRouteSelections.has(rVal);
+                let gVal = String(row[garantiaKeyName] !== undefined && row[garantiaKeyName] !== null ? row[garantiaKeyName] : 'N/D');
+                let matchGarantia = activeCronoGarantiaSelections.has(gVal);
+                return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia;
+            });
+
+            let plazaFilteredRowsForAvance = rawData.filter(row => activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true);
+            updateStatusBoard(plazaFilteredRowsForAvance);
+
+            const routeMap = {};
+            cronoFilteredRows.forEach(row => {
+                let ruta = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                if (!routeMap[ruta]) routeMap[ruta] = [];
+                let timeVal = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
+                let guideVal = row[guideKeyName] !== undefined && row[guideKeyName] !== null ? row[guideKeyName] : '—';
+                if (timeVal && !isNaN(timeVal)) {
+                    routeMap[ruta].push({ time: timeVal.getTime(), dateObj: timeVal, guide: guideVal, originalRow: row });
+                }
+            });
+
+            cachedDeadTimesList = [];
+            rawCachedCronoList = [];
+
+            for (let ruta in routeMap) {
+                let events = routeMap[ruta].sort((a, b) => a.time - b.time);
+                let totalEvents = events.length;
+                let diffs = [];
+
+                for (let i = 1; i < totalEvents; i++) {
+                    let prev = events[i - 1];
+                    let curr = events[i];
+                    let diff = curr.time - prev.time;
+                    if (diff >= 0) {
+                        diffs.push(diff);
+                        rawCachedCronoList.push({
+                            ruta: ruta,
+                            prevTime: formatDateString(prev.dateObj),
+                            prevGuide: String(prev.guide),
+                            prevRow: prev.originalRow,
+                            currGuide: String(curr.guide),
+                            currTime: formatDateString(curr.dateObj),
+                            currRow: curr.originalRow,
+                            diff: diff
+                        });
+                    }
+                }
+
+                let totalDiff = diffs.reduce((acc, curr) => acc + curr, 0);
+                let avgDiff = diffs.length > 0 ? totalDiff / diffs.length : 0;
+                let maxDiff = diffs.length > 0 ? Math.max(...diffs) : 0;
+
+                cachedDeadTimesList.push({ ruta, count: totalEvents, avg: avgDiff, max: maxDiff, total: totalDiff });
+            }
+            cachedDeadTimesList.sort((a, b) => b.max - a.max);
+            renderDeadTimesTablePage();
+            applyCronoDetailFilter();
+        }
+
+        function getTargetSequences() {
+            const seqInput = document.getElementById('sequence-search-input') ? document.getElementById('sequence-search-input').value.trim() : '';
+            if (seqInput === '') return null;
+            const numbers = [];
+            for (let p of seqInput.split(',')) {
+                let num = parseInt(p.trim(), 10);
+                if (!isNaN(num)) numbers.push(num);
+            }
+            return numbers.length > 0 ? numbers : null;
+        }
+
+        function prepareTimelineEvents() {
+            let timelineSearch = document.getElementById('timeline-advanced-search') ? document.getElementById('timeline-advanced-search').value.toLowerCase().trim() : '';
+            let targetSeqs = getTargetSequences();
+
+            let allMappedRows = [];
+            rawData.forEach(row => {
+                let matchPlaza = activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true;
+                let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
+                let matchStatus = true;
+                if (activeTimelineStatusFilter === 'CONFIRMADO') matchStatus = rowStatus.includes('CONFIRMADA') || rowStatus.includes('CONFIRMADO');
+                else if (activeTimelineStatusFilter === 'EXCEPCIONADO') matchStatus = rowStatus.includes('EXCEPCIONADO') || rowStatus.includes('EXCEPCIONADA');
+                else if (activeTimelineStatusFilter === 'PENDIENTE') matchStatus = rowStatus.includes('PENDIENTE');
+
+                let matchProg = true;
+                if (!showTimelineProgData) {
+                    const guideVal = String(row[guideKeyName] || '').trim();
+                    if (isProgramada(guideVal)) matchProg = false;
+                }
+
+                let rVal = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                let matchRoute = activeTimelineRouteSelections.has(rVal);
+                let gVal = String(row[garantiaKeyName] !== undefined && row[garantiaKeyName] !== null ? row[garantiaKeyName] : 'N/D');
+                let matchGarantia = activeTimelineGarantiaSelections.has(gVal);
+                let matchSearch = timelineSearch === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(timelineSearch));
+
+                if (matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchSearch) {
+                    let timeVal = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
+                    let timeStamp = timeVal && !isNaN(timeVal) ? timeVal.getTime() : 0;
+                    let ruta = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                    let guide = String(row[guideKeyName] !== undefined && row[guideKeyName] !== null ? row[guideKeyName] : '—');
+                    let status = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]) : 'N/D';
+                    allMappedRows.push({ timestamp: timeStamp, ruta, guide, status, rowObj: row });
+                }
+            });
+
+            allMappedRows.sort((a, b) => a.timestamp - b.timestamp);
+            cachedTimelineList = [];
+            allMappedRows.forEach((item, index) => {
+                item.sequenceNumber = index + 1;
+                let matchSeq = targetSeqs === null || targetSeqs.includes(item.sequenceNumber);
+                if (matchSeq) cachedTimelineList.push(item);
+            });
+
+            renderTimelineTablePage();
+            renderTimelineMap();
+        }
+
+        function prepareGpsMapEvents() {
+            let mapSearch = document.getElementById('map-advanced-search') ? document.getElementById('map-advanced-search').value.toLowerCase().trim() : '';
+            cachedGpsMapList = [];
+            rawData.forEach(row => {
+                let matchPlaza = activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true;
+                let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
+                let matchStatus = true;
+                if (activeMapStatusFilter === 'CONFIRMADO') matchStatus = rowStatus.includes('CONFIRMADA') || rowStatus.includes('CONFIRMADO');
+                else if (activeMapStatusFilter === 'EXCEPCIONADO') matchStatus = rowStatus.includes('EXCEPCIONADO') || rowStatus.includes('EXCEPCIONADA');
+                else if (activeMapStatusFilter === 'PENDIENTE') matchStatus = rowStatus.includes('PENDIENTE');
+
+                let matchProg = true;
+                if (!showMapProgData) {
+                    const guideVal = String(row[guideKeyName] || '').trim();
+                    if (isProgramada(guideVal)) matchProg = false;
+                }
+
+                let rVal = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                let matchRoute = activeMapRouteSelections.has(rVal);
+                let gVal = String(row[garantiaKeyName] !== undefined && row[garantiaKeyName] !== null ? row[garantiaKeyName] : 'N/D');
+                let matchGarantia = activeMapGarantiaSelections.has(gVal);
+                let matchSearch = mapSearch === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(mapSearch));
+
+                if (matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchSearch) {
+                    let coords = coordKeyName ? parseCoordinates(row[coordKeyName]) : null;
+                    if (coords) {
+                        cachedGpsMapList.push({
+                            coords, rowObj: row,
+                            guide: row[guideKeyName] || '—',
+                            ruta: rVal,
+                            status: row[statusKeyName] || 'N/D'
+                        });
+                    }
+                }
+            });
+            document.getElementById('gps-map-row-count').innerText = cachedGpsMapList.length.toLocaleString();
+            renderGpsMap();
+        }
+
+        function renderGpsMap() {
+            if (window._gpsTimer) clearTimeout(window._gpsTimer);
+            window._gpsTimer = setTimeout(() => {
+                if (!gpsMapInstance) {
+                    gpsMapInstance = L.map('gps-map').setView([19.4326, -99.1332], 6);
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(gpsMapInstance);
+                }
+                if (gpsClusterGroup) gpsMapInstance.removeLayer(gpsClusterGroup);
+                gpsClusterGroup = L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false, zoomToBoundsOnClick: true });
+                let latLngs = [];
+                cachedGpsMapList.forEach(item => {
+                    let marker = L.circleMarker(item.coords, { radius: 8, color: '#991B1B', fillColor: '#DA291C', fillOpacity: 1 });
+                    let timeStr = eventTimeKeyName && item.rowObj[eventTimeKeyName] ? item.rowObj[eventTimeKeyName] : '—';
+                    marker.bindPopup(`<b>Guía:</b> ${esc(item.guide)}<br><b>Ruta:</b> ${esc(item.ruta)}<br><b>Hora:</b> ${esc(timeStr)}`);
+                    marker.on('click', () => openCardModal(item.rowObj));
+                    gpsClusterGroup.addLayer(marker);
+                    latLngs.push(item.coords);
+                });
+                gpsMapInstance.addLayer(gpsClusterGroup);
+                if (latLngs.length > 0) gpsMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15 });
+                gpsMapInstance.invalidateSize();
+            }, 100);
+        }
+
+        function renderTimelineMap() {
+            if (window._timelineTimer) clearTimeout(window._timelineTimer);
+            window._timelineTimer = setTimeout(() => {
+                if (!timelineMapInstance) {
+                    timelineMapInstance = L.map('map').setView([19.4326, -99.1332], 6);
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(timelineMapInstance);
+                    routeLinesLayer = L.layerGroup().addTo(timelineMapInstance);
+                }
+                if (timelineClusterGroup) timelineMapInstance.removeLayer(timelineClusterGroup);
+                timelineClusterGroup = L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false, zoomToBoundsOnClick: true });
+                if (routeLinesLayer) routeLinesLayer.clearLayers();
+
+                let latLngs = [];
+                let validPointsForLines = [];
+                const targetSeqs = getTargetSequences();
+
+                cachedTimelineList.forEach(item => {
+                    let coords = coordKeyName && item.rowObj ? parseCoordinates(item.rowObj[coordKeyName]) : null;
+                    if (coords) {
+                        let timeOnly = '—';
+                        if (eventTimeKeyName && item.rowObj[eventTimeKeyName]) {
+                            let d = new Date(item.rowObj[eventTimeKeyName]);
+                            if (!isNaN(d)) timeOnly = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} hrs`;
+                            else { let parts = String(item.rowObj[eventTimeKeyName]).split(' '); timeOnly = parts.length > 1 ? parts[1] : String(item.rowObj[eventTimeKeyName]); }
+                        }
+                        const pointColor = targetSeqs !== null ? '#DA291C' : '#10B981';
+                        const numberedIcon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div style="background-color:${pointColor};color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">${item.sequenceNumber}</div>`,
+                            iconSize: [28, 28], iconAnchor: [14, 14]
+                        });
+                        let marker = L.marker(coords, { icon: numberedIcon });
+                        marker.bindPopup(`<b>Secuencia #${item.sequenceNumber}</b><br>Hora: <b>${esc(timeOnly)}</b><br><b>Guía:</b> ${esc(item.guide)}`);
+                        timelineClusterGroup.addLayer(marker);
+                        latLngs.push(coords);
+                        let rowDate = eventTimeKeyName ? new Date(item.rowObj[eventTimeKeyName]) : null;
+                        validPointsForLines.push({ latLng: L.latLng(coords[0], coords[1]), seqNum: item.sequenceNumber, date: rowDate });
+                    }
+                });
+                timelineMapInstance.addLayer(timelineClusterGroup);
+
+                for (let i = 0; i < validPointsForLines.length - 1; i++) {
+                    let p1 = validPointsForLines[i];
+                    let p2 = validPointsForLines[i + 1];
+                    let distMeters = p1.latLng.distanceTo(p2.latLng);
+                    let distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(1) + ' metros';
+                    let timeText = '';
+                    if (p1.date && p2.date && !isNaN(p1.date) && !isNaN(p2.date)) {
+                        let diffMs = p2.date - p1.date;
+                        if (diffMs >= 0) {
+                            let totalMins = Math.floor(diffMs / 60000);
+                            let hrs = Math.floor(totalMins / 60);
+                            let mins = totalMins % 60;
+                            timeText = hrs > 0 ? `<br>Tiempo transcurrido: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo transcurrido: <b>${totalMins} min</b>`;
+                        }
+                    }
+                    let segmentLine = L.polyline([p1.latLng, p2.latLng], { color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5' });
+                    segmentLine.bindTooltip(`Seq #${p1.seqNum} &rarr; #${p2.seqNum}<br>Distancia: <b>${distText}</b>${timeText}`, { sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200' });
+                    routeLinesLayer.addLayer(segmentLine);
+                }
+
+                if (showRouteLines && routeLinesLayer) { if (!timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.addLayer(routeLinesLayer); }
+                else { if (routeLinesLayer && timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.removeLayer(routeLinesLayer); }
+                timelineMapInstance.invalidateSize();
+            }, 100);
+        }
+
+        const toggleLinesBtn = document.getElementById('toggle-lines-btn');
+        if (toggleLinesBtn) {
+            toggleLinesBtn.addEventListener('click', () => {
+                showRouteLines = !showRouteLines;
+                const linesIcon = document.getElementById('lines-icon');
+                const linesText = document.getElementById('lines-text');
+                if (linesIcon) linesIcon.className = showRouteLines ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
+                if (linesText) linesText.innerText = showRouteLines ? "Ocultar Líneas" : "Mostrar Líneas";
+                if (routeLinesLayer && timelineMapInstance) {
+                    if (showRouteLines) { if (!timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.addLayer(routeLinesLayer); }
+                    else { if (timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.removeLayer(routeLinesLayer); }
+                }
+            });
+        }
+
+        const toggleFullscreenBtn = document.getElementById('toggle-fullscreen-btn');
+        const mapCard = document.getElementById('map-card');
+        if (toggleFullscreenBtn && mapCard) {
+            toggleFullscreenBtn.addEventListener('click', () => {
+                mapCard.classList.toggle('fullscreen');
+                const isFullscreen = mapCard.classList.contains('fullscreen');
+                const fullscreenIcon = document.getElementById('fullscreen-icon');
+                const fullscreenText = document.getElementById('fullscreen-text');
+                if (fullscreenIcon) fullscreenIcon.className = isFullscreen ? "fa-solid fa-compress" : "fa-solid fa-expand";
+                if (fullscreenText) fullscreenText.innerText = isFullscreen ? "Restaurar" : "Pantalla Completa";
+                setTimeout(() => { if (timelineMapInstance) timelineMapInstance.invalidateSize(); }, 100);
+            });
+        }
+
+        function initOrUpdateCronoMap(item) {
+            let prevCoords = coordKeyName && item.prevRow ? parseCoordinates(item.prevRow[coordKeyName]) : null;
+            let currCoords = coordKeyName && item.currRow ? parseCoordinates(item.currRow[coordKeyName]) : null;
+
+            if (!cronoMapInstance) {
+                cronoMapInstance = L.map('crono-map').setView([19.4326, -99.1332], 6);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(cronoMapInstance);
+            }
+            if (cronoClusterGroup) cronoMapInstance.removeLayer(cronoClusterGroup);
+            if (cronoPolyline) { cronoMapInstance.removeLayer(cronoPolyline); cronoPolyline = null; }
+
+            cronoClusterGroup = L.markerClusterGroup();
+            let latLngs = [];
+
+            if (prevCoords) {
+                let markerPrev = L.circleMarker(prevCoords, { radius: 8, color: '#4B5563', fillColor: '#6B7280', fillOpacity: 0.9 });
+                markerPrev.bindPopup(`<b>Guía Anterior:</b> ${esc(item.prevGuide)}<br><b>Hora:</b> ${esc(item.prevTime)}`);
+                cronoClusterGroup.addLayer(markerPrev);
+                latLngs.push(prevCoords);
+            }
+            if (currCoords) {
+                let markerCurr = L.circleMarker(currCoords, { radius: 9, color: '#991B1B', fillColor: '#DA291C', fillOpacity: 1 });
+                markerCurr.bindPopup(`<b>Guía Actual:</b> ${esc(item.currGuide)}<br><b>Hora:</b> ${esc(item.currTime)}`);
+                cronoClusterGroup.addLayer(markerCurr);
+                latLngs.push(currCoords);
+            }
+            cronoMapInstance.addLayer(cronoClusterGroup);
+
+            if (prevCoords && currCoords) {
+                cronoPolyline = L.polyline([prevCoords, currCoords], { color: '#DA291C', weight: 3, dashArray: '5, 5' }).addTo(cronoMapInstance);
+            }
+            if (latLngs.length > 0) cronoMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15 });
+            cronoMapInstance.invalidateSize();
+        }
+
+        if (document.getElementById('timeline-advanced-search')) {
+            document.getElementById('timeline-advanced-search').addEventListener('input', debounce(() => {
+                timelineCurrentPage = 1; prepareTimelineEvents(); toggleFloatingResetButton();
+            }));
+        }
+        if (document.getElementById('sequence-search-input')) {
+            document.getElementById('sequence-search-input').addEventListener('input', debounce(() => {
+                timelineCurrentPage = 1; prepareTimelineEvents(); toggleFloatingResetButton();
+            }));
+        }
+        if (document.getElementById('map-advanced-search')) {
+            document.getElementById('map-advanced-search').addEventListener('input', debounce(() => {
+                prepareGpsMapEvents(); toggleFloatingResetButton();
+            }));
+        }
+        if (document.getElementById('table-advanced-search')) {
+            document.getElementById('table-advanced-search').addEventListener('input', debounce(() => {
+                currentPage = 1; applyFilters(); toggleFloatingResetButton();
+            }));
+        }
+        if (document.getElementById('crono-advanced-search')) {
+            document.getElementById('crono-advanced-search').addEventListener('input', debounce(() => {
+                deadTimesCurrentPage = 1; cronoCurrentPage = 1; applyCronoDetailFilter(); toggleFloatingResetButton();
+            }));
+        }
+
+        function renderTimelineTablePage() {
+            const container = document.getElementById('timeline-grid-container');
+            if (!container) return;
+            container.innerHTML = '';
+            document.getElementById('timeline-row-count').innerText = cachedTimelineList.length.toLocaleString();
+
+            let totalPages = Math.ceil(cachedTimelineList.length / timelinePerPage) || 1;
+            if (timelineCurrentPage > totalPages) timelineCurrentPage = totalPages;
+            if (timelineCurrentPage < 1) timelineCurrentPage = 1;
+            document.getElementById('timeline-current-page-num').innerText = timelineCurrentPage;
+            document.getElementById('timeline-total-pages-num').innerText = totalPages;
+
+            if (cachedTimelineList.length === 0) {
+                container.innerHTML = `<div class="py-8 text-center text-gray-400 italic text-xs w-full">No hay eventos registrados en la línea de tiempo con los filtros seleccionados.</div>`;
+                document.getElementById('timeline-pagination-container').style.display = 'none';
+                return;
+            }
+            document.getElementById('timeline-pagination-container').style.display = 'flex';
+
+            const startIndex = (timelineCurrentPage - 1) * timelinePerPage;
+            const pageRows = cachedTimelineList.slice(startIndex, startIndex + timelinePerPage);
+            let fragment = document.createDocumentFragment();
+
+            pageRows.forEach((item) => {
+                let statusBadge = getStatusBadge(item.status);
+                let card = document.createElement('div');
+                card.className = 'bg-white border border-gray-200/90 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-red-400 transition-all flex flex-col justify-between space-y-2 border-l-4 estafeta-border cursor-pointer min-w-[280px] max-w-[280px] flex-shrink-0';
+                card.onclick = () => openCardModal(item.rowObj);
+                let timeStr = item.rowObj[eventTimeKeyName] ? String(item.rowObj[eventTimeKeyName]) : '—';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                        <span class="bg-gray-900 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm">#${item.sequenceNumber}</span>
+                        <div>${statusBadge}</div>
+                    </div>
+                    <div class="space-y-1.5 text-xs py-1">
+                        <div class="estafeta-red-text font-semibold flex items-center"><i class="fa-solid fa-clock mr-1.5"></i><span class="truncate" title="${esc(timeStr)}">${esc(timeStr)}</span></div>
+                        <div class="truncate"><span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Guía:</span><span class="font-bold text-gray-900 ml-1 truncate" title="${esc(item.guide)}"><i class="fa-solid fa-barcode estafeta-red-text mr-1"></i>${esc(item.guide)}</span></div>
+                        <div class="truncate"><span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Ruta:</span><span class="font-medium text-gray-700 ml-1 truncate" title="${esc(item.ruta)}"><i class="fa-solid fa-route text-gray-400 mr-1"></i>${esc(item.ruta)}</span></div>
+                    </div>
+                    <div class="pt-1.5 border-t border-gray-100 flex justify-end"><span class="text-[10px] estafeta-red-text font-semibold hover:underline"><i class="fa-solid fa-arrow-pointer mr-1"></i>Ver Detalle</span></div>
+                `;
+                fragment.appendChild(card);
+            });
+            container.appendChild(fragment);
+        }
+
+        function updateStatusBoard(rows) {
+            let total = rows.length;
+            document.getElementById('status-board-total').innerText = total.toLocaleString();
+
+            let confirmadosCount = 0, excepcionadosCount = 0, orCount = 0, pendientesCount = 0, otrosCount = 0;
+
+            rows.forEach(r => {
+                const st = String(r[statusKeyName] || '').trim().toUpperCase();
+                const guideVal = String(r[guideKeyName] || '').trim().toUpperCase();
+                const isOR = guideVal.startsWith('OR');
+                if (isOR) orCount++;
+                if (!isOR) {
+                    if (st.includes('CONFIRMAD')) confirmadosCount++;
+                    else if (st.includes('EXCEPCION')) excepcionadosCount++;
+                    else if (st.includes('PENDIENT')) pendientesCount++;
+                    else otrosCount++;
+                }
+            });
+
+            const pct = c => total > 0 ? ((c / total) * 100).toFixed(1) : 0;
+
+            document.getElementById('badge-total-confirmados').innerText = confirmadosCount.toLocaleString();
+            document.getElementById('percent-confirmados').innerText = pct(confirmadosCount) + '%';
+            document.getElementById('badge-total-excepcionados').innerText = excepcionadosCount.toLocaleString();
+            document.getElementById('percent-excepcionados').innerText = pct(excepcionadosCount) + '%';
+            document.getElementById('badge-total-or').innerText = orCount.toLocaleString();
+            document.getElementById('percent-or').innerText = pct(orCount) + '%';
+            document.getElementById('badge-total-pendientes').innerText = pendientesCount.toLocaleString();
+            document.getElementById('percent-pendientes').innerText = pct(pendientesCount) + '%';
+
+            const tbody = document.getElementById('status-board-tbody');
+            tbody.innerHTML = `
+                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-green-800"><i class="fa-solid fa-circle-check text-green-600 mr-1.5"></i> Confirmados</td><td class="p-3 text-center font-semibold text-gray-800">${confirmadosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(confirmadosCount)}%</td></tr>
+                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-red-800"><i class="fa-solid fa-circle-exclamation estafeta-red-text mr-1.5"></i> Excepcionados</td><td class="p-3 text-center font-semibold text-gray-800">${excepcionadosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(excepcionadosCount)}%</td></tr>
+                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-blue-800"><i class="fa-solid fa-barcode text-blue-600 mr-1.5"></i> Órdenes de Recolección (OR)</td><td class="p-3 text-center font-semibold text-gray-800">${orCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(orCount)}%</td></tr>
+                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-yellow-800"><i class="fa-solid fa-clock-rotate-left text-yellow-600 mr-1.5"></i> Pendientes</td><td class="p-3 text-center font-semibold text-gray-800">${pendientesCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(pendientesCount)}%</td></tr>
+                ${otrosCount > 0 ? `<tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-gray-700"><i class="fa-solid fa-circle-question text-gray-400 mr-1.5"></i> Otros</td><td class="p-3 text-center font-semibold text-gray-800">${otrosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(otrosCount)}%</td></tr>` : ''}
+            `;
+        }
+
+        function applyCronoDetailFilter() {
+            const searchVal = document.getElementById('crono-advanced-search').value.toLowerCase().trim();
+            if (searchVal === '') {
+                cachedCronoList = [...rawCachedCronoList];
+            } else {
+                cachedCronoList = rawCachedCronoList.filter(item => {
+                    let matchCurr = item.currGuide.toLowerCase().includes(searchVal);
+                    let matchPrev = item.prevGuide.toLowerCase().includes(searchVal);
+                    let matchRuta = item.ruta.toLowerCase().includes(searchVal);
+                    let matchCurrRow = item.currRow && Object.values(item.currRow).some(v => v !== null && String(v).toLowerCase().includes(searchVal));
+                    let matchPrevRow = item.prevRow && Object.values(item.prevRow).some(v => v !== null && String(v).toLowerCase().includes(searchVal));
+                    return matchCurr || matchPrev || matchRuta || matchCurrRow || matchPrevRow;
+                });
+            }
+            const sortOrder = document.getElementById('crono-sort-select').value;
+            cachedCronoList.sort((a, b) => sortOrder === 'asc' ? a.diff - b.diff : b.diff - a.diff);
+            cronoCurrentPage = 1;
+            renderCronoTablePage();
+            renderCronoSearchKPIs(searchVal);
+        }
+
+        function renderCronoSearchKPIs(searchVal) {
+            const containerKPIs = document.getElementById('crono-search-kpis-container');
+            const gridKPIs = document.getElementById('crono-kpis-grid');
+            const mapWrapper = document.getElementById('crono-map-wrapper');
+            gridKPIs.innerHTML = '';
+
+            if (searchVal === '' || cachedCronoList.length === 0) {
+                containerKPIs.classList.add('hidden');
+                mapWrapper.classList.add('hidden');
+                if (cronoMapInstance) { cronoMapInstance.remove(); cronoMapInstance = null; cronoPolyline = null; }
+                return;
+            }
+            let matchItem = cachedCronoList.find(item =>
+                item.currGuide.toLowerCase().includes(searchVal) ||
+                item.prevGuide.toLowerCase().includes(searchVal) ||
+                (item.currRow && Object.values(item.currRow).some(v => v !== null && String(v).toLowerCase().includes(searchVal)))
+            ) || cachedCronoList[0];
+
+            containerKPIs.classList.remove('hidden');
+            mapWrapper.classList.remove('hidden');
+
+            gridKPIs.appendChild(createMiniKPI("Guía Anterior (Previa)", matchItem.prevGuide, matchItem.prevRow, "fa-history"));
+            gridKPIs.appendChild(createMiniKPI("Guía Actual (Buscada)", matchItem.currGuide, matchItem.currRow, "fa-barcode"));
+            setTimeout(() => { initOrUpdateCronoMap(matchItem); }, 100);
+        }
+
+        function createMiniKPI(titleLabel, guideVal, rowObj, iconClass) {
+            let card = document.createElement('div');
+            card.className = 'bg-white border border-gray-200/90 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-red-400 transition-all flex flex-col justify-between space-y-2 border-l-4 estafeta-border cursor-pointer';
+            if (rowObj) card.onclick = () => openCardModal(rowObj);
+            let statusBadgeHtml = getStatusBadge(rowObj ? rowObj[statusKeyName] : 'N/D');
+            card.innerHTML = `
+                <div class="flex justify-between items-center pb-1.5 border-b border-gray-100">
+                    <span class="bg-gray-900 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">${esc(titleLabel)}</span>
+                    <div>${statusBadgeHtml}</div>
+                </div>
+                <div class="flex items-center justify-between py-0.5">
+                    <div class="truncate pr-2">
+                        <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Guía / OR</div>
+                        <div class="font-bold text-gray-900 text-xs truncate mt-0.5" title="${esc(guideVal)}"><i class="fa-solid ${iconClass} estafeta-red-text mr-1"></i>${esc(guideVal)}</div>
+                    </div>
+                    <div class="text-right flex-shrink-0 pl-2"><span class="text-[10px] estafeta-red-text font-semibold hover:underline"><i class="fa-solid fa-arrow-pointer mr-1"></i>Detalle</span></div>
+                </div>
+            `;
+            return card;
+        }
+
+        function onCronoSortChange() {
+            const sortOrder = document.getElementById('crono-sort-select').value;
+            cachedCronoList.sort((a, b) => sortOrder === 'asc' ? a.diff - b.diff : b.diff - a.diff);
+            cronoCurrentPage = 1;
+            renderCronoTablePage();
+        }
+
+        function renderDeadTimesTablePage() {
+            const tbody = document.getElementById('dead-times-tbody');
+            tbody.innerHTML = '';
+            let totalPages = Math.ceil(cachedDeadTimesList.length / deadTimesPerPage) || 1;
+            if (deadTimesCurrentPage > totalPages) deadTimesCurrentPage = totalPages;
+            if (deadTimesCurrentPage < 1) deadTimesCurrentPage = 1;
+            document.getElementById('dt-current-page-num').innerText = deadTimesCurrentPage;
+            document.getElementById('dt-total-pages-num').innerText = totalPages;
+
+            if (cachedDeadTimesList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-gray-400 italic">No hay datos suficientes para calcular tiempos muertos.</td></tr>`;
+                document.getElementById('dead-times-pagination-container').style.display = 'none';
+                return;
+            }
+            document.getElementById('dead-times-pagination-container').style.display = 'flex';
+
+            const startIndex = (deadTimesCurrentPage - 1) * deadTimesPerPage;
+            const pageRows = cachedDeadTimesList.slice(startIndex, startIndex + deadTimesPerPage);
+            let fragment = document.createDocumentFragment();
+            pageRows.forEach((item, idx) => {
+                let absoluteIndex = startIndex + idx + 1;
+                let tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition-all';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-500">#${absoluteIndex}</td>
+                    <td class="p-3 font-bold text-gray-800"><i class="fa-solid fa-route estafeta-red-text mr-1.5"></i>${esc(item.ruta)}</td>
+                    <td class="p-3 text-center font-medium">${item.count}</td>
+                    <td class="p-3 text-center font-medium text-gray-600">${formatDuration(item.avg)}</td>
+                    <td class="p-3 text-center font-semibold text-gray-700">${formatDuration(item.max)}</td>
+                    <td class="p-3 text-center font-bold text-red-600">${formatDuration(item.total)}</td>
+                `;
+                fragment.appendChild(tr);
+            });
+            tbody.appendChild(fragment);
+        }
+
+        function renderCronoTablePage() {
+            const tbody = document.getElementById('crono-dead-times-tbody');
+            tbody.innerHTML = '';
+            document.getElementById('crono-row-count').innerText = cachedCronoList.length.toLocaleString();
+
+            let totalPages = Math.ceil(cachedCronoList.length / cronoPerPage) || 1;
+            if (cronoCurrentPage > totalPages) cronoCurrentPage = totalPages;
+            if (cronoCurrentPage < 1) cronoCurrentPage = 1;
+            document.getElementById('crono-current-page-num').innerText = cronoCurrentPage;
+            document.getElementById('crono-total-pages-num').innerText = totalPages;
+
+            if (cachedCronoList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-gray-400 italic">No hay registros cronológicos con los filtros seleccionados.</td></tr>`;
+                document.getElementById('crono-pagination-container').style.display = 'none';
+                return;
+            }
+            document.getElementById('crono-pagination-container').style.display = 'flex';
+
+            const startIndex = (cronoCurrentPage - 1) * cronoPerPage;
+            const pageRows = cachedCronoList.slice(startIndex, startIndex + cronoPerPage);
+            let fragment = document.createDocumentFragment();
+            pageRows.forEach((item, idx) => {
+                let absoluteIndex = startIndex + idx + 1;
+                let tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition-all';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-500">#${absoluteIndex}</td>
+                    <td class="p-3 font-bold text-gray-800"><i class="fa-solid fa-route estafeta-red-text mr-1.5"></i>${esc(item.ruta)}</td>
+                    <td class="p-3 text-center font-mono text-gray-600">${esc(item.prevTime)}</td>
+                    <td class="p-3 font-medium text-gray-700">${esc(item.currGuide)}</td>
+                    <td class="p-3 text-center font-mono text-gray-600">${esc(item.currTime)}</td>
+                    <td class="p-3 text-center font-bold text-red-600">${formatDuration(item.diff)}</td>
+                `;
+                fragment.appendChild(tr);
+            });
+            tbody.appendChild(fragment);
+        }
+
+        function openCardModal(row) {
+            const modal = document.getElementById('card-modal');
+            const modalBody = document.getElementById('modal-body');
+            const modalTitle = document.getElementById('modal-title');
+            modalTitle.innerText = `Guía/OR: ${row[guideKeyName] || 'Sin Guía'}`;
+
+            let html = '<div class="space-y-1.5 divide-y divide-gray-100">';
+            allKeysFull.forEach(k => {
+                const upperK = k.trim().toUpperCase().replace(':', '');
+                if (!hiddenColumns.includes(upperK)) {
+                    let val = row[k] !== undefined && row[k] !== null ? row[k] : '—';
+                    html += `<div class="flex justify-between items-center pt-1.5"><span class="font-semibold text-gray-500 pr-2">${esc(k)}:</span><span class="text-gray-800 font-medium text-right" title="${esc(val)}">${esc(val)}</span></div>`;
+                }
+            });
+            html += '</div>';
+            modalBody.innerHTML = html;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('card-modal').classList.add('hidden'); }
+
+        function renderPlazaFilterList() {
+            const container = document.getElementById('plaza-list-container');
+            container.innerHTML = '';
+            const plazasMap = {};
+            rawData.forEach(row => {
+                let p = row[plazaKeyName] || 'N/D';
+                plazasMap[p] = (plazasMap[p] || 0) + 1;
+            });
+            const sortedPlazas = Object.keys(plazasMap).sort();
+            document.getElementById('plaza-count-badge').innerText = sortedPlazas.length;
+
+            let allDiv = document.createElement('div');
+            allDiv.className = `px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-medium flex justify-between items-center transition-all ${activePlazaFilter === null ? 'bg-red-50 estafeta-red-text font-bold' : 'hover:bg-gray-50 text-gray-600'}`;
+            allDiv.innerHTML = `<span class="truncate pr-1">Todas las Plazas</span><span class="text-[9px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded-full flex-shrink-0">${rawData.length}</span>`;
+            allDiv.onclick = (e) => {
+                e.stopPropagation();
+                activePlazaFilter = null;
+                initSelections();
+                currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
+                updateDashboard();
+            };
+            container.appendChild(allDiv);
+
+            sortedPlazas.forEach(plaza => {
+                let count = plazasMap[plaza];
+                let isSelected = activePlazaFilter === plaza;
+                let div = document.createElement('div');
+                div.className = `px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-medium flex justify-between items-center transition-all ${isSelected ? 'bg-red-50 estafeta-red-text font-bold border-l-2 estafeta-border' : 'hover:bg-gray-50 text-gray-700'}`;
+                div.innerHTML = `<span class="truncate pr-1" title="${esc(plaza)}">${esc(plaza)}</span><span class="text-[9px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded-full flex-shrink-0">${count}</span>`;
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    activePlazaFilter = activePlazaFilter === plaza ? null : plaza;
+                    initSelections();
+                    currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
+                    updateDashboard();
+                };
+                container.appendChild(div);
+            });
+        }
+
+        function updateDashboard() {
+            applyFilters();
+            renderPlazaFilterList();
+            prepareTimelineEvents();
+            prepareGpsMapEvents();
+            toggleFloatingResetButton();
+        }
+
+        function applyFilters() {
+            let tableVal = document.getElementById('table-advanced-search').value.toLowerCase();
+            filteredData = rawData.filter(row => {
+                let matchPlaza = activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true;
+                let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
+                let matchStatus = true;
+                if (activeStatusFilter === 'CONFIRMADO') matchStatus = rowStatus.includes('CONFIRMADA') || rowStatus.includes('CONFIRMADO');
+                else if (activeStatusFilter === 'EXCEPCIONADO') matchStatus = rowStatus.includes('EXCEPCIONADO') || rowStatus.includes('EXCEPCIONADA');
+                else if (activeStatusFilter === 'PENDIENTE') matchStatus = rowStatus.includes('PENDIENTE');
+
+                let matchProg = true;
+                if (!showProgData) {
+                    const guideVal = String(row[guideKeyName] || '').trim();
+                    if (isProgramada(guideVal)) matchProg = false;
+                }
+
+                let rVal = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                let matchRoute = activeRouteSelections.has(rVal);
+                let gVal = String(row[garantiaKeyName] !== undefined && row[garantiaKeyName] !== null ? row[garantiaKeyName] : 'N/D');
+                let matchGarantia = activeGarantiaSelections.has(gVal);
+                let matchTable = tableVal === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(tableVal));
+                return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchTable;
+            });
+            renderCards(filteredData);
+            prepareDeadTimes();
+            // 🔔 Analizar y notificar
+            if (!window._notifAnalyzed || window._notifAnalyzed !== rawData.length) {
+                window._notifAnalyzed = rawData.length;
+                setTimeout(analyzeAndNotify, 700);
+            }
+        }
+
+        function toggleFloatingResetButton() {
+            const resetBtn = document.getElementById('floating-reset-btn');
+            const tableVal = document.getElementById('table-advanced-search').value;
+            const cronoTableVal = document.getElementById('crono-advanced-search').value;
+            const timelineVal = document.getElementById('timeline-advanced-search').value;
+            const seqVal = document.getElementById('sequence-search-input') ? document.getElementById('sequence-search-input').value : '';
+            const mapVal = document.getElementById('map-advanced-search') ? document.getElementById('map-advanced-search').value : '';
+
+            const hasFilters = activePlazaFilter !== null ||
+                activeStatusFilter !== 'ALL' || activeCronoStatusFilter !== 'ALL' || activeTimelineStatusFilter !== 'ALL' || activeMapStatusFilter !== 'ALL' ||
+                tableVal.trim() !== '' || cronoTableVal.trim() !== '' || timelineVal.trim() !== '' || seqVal.trim() !== '' || mapVal.trim() !== '' ||
+                !showProgData || !showCronoProgData || !showTimelineProgData || !showMapProgData ||
+                activeRouteSelections.size < rawData.length || activeGarantiaSelections.size < rawData.length ||
+                activeCronoRouteSelections.size < rawData.length || activeCronoGarantiaSelections.size < rawData.length ||
+                activeTimelineRouteSelections.size < rawData.length || activeTimelineGarantiaSelections.size < rawData.length ||
+                activeMapRouteSelections.size < rawData.length || activeMapGarantiaSelections.size < rawData.length;
+
+            if (hasFilters) { resetBtn.classList.remove('hidden'); resetBtn.classList.add('flex'); }
+            else { resetBtn.classList.add('hidden'); resetBtn.classList.remove('flex'); }
+        }
+
+        function resetFilters() {
+            activePlazaFilter = null;
+            setStatusFilter('ALL');
+            setCronoStatusFilter('ALL');
+            setTimelineStatusFilter('ALL');
+            setMapStatusFilter('ALL');
+            if (!showProgData) toggleProgramadaVisibility();
+            if (!showCronoProgData) toggleCronoProgramadaVisibility();
+            if (!showTimelineProgData) toggleTimelineProgramadaVisibility();
+            if (!showMapProgData) toggleMapProgramadaVisibility();
+            initSelections();
+            document.getElementById('table-advanced-search').value = '';
+            document.getElementById('crono-advanced-search').value = '';
+            document.getElementById('timeline-advanced-search').value = '';
+            if (document.getElementById('sequence-search-input')) document.getElementById('sequence-search-input').value = '';
+            if (document.getElementById('map-advanced-search')) document.getElementById('map-advanced-search').value = '';
+            currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
+            updateDashboard();
+        }
+
+        /* ============================================================
+           CAMPANA DE NOTIFICACIONES - LÓGICA
+           ============================================================ */
+        const NOTIF_CONFIG = {
+            dashboardId: 'tiempos-muertos',
+            storageKey: 'notif_history_tiempos-muertos',
+            maxHistory: 50,
+            maxToasts: 2,
+            toastDuration: 6000,
+            successToastDuration: 4000,
+            maxVisibleToasts: 3,
+            rules: {
+                deadTimeCriticoMax: 60 * 60 * 1000,      // 60 min
+                deadTimeAltoAvg: 30 * 60 * 1000,          // 30 min
+                deadTimeAltoMax: 60 * 60 * 1000,          // para separar de criticas
+                excepcionadosDanger: 20,                  // %
+                excepcionadosWarning: 10,                 // %
+                fueraHorarioPct: 10,                      // %
+                sinActividadMinutos: 45,                  // 45 min sin eventos (ruta colgada)
+                topRutasCount: 3                          // top 3 para ruta con más tiempo muerto
+            }
+        };
+
+        const NOTIF_ICONS = {
+            danger: 'fa-solid fa-triangle-exclamation',
+            warning: 'fa-solid fa-circle-exclamation',
+            info: 'fa-solid fa-circle-info',
+            success: 'fa-solid fa-circle-check'
+        };
+
+        let notifHistory = [];
+
+        function loadNotifHistory() {
+            try {
+                const raw = localStorage.getItem(NOTIF_CONFIG.storageKey);
+                notifHistory = raw ? JSON.parse(raw) : [];
+                if (!Array.isArray(notifHistory)) notifHistory = [];
+            } catch (e) { notifHistory = []; }
+        }
+
+        function saveNotifHistory() {
+            try {
+                if (notifHistory.length > NOTIF_CONFIG.maxHistory) {
+                    notifHistory = notifHistory.slice(-NOTIF_CONFIG.maxHistory);
+                }
+                localStorage.setItem(NOTIF_CONFIG.storageKey, JSON.stringify(notifHistory));
+            } catch (e) { console.warn('No se pudo guardar historial:', e); }
+        }
+
+        function injectBell() {
+            const container = document.getElementById('header-actions-container');
+            if (!container) return;
+            if (document.getElementById('notif-bell')) return;
+            const btn = document.createElement('button');
+            btn.id = 'notif-bell';
+            btn.setAttribute('aria-label', 'Ver notificaciones');
+            btn.innerHTML = `<i class="fa-solid fa-bell"></i><span id="notif-badge" class="hidden">0</span>`;
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleNotifPanel();
+            });
+            container.appendChild(btn);
+            loadNotifHistory();
+            updateBadge();
+            renderPanel();
+        }
+
+        function updateBadge() {
+            const badge = document.getElementById('notif-badge');
+            if (!badge) return;
+            const unread = notifHistory.filter(n => !n.read).length;
+            if (unread > 0) {
+                badge.textContent = unread > 99 ? '99+' : unread;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function pulseBadge() {
+            const badge = document.getElementById('notif-badge');
+            if (!badge) return;
+            badge.classList.remove('pulse');
+            void badge.offsetWidth;
+            badge.classList.add('pulse');
+        }
+
+        function showToast(notif, duration) {
+            const container = document.getElementById('notif-toast-container');
+            if (!container) return;
+
+            while (container.children.length >= NOTIF_CONFIG.maxVisibleToasts) {
+                container.removeChild(container.firstChild);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `notif-toast notif-${notif.type}`;
+            const dur = duration || (notif.type === 'success' ? NOTIF_CONFIG.successToastDuration : NOTIF_CONFIG.toastDuration);
+            toast.innerHTML = `
+                <div class="notif-toast-icon"><i class="${NOTIF_ICONS[notif.type] || NOTIF_ICONS.info}"></i></div>
+                <div class="notif-toast-content">
+                    <div class="notif-toast-title">${notif.title}</div>
+                    <div class="notif-toast-msg">${notif.message}</div>
+                </div>
+                <button class="notif-toast-close" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+                <div class="notif-toast-progress" style="animation-duration:${dur}ms;"></div>
+            `;
+            const closeBtn = toast.querySelector('.notif-toast-close');
+            const removeToast = () => {
+                if (toast.parentNode) {
+                    toast.classList.add('removing');
+                    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+                }
+            };
+            closeBtn.addEventListener('click', removeToast);
+            container.appendChild(toast);
+            setTimeout(removeToast, dur);
+        }
+
+        function timeAgo(ts) {
+            const diff = Math.floor((Date.now() - ts) / 1000);
+            if (diff < 60) return 'Hace unos segundos';
+            if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
+            if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} h`;
+            return `Hace ${Math.floor(diff / 86400)} d`;
+        }
+
+        function renderPanel() {
+            const body = document.getElementById('notif-panel-body');
+            const title = document.getElementById('notif-panel-title');
+            if (!body) return;
+            const total = notifHistory.length;
+            const unread = notifHistory.filter(n => !n.read).length;
+            if (title) title.textContent = unread > 0 ? `Notificaciones (${unread} sin leer)` : `Notificaciones (${total})`;
+
+            if (total === 0) {
+                body.innerHTML = `<div class="notif-empty"><i class="fa-regular fa-bell-slash"></i>No hay notificaciones por ahora</div>`;
+                return;
+            }
+
+            const sorted = [...notifHistory].sort((a, b) => b.timestamp - a.timestamp);
+            body.innerHTML = sorted.map(n => `
+                <div class="notif-item notif-${n.type} ${n.read ? '' : 'unread'}">
+                    <div class="notif-item-icon"><i class="${NOTIF_ICONS[n.type] || NOTIF_ICONS.info}"></i></div>
+                    <div class="notif-item-body">
+                        <div class="notif-item-title">${n.title}</div>
+                        <div class="notif-item-msg">${n.message}</div>
+                        <div class="notif-item-time">${timeAgo(n.timestamp)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addNotifications(notifs) {
+            if (!Array.isArray(notifs) || notifs.length === 0) return;
+            const order = { danger: 0, warning: 1, info: 2, success: 3 };
+            const enriched = notifs.map((n, i) => ({
+                id: `${NOTIF_CONFIG.dashboardId}-${Date.now()}-${i}`,
+                timestamp: Date.now(),
+                read: false,
+                type: n.type || 'info',
+                title: n.title || '',
+                message: n.message || '',
+                duration: n.duration || null
+            }));
+            enriched.sort((a, b) => order[a.type] - order[b.type]);
+            notifHistory.push(...enriched);
+            saveNotifHistory();
+            enriched.slice(0, NOTIF_CONFIG.maxToasts).forEach((n, i) => {
+                setTimeout(() => showToast(n, n.duration), i * 300);
+            });
+            updateBadge();
+            pulseBadge();
+            renderPanel();
+        }
+
+        function toggleNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            if (!panel) return;
+            if (panel.classList.contains('show')) closeNotifPanel();
+            else openNotifPanel();
+        }
+
+        function openNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            if (!panel) return;
+            panel.classList.add('show');
+            renderPanel();
+        }
+
+        function closeNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            if (!panel) return;
+            panel.classList.remove('show');
+        }
+
+        function markAllAsRead() {
+            notifHistory.forEach(n => n.read = true);
+            saveNotifHistory();
+            updateBadge();
+            renderPanel();
+        }
+
+        function clearNotifHistory() {
+            if (!confirm('¿Eliminar todo el historial de notificaciones?')) return;
+            notifHistory = [];
+            saveNotifHistory();
+            updateBadge();
+            renderPanel();
+        }
+
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('notif-panel');
+            const bell = document.getElementById('notif-bell');
+            if (!panel || !panel.classList.contains('show')) return;
+            if (panel.contains(e.target)) return;
+            if (bell && bell.contains(e.target)) return;
+            closeNotifPanel();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeNotifPanel();
+        });
+
+        /* ============================================================
+           ANALIZADOR DE REGLAS DE NEGOCIO
+           Combina las 6 reglas heredadas + 5 nuevas
+           ============================================================ */
+        function analyzeAndNotify() {
+            if (!rawData || rawData.length === 0) return;
+
+            const notifs = [];
+            const R = NOTIF_CONFIG.rules;
+            const fmt = n => Number(n).toLocaleString('es-MX');
+
+            /* ===== REGLAS HEREDADAS ===== */
+
+            /* 1. Rutas con tiempo muerto extremo (> 60 min máx) */
+            if (cachedDeadTimesList && cachedDeadTimesList.length > 0) {
+                const criticas = cachedDeadTimesList.filter(r => r.max >= R.deadTimeCriticoMax);
+                if (criticas.length > 0) {
+                    const nombres = criticas.slice(0, 3).map(r => r.ruta).join(', ');
+                    const extra = criticas.length > 3 ? ` y ${criticas.length - 3} más` : '';
+                    notifs.push({
+                        type: 'danger',
+                        title: `🚨 ${criticas.length} ruta(s) con tiempo muerto extremo`,
+                        message: `<b>${nombres}${extra}</b> superan los 60 min. Revisa Detalle Cronológico.`
+                    });
+                }
+
+                /* 2. Rutas con tiempo muerto alto (avg ≥ 30 min) */
+                const alertas = cachedDeadTimesList.filter(r => r.avg >= R.deadTimeAltoAvg && r.max < R.deadTimeAltoMax);
+                if (alertas.length > 0) {
+                    const nombres = alertas.slice(0, 3).map(r => r.ruta).join(', ');
+                    const extra = alertas.length > 3 ? ` y ${alertas.length - 3} más` : '';
+                    notifs.push({
+                        type: 'warning',
+                        title: `⚠️ ${alertas.length} ruta(s) con tiempo muerto alto`,
+                        message: `<b>${nombres}${extra}</b> promedian más de 30 min.`
+                    });
+                }
+            }
+
+            /* 3. Excepcionados */
+            const excepcionados = rawData.filter(r => {
+                const st = String(r[statusKeyName] || '').toUpperCase();
+                return st.includes('EXCEPCION');
+            }).length;
+            const pctExcep = (excepcionados / rawData.length) * 100;
+            if (pctExcep > R.excepcionadosDanger) {
+                notifs.push({
+                    type: 'danger',
+                    title: `📉 ${pctExcep.toFixed(1)}% excepcionados`,
+                    message: `${fmt(excepcionados)} de ${fmt(rawData.length)} registros. Umbral: <${R.excepcionadosDanger}%.`
+                });
+            } else if (pctExcep > R.excepcionadosWarning) {
+                notifs.push({
+                    type: 'warning',
+                    title: `⚠️ ${pctExcep.toFixed(1)}% excepcionados`,
+                    message: `${fmt(excepcionados)} registros con excepción.`
+                });
+            }
+
+            /* 4. OR pendientes */
+            const orPendientes = rawData.filter(r => {
+                const guide = String(r[guideKeyName] || '').toUpperCase().trim();
+                const st = String(r[statusKeyName] || '').toUpperCase();
+                return guide.startsWith('OR') && st.includes('PENDIENTE');
+            }).length;
+            if (orPendientes > 0) {
+                notifs.push({
+                    type: 'info',
+                    title: `📦 ${orPendientes} OR pendientes`,
+                    message: `Órdenes de Recolección sin recolectar todavía.`
+                });
+            }
+
+            /* 5. Eventos fuera de horario */
+            if (eventTimeKeyName) {
+                let fueraHorario = 0;
+                rawData.forEach(r => {
+                    const t = r[eventTimeKeyName];
+                    if (!t) return;
+                    const d = t instanceof Date ? t : new Date(t);
+                    if (isNaN(d)) return;
+                    const h = d.getHours();
+                    if (h < 6 || h > 22) fueraHorario++;
+                });
+                const pct = (fueraHorario / rawData.length) * 100;
+                if (pct > R.fueraHorarioPct) {
+                    notifs.push({
+                        type: 'warning',
+                        title: `🕐 ${fueraHorario} eventos fuera de horario`,
+                        message: `(${pct.toFixed(1)}%) entre 22:00 y 06:00 hrs.`
+                    });
+                }
+            }
+
+            /* ===== REGLAS NUEVAS ===== */
+
+            /* 6. Ruta con mayor tiempo muerto total (reemplaza al % de concentración) */
+            if (cachedDeadTimesList && cachedDeadTimesList.length > 0) {
+                const top = [...cachedDeadTimesList].sort((a, b) => b.total - a.total).slice(0, R.topRutasCount);
+                if (top.length > 0) {
+                    const lineas = top.map((r, i) => {
+                        const medals = ['🥇', '🥈', '🥉'];
+                        return `${medals[i]} <b>${r.ruta}</b>: ${formatDuration(r.total)}`;
+                    }).join('<br>');
+                    notifs.push({
+                        type: 'danger',
+                        title: `⏱️ Top ${R.topRutasCount} Rutas con Más Tiempo Muerto Total`,
+                        message: lineas
+                    });
+                }
+            }
+
+            /* 7. Rutas sin actividad reciente (>= 45 min sin evento respecto al máximo global) */
+            if (eventTimeKeyName && cachedCronoList) {
+                const now = Date.now();
+                let maxTimeGlobal = 0;
+                rawData.forEach(r => {
+                    const t = r[eventTimeKeyName];
+                    if (!t) return;
+                    const d = t instanceof Date ? t : new Date(t);
+                    if (!isNaN(d)) maxTimeGlobal = Math.max(maxTimeGlobal, d.getTime());
+                });
+                if (maxTimeGlobal > 0) {
+                    const umbralMs = R.sinActividadMinutos * 60 * 1000;
+                    const rutasColgadas = [];
+                    const ultimoPorRuta = {};
+                    rawData.forEach(r => {
+                        const ruta = String(r[routeKeyName] || 'N/D');
+                        const t = r[eventTimeKeyName];
+                        if (!t) return;
+                        const d = t instanceof Date ? t : new Date(t);
+                        if (isNaN(d)) return;
+                        const ts = d.getTime();
+                        if (!ultimoPorRuta[ruta] || ts > ultimoPorRuta[ruta]) ultimoPorRuta[ruta] = ts;
+                    });
+                    Object.entries(ultimoPorRuta).forEach(([ruta, ts]) => {
+                        const diff = maxTimeGlobal - ts;
+                        if (diff >= umbralMs) {
+                            rutasColgadas.push({ ruta, diff });
+                        }
+                    });
+                    if (rutasColgadas.length > 0) {
+                        rutasColgadas.sort((a, b) => b.diff - a.diff);
+                        const muestra = rutasColgadas.slice(0, 3).map(r => `<b>${r.ruta}</b> (${Math.floor(r.diff / 60000)} min)`).join(', ');
+                        const extra = rutasColgadas.length > 3 ? ` y ${rutasColgadas.length - 3} más` : '';
+                        notifs.push({
+                            type: 'warning',
+                            title: `⏸️ ${rutasColgadas.length} ruta(s) sin actividad ≥ ${R.sinActividadMinutos} min`,
+                            message: `${muestra}${extra}.`
+                        });
+                    }
+                }
+            }
+
+            /* 8. Distribución de estatus (informativo) */
+            const confirmados = rawData.filter(r => {
+                const st = String(r[statusKeyName] || '').toUpperCase();
+                return st.includes('CONFIRMAD');
+            }).length;
+            const pendientes = rawData.filter(r => {
+                const st = String(r[statusKeyName] || '').toUpperCase();
+                return st.includes('PENDIENT') && !String(r[guideKeyName] || '').toUpperCase().startsWith('OR');
+            }).length;
+            const pctConf = (confirmados / rawData.length) * 100;
+            const pctPend = (pendientes / rawData.length) * 100;
+            notifs.push({
+                type: 'info',
+                title: `📊 Distribución de Estatus`,
+                message: `✅ ${fmt(confirmados)} (${pctConf.toFixed(1)}%) · 🚨 ${fmt(excepcionados)} (${pctExcep.toFixed(1)}%) · 📦 ${fmt(orPendientes)} OR · ⏳ ${fmt(pendientes)} (${pctPend.toFixed(1)}%)`
+            });
+
+            /* 9. Top 2 plazas con mayor tiempo muerto promedio */
+            if (eventTimeKeyName && plazaKeyName) {
+                const plazasMap = {};
+                rawData.forEach(r => {
+                    const plaza = String(r[plazaKeyName] || 'N/D');
+                    const ruta = String(r[routeKeyName] || 'N/D');
+                    const t = r[eventTimeKeyName];
+                    if (!t) return;
+                    const d = t instanceof Date ? t : new Date(t);
+                    if (isNaN(d)) return;
+                    if (!plazasMap[plaza]) plazasMap[plaza] = {};
+                    if (!plazasMap[plaza][ruta] || d.getTime() > plazasMap[plaza][ruta]) {
+                        plazasMap[plaza][ruta] = d.getTime();
+                    }
+                });
+                const plazaDeadTimes = {};
+                Object.entries(plazasMap).forEach(([plaza, rutasMap]) => {
+                    const tiempos = Object.values(rutasMap).sort((a, b) => a - b);
+                    if (tiempos.length < 2) return;
+                    let totalDiff = 0;
+                    for (let i = 1; i < tiempos.length; i++) totalDiff += tiempos[i] - tiempos[i - 1];
+                    plazaDeadTimes[plaza] = totalDiff / (tiempos.length - 1);
+                });
+                const topPlazas = Object.entries(plazaDeadTimes)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 2);
+                if (topPlazas.length > 0) {
+                    const lineas = topPlazas.map(([p, ms]) => `<b>${esc(p)}</b>: ${formatDuration(ms)}`).join(' · ');
+                    notifs.push({
+                        type: 'warning',
+                        title: `🗺️ Plazas con Mayor Tiempo Muerto Promedio`,
+                        message: lineas
+                    });
+                }
+            }
+
+            /* 10. Carga exitosa (siempre al final) */
+            notifs.push({
+                type: 'success',
+                title: `✅ ${fmt(rawData.length)} registros cargados`,
+                message: `${cachedDeadTimesList.length} rutas analizadas · ${cachedTimelineList.length} eventos en timeline.`,
+                duration: NOTIF_CONFIG.successToastDuration
+            });
+
+            addNotifications(notifs);
+        }
+
+        /* ============================================================
+           INICIALIZACIÓN
+           ============================================================ */
+        document.addEventListener('DOMContentLoaded', () => {
+            injectBell();
+        });
+
+        window.addEventListener('load', () => {
+            injectBell();
+        });
+    </script>
+
+    <style>
+        #file-status { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+        button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
+            outline: 2px solid #DA291C; outline-offset: 2px; border-radius: 4px;
+        }
+    </style>
+
+    <!-- ===== BOTONES CSV/PDF ELIMINADOS: se quitó el script de exportación CSV y el de copiar guía ===== -->
+
+    <style>
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 1000px 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+}
+</style>
+
+    <style>
+        .ripple-host { position: relative; overflow: hidden; }
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.55);
+            transform: scale(0);
+            animation: rippleAnim 0.6s ease-out;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+        #cards-container > div {
+            transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+        }
+        #cards-container > div:hover {
+            box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.18), 0 20px 40px -10px rgba(218, 41, 28, 0.28) !important;
+        }
+
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(20px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .card-enter {
+            animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+        }
+
+        @keyframes pulseCritical {
+            0%, 100% { background-color: rgba(220, 38, 38, 0.08); }
+            50%      { background-color: rgba(220, 38, 38, 0.28); }
+        }
+        .critical-pulse {
+            animation: pulseCritical 2s ease-in-out infinite;
+            font-weight: 800;
+            color: #dc2626 !important;
+            border-radius: 4px;
+            padding: 2px 6px;
+            display: inline-block;
+        }
+
+        .kpi-bar-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.06);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+        .kpi-bar-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 999px;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50%      { background-position: 100% 50%; }
+        }
+        header.estafeta-red {
+            background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C) !important;
+            background-size: 300% 100% !important;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0 !important; }
+        body.dark-mode header.estafeta-red { background: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B) !important; background-size: 300% 100% !important; }
+        body.dark-mode main,
+        body.dark-mode main > div > div,
+        body.dark-mode .bg-white,
+        body.dark-mode .bg-gray-50,
+        body.dark-mode .bg-gray-100 { background-color: #1e293b !important; }
+        body.dark-mode .bg-gray-50\/60 { background-color: rgba(30, 41, 59, 0.6) !important; }
+        body.dark-mode .text-gray-800,
+        body.dark-mode .text-gray-700,
+        body.dark-mode .text-gray-900 { color: #e2e8f0 !important; }
+        body.dark-mode .text-gray-600,
+        body.dark-mode .text-gray-500,
+        body.dark-mode .text-gray-400 { color: #94a3b8 !important; }
+        body.dark-mode .border-gray-100,
+        body.dark-mode .border-gray-200,
+        body.dark-mode .border-gray-200\/60,
+        body.dark-mode .border-gray-200\/90 { border-color: #334155 !important; }
+        body.dark-mode .shadow-sm,
+        body.dark-mode .shadow-xl,
+        body.dark-mode .shadow-2xl { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -2px rgba(0,0,0,0.4) !important; }
+        body.dark-mode .divide-gray-100 > * + * { border-color: #334155 !important; }
+        body.dark-mode input,
+        body.dark-mode select { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        body.dark-mode .bg-green-50\/60 { background-color: rgba(20, 83, 45, 0.3) !important; }
+        body.dark-mode .bg-red-50\/60 { background-color: rgba(127, 29, 29, 0.3) !important; }
+        body.dark-mode .bg-blue-50\/60 { background-color: rgba(30, 58, 138, 0.3) !important; }
+        body.dark-mode .bg-yellow-50\/60 { background-color: rgba(120, 53, 15, 0.3) !important; }
+        body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; }
+        body.dark-mode #custom-filter-modal > div { background: #1e293b !important; }
+        body.dark-mode #card-modal > div { background: #1e293b !important; }
+        body.dark-mode #card-modal #modal-body .text-gray-800 { color: #e2e8f0 !important; }
+        body.dark-mode #custom-options-container { background-color: #0f172a !important; }
+        body.dark-mode #custom-options-container label:hover { background: #334155 !important; }
+        body.dark-mode #floating-plaza-filter { background: #1e293b !important; border-color: #334155 !important; }
+        body.dark-mode .estafeta-red { background-color: #b91c1c !important; }
+
+        #theme-toggle {
+            position: fixed;
+            bottom: 88px;
+            right: 24px;
+            z-index: 40;
+            width: 48px;
+            height: 48px;
+            border-radius: 999px;
+            background: #1e293b;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        #theme-toggle:hover { transform: scale(1.08); background: #334155; }
+        body.dark-mode #theme-toggle { background: #fbbf24; color: #1e293b; }
+    </style>
+
+    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+    </button>
+
+    <script>
+    (function () {
+        'use strict';
+
+        function aplicarTema(tema) {
+            const body = document.body;
+            const icon = document.getElementById('theme-toggle-icon');
+            if (tema === 'dark') {
+                body.classList.add('dark-mode');
+                if (icon) icon.className = 'fa-solid fa-sun';
+            } else {
+                body.classList.remove('dark-mode');
+                if (icon) icon.className = 'fa-solid fa-moon';
+            }
+        }
+
+        function initTema() {
+            const stored = localStorage.getItem('dashboard-theme');
+            if (stored === 'dark' || stored === 'light') {
+                aplicarTema(stored);
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                aplicarTema('dark');
+            }
+
+            const btn = document.getElementById('theme-toggle');
+            if (btn) {
+                btn.onclick = () => {
+                    const isDark = document.body.classList.contains('dark-mode');
+                    const next = isDark ? 'light' : 'dark';
+                    aplicarTema(next);
+                    localStorage.setItem('dashboard-theme', next);
+                };
+            }
+
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem('dashboard-theme')) aplicarTema(e.matches ? 'dark' : 'light');
+                });
+            }
+        }
+
+        function animateNumber(el, to, duration = 800) {
+            if (!el) return;
+            const from = 0;
+            const start = performance.now();
+            const step = (now) => {
+                const p = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.floor(from + (to - from) * eased).toLocaleString();
+                if (p < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        }
+
+        function patchKPICounters() {
+            const map = {
+                'badge-total-confirmados': 'badge-total-confirmados',
+                'badge-total-excepcionados': 'badge-total-excepcionados',
+                'badge-total-or': 'badge-total-or',
+                'badge-total-pendientes': 'badge-total-pendientes',
+                'status-board-total': 'status-board-total'
+            };
+
+            Object.keys(map).forEach(id => {
+                const el = document.getElementById(id);
+                if (!el || el.dataset.animated === 'patched') return;
+                el.dataset.animated = 'patched';
+
+                const targetText = el.textContent.replace(/,/g, '');
+                const target = parseInt(targetText, 10);
+                if (isNaN(target) || target === 0) return;
+                animateNumber(el, target, 900);
+            });
+        }
+
+        function applyCardStagger() {
+            const container = document.getElementById('cards-container');
+            if (!container) return;
+            Array.from(container.children).forEach((card, i) => {
+                if (card.classList.contains('card-enter')) return;
+                card.classList.add('card-enter');
+                card.style.animationDelay = (i * 45) + 'ms';
+            });
+        }
+
+        function initRipple() {
+            document.body.addEventListener('click', (e) => {
+                const btn = e.target.closest('button');
+                if (!btn || btn.disabled) return;
+                if (btn.classList.contains('toast-close')) return;
+                if (!btn.classList.contains('ripple-host')) btn.classList.add('ripple-host');
+
+                const rect = btn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple-effect';
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 650);
+            }, true);
+        }
+
+        function applyTiltToCards() {
+            document.querySelectorAll('#cards-container > div').forEach(card => {
+                if (card.dataset.tilt === 'on') return;
+                card.dataset.tilt = 'on';
+
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width - 0.5;
+                    const y = (e.clientY - rect.top) / rect.height - 0.5;
+                    card.style.transform = `perspective(1000px) rotateY(${x * 5}deg) rotateX(${-y * 5}deg) translateY(-4px) scale(1.02)`;
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = '';
+                });
+            });
+        }
+
+        function injectKPIBars() {
+            const kpiMap = [
+                { card: 'badge-total-confirmados', pctId: 'percent-confirmados', color: '#10b981' },
+                { card: 'badge-total-excepcionados', pctId: 'percent-excepcionados', color: '#dc2626' },
+                { card: 'badge-total-or', pctId: 'percent-or', color: '#3b82f6' },
+                { card: 'badge-total-pendientes', pctId: 'percent-pendientes', color: '#f59e0b' }
+            ];
+
+            kpiMap.forEach(({ card, pctId, color }) => {
+                const cardEl = document.getElementById(card);
+                const pctEl = document.getElementById(pctId);
+                if (!cardEl || !pctEl) return;
+
+                const cardContainer = cardEl.closest('.bg-green-50\\/60, .bg-red-50\\/60, .bg-blue-50\\/60, .bg-yellow-50\\/60');
+                if (!cardContainer) return;
+
+                if (cardContainer.querySelector('.kpi-bar-track')) return;
+
+                const pct = parseFloat(pctEl.textContent) || 0;
+
+                const track = document.createElement('div');
+                track.className = 'kpi-bar-track';
+                const fill = document.createElement('div');
+                fill.className = 'kpi-bar-fill';
+                fill.style.background = color;
+                track.appendChild(fill);
+                cardContainer.appendChild(track);
+
+                setTimeout(() => { fill.style.width = pct + '%'; }, 150);
+            });
+        }
+
+        function applyCriticalPulse() {
+            const tbody = document.getElementById('dead-times-tbody');
+            if (!tbody) return;
+
+            tbody.querySelectorAll('tr').forEach(tr => {
+                const cells = tr.querySelectorAll('td');
+                if (cells.length < 6) return;
+                const maxCell = cells[4];
+                const totalCell = cells[5];
+
+                const maxTime = maxCell.textContent.trim();
+                const [hh, mm] = maxTime.split(':').map(Number);
+                const totalMin = (hh || 0) * 60 + (mm || 0);
+
+                if (totalMin >= 60 && !maxCell.querySelector('.critical-pulse')) {
+                    const span = document.createElement('span');
+                    span.className = 'critical-pulse';
+                    span.textContent = maxTime;
+                    maxCell.textContent = '';
+                    maxCell.appendChild(span);
+                }
+                if (totalCell) {
+                    const [th, tm] = totalCell.textContent.trim().split(':').map(Number);
+                    if ((th || 0) * 60 + (tm || 0) >= 60 && !totalCell.querySelector('.critical-pulse')) {
+                        const span2 = document.createElement('span');
+                        span2.className = 'critical-pulse';
+                        span2.textContent = totalCell.textContent.trim();
+                        totalCell.textContent = '';
+                        totalCell.appendChild(span2);
+                    }
+                }
+            });
+        }
+
+        function patchViewTransitions() {
+            if (!document.startViewTransition) return;
+            if (window._viewTransitionsPatched) return;
+            window._viewTransitionsPatched = true;
+
+            const origApplyFilters = window.applyFilters;
+            if (typeof origApplyFilters === 'function') {
+                window.applyFilters = function () {
+                    if (document.startViewTransition) {
+                        document.startViewTransition(() => origApplyFilters());
+                    } else {
+                        origApplyFilters();
+                    }
+                };
+            }
+            if (typeof setStatusFilter === 'function') {
+                const origSetStatus = window.setStatusFilter;
+                window.setStatusFilter = function (s) {
+                    if (document.startViewTransition) document.startViewTransition(() => origSetStatus(s));
+                    else origSetStatus(s);
+                };
+            }
+        }
+
+        function runAllEffects() {
+            patchKPICounters();
+            setTimeout(applyCardStagger, 80);
+            setTimeout(applyTiltToCards, 150);
+            setTimeout(injectKPIBars, 200);
+            setTimeout(applyCriticalPulse, 350);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTema();
+            initRipple();
+            patchViewTransitions();
+
+            const dash = document.getElementById('dashboard-content');
+            if (!dash) return;
+
+            let lastCount = -1;
+            const obs = new MutationObserver(() => {
+                if (!dash.classList.contains('hidden')) {
+                    if (typeof rawData !== 'undefined' && rawData.length > 0 && rawData.length !== lastCount) {
+                        lastCount = rawData.length;
+                        setTimeout(runAllEffects, 300);
+                    }
+                    setTimeout(applyCardStagger, 100);
+                }
+            });
+            obs.observe(dash, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
+
+            const obsTbody = document.getElementById('dead-times-tbody');
+            if (obsTbody) {
+                new MutationObserver(() => setTimeout(applyCriticalPulse, 150))
+                    .observe(obsTbody, { childList: true });
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,2623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embarque TR1</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --estafeta-red: #DA291C;
+            --estafeta-dark: #222222;
+        }
+        .bg-estafeta { background-color: var(--estafeta-red); }
+        .text-estafeta { color: var(--estafeta-red); }
+        .border-estafeta { border-color: var(--estafeta-red); }
+
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            background: #DA291C;
+            padding: 10px 20px;
+        }
+
+        .floating-plaza-container {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            background-color: #FFFFFF;
+            color: var(--estafeta-dark);
+            padding: 10px 18px;
+            border-radius: 30px;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 9999;
+            transition: all 0.3s ease;
+        }
+        .floating-plaza-container:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            transform: translateY(-2px);
+        }
+        .floating-plaza-container.hidden { display: none !important; }
+
+        .custom-multiselect { position: relative; display: inline-block; }
+        .multiselect-header { padding: 6px 12px; border-radius: 6px; border: 1px solid #CBD5E1; background: white; font-size: 13px; color: var(--estafeta-dark); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; min-width: 180px; }
+
+        .multiselect-dropdown {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 380px; max-width: 90vw;
+            background: white; border: 1px solid #CBD5E1;
+            border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            z-index: 999999; display: none; padding: 20px; opacity: 0;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .multiselect-dropdown.show { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.4); z-index: 999988; display: none;
+            backdrop-filter: blur(2px);
+        }
+        .modal-backdrop.show { display: block; }
+
+        .modal-title-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 700; font-size: 15px; color: var(--estafeta-dark); border-bottom: 1px solid #E2E8F0; padding-bottom: 8px; }
+        .modal-close-x { cursor: pointer; color: #555; font-size: 16px; padding: 4px; }
+        .modal-close-x:hover { color: var(--estafeta-red); }
+        .multiselect-search-box { width: 100%; padding: 8px 12px; margin-bottom: 12px; border: 1px solid #CBD5E1; border-radius: 6px; font-size: 13px; outline: none; }
+        .multiselect-search-box:focus { border-color: var(--estafeta-red); }
+        .multiselect-actions { display: flex; justify-content: space-between; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid #E2E8F0; font-size: 12px; }
+        .multiselect-actions span { color: var(--estafeta-red); cursor: pointer; font-weight: 500; }
+        .multiselect-actions span:hover { text-decoration: underline; }
+        .multiselect-options-list { max-height: 250px; overflow-y: auto; margin-bottom: 15px; }
+        .multiselect-option { display: flex; align-items: center; gap: 8px; padding: 8px; font-size: 13px; cursor: pointer; border-radius: 4px; }
+        .multiselect-option:hover { background-color: #F8FAFC; }
+        .multiselect-option input { cursor: pointer; width: 16px; height: 16px; accent-color: var(--estafeta-red); }
+        .modal-apply-btn { width: 100%; background-color: var(--estafeta-red); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; }
+        .modal-apply-btn:hover { background-color: #b00e14; }
+
+        /* 5.2: GRADIENTE ANIMADO */
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50%      { background-position: 100% 50%; }
+        }
+        header.top-bar {
+            background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C) !important;
+            background-size: 300% 100% !important;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        /* 2.1: RIPPLE */
+        .ripple-host { position: relative; overflow: hidden; }
+        .ripple-effect {
+            position: absolute; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.55);
+            transform: scale(0); animation: rippleAnim 0.6s ease-out;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+        /* 1.3: CASCADA */
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(20px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
+
+        /* 3.2: PULSE CRÍTICO */
+        @keyframes pulseCritical {
+            0%, 100% { background-color: rgba(220, 38, 38, 0.08); }
+            50%      { background-color: rgba(220, 38, 38, 0.28); }
+        }
+        .critical-pulse {
+            animation: pulseCritical 2s ease-in-out infinite;
+            font-weight: 800; color: #dc2626 !important;
+            border-radius: 4px; padding: 2px 6px;
+            display: inline-block;
+        }
+
+        /* 3.1: BARRAS */
+        .kpi-bar-track {
+            width: 100%; height: 5px;
+            background: rgba(0, 0, 0, 0.06);
+            border-radius: 999px; overflow: hidden; margin-top: 6px;
+        }
+        .kpi-bar-fill {
+            height: 100%; width: 0%;
+            border-radius: 999px;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 5.1: MODO OSCURO */
+        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
+        body.dark-mode header.top-bar { background: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B) !important; background-size: 300% 100% !important; }
+        body.dark-mode main,
+        body.dark-mode .bg-white,
+        body.dark-mode .bg-gray-50,
+        body.dark-mode .bg-gray-100 { background-color: #1e293b !important; }
+        body.dark-mode .text-gray-800,
+        body.dark-mode .text-gray-700,
+        body.dark-mode .text-gray-900 { color: #e2e8f0 !important; }
+        body.dark-mode .text-gray-600,
+        body.dark-mode .text-gray-500,
+        body.dark-mode .text-gray-400 { color: #94a3b8 !important; }
+        body.dark-mode .border-gray-100,
+        body.dark-mode .border-gray-200,
+        body.dark-mode .border-gray-300 { border-color: #334155 !important; }
+        body.dark-mode .border-l-4 { border-left-color: inherit !important; }
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        body.dark-mode .bg-gray-200 { background-color: #334155 !important; }
+        body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; }
+        body.dark-mode .bg-red-100 { background-color: rgba(127, 29, 29, 0.5) !important; }
+        body.dark-mode .bg-amber-50 { background-color: rgba(120, 53, 15, 0.35) !important; }
+        body.dark-mode .bg-amber-100 { background-color: rgba(120, 53, 15, 0.45) !important; }
+        body.dark-mode .bg-blue-50 { background-color: rgba(30, 58, 138, 0.35) !important; }
+        body.dark-mode .bg-purple-50 { background-color: rgba(88, 28, 135, 0.35) !important; }
+        body.dark-mode .bg-green-100 { background-color: rgba(20, 83, 45, 0.4) !important; }
+        body.dark-mode .bg-red-50\/50 { background-color: rgba(127, 29, 29, 0.2) !important; }
+        body.dark-mode .bg-red-50\/40 { background-color: rgba(127, 29, 29, 0.2) !important; }
+        body.dark-mode table thead.bg-gray-100 { background-color: #0f172a !important; }
+        body.dark-mode table tbody tr:hover { background-color: rgba(51, 65, 85, 0.5) !important; }
+        body.dark-mode .shadow-sm,
+        body.dark-mode .shadow-md,
+        body.dark-mode .shadow-lg,
+        body.dark-mode .shadow-xl,
+        body.dark-mode .shadow-2xl { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important; }
+        body.dark-mode .multiselect-dropdown,
+        body.dark-mode .modal-backdrop { background-color: #1e293b !important; }
+        body.dark-mode .floating-plaza-container { background: #1e293b !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+
+        /* Botón de tema flotante */
+        #theme-toggle {
+            position: fixed;
+            bottom: 90px;
+            right: 24px;
+            z-index: 40;
+            width: 48px;
+            height: 48px;
+            border-radius: 999px;
+            background: #1e293b;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        #theme-toggle:hover { transform: scale(1.08) rotate(15deg); background: #334155; }
+        body.dark-mode #theme-toggle { background: #fbbf24; color: #1e293b; }
+        body.dark-mode #theme-toggle:hover { background: #f59e0b; }
+
+        /* ============================================================
+           🔔 CAMPANA DE NOTIFICACIONES — ESTILOS
+           ============================================================ */
+        #notif-bell {
+            position: relative;
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.35);
+            color: #fff;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 17px;
+            transition: all 0.2s ease;
+        }
+        #notif-bell:hover { background: rgba(255,255,255,0.22); transform: translateY(-1px); }
+        #notif-bell:active { transform: scale(0.96); }
+
+        #notif-badge {
+            position: absolute;
+            top: -6px; right: -6px;
+            min-width: 20px; height: 20px;
+            padding: 0 6px;
+            background: #dc2626;
+            color: #fff;
+            border: 2px solid #fff;
+            border-radius: 999px;
+            font-size: 11px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        #notif-badge.hidden { display: none !important; }
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.18); }
+        }
+        #notif-badge.pulse { animation: badgePulse 0.6s ease; }
+
+        /* TOASTS */
+        #notif-toast-container {
+            position: fixed;
+            top: 80px; right: 20px;
+            display: flex; flex-direction: column; gap: 12px;
+            width: 380px; max-width: calc(100vw - 40px);
+            z-index: 99999;
+            pointer-events: none;
+        }
+        .notif-toast {
+            pointer-events: auto;
+            background: #fff;
+            color: #1e293b;
+            border-radius: 12px;
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08);
+            padding: 12px 14px;
+            display: flex; gap: 10px;
+            animation: notifToastIn 0.45s cubic-bezier(0.16,1,0.3,1);
+            font-size: 13px;
+            line-height: 1.45;
+            position: relative;
+        }
+        @keyframes notifToastIn {
+            from { opacity: 0; transform: translateX(120%); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        .notif-toast.out {
+            animation: notifToastOut 0.35s ease forwards;
+        }
+        @keyframes notifToastOut {
+            to { opacity: 0; transform: translateX(120%); }
+        }
+        .notif-toast .notif-toast-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+        .notif-toast .notif-toast-content { flex: 1; min-width: 0; }
+        .notif-toast .notif-toast-title { font-weight: 800; font-size: 13px; margin-bottom: 3px; }
+        .notif-toast .notif-toast-msg { color: #475569; font-size: 12.5px; word-break: break-word; }
+        .notif-toast .notif-toast-msg br { line-height: 1.5; }
+        .notif-toast .notif-toast-close {
+            position: absolute; top: 6px; right: 8px;
+            background: transparent; border: none;
+            color: #94a3b8; cursor: pointer;
+            font-size: 13px; padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .notif-toast .notif-toast-close:hover { color: #475569; background: #f1f5f9; }
+
+        .notif-toast.notif-danger  { border-left-color: #dc2626; }
+        .notif-toast.notif-danger  .notif-toast-icon { color: #dc2626; }
+        .notif-toast.notif-danger  .notif-toast-title { color: #991b1b; }
+
+        .notif-toast.notif-warning { border-left-color: #f59e0b; }
+        .notif-toast.notif-warning .notif-toast-icon { color: #d97706; }
+        .notif-toast.notif-warning .notif-toast-title { color: #92400e; }
+
+        .notif-toast.notif-info    { border-left-color: #3b82f6; }
+        .notif-toast.notif-info    .notif-toast-icon { color: #2563eb; }
+        .notif-toast.notif-info    .notif-toast-title { color: #1e40af; }
+
+        .notif-toast.notif-success { border-left-color: #16a34a; }
+        .notif-toast.notif-success .notif-toast-icon { color: #15803d; }
+        .notif-toast.notif-success .notif-toast-title { color: #166534; }
+
+        .notif-toast.notif-purple  { border-left-color: #9333ea; }
+        .notif-toast.notif-purple  .notif-toast-icon { color: #7e22ce; }
+        .notif-toast.notif-purple  .notif-toast-title { color: #6b21a8; }
+
+        /* PANEL */
+        #notif-panel {
+            position: fixed;
+            top: 80px; right: 20px;
+            width: 400px; max-width: calc(100vw - 40px);
+            max-height: 70vh;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            z-index: 99998;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            animation: notifPanelIn 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        #notif-panel.open { display: flex; }
+        @keyframes notifPanelIn {
+            from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .notif-panel-header {
+            padding: 14px 16px;
+            background: linear-gradient(90deg,#DA291C,#b81810);
+            color: #fff;
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: 700; font-size: 14px;
+        }
+        .notif-panel-header .notif-panel-close {
+            background: rgba(255,255,255,0.15);
+            border: none; color: #fff;
+            width: 28px; height: 28px;
+            border-radius: 8px; cursor: pointer;
+            font-size: 13px;
+        }
+        .notif-panel-header .notif-panel-close:hover { background: rgba(255,255,255,0.3); }
+        .notif-panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        .notif-panel-body::-webkit-scrollbar { width: 6px; }
+        .notif-panel-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .notif-item {
+            display: flex; gap: 10px;
+            padding: 10px 10px 10px 12px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            border-left: 3px solid transparent;
+            background: #f8fafc;
+            transition: background 0.2s;
+        }
+        .notif-item:hover { background: #f1f5f9; }
+        .notif-item.unread { background: #fef2f2; }
+        body.dark-mode .notif-item { background: #1e293b; }
+        body.dark-mode .notif-item.unread { background: rgba(127,29,29,0.35); }
+        body.dark-mode .notif-item:hover { background: #334155; }
+
+        .notif-item.notif-danger  { border-left-color: #dc2626; }
+        .notif-item.notif-warning { border-left-color: #f59e0b; }
+        .notif-item.notif-info    { border-left-color: #3b82f6; }
+        .notif-item.notif-success { border-left-color: #16a34a; }
+        .notif-item.notif-purple  { border-left-color: #9333ea; }
+
+        .notif-item-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+        .notif-item.notif-danger  .notif-item-icon { color: #dc2626; }
+        .notif-item.notif-warning .notif-item-icon { color: #d97706; }
+        .notif-item.notif-info    .notif-item-icon { color: #2563eb; }
+        .notif-item.notif-success .notif-item-icon { color: #15803d; }
+        .notif-item.notif-purple  .notif-item-icon { color: #7e22ce; }
+
+        .notif-item-content { flex: 1; min-width: 0; }
+        .notif-item-title { font-weight: 800; font-size: 12.5px; color: #1e293b; margin-bottom: 3px; }
+        .notif-item-msg { color: #475569; font-size: 12px; line-height: 1.45; word-break: break-word; }
+        .notif-item-time { color: #94a3b8; font-size: 11px; margin-top: 4px; }
+        body.dark-mode .notif-item-title { color: #f1f5f9; }
+        body.dark-mode .notif-item-msg { color: #cbd5e1; }
+        body.dark-mode .notif-item-time { color: #64748b; }
+
+        .notif-panel-footer {
+            padding: 10px 12px;
+            border-top: 1px solid #e2e8f0;
+            display: flex; gap: 8px;
+            background: #f8fafc;
+        }
+        .notif-panel-footer button {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px; font-weight: 700;
+            cursor: pointer;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+            transition: all 0.2s;
+        }
+        .notif-panel-footer button:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .notif-panel-footer button.danger { color: #dc2626; border-color: #fecaca; }
+        .notif-panel-footer button.danger:hover { background: #fef2f2; }
+        body.dark-mode #notif-panel { background: #1e293b; border-color: #334155; }
+        body.dark-mode .notif-panel-footer { background: #0f172a; border-color: #334155; }
+        body.dark-mode .notif-panel-footer button { background: #1e293b; color: #e2e8f0; border-color: #334155; }
+        body.dark-mode .notif-panel-footer button:hover { background: #334155; }
+        body.dark-mode .notif-toast { background: #1e293b; color: #e2e8f0; }
+        body.dark-mode .notif-toast .notif-toast-msg { color: #cbd5e1; }
+        body.dark-mode .notif-toast .notif-toast-close:hover { background: #334155; color: #f1f5f9; }
+
+        .notif-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .notif-empty i { font-size: 36px; display: block; margin-bottom: 12px; opacity: 0.5; }
+
+        @media (max-width: 640px) {
+            #notif-toast-container {
+                top: auto;
+                bottom: 20px;
+                right: 12px;
+                left: 12px;
+                width: auto;
+                max-width: none;
+            }
+            #notif-panel {
+                top: auto;
+                bottom: 12px;
+                left: 12px; right: 12px;
+                width: auto; max-width: none;
+                max-height: 65vh;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 min-h-screen flex flex-col">
+
+    <div class="modal-backdrop" id="modal-backdrop" onclick="closeAllModals()"></div>
+
+    <div class="multiselect-dropdown" id="plaza-multiselect-dropdown-box">
+        <div class="modal-title-bar">
+            <span>Filtrar Plaza Destino</span>
+            <i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i>
+        </div>
+        <input type="text" class="multiselect-search-box" id="search-plaza" placeholder="Buscar plaza..." onkeyup="filterMultiselectOptions('plaza-multiselect-options-container', 'search-plaza')">
+        <div class="multiselect-actions">
+            <span onclick="selectAllPlazas(true)">Seleccionar todas</span>
+            <span onclick="selectAllPlazas(false)">Ninguna</span>
+        </div>
+        <div class="multiselect-options-list" id="plaza-multiselect-options-container"></div>
+        <button class="modal-apply-btn" onclick="closeAllModals()">Aplicar Filtro</button>
+    </div>
+
+    <header class="top-bar text-white shadow-md border-b-4 border-[#222222] w-full">
+        <div class="max-w-7xl mx-auto px-4 py-2 flex flex-col md:flex-row justify-between items-center gap-4 w-full">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-[#DA291C] font-black text-2xl px-3 py-1 rounded tracking-wider shadow">ESTAFETA</div>
+                <div>
+                    <h1 class="text-xl font-bold">Embarque TR1</h1>
+                    <p class="text-xs text-white/80">Procesamiento local y seguro en navegador</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3" id="header-actions-container">
+                <div class="relative">
+                    <button onclick="document.getElementById('excel-file-header').click()" class="bg-transparent hover:bg-white/10 text-white border border-white/40 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-file-excel text-emerald-300"></i> Cargar / Arrastrar Excel
+                    </button>
+                    <input type="file" id="excel-file-header" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileSelect(event)">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileSelect(event)">
+
+    <main id="main-dashboard" class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow hidden space-y-6">
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 space-y-4">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-filter text-[#DA291C]"></i> Filtros dinámicos
+                </h3>
+                <div id="active-filters" class="flex flex-wrap gap-2 items-center">
+                    <span class="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full border">Sin filtros activos</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <div class="relative" id="ut-dropdown-container">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Unidad de Transporte (UT)</label>
+                    <button type="button" onclick="toggleUTDropdown()" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-3 text-left text-sm flex justify-between items-center focus:ring-2 focus:ring-[#DA291C] focus:outline-none cursor-pointer">
+                        <span id="ut-dropdown-label" class="text-gray-700 truncate">Seleccionar UT(s)...</span>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-500"></i>
+                    </button>
+                    <div id="ut-dropdown-panel" class="hidden absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto p-2">
+                        <div class="p-1 border-b border-gray-100 flex justify-between items-center text-xs mb-1 font-medium">
+                            <span class="font-bold text-gray-600">Filtrar por UT</span>
+                            <div class="space-x-2">
+                                <button type="button" onclick="selectAllUT(true)" class="text-red-600 hover:underline">Todos</button>
+                                <span class="text-gray-300">|</span>
+                                <button type="button" onclick="selectAllUT(false)" class="text-gray-500 hover:underline">Ninguno</button>
+                            </div>
+                        </div>
+                        <div id="ut-checkbox-list" class="space-y-1"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Filtrar por Garantía</label>
+                    <select id="slicer-garantia" onchange="filterData()" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-3 text-sm focus:ring-2 focus:ring-[#DA291C] focus:outline-none">
+                        <option value="">Todas las garantías</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Búsqueda Rápida Global</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search"></i></span>
+                        <input type="text" id="search-general" placeholder="Guía, cliente, plaza..." onkeyup="filterData()" class="pl-9 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#DA291C] focus:outline-none w-full">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 border-l-4 border-l-[#DA291C] transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                <div class="flex items-center justify-between">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total de Guías</p>
+                    <div class="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center text-[#DA291C]">
+                        <i class="fa-solid fa-box-archive text-sm"></i>
+                    </div>
+                </div>
+                <h3 id="kpi-total" class="text-2xl font-black text-gray-800 mt-1">0</h3>
+                <span class="text-xs text-green-600 font-medium mt-2 inline-block"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Filtradas del total</span>
+                <div class="kpi-bar-track"><div class="kpi-bar-fill" id="bar-total" style="background:#DA291C"></div></div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 border-l-4 border-l-blue-600 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                <div class="flex items-center justify-between">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Promedio Horas Sin Movimiento</p>
+                    <div class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                        <i class="fa-solid fa-clock text-sm"></i>
+                    </div>
+                </div>
+                <h3 id="kpi-horas" class="text-2xl font-black text-gray-800 mt-1">0 hrs</h3>
+                <span class="text-xs text-gray-500 font-medium mt-2 inline-block">Tiempo promedio en tránsito</span>
+                <div class="kpi-bar-track"><div class="kpi-bar-fill" id="bar-horas" style="background:#2563eb"></div></div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 border-l-4 border-l-amber-500 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                <div class="flex items-center justify-between">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Con UT Asignada</p>
+                    <div class="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-amber-600">
+                        <i class="fa-solid fa-truck text-sm"></i>
+                    </div>
+                </div>
+                <h3 id="kpi-ut" class="text-2xl font-black text-gray-800 mt-1">0</h3>
+                <span class="text-xs text-amber-600 font-medium mt-2 inline-block">Unidades de Transporte registradas</span>
+                <div class="kpi-bar-track"><div class="kpi-bar-fill" id="bar-ut" style="background:#f59e0b"></div></div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 border-l-4 border-l-purple-600 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                <div class="flex items-center justify-between">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Plazas de Destino Únicas</p>
+                    <div class="w-9 h-9 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+                        <i class="fa-solid fa-map-location-dot text-sm"></i>
+                    </div>
+                </div>
+                <h3 id="kpi-plazas" class="text-2xl font-black text-gray-800 mt-1">0</h3>
+                <span class="text-xs text-purple-600 font-medium mt-2 inline-block">Destinos activos</span>
+                <div class="kpi-bar-track"><div class="kpi-bar-fill" id="bar-plazas" style="background:#9333ea"></div></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+                <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center justify-between">
+                    <span><i class="fa-solid fa-chart-pie text-[#DA291C] mr-2"></i> Distribución por Garantía</span>
+                    <span class="text-xs text-gray-400 font-normal">Dinámico según Slicers</span>
+                </h3>
+                <div class="relative flex-grow h-72">
+                    <canvas id="chartGarantia"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+                <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center justify-between">
+                    <span><i class="fa-solid fa-clock-rotate-left text-[#DA291C] mr-2"></i> Estatus de Vencimiento (V, VH, ET)</span>
+                    <span class="text-xs text-gray-400 font-normal">Dinámico según Slicers</span>
+                </h3>
+                <div class="relative flex-grow h-72">
+                    <canvas id="chartVencidosTiempo"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-4 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-box text-[#DA291C] mr-2"></i> Reporte General de Paquetes</h3>
+                <div class="relative w-full md:w-72">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span>
+                    <input type="text" id="reporte-search-input" placeholder="Búsqueda avanzada en reporte..." onkeyup="filterReporteTableSearch()" class="pl-8 pr-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-[#DA291C] focus:outline-none w-full shadow-sm">
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto flex-wrap justify-end">
+                    <span id="reporte-paquetes-table-count" class="text-xs bg-gray-200 text-gray-700 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">0 registros</span>
+                    <button onclick="downloadReportePaquetesExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+                        <i class="fa-solid fa-file-excel"></i> Descargar Excel
+                    </button>
+                </div>
+            </div>
+            <div id="reporte-active-filters-bar" class="hidden px-4 py-2 bg-red-50 border-b border-red-100 flex items-center justify-between text-xs">
+                <div id="reporte-active-filters-desc" class="flex items-center gap-2 text-red-800 font-medium"></div>
+                <button onclick="clearReporteTableFilters()" class="text-red-700 hover:text-red-900 underline font-semibold cursor-pointer">Quitar filtros de tabla</button>
+            </div>
+            <div class="overflow-x-auto min-h-[145px]">
+                <table id="reporte-paquetes-table" class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-gray-100 text-gray-700 uppercase sticky top-0 z-10 font-semibold"><tr></tr></thead>
+                    <tbody class="text-gray-600"></tbody>
+                </table>
+            </div>
+            <div id="reporte-paquetes-pagination" class="p-3 bg-gray-50 border-t border-gray-200 flex justify-between items-center text-xs"></div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-4 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-triangle-exclamation text-amber-500 mr-2"></i> Rojos y Amarillos por UT</h3>
+                <div class="flex items-center gap-3 w-full sm:w-auto flex-wrap justify-end">
+                    <div id="rojos-amarillos-concentrado" class="text-xs bg-amber-50 text-amber-900 border border-amber-200 px-3 py-1.5 rounded-lg font-medium flex flex-wrap gap-2 items-center"></div>
+                    <span id="rojos-amarillos-table-count" class="text-xs bg-gray-200 text-gray-700 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">0 registros</span>
+                    <button onclick="downloadRojosAmarillosExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+                        <i class="fa-solid fa-file-excel"></i> Descargar Excel
+                    </button>
+                </div>
+            </div>
+            <div id="table-active-filters-bar" class="hidden px-4 py-2 bg-red-50 border-b border-red-100 flex items-center justify-between text-xs">
+                <div id="table-active-filters-desc" class="flex items-center gap-2 text-red-800 font-medium"></div>
+                <button onclick="clearTableFilters()" class="text-red-700 hover:text-red-900 underline font-semibold cursor-pointer">Quitar filtro de columna</button>
+            </div>
+            <div class="overflow-x-auto min-h-[145px]">
+                <table id="rojos-amarillos-ut-table" class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-gray-100 text-gray-700 uppercase sticky top-0 z-10 font-semibold"><tr></tr></thead>
+                    <tbody class="text-gray-600"></tbody>
+                </table>
+            </div>
+            <div id="rojos-amarillos-pagination" class="p-3 bg-gray-50 border-t border-gray-200 flex justify-between items-center text-xs"></div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-4 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-percent text-[#DA291C] mr-2"></i> Garantías y Porcentaje de Carga por UT</h3>
+                <div class="flex items-center gap-3">
+                    <span id="garantia-table-count" class="text-xs bg-gray-200 text-gray-700 px-2.5 py-1 rounded-full font-medium">0 registros</span>
+                </div>
+            </div>
+            <div id="garantia-active-filters-bar" class="hidden px-4 py-2 bg-red-50 border-b border-red-100 flex items-center justify-between text-xs">
+                <div id="garantia-active-filters-desc" class="flex items-center gap-2 text-red-800 font-medium"></div>
+                <button onclick="clearGarantiaTableFilters()" class="text-red-700 hover:text-red-900 underline font-semibold cursor-pointer">Quitar filtros de tabla</button>
+            </div>
+            <div class="overflow-x-auto min-h-[145px]">
+                <table id="garantia-ut-table" class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-gray-100 text-gray-700 uppercase sticky top-0 z-10 font-semibold">
+                        <tr>
+                            <th class="px-4 py-2">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="cursor-pointer select-none flex-grow flex items-center" onclick="sortGarantiaTable('ut')">
+                                        <span>UT (Unidad de Transporte)</span>
+                                        <span id="sort-icon-ut"><i class="fa-solid fa-sort text-gray-300 hover:text-gray-500 text-xs ml-1"></i></span>
+                                    </span>
+                                    <button onclick="openGarantiaColumnFilterModal('ut')" class="text-gray-500 hover:text-[#DA291C] p-1 rounded transition cursor-pointer" title="Filtrar UT">
+                                        <i class="fa-solid fa-filter text-xs"></i>
+                                    </button>
+                                </div>
+                            </th>
+                            <th class="px-4 py-2">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="cursor-pointer select-none flex-grow flex items-center" onclick="sortGarantiaTable('garantia')">
+                                        <span>Garantía</span>
+                                        <span id="sort-icon-garantia"><i class="fa-solid fa-sort text-gray-300 hover:text-gray-500 text-xs ml-1"></i></span>
+                                    </span>
+                                    <button onclick="openGarantiaColumnFilterModal('garantia')" class="text-gray-500 hover:text-[#DA291C] p-1 rounded transition cursor-pointer" title="Filtrar Garantía">
+                                        <i class="fa-solid fa-filter text-xs"></i>
+                                    </button>
+                                </div>
+                            </th>
+                            <th class="px-4 py-2 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <span class="cursor-pointer select-none flex items-center" onclick="sortGarantiaTable('count')">
+                                        <span>Cantidad</span>
+                                        <span id="sort-icon-count"><i class="fa-solid fa-sort text-gray-300 hover:text-gray-500 text-xs ml-1"></i></span>
+                                    </span>
+                                </div>
+                            </th>
+                            <th class="px-4 py-2 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <span class="cursor-pointer select-none flex items-center" onclick="sortGarantiaTable('percentage')">
+                                        <span>% Representación</span>
+                                        <span id="sort-icon-percentage"><i class="fa-solid fa-sort text-gray-300 hover:text-gray-500 text-xs ml-1"></i></span>
+                                    </span>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600"></tbody>
+                </table>
+            </div>
+            <div id="garantia-ut-pagination" class="p-3 bg-gray-50 border-t border-gray-200 flex justify-between items-center text-xs"></div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-4 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-table text-[#DA291C] mr-2"></i> Detalle de Guías Operativas</h3>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <span id="table-count" class="text-xs bg-gray-200 text-gray-700 px-2.5 py-1 rounded-full font-medium">Mostrando 0 registros</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto min-h-[145px]">
+                <table id="data-table" class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-gray-100 text-gray-700 uppercase sticky top-0 z-10 font-semibold"></thead>
+                    <tbody class="text-gray-600"></tbody>
+                </table>
+            </div>
+            <div id="data-table-pagination" class="p-3 bg-gray-50 border-t border-gray-200 flex justify-between items-center text-xs"></div>
+        </div>
+
+    </main>
+
+    <div class="floating-plaza-container hidden" id="floating-plaza-container">
+        <i class="fa-solid fa-map-location-dot" style="color: var(--estafeta-red);"></i>
+        <span style="font-size: 13px; font-weight: 600;">Plaza:</span>
+        <div class="custom-multiselect" id="plaza-multiselect">
+            <div class="multiselect-header" onclick="openModal('plaza-multiselect-dropdown-box', event)" style="min-width: 160px;">
+                <span id="plaza-multiselect-header-text">-- Todas las Plazas --</span>
+                <i class="fa-solid fa-chevron-down" style="font-size: 11px; color: #555;"></i>
+            </div>
+        </div>
+    </div>
+
+    <button id="floating-reset-btn" onclick="resetFilters()" class="hidden fixed bottom-6 right-6 z-40 bg-[#DA291C] hover:bg-red-700 text-white px-4 py-3 rounded-full shadow-2xl font-semibold text-xs transition-all duration-300 flex items-center gap-2 cursor-pointer border-2 border-white">
+        <i class="fa-solid fa-rotate-right"></i> Limpiar Filtros
+    </button>
+
+    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+    </button>
+
+    <!-- 🔔 CAMPANA: contenedores -->
+    <div id="notif-toast-container"></div>
+    <div id="notif-panel">
+        <div class="notif-panel-header">
+            <span id="notif-panel-title"><i class="fa-solid fa-bell mr-1"></i> Notificaciones</span>
+            <button class="notif-panel-close" onclick="closeNotifPanel()" aria-label="Cerrar panel">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="notif-panel-body" id="notif-panel-body"></div>
+        <div class="notif-panel-footer">
+            <button onclick="markAllAsRead()"><i class="fa-solid fa-check-double mr-1"></i> Marcar leídas</button>
+            <button class="danger" onclick="clearNotifHistory()"><i class="fa-solid fa-trash mr-1"></i> Limpiar</button>
+        </div>
+    </div>
+
+    <!-- MODALES -->
+<div id="column-filter-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-200">
+        <div class="p-4 bg-[#222222] text-white flex justify-between items-center">
+            <h4 id="column-filter-title" class="text-sm font-bold flex items-center gap-2">
+                <i class="fa-solid fa-filter text-[#DA291C]"></i> Filtrar Columna
+            </h4>
+            <button onclick="closeColumnFilterModal()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-4 space-y-3">
+            <div class="relative">
+                <input type="text" id="column-filter-search" placeholder="Buscar valor..." onkeyup="filterColumnModalValues()" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-[#DA291C] focus:outline-none">
+            </div>
+            <div class="flex justify-between items-center text-xs font-medium text-gray-500 px-1">
+                <span>Seleccionar valores:</span>
+                <div class="space-x-2">
+                    <button type="button" onclick="selectAllModalValues(true)" class="text-[#DA291C] hover:underline">Todos</button>
+                    <span>|</span>
+                    <button type="button" onclick="selectAllModalValues(false)" class="text-gray-500 hover:underline">Ninguno</button>
+                </div>
+            </div>
+            <div id="column-filter-checkboxes" class="max-h-48 overflow-y-auto space-y-1 border border-gray-200 rounded-lg p-2 bg-gray-50 text-xs"></div>
+        </div>
+        <div class="p-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+            <button onclick="closeColumnFilterModal()" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-300 cursor-pointer">Cancelar</button>
+            <button onclick="applyColumnFilterModal()" class="px-3 py-1.5 bg-[#DA291C] text-white rounded-lg text-xs font-semibold hover:bg-red-700 cursor-pointer">Aplicar Filtro</button>
+        </div>
+    </div>
+</div>
+
+<div id="reporte-column-filter-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-200">
+        <div class="p-4 bg-[#222222] text-white flex justify-between items-center">
+            <h4 id="reporte-column-filter-title" class="text-sm font-bold flex items-center gap-2">
+                <i class="fa-solid fa-filter text-[#DA291C]"></i> Filtrar Columna
+            </h4>
+            <button onclick="closeReporteColumnFilterModal()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-4 space-y-3">
+            <div class="relative">
+                <input type="text" id="reporte-column-filter-search" placeholder="Buscar valor..." onkeyup="filterReporteColumnModalValues()" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-[#DA291C] focus:outline-none">
+            </div>
+            <div class="flex justify-between items-center text-xs font-medium text-gray-500 px-1">
+                <span>Seleccionar valores:</span>
+                <div class="space-x-2">
+                    <button type="button" onclick="selectAllReporteModalValues(true)" class="text-[#DA291C] hover:underline">Todos</button>
+                    <span>|</span>
+                    <button type="button" onclick="selectAllReporteModalValues(false)" class="text-gray-500 hover:underline">Ninguno</button>
+                </div>
+            </div>
+            <div id="reporte-column-filter-checkboxes" class="max-h-48 overflow-y-auto space-y-1 border border-gray-200 rounded-lg p-2 bg-gray-50 text-xs"></div>
+        </div>
+        <div class="p-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+            <button onclick="closeReporteColumnFilterModal()" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-300 cursor-pointer">Cancelar</button>
+            <button onclick="applyReporteColumnFilterModal()" class="px-3 py-1.5 bg-[#DA291C] text-white rounded-lg text-xs font-semibold hover:bg-red-700 cursor-pointer">Aplicar Filtro</button>
+        </div>
+    </div>
+</div>
+
+<div id="garantia-column-filter-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-200">
+        <div class="p-4 bg-[#222222] text-white flex justify-between items-center">
+            <h4 id="garantia-column-filter-title" class="text-sm font-bold flex items-center gap-2">
+                <i class="fa-solid fa-filter text-[#DA291C]"></i> Filtrar Tabla
+            </h4>
+            <button onclick="closeGarantiaColumnFilterModal()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-4 space-y-3">
+            <div class="relative">
+                <input type="text" id="garantia-column-filter-search" placeholder="Buscar valor..." onkeyup="filterGarantiaColumnModalValues()" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-[#DA291C] focus:outline-none">
+            </div>
+            <div class="flex justify-between items-center text-xs font-medium text-gray-500 px-1">
+                <span>Seleccionar valores:</span>
+                <div class="space-x-2">
+                    <button type="button" onclick="selectAllGarantiaModalValues(true)" class="text-[#DA291C] hover:underline">Todos</button>
+                    <span>|</span>
+                    <button type="button" onclick="selectAllGarantiaModalValues(false)" class="text-gray-500 hover:underline">Ninguno</button>
+                </div>
+            </div>
+            <div id="garantia-column-filter-checkboxes" class="max-h-48 overflow-y-auto space-y-1 border border-gray-200 rounded-lg p-2 bg-gray-50 text-xs"></div>
+        </div>
+        <div class="p-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+            <button onclick="closeGarantiaColumnFilterModal()" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-300 cursor-pointer">Cancelar</button>
+            <button onclick="applyGarantiaColumnFilterModal()" class="px-3 py-1.5 bg-[#DA291C] text-white rounded-lg text-xs font-semibold hover:bg-red-700 cursor-pointer">Aplicar Filtro</button>
+        </div>
+    </div>
+</div>
+
+<footer class="mt-auto bg-gray-200 text-gray-600 text-center py-4 text-xs border-t border-gray-300 hidden">
+    Estafeta Mexicana - Dashboard Operativo Local
+</footer>
+
+<script>
+    /* AUTENTICACIÓN */
+    window.addEventListener('DOMContentLoaded', () => {
+        const encodedRole = localStorage.getItem('auth_role');
+        if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
+        let rol = '';
+        try {
+            const decoded = atob(encodedRole);
+            const parts = decoded.split('|');
+            if (parts.length >= 1) rol = parts[0];
+        } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
+        if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
+
+        let inactivityTimer;
+        const maxInactivityMinutes = 30;
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                alert("Su sesión ha expirado por inactividad.");
+                localStorage.removeItem('auth_role');
+                window.location.href = 'Panel de Control Operativo.html';
+            }, maxInactivityMinutes * 60 * 1000);
+        }
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
+            window.addEventListener(event, resetInactivityTimer);
+        });
+        resetInactivityTimer();
+
+        if (rol === 'admin') console.warn("Modo Administrador activo.");
+    });
+
+    /* Escape XSS */
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+
+    /* Debounce */
+    function debounce(fn, ms = 250) {
+        let t;
+        return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+    }
+
+    /* ESTADO GLOBAL */
+    let rawData = [];
+    let filteredData = [];
+    let columns = [];
+    let selectedUTs = new Set();
+    let selectedPlazas = new Set();
+    let chartGarantiaInstance = null;
+    let chartVencidosTiempoInstance = null;
+
+    let utColumnCached = '';
+    let plazaColumnCached = '';
+    let semaforoColumnCached = '';
+    let garantiaColumnCached = '';
+
+    let tableColumnFilters = { cpCol: null, vencCol: null };
+    let currentModalColumnKey = null;
+
+    let reporteTableFilters = { cpCol: null, garantiaCol: null, vencCol: null, search: '' };
+    let currentReporteModalKey = null;
+    let reporteTableSort = { column: null, direction: 'asc' };
+
+    let garantiaTableSort = { column: null, direction: 'asc' };
+    let garantiaTableFilters = { utCol: null, garantiaCol: null };
+    let currentGarantiaModalKey = null;
+
+    let rojosAmarillosSort = { column: null, direction: 'asc' };
+
+    let pageReportePaquetes = 1;
+    let pageRojosAmarillos = 1;
+    let pageGarantiaUT = 1;
+    let pageGuiasOperativas = 1;
+    const rowsPerPage = 10;
+    const minRows = 3;
+
+    /* Normalización */
+    const _norm = s => String(s ?? '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().trim();
+
+    function validarArchivo(encabezados) {
+        if (!encabezados || encabezados.length === 0) return false;
+        const n = encabezados.map(_norm);
+        const has = (...frags) => n.some(h => frags.every(f => h.includes(f)));
+        return has('trackingnumber') && has('frecuencydays') && has('warrantycompliancedatetime');
+    }
+
+    window.addEventListener('click', function(e) {
+        const container = document.getElementById('ut-dropdown-container');
+        if (container && !container.contains(e.target)) {
+            document.getElementById('ut-dropdown-panel').classList.add('hidden');
+        }
+        // Cerrar panel de notificaciones si clic fuera
+        const panel = document.getElementById('notif-panel');
+        const bell = document.getElementById('notif-bell');
+        if (panel && panel.classList.contains('open')) {
+            if (!panel.contains(e.target) && bell && !bell.contains(e.target)) {
+                closeNotifPanel();
+            }
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeNotifPanel();
+    });
+
+    function toggleUTDropdown() {
+        document.getElementById('ut-dropdown-panel').classList.toggle('hidden');
+    }
+
+    function openModal(modalId, e) {
+        if (e) e.stopPropagation();
+        closeAllModals();
+        const modal = document.getElementById(modalId);
+        const backdrop = document.getElementById('modal-backdrop');
+        if (modal && backdrop) {
+            modal.classList.add('show');
+            backdrop.classList.add('show');
+        }
+    }
+
+    function closeAllModals() {
+        document.querySelectorAll('.multiselect-dropdown').forEach(m => m.classList.remove('show'));
+        const backdrop = document.getElementById('modal-backdrop');
+        if (backdrop) backdrop.classList.remove('show');
+    }
+
+    function filterMultiselectOptions(containerId, searchInputId) {
+        const query = document.getElementById(searchInputId).value.toLowerCase().trim();
+        const container = document.getElementById(containerId);
+        container.querySelectorAll('.multiselect-option').forEach(opt => {
+            opt.style.display = opt.textContent.toLowerCase().includes(query) ? 'flex' : 'none';
+        });
+    }
+
+    function handleFileSelect(e) {
+        const files = e.target.files;
+        if (files.length) handleFiles(files[0]);
+    }
+
+    function handleFiles(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+            const headerRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            const headerArray = headerRows.length > 0 ? headerRows[0] : [];
+
+            if (!validarArchivo(headerArray)) {
+                alert("El archivo no contiene los encabezados requeridos (Trackingnumber, Frecuencydays, Warrantycompliancedatetime).");
+                return;
+            }
+
+            const json = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
+            if (json.length > 0) {
+                columns = Object.keys(json[0]);
+                rawData = json.filter(row => {
+                    const v = String(row[columns[0]] || '').toLowerCase();
+                    return v !== 'total general' && v !== 'total';
+                });
+                filteredData = [...rawData];
+
+                utColumnCached = columns.find(c => _norm(c) === 'ut') || columns.find(c => _norm(c).includes('unidad')) || '';
+                plazaColumnCached = columns.find(c => _norm(c).includes('plaza')) || '';
+                semaforoColumnCached = columns.find(c => {
+                    const n = _norm(c);
+                    return n.includes('semaforo') || n.includes('estatus') || n.includes('color') || n.includes('vencimiento');
+                }) || '';
+                garantiaColumnCached = columns.find(c => {
+                    const n = _norm(c);
+                    return n.includes('garantia') && !n.includes('grupo') && !n.includes('segmento');
+                }) || columns[0] || '';
+
+                console.log('🗺️ Columnas mapeadas:', {
+                    ut: utColumnCached, plaza: plazaColumnCached,
+                    semaforo: semaforoColumnCached, garantia: garantiaColumnCached
+                });
+
+                document.getElementById('main-dashboard').classList.remove('hidden');
+                document.getElementById('floating-plaza-container').classList.remove('hidden');
+
+                initUTDropdownOptions();
+                initPlazaDropdownOptions();
+                initGarantiaSlicer();
+                updateDashboard();
+
+                // 🔔 ANALIZAR Y DISPARAR NOTIFICACIONES
+                analyzeAndAlert();
+
+            } else {
+                alert("El archivo Excel está vacío o no tiene el formato correcto.");
+            }
+        };
+        reader.readAsArrayBuffer(file);
+        e.target.value = '';
+    }
+
+    function getUTColumn() { return utColumnCached; }
+    function getPlazaColumn() { return plazaColumnCached; }
+    function getSemaforoColumn() { return semaforoColumnCached; }
+    function getGarantiaColumn() { return garantiaColumnCached; }
+
+    function initUTDropdownOptions() {
+        const utCol = getUTColumn();
+        const listContainer = document.getElementById('ut-checkbox-list');
+        if (!utCol) {
+            listContainer.innerHTML = '<span class="text-xs text-gray-400 p-2">Columna UT no encontrada</span>';
+            return;
+        }
+        const uniqueUTs = [...new Set(rawData.map(row => String(row[utCol] || '').trim()))].filter(Boolean).sort();
+        selectedUTs = new Set(uniqueUTs);
+        listContainer.innerHTML = uniqueUTs.map(ut => `
+            <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-50 rounded cursor-pointer text-xs">
+                <input type="checkbox" value="${esc(ut)}" checked onchange="handleUTCheckboxChange(this)" class="rounded text-[#DA291C] focus:ring-[#DA291C]">
+                <span class="text-gray-700">${esc(ut)}</span>
+            </label>
+        `).join('');
+        updateUTDropdownLabel();
+    }
+
+    function initPlazaDropdownOptions() {
+        const plazaCol = getPlazaColumn();
+        const container = document.getElementById('plaza-multiselect-options-container');
+        if (!container) return;
+        container.innerHTML = '';
+        if (!plazaCol) {
+            container.innerHTML = '<span class="text-xs text-gray-400 p-2">Columna Plaza no encontrada</span>';
+            return;
+        }
+        const uniquePlazas = [...new Set(rawData.map(row => String(row[plazaCol] || '').trim()))].filter(Boolean).sort();
+        selectedPlazas = new Set(uniquePlazas);
+        container.innerHTML = uniquePlazas.map(p => `
+            <label class="multiselect-option">
+                <input type="checkbox" value="${esc(p)}" checked onchange="updatePlazaMultiselectHeaderText(); filterData();">
+                <span>Plaza: ${esc(p)}</span>
+            </label>
+        `).join('');
+        updatePlazaMultiselectHeaderText();
+    }
+
+    function selectAllPlazas(select) {
+        const container = document.getElementById('plaza-multiselect-options-container');
+        if (!container) return;
+        container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            if (cb.closest('.multiselect-option').style.display !== 'none') {
+                cb.checked = select;
+                if (select) selectedPlazas.add(cb.value);
+                else selectedPlazas.delete(cb.value);
+            }
+        });
+        updatePlazaMultiselectHeaderText();
+        filterData();
+    }
+
+    function updatePlazaMultiselectHeaderText() {
+        const container = document.getElementById('plaza-multiselect-options-container');
+        if (!container) return;
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        const visibleCheckboxes = Array.from(checkboxes).filter(cb => cb.closest('.multiselect-option').style.display !== 'none');
+        const checkedCount = visibleCheckboxes.filter(cb => cb.checked).length;
+        const headerText = document.getElementById('plaza-multiselect-header-text');
+
+        if (checkedCount === 0) {
+            headerText.innerText = '-- Ninguna plaza --';
+            selectedPlazas.clear();
+        } else if (checkedCount === checkboxes.length) {
+            headerText.innerText = '-- Todas las Plazas --';
+            checkboxes.forEach(cb => selectedPlazas.add(cb.value));
+        } else if (checkedCount === 1) {
+            const selectedCb = visibleCheckboxes.find(cb => cb.checked);
+            headerText.innerText = `Plaza: ${selectedCb ? selectedCb.value : ''}`;
+            selectedPlazas.clear();
+            if (selectedCb) selectedPlazas.add(selectedCb.value);
+        } else {
+            headerText.innerText = `${checkedCount} plazas seleccionadas`;
+            selectedPlazas.clear();
+            checkboxes.forEach(cb => { if (cb.checked) selectedPlazas.add(cb.value); });
+        }
+    }
+
+    function initGarantiaSlicer() {
+        const garCol = getGarantiaColumn();
+        const uniqueGar = [...new Set(rawData.map(row => String(row[garCol] || '').trim()))].filter(Boolean).sort();
+        const select = document.getElementById('slicer-garantia');
+        select.innerHTML = '<option value="">Todas las garantías</option>' + uniqueGar.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
+    }
+
+    function handleUTCheckboxChange(checkbox) {
+        if (checkbox.checked) selectedUTs.add(checkbox.value);
+        else selectedUTs.delete(checkbox.value);
+        updateUTDropdownLabel();
+        filterData();
+    }
+
+    function selectAllUT(select) {
+        document.querySelectorAll('#ut-checkbox-list input[type="checkbox"]').forEach(cb => {
+            cb.checked = select;
+            if (select) selectedUTs.add(cb.value);
+            else selectedUTs.delete(cb.value);
+        });
+        updateUTDropdownLabel();
+        filterData();
+    }
+
+    function updateUTDropdownLabel() {
+        const label = document.getElementById('ut-dropdown-label');
+        const totalCheckboxes = document.querySelectorAll('#ut-checkbox-list input[type="checkbox"]').length;
+        if (selectedUTs.size === 0) label.innerText = 'Ningún UT seleccionado';
+        else if (selectedUTs.size === totalCheckboxes) label.innerText = 'Todos los UTs seleccionados';
+        else label.innerText = `${selectedUTs.size} UT(s) seleccionados`;
+    }
+
+    function animateNumber(el, to, duration = 800) {
+        if (!el) return;
+        const from = 0;
+        const start = performance.now();
+        const step = (now) => {
+            const p = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = Math.floor(from + (to - from) * eased).toLocaleString();
+            if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+    }
+
+    function updateDashboard() {
+        updateKPIs();
+        renderCharts();
+        renderReportePaquetesTable();
+        renderRojosAmarillosUTTable();
+        renderGarantiaUTTable();
+        renderTable();
+        renderActiveFilters();
+        updateFloatingResetButton();
+    }
+
+    function updateKPIs() {
+        const total = filteredData.length;
+        const totalEl = document.getElementById('kpi-total');
+        totalEl.textContent = '0';
+        animateNumber(totalEl, total, 800);
+
+        const barTotal = document.getElementById('bar-total');
+        if (barTotal) setTimeout(() => { barTotal.style.width = '100%'; }, 100);
+
+        const horasCol = columns.find(c => _norm(c).includes('horas sin movimiento'));
+        if (horasCol && filteredData.length > 0) {
+            let sum = filteredData.reduce((acc, row) => acc + (Number(row[horasCol]) || 0), 0);
+            let avg = Math.round(sum / filteredData.length);
+            const horasEl = document.getElementById('kpi-horas');
+            horasEl.textContent = '0 hrs';
+            animateNumber(horasEl, avg, 800);
+            setTimeout(() => { if (horasEl) horasEl.textContent = avg.toLocaleString() + ' hrs'; }, 850);
+            const barHoras = document.getElementById('bar-horas');
+            if (barHoras) setTimeout(() => { barHoras.style.width = Math.min(avg, 100) + '%'; }, 150);
+        } else {
+            document.getElementById('kpi-horas').innerText = '0 hrs';
+        }
+
+        const utCol = getUTColumn();
+        if (utCol) {
+            const countUT = filteredData.filter(row => row[utCol] !== undefined && row[utCol] !== "" && row[utCol] !== null).length;
+            const utEl = document.getElementById('kpi-ut');
+            utEl.textContent = '0';
+            animateNumber(utEl, countUT, 800);
+            const barUt = document.getElementById('bar-ut');
+            if (barUt) setTimeout(() => { barUt.style.width = Math.min((countUT / Math.max(total, 1)) * 100, 100) + '%'; }, 200);
+        } else {
+            document.getElementById('kpi-ut').innerText = '0';
+        }
+
+        const plazaCol = getPlazaColumn();
+        if (plazaCol) {
+            const uniquePlazas = new Set(filteredData.map(row => row[plazaCol])).size;
+            const plazaEl = document.getElementById('kpi-plazas');
+            plazaEl.textContent = '0';
+            animateNumber(plazaEl, uniquePlazas, 800);
+            const barPlazas = document.getElementById('bar-plazas');
+            if (barPlazas) setTimeout(() => { barPlazas.style.width = Math.min((uniquePlazas / 20) * 100, 100) + '%'; }, 250);
+        } else {
+            document.getElementById('kpi-plazas').innerText = '0';
+        }
+    }
+
+    let chartsRenderTimer = null;
+    function renderCharts() {
+        if (chartsRenderTimer) clearTimeout(chartsRenderTimer);
+        chartsRenderTimer = setTimeout(() => {
+            const estafetaRed = '#DA291C';
+            const garCol = getGarantiaColumn();
+
+            const garCounts = {};
+            filteredData.forEach(row => {
+                let val = row[garCol] || 'No especificado';
+                garCounts[val] = (garCounts[val] || 0) + 1;
+            });
+            const garLabels = Object.keys(garCounts);
+            const garData = Object.values(garCounts);
+
+            const ctxGar = document.getElementById('chartGarantia').getContext('2d');
+            if (chartGarantiaInstance) chartGarantiaInstance.destroy();
+            chartGarantiaInstance = new Chart(ctxGar, {
+                type: 'bar',
+                data: {
+                    labels: garLabels,
+                    datasets: [{ label: 'Número de Guías', data: garData, backgroundColor: estafetaRed, borderRadius: 6 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } }
+                }
+            });
+
+            const semCol = getSemaforoColumn();
+            const vencCounts = { 'Vencidos': 0, 'Vence Hoy': 0, 'En Tiempo': 0, 'Otros': 0 };
+            filteredData.forEach(row => {
+                let val = String(row[semCol] || '').trim().toLowerCase();
+                if (val.includes('rojo') || val.includes('vencido')) vencCounts['Vencidos']++;
+                else if (val.includes('amarillo') || val.includes('hoy')) vencCounts['Vence Hoy']++;
+                else if (val.includes('verde') || val.includes('tiempo')) vencCounts['En Tiempo']++;
+                else vencCounts['Otros']++;
+            });
+
+            const vencLabels = Object.keys(vencCounts);
+            const vencData = Object.values(vencCounts);
+            const vencColors = ['#DC2626', '#D97706', '#16A34A', '#9CA3AF'];
+
+            const ctxVenc = document.getElementById('chartVencidosTiempo').getContext('2d');
+            if (chartVencidosTiempoInstance) chartVencidosTiempoInstance.destroy();
+            chartVencidosTiempoInstance = new Chart(ctxVenc, {
+                type: 'bar',
+                data: {
+                    labels: vencLabels,
+                    datasets: [{ label: 'Cantidad de Guías', data: vencData, backgroundColor: vencColors, borderRadius: 6 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } }
+                }
+            });
+        }, 150);
+    }
+            /* ============================================================
+           TABLA: Reporte General de Paquetes
+           ============================================================ */
+        function sortReporteTable(colKey) {
+            if (reporteTableSort.column === colKey) {
+                reporteTableSort.direction = reporteTableSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                reporteTableSort.column = colKey;
+                reporteTableSort.direction = 'asc';
+            }
+            renderReportePaquetesTable();
+        }
+
+        function getReporteSortIcon(colKey) {
+            if (reporteTableSort.column !== colKey) {
+                return '<i class="fa-solid fa-sort text-gray-300 hover:text-gray-500 text-xs ml-1"></i>';
+            }
+            return reporteTableSort.direction === 'asc'
+                ? '<i class="fa-solid fa-sort-up text-[#DA291C] text-xs ml-1"></i>'
+                : '<i class="fa-solid fa-sort-down text-[#DA291C] text-xs ml-1"></i>';
+        }
+
+        function filterReporteTableSearch() {
+            const val = document.getElementById('reporte-search-input').value.toLowerCase().trim();
+            reporteTableFilters.search = val;
+            pageReportePaquetes = 1;
+            renderReportePaquetesTable();
+            updateFloatingResetButton();
+        }
+
+        function openReporteColumnFilterModal(colKey) {
+            currentReporteModalKey = colKey;
+            const modal = document.getElementById('reporte-column-filter-modal');
+            const titleEl = document.getElementById('reporte-column-filter-title');
+            const checkboxesContainer = document.getElementById('reporte-column-filter-checkboxes');
+            document.getElementById('reporte-column-filter-search').value = '';
+
+            const colI = columns[8] || 'C. P.';
+            const semCol = getSemaforoColumn() || 'Vencimiento';
+            const garCol = getGarantiaColumn() || 'Garantía';
+
+            let colNameDisplay = '';
+            if (colKey === 'cp') colNameDisplay = colI;
+            else if (colKey === 'garantia') colNameDisplay = garCol;
+            else if (colKey === 'venc') colNameDisplay = semCol;
+
+            titleEl.innerHTML = `<i class="fa-solid fa-filter text-[#DA291C]"></i> Filtrar Columna: ${esc(colNameDisplay)}`;
+
+            let baseRows = [...filteredData];
+            if (colKey !== 'cp' && reporteTableFilters.cpCol) {
+                baseRows = baseRows.filter(r => reporteTableFilters.cpCol.has(String(r[colI] || '').trim()));
+            }
+            if (colKey !== 'garantia' && reporteTableFilters.garantiaCol) {
+                baseRows = baseRows.filter(r => reporteTableFilters.garantiaCol.has(String(r[garCol] || '').trim()));
+            }
+            if (colKey !== 'venc' && reporteTableFilters.vencCol) {
+                baseRows = baseRows.filter(r => reporteTableFilters.vencCol.has(String(r[semCol] || '').trim()));
+            }
+
+            const targetColKey = (colKey === 'cp') ? colI : (colKey === 'garantia' ? garCol : semCol);
+            const uniqueValues = [...new Set(baseRows.map(row => String(row[targetColKey] || '').trim()))].filter(Boolean).sort();
+            const currentActiveSet = (colKey === 'cp') ? reporteTableFilters.cpCol : (colKey === 'garantia' ? reporteTableFilters.garantiaCol : reporteTableFilters.vencCol);
+
+            checkboxesContainer.innerHTML = uniqueValues.map(val => {
+                const isChecked = (!currentActiveSet || currentActiveSet.has(val)) ? 'checked' : '';
+                return `
+                    <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded cursor-pointer">
+                        <input type="checkbox" value="${esc(val)}" ${isChecked} class="reporte-column-modal-cb rounded text-[#DA291C] focus:ring-[#DA291C]">
+                        <span class="text-gray-700 truncate">${esc(val)}</span>
+                    </label>
+                `;
+            }).join('');
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeReporteColumnFilterModal() {
+            document.getElementById('reporte-column-filter-modal').classList.add('hidden');
+            currentReporteModalKey = null;
+        }
+
+        function selectAllReporteModalValues(select) {
+            document.querySelectorAll('.reporte-column-modal-cb').forEach(cb => cb.checked = select);
+        }
+
+        function filterReporteColumnModalValues() {
+            const query = document.getElementById('reporte-column-filter-search').value.toLowerCase();
+            document.querySelectorAll('#reporte-column-filter-checkboxes label').forEach(label => {
+                label.style.display = label.innerText.toLowerCase().includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function applyReporteColumnFilterModal() {
+            const checkboxes = document.querySelectorAll('.reporte-column-modal-cb');
+            const selectedSet = new Set();
+            let allChecked = true;
+            checkboxes.forEach(cb => {
+                if (cb.checked) selectedSet.add(cb.value);
+                else allChecked = false;
+            });
+            if (allChecked) {
+                if (currentReporteModalKey === 'cp') reporteTableFilters.cpCol = null;
+                if (currentReporteModalKey === 'garantia') reporteTableFilters.garantiaCol = null;
+                if (currentReporteModalKey === 'venc') reporteTableFilters.vencCol = null;
+            } else {
+                if (currentReporteModalKey === 'cp') reporteTableFilters.cpCol = selectedSet;
+                if (currentReporteModalKey === 'garantia') reporteTableFilters.garantiaCol = selectedSet;
+                if (currentReporteModalKey === 'venc') reporteTableFilters.vencCol = selectedSet;
+            }
+            pageReportePaquetes = 1;
+            closeReporteColumnFilterModal();
+            renderReportePaquetesTable();
+            updateFloatingResetButton();
+        }
+
+        function clearReporteTableFilters() {
+            reporteTableFilters = { cpCol: null, garantiaCol: null, vencCol: null, search: '' };
+            const s = document.getElementById('reporte-search-input');
+            if (s) s.value = '';
+            pageReportePaquetes = 1;
+            renderReportePaquetesTable();
+            updateFloatingResetButton();
+        }
+
+        function renderReportePaquetesTable() {
+            const thead = document.querySelector('#reporte-paquetes-table thead');
+            const tbody = document.querySelector('#reporte-paquetes-table tbody');
+            const paginationContainer = document.getElementById('reporte-paquetes-pagination');
+            const activeBar = document.getElementById('reporte-active-filters-bar');
+            const activeDesc = document.getElementById('reporte-active-filters-desc');
+
+            const colA = columns[0] || 'Guía';
+            const colI = columns[8] || 'C. P.';
+            const semCol = getSemaforoColumn() || 'Estatus';
+            const colT = columns[19] || columns.find(c => _norm(c).includes('cliente')) || 'Cliente';
+            const utCol = getUTColumn() || 'UT';
+            const garCol = getGarantiaColumn() || 'Garantía';
+
+            let activeFiltersText = [];
+            if (reporteTableFilters.cpCol) activeFiltersText.push(`C. P. (${reporteTableFilters.cpCol.size})`);
+            if (reporteTableFilters.garantiaCol) activeFiltersText.push(`Garantía (${reporteTableFilters.garantiaCol.size})`);
+            if (reporteTableFilters.vencCol) activeFiltersText.push(`Vencimiento (${reporteTableFilters.vencCol.size})`);
+            if (reporteTableFilters.search) activeFiltersText.push(`Búsqueda ("${reporteTableFilters.search}")`);
+
+            if (activeFiltersText.length > 0) {
+                activeBar.classList.remove('hidden');
+                activeDesc.innerHTML = `<i class="fa-solid fa-filter text-red-600"></i> Filtro aplicado: ${activeFiltersText.join(' | ')}`;
+            } else {
+                activeBar.classList.add('hidden');
+            }
+
+            thead.innerHTML = `
+                <tr>
+                    <th class="px-4 py-2 cursor-pointer select-none" onclick="sortReporteTable('guia')">
+                        <div class="flex items-center justify-between gap-2"><span>${esc(colA)}</span>${getReporteSortIcon('guia')}</div>
+                    </th>
+                    <th class="px-4 py-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="cursor-pointer select-none flex-grow flex items-center" onclick="sortReporteTable('cp')"><span>C. P.</span>${getReporteSortIcon('cp')}</span>
+                            <button onclick="openReporteColumnFilterModal('cp')" class="text-gray-500 hover:text-[#DA291C] p-1 rounded transition cursor-pointer ${reporteTableFilters.cpCol ? 'text-[#DA291C] bg-red-50' : ''}"><i class="fa-solid fa-filter text-xs"></i></button>
+                        </div>
+                    </th>
+                    <th class="px-4 py-2 cursor-pointer select-none" onclick="sortReporteTable('ut')">
+                        <div class="flex items-center justify-between gap-2"><span>UT</span>${getReporteSortIcon('ut')}</div>
+                    </th>
+                    <th class="px-4 py-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="cursor-pointer select-none flex-grow flex items-center" onclick="sortReporteTable('garantia')"><span>Garantía</span>${getReporteSortIcon('garantia')}</span>
+                            <button onclick="openReporteColumnFilterModal('garantia')" class="text-gray-500 hover:text-[#DA291C] p-1 rounded transition cursor-pointer ${reporteTableFilters.garantiaCol ? 'text-[#DA291C] bg-red-50' : ''}"><i class="fa-solid fa-filter text-xs"></i></button>
+                        </div>
+                    </th>
+                    <th class="px-4 py-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="cursor-pointer select-none flex-grow flex items-center" onclick="sortReporteTable('venc')"><span>${esc(semCol)}</span>${getReporteSortIcon('venc')}</span>
+                            <button onclick="openReporteColumnFilterModal('venc')" class="text-gray-500 hover:text-[#DA291C] p-1 rounded transition cursor-pointer ${reporteTableFilters.vencCol ? 'text-[#DA291C] bg-red-50' : ''}"><i class="fa-solid fa-filter text-xs"></i></button>
+                        </div>
+                    </th>
+                    <th class="px-4 py-2 cursor-pointer select-none" onclick="sortReporteTable('cliente')">
+                        <div class="flex items-center justify-between gap-2"><span>${esc(colT)}</span>${getReporteSortIcon('cliente')}</div>
+                    </th>
+                </tr>
+            `;
+
+            let matchingRows = [...filteredData];
+            if (reporteTableFilters.cpCol) matchingRows = matchingRows.filter(row => reporteTableFilters.cpCol.has(String(row[colI] || '').trim()));
+            if (reporteTableFilters.garantiaCol) matchingRows = matchingRows.filter(row => reporteTableFilters.garantiaCol.has(String(row[garCol] || '').trim()));
+            if (reporteTableFilters.vencCol) matchingRows = matchingRows.filter(row => reporteTableFilters.vencCol.has(String(row[semCol] || '').trim()));
+            if (reporteTableFilters.search) {
+                const q = reporteTableFilters.search;
+                matchingRows = matchingRows.filter(row => Object.values(row).some(val => String(val).toLowerCase().includes(q)));
+            }
+
+            if (reporteTableSort.column) {
+                matchingRows.sort((a, b) => {
+                    let valA_sort = '', valB_sort = '';
+                    if (reporteTableSort.column === 'guia') { valA_sort = String(a[colA] || '').trim(); valB_sort = String(b[colA] || '').trim(); }
+                    else if (reporteTableSort.column === 'cp') { valA_sort = String(a[colI] || '').trim(); valB_sort = String(b[colI] || '').trim(); }
+                    else if (reporteTableSort.column === 'ut') { valA_sort = String(a[utCol] || '').trim(); valB_sort = String(b[utCol] || '').trim(); }
+                    else if (reporteTableSort.column === 'garantia') { valA_sort = String(a[garCol] || '').trim(); valB_sort = String(b[garCol] || '').trim(); }
+                    else if (reporteTableSort.column === 'venc') { valA_sort = String(a[semCol] || '').trim(); valB_sort = String(b[semCol] || '').trim(); }
+                    else if (reporteTableSort.column === 'cliente') { valA_sort = String(a[colT] || '').trim(); valB_sort = String(b[colT] || '').trim(); }
+                    let numA = Number(valA_sort), numB = Number(valB_sort);
+                    let cmp = (!isNaN(numA) && !isNaN(numB) && valA_sort !== '' && valB_sort !== '') ? numA - numB : valA_sort.localeCompare(valB_sort, 'es', { numeric: true, sensitivity: 'base' });
+                    return reporteTableSort.direction === 'asc' ? cmp : -cmp;
+                });
+            }
+
+            document.getElementById('reporte-paquetes-table-count').innerText = `${matchingRows.length} registros`;
+
+            const totalRecords = matchingRows.length;
+            const totalPages = Math.ceil(totalRecords / rowsPerPage) || 1;
+            if (pageReportePaquetes > totalPages) pageReportePaquetes = totalPages;
+            if (pageReportePaquetes < 1) pageReportePaquetes = 1;
+
+            const startIndex = (pageReportePaquetes - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const pageItems = matchingRows.slice(startIndex, endIndex);
+
+            let renderRows = [...pageItems];
+            if (totalRecords < 9 && renderRows.length < minRows) {
+                while (renderRows.length < minRows) renderRows.push({ empty: true });
+            }
+
+            if (renderRows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-3 text-center text-gray-400">No hay paquetes con los filtros seleccionados</td></tr>`;
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = renderRows.map((row, i) => {
+                if (row.empty) return `<tr class="bg-transparent"><td colspan="6" class="px-4 py-2 text-transparent select-none">&nbsp;</td></tr>`;
+                const valA = row[colA] !== undefined ? row[colA] : '';
+                const valCP = row[colI] !== undefined ? row[colI] : '';
+                const valUT = row[utCol] !== undefined ? row[utCol] : '';
+                const valGar = row[garCol] !== undefined ? row[garCol] : '';
+                const valSem = row[semCol] !== undefined ? row[semCol] : '';
+                const valT = row[colT] !== undefined ? row[colT] : '';
+                const lowerQ = String(valSem).toLowerCase();
+                let badgeClass = 'bg-gray-100 text-gray-700 border-gray-200';
+                if (lowerQ.includes('rojo') || lowerQ.includes('vencido')) badgeClass = 'bg-red-100 text-red-700 border-red-200';
+                else if (lowerQ.includes('amarillo') || lowerQ.includes('hoy')) badgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
+                else if (lowerQ.includes('verde') || lowerQ.includes('tiempo')) badgeClass = 'bg-green-100 text-green-700 border-green-200';
+                return `
+                    <tr class="hover:bg-red-50/50 transition card-enter" style="animation-delay:${i * 30}ms">
+                        <td class="px-4 py-2 font-medium text-gray-800">${esc(valA)}</td>
+                        <td class="px-4 py-2 text-gray-700">${esc(valCP)}</td>
+                        <td class="px-4 py-2 text-gray-700 font-semibold">${esc(valUT)}</td>
+                        <td class="px-4 py-2 text-gray-700">${esc(valGar)}</td>
+                        <td class="px-4 py-2"><span class="px-2 py-0.5 rounded-full text-xs font-semibold border ${badgeClass}">${esc(valSem)}</span></td>
+                        <td class="px-4 py-2 text-gray-700">${esc(valT)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            if (totalRecords > 10) {
+                paginationContainer.innerHTML = `
+                    <span>Mostrando ${startIndex + 1} - ${Math.min(endIndex, totalRecords)} de ${totalRecords}</span>
+                    <div class="space-x-1">
+                        <button onclick="changePageReportePaquetes(-1)" ${pageReportePaquetes === 1 ? 'disabled class="px-2 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed"' : 'class="px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-100"'}>Anterior</button>
+                        <span class="px-2 font-medium">Pág. ${pageReportePaquetes} de ${totalPages}</span>
+                        <button onclick="changePageReportePaquetes(1)" ${pageReportePaquetes === totalPages ? 'disabled class="px-2 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed"' : 'class="px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-100"'}>Siguiente</button>
+                    </div>
+                `;
+            } else {
+                paginationContainer.innerHTML = `<span>Mostrando ${totalRecords} registros</span>`;
+            }
+        }
+
+        function changePageReportePaquetes(direction) {
+            pageReportePaquetes += direction;
+            renderReportePaquetesTable();
+        }
+
+        function downloadReportePaquetesExcel() {
+            const colI = columns[8] || 'C. P.';
+            const semCol = getSemaforoColumn() || 'Estatus';
+            const garCol = getGarantiaColumn() || 'Garantía';
+            let matchingRows = [...filteredData];
+            if (reporteTableFilters.cpCol) matchingRows = matchingRows.filter(row => reporteTableFilters.cpCol.has(String(row[colI] || '').trim()));
+            if (reporteTableFilters.garantiaCol) matchingRows = matchingRows.filter(row => reporteTableFilters.garantiaCol.has(String(row[garCol] || '').trim()));
+            if (reporteTableFilters.vencCol) matchingRows = matchingRows.filter(row => reporteTableFilters.vencCol.has(String(row[semCol] || '').trim()));
+            if (reporteTableFilters.search) {
+                const q = reporteTableFilters.search;
+                matchingRows = matchingRows.filter(row => Object.values(row).some(val => String(val).toLowerCase().includes(q)));
+            }
+            if (matchingRows.length === 0) { alert("No hay registros para descargar."); return; }
+            const ws = XLSX.utils.json_to_sheet(matchingRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Reporte Paquetes");
+            XLSX.writeFile(wb, "Reporte_General_Paquetes.xlsx");
+        }
+
+        function downloadRojosAmarillosExcel() {
+            const colA = columns[0] || 'Columna A';
+            const colI = columns[8] || 'C. P.';
+            const semCol = getSemaforoColumn() || 'Vencimiento';
+            const colT = columns[19] || columns.find(c => _norm(c).includes('cliente')) || 'Columna T';
+            if (!semCol) { alert("No se localizó la columna de estatus."); return; }
+            let matchingRows = filteredData.filter(row => {
+                const semVal = String(row[semCol] || '').trim().toLowerCase();
+                return semVal.includes('rojo') || semVal.includes('amarillo') || semVal.includes('vencido') || semVal.includes('hoy');
+            });
+            if (tableColumnFilters.cpCol) matchingRows = matchingRows.filter(row => tableColumnFilters.cpCol.has(String(row[colI] || '').trim()));
+            if (tableColumnFilters.vencCol) matchingRows = matchingRows.filter(row => tableColumnFilters.vencCol.has(String(row[semCol] || '').trim()));
+            if (matchingRows.length === 0) { alert("No hay registros para descargar."); return; }
+            const exportData = matchingRows.map(row => ({
+                [colA]: row[colA] !== undefined ? row[colA] : '',
+                "C. P.": row[colI] !== undefined ? row[colI] : '',
+                [semCol]: row[semCol] !== undefined ? row[semCol] : '',
+                [colT]: row[colT] !== undefined ? row[colT] : ''
+            }));
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rojos y Amarillos");
+            XLSX.writeFile(wb, "Rojos_y_Amarillos.xlsx");
+        }
+
+        /* ============================================================
+           TABLA: Rojos y Amarillos
+           ============================================================ */
+        function openColumnFilterModal(colKey) {
+            currentModalColumnKey = colKey;
+            const modal = document.getElementById('column-filter-modal');
+            const titleEl = document.getElementById('column-filter-title');
+            const checkboxesContainer = document.getElementById('column-filter-checkboxes');
+            document.getElementById('column-filter-search').value = '';
+            const semCol = getSemaforoColumn();
+            const colI = columns[8] || 'C. P.';
+            titleEl.innerHTML = `<i class="fa-solid fa-filter text-[#DA291C]"></i> Filtrar Columna: ${colKey === 'cp' ? esc(colI) : esc(semCol || 'Vencimiento')}`;
+
+            const semColKey = getSemaforoColumn();
+            let baseMatchingRows = filteredData.filter(row => {
+                const semVal = String(row[semColKey] || '').trim().toLowerCase();
+                return semVal.includes('rojo') || semVal.includes('amarillo') || semVal.includes('vencido') || semVal.includes('hoy');
+            });
+            if (colKey === 'cp' && tableColumnFilters.vencCol) baseMatchingRows = baseMatchingRows.filter(row => tableColumnFilters.vencCol.has(String(row[semColKey] || '').trim()));
+            else if (colKey === 'venc' && tableColumnFilters.cpCol) baseMatchingRows = baseMatchingRows.filter(row => tableColumnFilters.cpCol.has(String(row[colI] || '').trim()));
+
+            const targetCol = (colKey === 'cp') ? colI : semColKey;
+            const uniqueValues = [...new Set(baseMatchingRows.map(row => String(row[targetCol] || '').trim()))].filter(Boolean).sort();
+            const currentActiveSet = (colKey === 'cp') ? tableColumnFilters.cpCol : tableColumnFilters.vencCol;
+
+            checkboxesContainer.innerHTML = uniqueValues.map(val => {
+                const isChecked = (!currentActiveSet || currentActiveSet.has(val)) ? 'checked' : '';
+                return `
+                    <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded cursor-pointer">
+                        <input type="checkbox" value="${esc(val)}" ${isChecked} class="column-modal-cb rounded text-[#DA291C] focus:ring-[#DA291C]">
+                        <span class="text-gray-700 truncate">${esc(val)}</span>
+                    </label>
+                `;
+            }).join('');
+            modal.classList.remove('hidden');
+        }
+
+        function closeColumnFilterModal() {
+            document.getElementById('column-filter-modal').classList.add('hidden');
+            currentModalColumnKey = null;
+        }
+
+        function selectAllModalValues(select) {
+            document.querySelectorAll('.column-modal-cb').forEach(cb => cb.checked = select);
+        }
+
+        function filterColumnModalValues() {
+            const query = document.getElementById('column-filter-search').value.toLowerCase();
+            document.querySelectorAll('#column-filter-checkboxes label').forEach(label => {
+                label.style.display = label.innerText.toLowerCase().includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function applyColumnFilterModal() {
+            const checkboxes = document.querySelectorAll('.column-modal-cb');
+            const selectedSet = new Set();
+            let allChecked = true;
+            checkboxes.forEach(cb => {
+                if (cb.checked) selectedSet.add(cb.value);
+                else allChecked = false;
+            });
+            if (allChecked) {
+                if (currentModalColumnKey === 'cp') tableColumnFilters.cpCol = null;
+                if (currentModalColumnKey === 'venc') tableColumnFilters.vencCol = null;
+            } else {
+                if (currentModalColumnKey === 'cp') tableColumnFilters.cpCol = selectedSet;
+                if (currentModalColumnKey === 'venc') tableColumnFilters.vencCol = selectedSet;
+            }
+            pageRojosAmarillos = 1;
+            closeColumnFilterModal();
+            renderRojosAmarillosUTTable();
+            updateFloatingResetButton();
+        }
+
+        function clearTableFilters() {
+            tableColumnFilters = { cpCol: null, vencCol: null };
+            pageRojosAmarillos = 1;
+            renderRojosAmarillosUTTable();
+            updateFloatingResetButton();
+        }
+
+        function sortRojosAmarillos(colKey) {
+            if (rojosAmarillosSort.column === colKey) rojosAmarillosSort.direction = rojosAmarillosSort.direction === 'asc' ? 'desc' : 'asc';
+            else { rojosAmarillosSort.column = colKey; rojosAmarillosSort.direction = 'asc'; }
+            renderRojosAmarillosUTTable();
+        }
+
+        function getSortIcon(colKey) {
+            if (rojosAmarillosSort.column !== colKey) return '<i class="fa-solid fa-sort text-gray-300 hover:text-gray-500 text-xs ml-1"></i>';
+            return rojosAmarillosSort.direction === 'asc'
+                ? '<i class="fa-solid fa-sort-up text-[#DA291C] text-xs ml-1"></i>'
+                : '<i class="fa-solid fa-sort-down text-[#DA291C] text-xs ml-1"></i>';
+        }
+
+        function renderRojosAmarillosUTTable() {
+            const thead = document.querySelector('#rojos-amarillos-ut-table thead');
+            const tbody = document.querySelector('#rojos-amarillos-ut-table tbody');
+            const paginationContainer = document.getElementById('rojos-amarillos-pagination');
+            const concentradoContainer = document.getElementById('rojos-amarillos-concentrado');
+            const activeBar = document.getElementById('table-active-filters-bar');
+            const activeDesc = document.getElementById('table-active-filters-desc');
+            const colA = columns[0] || 'Columna A';
+            const colI = columns[8] || 'C. P.';
+            const semCol = getSemaforoColumn() || 'Vencimiento';
+            const colT = columns[19] || columns.find(c => _norm(c).includes('cliente')) || 'Columna T';
+
+            let activeFiltersText = [];
+            if (tableColumnFilters.cpCol) activeFiltersText.push(`C. P. (${tableColumnFilters.cpCol.size})`);
+            if (tableColumnFilters.vencCol) activeFiltersText.push(`Vencimiento (${tableColumnFilters.vencCol.size})`);
+            if (activeFiltersText.length > 0) { activeBar.classList.remove('hidden'); activeDesc.innerHTML = `<i class="fa-solid fa-filter text-red-600"></i> Filtro: ${activeFiltersText.join(' | ')}`; }
+            else activeBar.classList.add('hidden');
+
+            thead.innerHTML = `
+                <tr>
+                    <th class="px-4 py-2 cursor-pointer select-none" onclick="sortRojosAmarillos('colA')"><div class="flex items-center justify-between gap-2"><span>${esc(colA)}</span>${getSortIcon('colA')}</div></th>
+                    <th class="px-4 py-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="cursor-pointer select-none flex-grow flex items-center" onclick="sortRojosAmarillos('cp')"><span>C. P.</span>${getSortIcon('cp')}</span>
+                            <button onclick="openColumnFilterModal('cp')" class="text-gray-500 hover:text-[#DA291C] p-1 rounded transition cursor-pointer ${tableColumnFilters.cpCol ? 'text-[#DA291C] bg-red-50' : ''}"><i class="fa-solid fa-filter text-xs"></i></button>
+                        </div>
+                    </th>
+                    <th class="px-4 py-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="cursor-pointer select-none flex-grow flex items-center" onclick="sortRojosAmarillos('venc')"><span>${esc(semCol)}</span>${getSortIcon('venc')}</span>
+                            <button onclick="openColumnFilterModal('venc')" class="text-gray-500 hover:text-[#DA291C] p-1 rounded transition cursor-pointer ${tableColumnFilters.vencCol ? 'text-[#DA291C] bg-red-50' : ''}"><i class="fa-solid fa-filter text-xs"></i></button>
+                        </div>
+                    </th>
+                    <th class="px-4 py-2 cursor-pointer select-none" onclick="sortRojosAmarillos('colT')"><div class="flex items-center justify-between gap-2"><span>${esc(colT)}</span>${getSortIcon('colT')}</div></th>
+                </tr>
+            `;
+
+            if (!semCol) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center text-gray-400">No se localizó la columna de estatus</td></tr>`;
+                document.getElementById('rojos-amarillos-table-count').innerText = `0 registros`;
+                concentradoContainer.innerHTML = `<span>Sin datos</span>`;
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let matchingRows = filteredData.filter(row => {
+                const semVal = String(row[semCol] || '').trim().toLowerCase();
+                return semVal.includes('rojo') || semVal.includes('amarillo') || semVal.includes('vencido') || semVal.includes('hoy');
+            });
+            if (tableColumnFilters.cpCol) matchingRows = matchingRows.filter(row => tableColumnFilters.cpCol.has(String(row[colI] || '').trim()));
+            if (tableColumnFilters.vencCol) matchingRows = matchingRows.filter(row => tableColumnFilters.vencCol.has(String(row[semCol] || '').trim()));
+
+            if (rojosAmarillosSort.column) {
+                matchingRows.sort((a, b) => {
+                    let valA_sort = '', valB_sort = '';
+                    if (rojosAmarillosSort.column === 'colA') { valA_sort = String(a[colA] || '').trim(); valB_sort = String(b[colA] || '').trim(); }
+                    else if (rojosAmarillosSort.column === 'cp') { valA_sort = String(a[colI] || '').trim(); valB_sort = String(b[colI] || '').trim(); }
+                    else if (rojosAmarillosSort.column === 'venc') { valA_sort = String(a[semCol] || '').trim(); valB_sort = String(b[semCol] || '').trim(); }
+                    else if (rojosAmarillosSort.column === 'colT') { valA_sort = String(a[colT] || '').trim(); valB_sort = String(b[colT] || '').trim(); }
+                    let numA = Number(valA_sort), numB = Number(valB_sort);
+                    let cmp = (!isNaN(numA) && !isNaN(numB) && valA_sort !== '' && valB_sort !== '') ? numA - numB : valA_sort.localeCompare(valB_sort, 'es', { numeric: true, sensitivity: 'base' });
+                    return rojosAmarillosSort.direction === 'asc' ? cmp : -cmp;
+                });
+            }
+
+            document.getElementById('rojos-amarillos-table-count').innerText = `${matchingRows.length} registros`;
+
+            const countsByQ = {};
+            matchingRows.forEach(row => {
+                const valQ = String(row[semCol] || 'No especificado').trim();
+                countsByQ[valQ] = (countsByQ[valQ] || 0) + 1;
+            });
+            concentradoContainer.innerHTML = Object.entries(countsByQ).map(([key, count]) => {
+                const lowerKey = key.toLowerCase();
+                let badgeStyle = 'bg-gray-100 text-gray-800 border-gray-200';
+                if (lowerKey.includes('rojo') || lowerKey.includes('vencido')) badgeStyle = 'bg-red-100 text-red-700 border-red-200';
+                else if (lowerKey.includes('amarillo') || lowerKey.includes('hoy')) badgeStyle = 'bg-amber-100 text-amber-800 border-amber-200';
+                return `<span class="px-2 py-0.5 rounded border ${badgeStyle} text-xs font-semibold">${esc(key)}: <strong>${count}</strong></span>`;
+            }).join('') || '<span>Sin elementos</span>';
+
+            const totalRecords = matchingRows.length;
+            const totalPages = Math.ceil(totalRecords / rowsPerPage) || 1;
+            if (pageRojosAmarillos > totalPages) pageRojosAmarillos = totalPages;
+            if (pageRojosAmarillos < 1) pageRojosAmarillos = 1;
+            const startIndex = (pageRojosAmarillos - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const pageItems = matchingRows.slice(startIndex, endIndex);
+            let renderRows = [...pageItems];
+            if (totalRecords < 9 && renderRows.length < minRows) while (renderRows.length < minRows) renderRows.push({ empty: true });
+
+            if (renderRows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center text-gray-400">No hay registros</td></tr>`;
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = renderRows.map((row, i) => {
+                if (row.empty) return `<tr class="bg-transparent"><td colspan="4" class="px-4 py-2 text-transparent select-none">&nbsp;</td></tr>`;
+                const valA = row[colA] !== undefined ? row[colA] : '';
+                const valI = row[colI] !== undefined ? row[colI] : '';
+                const valQ = row[semCol] !== undefined ? row[semCol] : '';
+                const valT = row[colT] !== undefined ? row[colT] : '';
+                const lowerQ = String(valQ).toLowerCase();
+                let badgeClass = 'bg-gray-100 text-gray-700 border-gray-200';
+                if (lowerQ.includes('rojo') || lowerQ.includes('vencido')) badgeClass = 'bg-red-100 text-red-700 border-red-200';
+                else if (lowerQ.includes('amarillo') || lowerQ.includes('hoy')) badgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
+                return `
+                    <tr class="hover:bg-red-50/50 transition card-enter" style="animation-delay:${i * 30}ms">
+                        <td class="px-4 py-2 font-medium text-gray-800">${esc(valA)}</td>
+                        <td class="px-4 py-2 text-gray-700">${esc(valI)}</td>
+                        <td class="px-4 py-2"><span class="px-2 py-0.5 rounded-full text-xs font-semibold border ${badgeClass}">${esc(valQ)}</span></td>
+                        <td class="px-4 py-2 text-gray-700">${esc(valT)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            if (totalRecords > 10) {
+                paginationContainer.innerHTML = `
+                    <span>Mostrando ${startIndex + 1} - ${Math.min(endIndex, totalRecords)} de ${totalRecords}</span>
+                    <div class="space-x-1">
+                        <button onclick="changePageRojosAmarillos(-1)" ${pageRojosAmarillos === 1 ? 'disabled class="px-2 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed"' : 'class="px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-100"'}>Anterior</button>
+                        <span class="px-2 font-medium">Pág. ${pageRojosAmarillos} de ${totalPages}</span>
+                        <button onclick="changePageRojosAmarillos(1)" ${pageRojosAmarillos === totalPages ? 'disabled class="px-2 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed"' : 'class="px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-100"'}>Siguiente</button>
+                    </div>
+                `;
+            } else {
+                paginationContainer.innerHTML = `<span>Mostrando ${totalRecords} registros</span>`;
+            }
+        }
+
+        function changePageRojosAmarillos(direction) {
+            pageRojosAmarillos += direction;
+            renderRojosAmarillosUTTable();
+        }
+
+        /* ============================================================
+           TABLA: Garantías por UT
+           ============================================================ */
+        function sortGarantiaTable(colKey) {
+            if (garantiaTableSort.column === colKey) garantiaTableSort.direction = garantiaTableSort.direction === 'asc' ? 'desc' : 'asc';
+            else { garantiaTableSort.column = colKey; garantiaTableSort.direction = 'asc'; }
+            updateGarantiaSortIcons();
+            renderGarantiaUTTable();
+        }
+
+        function updateGarantiaSortIcons() {
+            ['ut', 'garantia', 'count', 'percentage'].forEach(key => {
+                const iconEl = document.getElementById(`sort-icon-${key}`);
+                if (!iconEl) return;
+                if (garantiaTableSort.column !== key) iconEl.innerHTML = '<i class="fa-solid fa-sort text-gray-300 hover:text-gray-500 text-xs ml-1"></i>';
+                else iconEl.innerHTML = garantiaTableSort.direction === 'asc'
+                    ? '<i class="fa-solid fa-sort-up text-[#DA291C] text-xs ml-1"></i>'
+                    : '<i class="fa-solid fa-sort-down text-[#DA291C] text-xs ml-1"></i>';
+            });
+        }
+
+        function openGarantiaColumnFilterModal(colKey) {
+            currentGarantiaModalKey = colKey;
+            const modal = document.getElementById('garantia-column-filter-modal');
+            const titleEl = document.getElementById('garantia-column-filter-title');
+            const checkboxesContainer = document.getElementById('garantia-column-filter-checkboxes');
+            document.getElementById('garantia-column-filter-search').value = '';
+            const utCol = getUTColumn();
+            const garCol = getGarantiaColumn();
+            const displayName = colKey === 'ut' ? 'UT' : 'Garantía';
+            titleEl.innerHTML = `<i class="fa-solid fa-filter text-[#DA291C]"></i> Filtrar: ${displayName}`;
+
+            const utTotals = {};
+            const utGarCounts = {};
+            filteredData.forEach(row => {
+                const utVal = String(row[utCol] || 'Sin UT').trim();
+                const garVal = String(row[garCol] || 'No especificado').trim();
+                utTotals[utVal] = (utTotals[utVal] || 0) + 1;
+                if (!utGarCounts[utVal]) utGarCounts[utVal] = {};
+                utGarCounts[utVal][garVal] = (utGarCounts[utVal][garVal] || 0) + 1;
+            });
+
+            let tableRows = [];
+            Object.keys(utGarCounts).forEach(ut => {
+                Object.keys(utGarCounts[ut]).forEach(garantia => {
+                    tableRows.push({ ut, garantia, count: utGarCounts[ut][garantia] });
+                });
+            });
+
+            let baseRows = [...tableRows];
+            if (colKey === 'ut' && garantiaTableFilters.garantiaCol) baseRows = baseRows.filter(r => garantiaTableFilters.garantiaCol.has(r.garantia));
+            else if (colKey === 'garantia' && garantiaTableFilters.utCol) baseRows = baseRows.filter(r => garantiaTableFilters.utCol.has(r.ut));
+
+            const uniqueValues = [...new Set(baseRows.map(r => r[colKey]))].filter(Boolean).sort((a, b) => String(a).localeCompare(String(b), 'es', { numeric: true }));
+            const currentActiveSet = colKey === 'ut' ? garantiaTableFilters.utCol : garantiaTableFilters.garantiaCol;
+
+            checkboxesContainer.innerHTML = uniqueValues.map(val => {
+                const isChecked = (!currentActiveSet || currentActiveSet.has(String(val))) ? 'checked' : '';
+                return `
+                    <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded cursor-pointer">
+                        <input type="checkbox" value="${esc(val)}" ${isChecked} class="garantia-column-modal-cb rounded text-[#DA291C] focus:ring-[#DA291C]">
+                        <span class="text-gray-700 truncate">${esc(val)}</span>
+                    </label>
+                `;
+            }).join('');
+            modal.classList.remove('hidden');
+        }
+
+        function closeGarantiaColumnFilterModal() {
+            document.getElementById('garantia-column-filter-modal').classList.add('hidden');
+            currentGarantiaModalKey = null;
+        }
+
+        function selectAllGarantiaModalValues(select) {
+            document.querySelectorAll('.garantia-column-modal-cb').forEach(cb => cb.checked = select);
+        }
+
+        function filterGarantiaColumnModalValues() {
+            const query = document.getElementById('garantia-column-filter-search').value.toLowerCase();
+            document.querySelectorAll('#garantia-column-filter-checkboxes label').forEach(label => {
+                label.style.display = label.innerText.toLowerCase().includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function applyGarantiaColumnFilterModal() {
+            const checkboxes = document.querySelectorAll('.garantia-column-modal-cb');
+            const selectedSet = new Set();
+            let allChecked = true;
+            checkboxes.forEach(cb => {
+                if (cb.checked) selectedSet.add(cb.value);
+                else allChecked = false;
+            });
+            if (allChecked) {
+                if (currentGarantiaModalKey === 'ut') garantiaTableFilters.utCol = null;
+                if (currentGarantiaModalKey === 'garantia') garantiaTableFilters.garantiaCol = null;
+            } else {
+                if (currentGarantiaModalKey === 'ut') garantiaTableFilters.utCol = selectedSet;
+                if (currentGarantiaModalKey === 'garantia') garantiaTableFilters.garantiaCol = selectedSet;
+            }
+            pageGarantiaUT = 1;
+            closeGarantiaColumnFilterModal();
+            renderGarantiaUTTable();
+            updateFloatingResetButton();
+        }
+
+        function clearGarantiaTableFilters() {
+            garantiaTableFilters = { utCol: null, garantiaCol: null };
+            pageGarantiaUT = 1;
+            renderGarantiaUTTable();
+            updateFloatingResetButton();
+        }
+
+        function renderGarantiaUTTable() {
+            const tbody = document.querySelector('#garantia-ut-table tbody');
+            const paginationContainer = document.getElementById('garantia-ut-pagination');
+            const activeBar = document.getElementById('garantia-active-filters-bar');
+            const activeDesc = document.getElementById('garantia-active-filters-desc');
+            const utCol = getUTColumn();
+            const garCol = getGarantiaColumn();
+
+            let activeFiltersText = [];
+            if (garantiaTableFilters.utCol) activeFiltersText.push(`UT (${garantiaTableFilters.utCol.size})`);
+            if (garantiaTableFilters.garantiaCol) activeFiltersText.push(`Garantía (${garantiaTableFilters.garantiaCol.size})`);
+            if (activeFiltersText.length > 0) { activeBar.classList.remove('hidden'); activeDesc.innerHTML = `<i class="fa-solid fa-filter text-red-600"></i> Filtro: ${activeFiltersText.join(' | ')}`; }
+            else activeBar.classList.add('hidden');
+
+            if (!utCol) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center text-gray-400">Columna UT no disponible</td></tr>`;
+                document.getElementById('garantia-table-count').innerText = `0 registros`;
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            const utTotals = {};
+            const utGarCounts = {};
+            filteredData.forEach(row => {
+                const utVal = String(row[utCol] || 'Sin UT').trim();
+                const garVal = String(row[garCol] || 'No especificado').trim();
+                utTotals[utVal] = (utTotals[utVal] || 0) + 1;
+                if (!utGarCounts[utVal]) utGarCounts[utVal] = {};
+                utGarCounts[utVal][garVal] = (utGarCounts[utVal][garVal] || 0) + 1;
+            });
+
+            let tableRows = [];
+            Object.keys(utGarCounts).forEach(ut => {
+                const totalUTLoad = utTotals[ut];
+                Object.keys(utGarCounts[ut]).forEach(garantia => {
+                    const count = utGarCounts[ut][garantia];
+                    const percentage = totalUTLoad > 0 ? Number(((count / totalUTLoad) * 100).toFixed(2)) : 0;
+                    tableRows.push({ ut, garantia, count, percentage });
+                });
+            });
+
+            if (garantiaTableFilters.utCol) tableRows = tableRows.filter(r => garantiaTableFilters.utCol.has(r.ut));
+            if (garantiaTableFilters.garantiaCol) tableRows = tableRows.filter(r => garantiaTableFilters.garantiaCol.has(r.garantia));
+
+            if (garantiaTableSort.column) {
+                tableRows.sort((a, b) => {
+                    let valA = a[garantiaTableSort.column];
+                    let valB = b[garantiaTableSort.column];
+                    let cmp = (typeof valA === 'number' && typeof valB === 'number') ? valA - valB : String(valA).localeCompare(String(valB), 'es', { numeric: true, sensitivity: 'base' });
+                    return garantiaTableSort.direction === 'asc' ? cmp : -cmp;
+                });
+            }
+
+            document.getElementById('garantia-table-count').innerText = `${tableRows.length} combinaciones`;
+            const totalRecords = tableRows.length;
+            const totalPages = Math.ceil(totalRecords / rowsPerPage) || 1;
+            if (pageGarantiaUT > totalPages) pageGarantiaUT = totalPages;
+            if (pageGarantiaUT < 1) pageGarantiaUT = 1;
+            const startIndex = (pageGarantiaUT - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const pageItems = tableRows.slice(startIndex, endIndex);
+            let renderRows = [...pageItems];
+            if (totalRecords < 9 && renderRows.length < minRows) while (renderRows.length < minRows) renderRows.push({ empty: true });
+
+            if (renderRows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center text-gray-400">No hay datos</td></tr>`;
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = renderRows.map((r, i) => {
+                if (r.empty) return `<tr class="bg-transparent"><td colspan="4" class="px-4 py-2 text-transparent select-none">&nbsp;</td></tr>`;
+                return `
+                    <tr class="hover:bg-red-50/50 transition card-enter" style="animation-delay:${i * 30}ms">
+                        <td class="px-4 py-2 font-medium text-gray-800">${esc(r.ut)}</td>
+                        <td class="px-4 py-2 text-gray-700">${esc(r.garantia)}</td>
+                        <td class="px-4 py-2 text-right font-semibold text-gray-800">${r.count.toLocaleString()}</td>
+                        <td class="px-4 py-2 text-right text-estafeta font-bold">${r.percentage}%</td>
+                    </tr>
+                `;
+            }).join('');
+
+            if (totalRecords > 10) {
+                paginationContainer.innerHTML = `
+                    <span>Mostrando ${startIndex + 1} - ${Math.min(endIndex, totalRecords)} de ${totalRecords}</span>
+                    <div class="space-x-1">
+                        <button onclick="changePageGarantiaUT(-1)" ${pageGarantiaUT === 1 ? 'disabled class="px-2 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed"' : 'class="px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-100"'}>Anterior</button>
+                        <span class="px-2 font-medium">Pág. ${pageGarantiaUT} de ${totalPages}</span>
+                        <button onclick="changePageGarantiaUT(1)" ${pageGarantiaUT === totalPages ? 'disabled class="px-2 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed"' : 'class="px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-100"'}>Siguiente</button>
+                    </div>
+                `;
+            } else {
+                paginationContainer.innerHTML = `<span>Mostrando ${totalRecords} registros</span>`;
+            }
+        }
+
+        function changePageGarantiaUT(direction) {
+            pageGarantiaUT += direction;
+            renderGarantiaUTTable();
+        }
+
+        /* ============================================================
+           TABLA: Detalle Guías
+           ============================================================ */
+        function renderTable() {
+            const thead = document.querySelector('#data-table thead');
+            const tbody = document.querySelector('#data-table tbody');
+            const paginationContainer = document.getElementById('data-table-pagination');
+
+            const priorityCols = columns.slice(0, 10);
+            if (columns[34] && !priorityCols.includes(columns[34])) priorityCols.push(columns[34]);
+            if (columns[36] && !priorityCols.includes(columns[36])) priorityCols.push(columns[36]);
+
+            thead.innerHTML = `<tr>${priorityCols.map(c => `<th class="px-3 py-2">${esc(c)}</th>`).join('')}</tr>`;
+
+            const totalRecords = filteredData.length;
+            const totalPages = Math.ceil(totalRecords / rowsPerPage) || 1;
+            if (pageGuiasOperativas > totalPages) pageGuiasOperativas = totalPages;
+            if (pageGuiasOperativas < 1) pageGuiasOperativas = 1;
+            const startIndex = (pageGuiasOperativas - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const pageItems = filteredData.slice(startIndex, endIndex);
+            let renderRows = [...pageItems];
+            if (totalRecords < 9 && renderRows.length < minRows) while (renderRows.length < minRows) renderRows.push({ empty: true });
+
+            if (renderRows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${priorityCols.length}" class="px-3 py-3 text-center text-gray-400">No hay registros</td></tr>`;
+                paginationContainer.innerHTML = '';
+                document.getElementById('table-count').innerText = `Mostrando 0 de 0 registros`;
+                return;
+            }
+
+            tbody.innerHTML = renderRows.map((row, i) => {
+                if (row.empty) return `<tr class="bg-transparent"><td colspan="${priorityCols.length}" class="px-3 py-2 text-transparent select-none">&nbsp;</td></tr>`;
+                return `
+                    <tr class="hover:bg-red-50/50 transition card-enter" style="animation-delay:${i * 25}ms">
+                        ${priorityCols.map(c => `<td class="px-3 py-2 text-gray-700">${esc(row[c] !== undefined ? row[c] : '')}</td>`).join('')}
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('table-count').innerText = `Mostrando ${startIndex + 1} - ${Math.min(endIndex, totalRecords)} de ${totalRecords} registros`;
+            if (totalRecords > 10) {
+                paginationContainer.innerHTML = `
+                    <span>Mostrando ${startIndex + 1} - ${Math.min(endIndex, totalRecords)} de ${totalRecords}</span>
+                    <div class="space-x-1">
+                        <button onclick="changePageGuiasOperativas(-1)" ${pageGuiasOperativas === 1 ? 'disabled class="px-2 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed"' : 'class="px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-100"'}>Anterior</button>
+                        <span class="px-2 font-medium">Pág. ${pageGuiasOperativas} de ${totalPages}</span>
+                        <button onclick="changePageGuiasOperativas(1)" ${pageGuiasOperativas === totalPages ? 'disabled class="px-2 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed"' : 'class="px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-100"'}>Siguiente</button>
+                    </div>
+                `;
+            } else {
+                paginationContainer.innerHTML = `<span>Mostrando ${totalRecords} registros</span>`;
+            }
+        }
+
+        function changePageGuiasOperativas(direction) {
+            pageGuiasOperativas += direction;
+            renderTable();
+        }
+
+        /* ============================================================
+           FILTROS GLOBALES
+           ============================================================ */
+        function filterData() {
+            const searchGenVal = document.getElementById('search-general').value.toLowerCase();
+            const garantiaVal = document.getElementById('slicer-garantia').value;
+            const utCol = getUTColumn();
+            const plazaCol = getPlazaColumn();
+            const garCol = getGarantiaColumn();
+
+            const totalCheckboxes = document.querySelectorAll('#ut-checkbox-list input[type="checkbox"]').length;
+            const allSelectedUT = selectedUTs.size === totalCheckboxes;
+            const plazaCheckboxes = document.querySelectorAll('#plaza-multiselect-options-container input[type="checkbox"]').length;
+            const allSelectedPlaza = selectedPlazas.size === plazaCheckboxes;
+
+            const doFilter = () => {
+                filteredData = rawData.filter(row => {
+                    if (utCol && !allSelectedUT) {
+                        const rowUT = String(row[utCol] || '').trim();
+                        if (!selectedUTs.has(rowUT)) return false;
+                    }
+                    if (plazaCol && !allSelectedPlaza) {
+                        const rowPlaza = String(row[plazaCol] || '').trim();
+                        if (!selectedPlazas.has(rowPlaza)) return false;
+                    }
+                    if (garantiaVal && String(row[garCol] || '').trim() !== garantiaVal) return false;
+                    if (searchGenVal) {
+                        const match = Object.values(row).some(val => String(val).toLowerCase().includes(searchGenVal));
+                        if (!match) return false;
+                    }
+                    return true;
+                });
+
+                pageReportePaquetes = 1;
+                pageRojosAmarillos = 1;
+                pageGarantiaUT = 1;
+                pageGuiasOperativas = 1;
+                updateDashboard();
+            };
+
+            if (document.startViewTransition) document.startViewTransition(doFilter);
+            else doFilter();
+        }
+
+        function renderActiveFilters() {
+            const container = document.getElementById('active-filters');
+            let chips = [];
+            const utCol = getUTColumn();
+            const totalCheckboxes = document.querySelectorAll('#ut-checkbox-list input[type="checkbox"]').length;
+            if (utCol && selectedUTs.size < totalCheckboxes && totalCheckboxes > 0) {
+                chips.push(`<span class="text-xs bg-red-100 text-red-800 px-3 py-1 rounded-full border border-red-200 flex items-center gap-1 font-medium">UTs: <strong>${selectedUTs.size}</strong></span>`);
+            }
+            const plazaCol = getPlazaColumn();
+            const plazaCheckboxes = document.querySelectorAll('#plaza-multiselect-options-container input[type="checkbox"]').length;
+            if (plazaCol && selectedPlazas.size < plazaCheckboxes && plazaCheckboxes > 0) {
+                chips.push(`<span class="text-xs bg-red-100 text-red-800 px-3 py-1 rounded-full border border-red-200 flex items-center gap-1 font-medium">Plaza: <strong>${selectedPlazas.size}</strong></span>`);
+            }
+            const garantiaVal = document.getElementById('slicer-garantia').value;
+            if (garantiaVal) chips.push(`<span class="text-xs bg-red-100 text-red-800 px-3 py-1 rounded-full border border-red-200 flex items-center gap-1 font-medium">Garantía: <strong>${esc(garantiaVal)}</strong></span>`);
+            const searchGenVal = document.getElementById('search-general').value;
+            if (searchGenVal) chips.push(`<span class="text-xs bg-red-100 text-red-800 px-3 py-1 rounded-full border border-red-200 flex items-center gap-1 font-medium">Búsqueda: <strong>${esc(searchGenVal)}</strong></span>`);
+            container.innerHTML = chips.length === 0
+                ? `<span class="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full border">Sin filtros activos</span>`
+                : chips.join('');
+        }
+
+        function hasActiveFilters() {
+            const garantiaVal = document.getElementById('slicer-garantia').value;
+            const searchGenVal = document.getElementById('search-general').value;
+            const totalCheckboxes = document.querySelectorAll('#ut-checkbox-list input[type="checkbox"]').length;
+            const utNotAll = totalCheckboxes > 0 && selectedUTs.size < totalCheckboxes;
+            const plazaCheckboxes = document.querySelectorAll('#plaza-multiselect-options-container input[type="checkbox"]').length;
+            const plazaNotAll = plazaCheckboxes > 0 && selectedPlazas.size < plazaCheckboxes;
+            const tableFiltered = tableColumnFilters.cpCol !== null || tableColumnFilters.vencCol !== null;
+            const reporteTableFiltered = reporteTableFilters.cpCol !== null || reporteTableFilters.garantiaCol !== null || reporteTableFilters.vencCol !== null || Boolean(reporteTableFilters.search);
+            const garantiaTableFiltered = garantiaTableFilters.utCol !== null || garantiaTableFilters.garantiaCol !== null;
+            return Boolean(garantiaVal || searchGenVal || utNotAll || plazaNotAll || tableFiltered || reporteTableFiltered || garantiaTableFiltered);
+        }
+
+        function updateFloatingResetButton() {
+            const btn = document.getElementById('floating-reset-btn');
+            if (!btn) return;
+            if (hasActiveFilters()) btn.classList.remove('hidden');
+            else btn.classList.add('hidden');
+        }
+
+        function resetFilters() {
+            document.getElementById('search-general').value = '';
+            document.getElementById('slicer-garantia').value = '';
+            selectAllUT(true);
+            selectAllPlazas(true);
+            clearTableFilters();
+            clearReporteTableFilters();
+            clearGarantiaTableFilters();
+            filteredData = [...rawData];
+            updateDashboard();
+        }
+
+        /* ============================================================
+           EFECTOS VISUALES
+           ============================================================ */
+        function applyCardStagger() {
+            document.querySelectorAll('.card-enter').forEach((card, i) => {
+                if (card.style.animationDelay) return;
+                card.style.animationDelay = (i * 30) + 'ms';
+            });
+        }
+
+        function initRipple() {
+            document.body.addEventListener('click', (e) => {
+                const btn = e.target.closest('button, .multiselect-header, [onclick]');
+                if (!btn || btn.disabled) return;
+                if (!btn.classList.contains('ripple-host')) btn.classList.add('ripple-host');
+                const rect = btn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple-effect';
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 650);
+            }, true);
+        }
+
+        function applyTiltToCards() {
+            if (window.matchMedia('(pointer: coarse)').matches) return;
+            document.querySelectorAll('#main-dashboard .border-l-4').forEach(card => {
+                if (card.dataset.tilt === 'on') return;
+                card.dataset.tilt = 'on';
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width - 0.5;
+                    const y = (e.clientY - rect.top) / rect.height - 0.5;
+                    card.style.transform = `perspective(1000px) rotateY(${x * 5}deg) rotateX(${-y * 5}deg) translateY(-4px) scale(1.02)`;
+                });
+                card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+            });
+        }
+
+        /* ============================================================
+           MODO OSCURO: aplicar, toggle manual y propagación a iframes
+           ============================================================ */
+        function aplicarTema(tema) {
+            if (tema === 'dark') {
+                document.body.classList.add('dark-mode');
+                const icon = document.getElementById('theme-toggle-icon');
+                if (icon) icon.className = 'fa-solid fa-sun';
+            } else {
+                document.body.classList.remove('dark-mode');
+                const icon = document.getElementById('theme-toggle-icon');
+                if (icon) icon.className = 'fa-solid fa-moon';
+            }
+            document.querySelectorAll('iframe').forEach(f => {
+                try { f.contentWindow.postMessage({ theme: tema }, '*'); } catch (e) {}
+            });
+        }
+
+        (function initTema() {
+            const stored = localStorage.getItem('panel-theme');
+            const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const initial = stored === 'dark' || (!stored && systemDark) ? 'dark' : 'light';
+            aplicarTema(initial);
+
+            const btn = document.getElementById('theme-toggle');
+            if (btn) {
+                btn.onclick = () => {
+                    const isDark = document.body.classList.contains('dark-mode');
+                    const next = isDark ? 'light' : 'dark';
+                    aplicarTema(next);
+                    localStorage.setItem('panel-theme', next);
+                };
+            }
+
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem('panel-theme')) aplicarTema(e.matches ? 'dark' : 'light');
+                });
+            }
+        })();
+
+        /* ============================================================
+           🔔 CAMPANA DE NOTIFICACIONES — JS
+           ============================================================ */
+        const NOTIF_CONFIG = {
+            dashboardId: 'embarque-tr1',
+            storageKey: 'notif_history_embarque-tr1',
+            maxHistory: 50
+        };
+
+        const NOTIF_ICONS = {
+            danger:  'fa-solid fa-triangle-exclamation',
+            warning: 'fa-solid fa-clock',
+            info:    'fa-solid fa-circle-info',
+            success: 'fa-solid fa-circle-check',
+            purple:  'fa-solid fa-users'
+        };
+
+        function getNotifHistory() {
+            try {
+                const raw = localStorage.getItem(NOTIF_CONFIG.storageKey);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) { return []; }
+        }
+
+        function saveNotifHistory(list) {
+            try {
+                const trimmed = list.slice(0, NOTIF_CONFIG.maxHistory);
+                localStorage.setItem(NOTIF_CONFIG.storageKey, JSON.stringify(trimmed));
+            } catch (e) { console.warn('No se pudo guardar historial', e); }
+        }
+
+        function injectBell() {
+            const container = document.getElementById('header-actions-container');
+            if (!container) return;
+            if (document.getElementById('notif-bell')) return;
+            const btn = document.createElement('button');
+            btn.id = 'notif-bell';
+            btn.setAttribute('aria-label', 'Notificaciones');
+            btn.innerHTML = `<i class="fa-solid fa-bell"></i><span id="notif-badge" class="hidden">0</span>`;
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (document.getElementById('notif-panel').classList.contains('open')) closeNotifPanel();
+                else openNotifPanel();
+            });
+            container.appendChild(btn);
+            updateBadge();
+        }
+
+        function updateBadge() {
+            const badge = document.getElementById('notif-badge');
+            if (!badge) return;
+            const history = getNotifHistory();
+            const unread = history.filter(n => !n.read).length;
+            if (unread > 0) {
+                badge.textContent = unread > 99 ? '99+' : String(unread);
+                badge.classList.remove('hidden');
+                badge.classList.remove('pulse');
+                void badge.offsetWidth;
+                badge.classList.add('pulse');
+            } else {
+                badge.classList.add('hidden');
+            }
+            const titleEl = document.getElementById('notif-panel-title');
+            if (titleEl) {
+                const total = history.length;
+                titleEl.innerHTML = `<i class="fa-solid fa-bell mr-1"></i> Notificaciones${total ? ` (${total})` : ''}`;
+            }
+        }
+
+        function timeAgo(ts) {
+            const diff = Math.floor((Date.now() - ts) / 1000);
+            if (diff < 60) return 'Hace un momento';
+            if (diff < 3600) return `Hace ${Math.floor(diff/60)} min`;
+            if (diff < 86400) return `Hace ${Math.floor(diff/3600)} h`;
+            return `Hace ${Math.floor(diff/86400)} d`;
+        }
+
+        function showToast(notif, duration = 6000) {
+            const container = document.getElementById('notif-toast-container');
+            if (!container) return;
+            // límite 3 toasts visibles
+            const existing = container.querySelectorAll('.notif-toast:not(.out)');
+            if (existing.length >= 3) {
+                const oldest = existing[0];
+                oldest.classList.add('out');
+                setTimeout(() => oldest.remove(), 350);
+            }
+            const el = document.createElement('div');
+            el.className = `notif-toast notif-${notif.type}`;
+            el.innerHTML = `
+                <div class="notif-toast-icon"><i class="${NOTIF_ICONS[notif.type] || NOTIF_ICONS.info}"></i></div>
+                <div class="notif-toast-content">
+                    <div class="notif-toast-title">${esc(notif.title)}</div>
+                    <div class="notif-toast-msg">${notif.message}</div>
+                </div>
+                <button class="notif-toast-close" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            container.appendChild(el);
+            el.querySelector('.notif-toast-close').addEventListener('click', () => {
+                el.classList.add('out');
+                setTimeout(() => el.remove(), 350);
+            });
+            setTimeout(() => {
+                if (el.parentNode) {
+                    el.classList.add('out');
+                    setTimeout(() => el.remove(), 350);
+                }
+            }, duration);
+        }
+
+        function renderPanel() {
+            const body = document.getElementById('notif-panel-body');
+            if (!body) return;
+            const history = getNotifHistory();
+            if (history.length === 0) {
+                body.innerHTML = `<div class="notif-empty"><i class="fa-solid fa-bell-slash"></i>Sin notificaciones por ahora</div>`;
+                return;
+            }
+            body.innerHTML = history.map(n => `
+                <div class="notif-item notif-${n.type} ${n.read ? '' : 'unread'}">
+                    <div class="notif-item-icon"><i class="${NOTIF_ICONS[n.type] || NOTIF_ICONS.info}"></i></div>
+                    <div class="notif-item-content">
+                        <div class="notif-item-title">${esc(n.title)}</div>
+                        <div class="notif-item-msg">${n.message}</div>
+                        <div class="notif-item-time">${timeAgo(n.timestamp)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            if (!panel) return;
+            renderPanel();
+            updateBadge();
+            panel.classList.add('open');
+        }
+
+        function closeNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            if (panel) panel.classList.remove('open');
+        }
+
+        function markAllAsRead() {
+            const history = getNotifHistory();
+            history.forEach(n => n.read = true);
+            saveNotifHistory(history);
+            updateBadge();
+            renderPanel();
+        }
+
+        function clearNotifHistory() {
+            if (!confirm('¿Eliminar todo el historial de notificaciones?')) return;
+            localStorage.removeItem(NOTIF_CONFIG.storageKey);
+            updateBadge();
+            renderPanel();
+        }
+
+        function addNotifications(notifs) {
+            if (!notifs || notifs.length === 0) return;
+            // Ordenar por prioridad: danger > warning > info > purple > success
+            const order = { danger: 0, warning: 1, info: 2, purple: 3, success: 4 };
+            const sorted = [...notifs].sort((a, b) => (order[a.type] ?? 99) - (order[b.type] ?? 99));
+            const history = getNotifHistory();
+            const now = Date.now();
+            const enriched = sorted.map((n, i) => ({
+                id: `${NOTIF_CONFIG.dashboardId}-${now}-${i}`,
+                timestamp: now,
+                read: false,
+                type: n.type,
+                title: n.title,
+                message: n.message,
+                duration: n.duration || 6000
+            }));
+            // Guardar (más nuevas primero)
+            const updated = [...enriched, ...history].slice(0, NOTIF_CONFIG.maxHistory);
+            saveNotifHistory(updated);
+            // Toasts: máximo 2 (los más críticos)
+            enriched.slice(0, 2).forEach((n, i) => {
+                setTimeout(() => showToast(n, n.duration), i * 300);
+            });
+            // Actualizar UI
+            updateBadge();
+            renderPanel();
+        }
+
+        function analyzeAndAlert() {
+            const notifs = [];
+            const semCol = getSemaforoColumn();
+            const garCol = getGarantiaColumn();
+            const utCol = getUTColumn();
+            const colT = columns[19] || columns.find(c => _norm(c).includes('cliente')) || '';
+
+            if (!semCol || filteredData.length === 0) return;
+
+            // 1. Vencidos (rojo/vencido)
+            const vencidos = filteredData.filter(row => {
+                const v = String(row[semCol] || '').toLowerCase();
+                return v.includes('rojo') || v.includes('vencido');
+            }).length;
+            if (vencidos > 0) {
+                notifs.push({
+                    type: 'danger',
+                    title: '🚨 Paquetes Vencidos',
+                    message: `<strong>${vencidos.toLocaleString()}</strong> paquete(s) han excedido su tiempo de garantía y requieren atención inmediata.`
+                });
+            }
+
+            // 2. Vencen hoy (amarillo/hoy)
+            const vencenHoy = filteredData.filter(row => {
+                const v = String(row[semCol] || '').toLowerCase();
+                return v.includes('amarillo') || v.includes('hoy');
+            }).length;
+            if (vencenHoy > 0) {
+                notifs.push({
+                    type: 'warning',
+                    title: '🟠 Paquetes que Vencen Hoy',
+                    message: `<strong>${vencenHoy.toLocaleString()}</strong> paquete(s) vencen el día de hoy. Prioriza su entrega.`
+                });
+            }
+
+            // 3. Top 3 Clientes con más paquetes
+            if (colT) {
+                const cliCounts = {};
+                filteredData.forEach(row => {
+                    const cli = String(row[colT] || '').trim();
+                    if (!cli) return;
+                    cliCounts[cli] = (cliCounts[cli] || 0) + 1;
+                });
+                const topCli = Object.entries(cliCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3);
+                if (topCli.length > 0) {
+                    const medals = ['🥇','🥈','🥉'];
+                    const lines = topCli.map(([c, n], i) => `${medals[i] || '•'} <strong>${esc(c)}</strong> — ${n.toLocaleString()} paquete(s)`).join('<br>');
+                    notifs.push({
+                        type: 'info',
+                        title: '👥 Top 3 Clientes con más paquetes',
+                        message: lines
+                    });
+                }
+            }
+
+            // 4. Servicios de garantía "día siguiente"
+            const dayNextCount = filteredData.filter(row => {
+                const v = _norm(row[garCol] || '');
+                return v.includes('dia siguiente') || v.includes('siguiente dia') ||
+                       v.includes('next day') || v.includes('24 hr') || v.includes('24hr') ||
+                       v.includes('día siguiente');
+            }).length;
+            if (dayNextCount > 0) {
+                notifs.push({
+                    type: 'purple',
+                    title: '⚡ Garantía Día Siguiente',
+                    message: `<strong>${dayNextCount.toLocaleString()}</strong> servicio(s) con garantía de <strong>día siguiente</strong> en esta carga.`
+                });
+            }
+
+            // 5. Top 3 UTs con más paquetes
+            if (utCol) {
+                const utCounts = {};
+                filteredData.forEach(row => {
+                    const ut = String(row[utCol] || '').trim();
+                    if (!ut) return;
+                    utCounts[ut] = (utCounts[ut] || 0) + 1;
+                });
+                const topUT = Object.entries(utCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3);
+                if (topUT.length > 0) {
+                    const medals = ['🥇','🥈','🥉'];
+                    const lines = topUT.map(([u, n], i) => `${medals[i] || '•'} <strong>${esc(u)}</strong> — ${n.toLocaleString()} paquete(s)`).join('<br>');
+                    notifs.push({
+                        type: 'success',
+                        title: '🚚 Top 3 UTs con más paquetes',
+                        message: lines
+                    });
+                }
+            }
+
+            // Toast de éxito de carga (siempre al final, corto)
+            notifs.push({
+                type: 'success',
+                title: '✅ Carga Exitosa',
+                message: `${filteredData.length.toLocaleString()} guías procesadas correctamente.`,
+                duration: 4000
+            });
+
+            addNotifications(notifs);
+        }
+
+        /* Orquestador de arranque */
+        document.addEventListener('DOMContentLoaded', () => {
+            initRipple();
+            injectBell();
+            const main = document.getElementById('main-dashboard');
+            if (main) {
+                let lastCount = -1;
+                const obs = new MutationObserver(() => {
+                    if (!main.classList.contains('hidden') && rawData.length > 0 && rawData.length !== lastCount) {
+                        lastCount = rawData.length;
+                        setTimeout(() => { applyCardStagger(); applyTiltToCards(); }, 300);
+                    }
+                });
+                obs.observe(main, { attributes: true, attributeFilter: ['class'] });
+            }
+            console.log('%c🎨 Efectos TR1: ripple, dark-mode (con toggle), gradiente, cascada, tilt, contadores, barras, view-transitions',
+                'background:#DA291C;color:white;padding:6px 10px;border-radius:4px;font-weight:bold;font-size:12px;');
+            console.log('%c🔔 Campana de notificaciones activa: 5 reglas (vencidos, vencen hoy, top clientes, día siguiente, top UT)',
+                'background:#dc2626;color:white;padding:6px 10px;border-radius:4px;font-weight:bold;font-size:12px;');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Logística - Estafeta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .estafeta-red { background-color: #DA291C; }
+        .estafeta-red-text { color: #DA291C; }
+        .estafeta-border { border-color: #DA291C; }
+        #map { background-color: #f3f4f6 !important; }
+        #map-card.fullscreen {
+            position: fixed !important; top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            z-index: 9999 !important; border-radius: 0 !important;
+            padding: 16px !important; background-color: white !important;
+            box-shadow: none !important; display: flex; flex-direction: column;
+        }
+        #map-card.fullscreen #map { flex-grow: 1 !important; height: auto !important; }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50%      { background-position: 100% 50%; }
+        }
+        header.estafeta-red {
+            background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C) !important;
+            background-size: 300% 100% !important;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        .ripple-host { position: relative; overflow: hidden; }
+        .ripple-effect {
+            position: absolute; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.55);
+            transform: scale(0); animation: rippleAnim 0.6s ease-out;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(20px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
+
+        #timeline-kpi-container > div {
+            transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+        }
+        #timeline-kpi-container > div:hover {
+            box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.18), 0 20px 40px -10px rgba(218, 41, 28, 0.28) !important;
+        }
+
+        @keyframes pulseCritical {
+            0%, 100% { background-color: rgba(220, 38, 38, 0.08); }
+            50%      { background-color: rgba(220, 38, 38, 0.28); }
+        }
+        .critical-pulse {
+            animation: pulseCritical 2s ease-in-out infinite;
+            font-weight: 800; color: #dc2626 !important;
+            border-radius: 4px; padding: 2px 6px;
+            display: inline-block;
+        }
+
+        .kpi-bar-track {
+            width: 100%; height: 5px;
+            background: rgba(0, 0, 0, 0.06);
+            border-radius: 999px; overflow: hidden; margin-top: 6px;
+        }
+        .kpi-bar-fill {
+            height: 100%; width: 0%;
+            border-radius: 999px;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ============ BOTÓN FLOTANTE DE TEMA ============ */
+        #theme-toggle {
+            position: fixed;
+            bottom: 88px;
+            right: 24px;
+            z-index: 40;
+            width: 48px;
+            height: 48px;
+            border-radius: 999px;
+            background: #1e293b;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        #theme-toggle:hover {
+            transform: scale(1.08) rotate(15deg);
+            background: #334155;
+        }
+        body.dark-mode #theme-toggle {
+            background: #fbbf24;
+            color: #1e293b;
+        }
+
+        /* ============ MODO OSCURO ============ */
+        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
+        body.dark-mode header.estafeta-red { background: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B) !important; background-size: 300% 100% !important; }
+        body.dark-mode main,
+        body.dark-mode main > div > div,
+        body.dark-mode .bg-white,
+        body.dark-mode .bg-gray-50,
+        body.dark-mode .bg-gray-100 { background-color: #1e293b !important; }
+        body.dark-mode .text-gray-800,
+        body.dark-mode .text-gray-700,
+        body.dark-mode .text-gray-900 { color: #e2e8f0 !important; }
+        body.dark-mode .text-gray-600,
+        body.dark-mode .text-gray-500,
+        body.dark-mode .text-gray-400 { color: #94a3b8 !important; }
+        body.dark-mode .border-gray-100,
+        body.dark-mode .border-gray-200,
+        body.dark-mode .border-gray-300 { border-color: #334155 !important; }
+        body.dark-mode .divide-gray-200 > * + * { border-color: #334155 !important; }
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; }
+        body.dark-mode .bg-emerald-50 { background-color: rgba(20, 83, 45, 0.3) !important; }
+        body.dark-mode .bg-blue-50 { background-color: rgba(30, 58, 138, 0.3) !important; }
+        body.dark-mode .bg-amber-50 { background-color: rgba(120, 53, 15, 0.3) !important; }
+        body.dark-mode .bg-red-50\/40 { background-color: rgba(127, 29, 29, 0.25) !important; }
+        body.dark-mode #map { background-color: #0f172a !important; }
+        body.dark-mode #route-modal > div,
+        body.dark-mode #cp-modal > div { background: #1e293b !important; }
+        body.dark-mode .shadow-sm,
+        body.dark-mode .shadow-md,
+        body.dark-mode .shadow-xl,
+        body.dark-mode .shadow-2xl { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -2px rgba(0,0,0,0.4) !important; }
+
+        /* ============ CAMPANA DE NOTIFICACIONES ============ */
+        #notif-bell {
+            position: relative;
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        #notif-bell:hover {
+            background: rgba(255, 255, 255, 0.32);
+            transform: translateY(-1px);
+        }
+        #notif-badge {
+            position: absolute;
+            top: -4px; right: -4px;
+            min-width: 20px; height: 20px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: #dc2626;
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        #notif-badge.hidden { display: none; }
+        @keyframes badgePulse {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(1.35); }
+            100% { transform: scale(1); }
+        }
+        #notif-badge.pulse { animation: badgePulse 0.6s ease; }
+
+        #notif-toast-container {
+            position: fixed;
+            top: 80px; right: 20px;
+            z-index: 9998;
+            display: flex; flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+            width: calc(100vw - 40px);
+            pointer-events: none;
+        }
+        @media (max-width: 640px) {
+            #notif-toast-container {
+                top: auto; bottom: 90px;
+                right: 12px; left: 12px;
+                max-width: none; width: auto;
+            }
+        }
+        .notif-toast {
+            pointer-events: auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.25);
+            border-left: 4px solid #DA291C;
+            padding: 12px 14px;
+            animation: notifToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex; gap: 10px;
+            align-items: flex-start;
+            position: relative;
+        }
+        .notif-toast.notif-danger  { border-left-color: #dc2626; }
+        .notif-toast.notif-warning { border-left-color: #f59e0b; }
+        .notif-toast.notif-info    { border-left-color: #3b82f6; }
+        .notif-toast.notif-success { border-left-color: #10b981; }
+        @keyframes notifToastIn {
+            from { opacity: 0; transform: translateX(60px) scale(0.95); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        .notif-toast.removing {
+            animation: notifToastOut 0.35s ease forwards;
+        }
+        @keyframes notifToastOut {
+            to { opacity: 0; transform: translateX(60px) scale(0.9); }
+        }
+        .notif-toast-icon {
+            flex-shrink: 0;
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 14px;
+        }
+        .notif-toast.notif-danger  .notif-toast-icon { background: #dc2626; }
+        .notif-toast.notif-warning .notif-toast-icon { background: #f59e0b; }
+        .notif-toast.notif-info    .notif-toast-icon { background: #3b82f6; }
+        .notif-toast.notif-success .notif-toast-icon { background: #10b981; }
+        .notif-toast-content { flex-grow: 1; min-width: 0; }
+        .notif-toast-title {
+            font-weight: 700; font-size: 13px;
+            color: #1f2937; margin-bottom: 2px;
+            line-height: 1.3;
+        }
+        .notif-toast-msg {
+            font-size: 12px; color: #6b7280;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .notif-toast-close {
+            background: transparent; border: none;
+            color: #9ca3af; cursor: pointer;
+            font-size: 14px; padding: 0 2px;
+            flex-shrink: 0;
+        }
+        .notif-toast-close:hover { color: #dc2626; }
+
+        #notif-panel {
+            position: fixed;
+            top: 80px; right: 20px;
+            width: 400px;
+            max-width: calc(100vw - 40px);
+            max-height: 70vh;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: notifPanelIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #notif-panel.open { display: flex; }
+        @keyframes notifPanelIn {
+            from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .notif-panel-header {
+            background: #1e293b;
+            color: white;
+            padding: 14px 18px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .notif-panel-header h3 {
+            font-weight: 700; font-size: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .notif-panel-close {
+            background: transparent; border: none;
+            color: #cbd5e1; font-size: 20px;
+            cursor: pointer; line-height: 1;
+            padding: 0 4px;
+        }
+        .notif-panel-close:hover { color: white; }
+        .notif-panel-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+        .notif-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .notif-empty i { font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.5; }
+        .notif-item {
+            padding: 12px 16px;
+            border-left: 3px solid transparent;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex; gap: 10px;
+            align-items: flex-start;
+            cursor: default;
+        }
+        .notif-item.unread { background: #fef2f2; }
+        .notif-item.notif-danger  { border-left-color: #dc2626; }
+        .notif-item.notif-warning { border-left-color: #f59e0b; }
+        .notif-item.notif-info    { border-left-color: #3b82f6; }
+        .notif-item.notif-success { border-left-color: #10b981; }
+        .notif-item-icon {
+            flex-shrink: 0;
+            width: 28px; height: 28px;
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 12px;
+        }
+        .notif-item.notif-danger  .notif-item-icon { background: #dc2626; }
+        .notif-item.notif-warning .notif-item-icon { background: #f59e0b; }
+        .notif-item.notif-info    .notif-item-icon { background: #3b82f6; }
+        .notif-item.notif-success .notif-item-icon { background: #10b981; }
+        .notif-item-content { flex-grow: 1; min-width: 0; }
+        .notif-item-title {
+            font-weight: 700; font-size: 12.5px;
+            color: #1f2937; margin-bottom: 2px;
+        }
+        .notif-item-msg {
+            font-size: 11.5px; color: #4b5563;
+            line-height: 1.45;
+            margin-bottom: 4px;
+            word-wrap: break-word;
+        }
+        .notif-item-time {
+            font-size: 10.5px; color: #9ca3af;
+            font-weight: 600;
+        }
+        .notif-panel-footer {
+            padding: 10px 14px;
+            background: #f1f5f9;
+            border-top: 1px solid #e2e8f0;
+            display: flex; gap: 8px;
+            flex-shrink: 0;
+        }
+        .notif-panel-footer button {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .notif-btn-read {
+            background: #DA291C;
+            color: white;
+        }
+        .notif-btn-read:hover { background: #b81810; }
+        .notif-btn-clear {
+            background: white;
+            color: #dc2626;
+            border-color: #fecaca;
+        }
+        .notif-btn-clear:hover { background: #fef2f2; }
+
+        /* Campana en modo oscuro */
+        body.dark-mode #notif-panel { background: #1e293b; }
+        body.dark-mode .notif-panel-header { background: #0f172a; }
+        body.dark-mode .notif-panel-body { background: #0f172a; }
+        body.dark-mode .notif-item { border-bottom-color: #334155; }
+        body.dark-mode .notif-item.unread { background: rgba(127, 29, 29, 0.25); }
+        body.dark-mode .notif-item-title { color: #e2e8f0; }
+        body.dark-mode .notif-item-msg { color: #cbd5e1; }
+        body.dark-mode .notif-item-time { color: #64748b; }
+        body.dark-mode .notif-panel-footer { background: #1e293b; border-top-color: #334155; }
+        body.dark-mode .notif-btn-clear { background: #0f172a; color: #fca5a5; border-color: #7f1d1d; }
+        body.dark-mode .notif-btn-clear:hover { background: rgba(127, 29, 29, 0.3); }
+        body.dark-mode .notif-toast { background: #1e293b; }
+        body.dark-mode .notif-toast-title { color: #e2e8f0; }
+        body.dark-mode .notif-toast-msg { color: #cbd5e1; }
+        body.dark-mode .notif-empty { color: #64748b; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased min-h-screen flex flex-col relative">
+
+    <header class="estafeta-red text-white shadow-md z-20">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-truck-fast text-3xl"></i>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-wide">ESTAFETA</h1>
+                    <p class="text-xs uppercase tracking-wider opacity-90">Monitoreo de Entregas a Domicilio</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="flex items-center space-x-3 bg-red-800 bg-opacity-60 px-4 py-2 rounded-xl border border-red-600 hover:bg-opacity-80 transition-all cursor-pointer shadow-inner" id="banner-drop-zone" onclick="document.getElementById('file-input').click()">
+                    <input type="file" id="file-input" class="hidden" accept=".csv, .xlsx, .xls">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-white"></i>
+                    <div class="text-left">
+                        <p id="file-status" class="text-sm font-semibold">Cargar Excel / CSV</p>
+                        <p class="text-xs text-red-200">Arrastra o haz clic aquí</p>
+                    </div>
+                </div>
+                <!-- CAMPANA DE NOTIFICACIONES (se inyecta aquí) -->
+                <div id="header-actions-container"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+        <div id="dashboard-content" class="hidden space-y-6">
+
+            <!-- Barra de Filtros -->
+            <div class="bg-white p-4 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto relative">
+
+                    <div class="relative">
+                        <div id="plaza-picker-trigger" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-300 px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 cursor-pointer shadow-sm select-none">
+                            <i class="fa-solid fa-map-marked-alt estafeta-red-text"></i>
+                            <span id="plaza-trigger-label" class="font-bold text-gray-800">Plazas (Todas)</span>
+                            <i class="fa-solid fa-chevron-down text-xs text-gray-400 ml-1"></i>
+                        </div>
+                        <div id="plaza-picker-dropdown" class="absolute left-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 w-72 z-50 hidden">
+                            <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-3">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-map-marked-alt estafeta-red-text"></i>
+                                    <span class="font-bold text-gray-800 tracking-wide text-sm">PLAZAS</span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-xs font-bold">
+                                    <button type="button" onclick="selectAllPlazas()" class="estafeta-red-text hover:underline">Todas</button>
+                                    <span class="text-gray-300">|</span>
+                                    <button type="button" onclick="deselectAllPlazas()" class="text-gray-500 hover:underline">Ninguna</button>
+                                </div>
+                            </div>
+                            <div id="plaza-options-container" class="space-y-1.5 max-h-60 overflow-y-auto"></div>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <div id="date-picker-trigger" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-300 px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 cursor-pointer shadow-sm select-none">
+                            <span class="text-xs font-semibold text-gray-500">Inicio</span>
+                            <span id="date-trigger-label" class="font-bold text-gray-800">Seleccionar días</span>
+                            <i class="fa-solid fa-calendar-days estafeta-red-text ml-1"></i>
+                        </div>
+                        <div id="date-picker-dropdown" class="absolute left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl p-4 w-80 z-50 hidden">
+                            <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+                                <div class="flex space-x-1">
+                                    <button type="button" id="cal-prev-year" class="p-1.5 hover:bg-gray-100 rounded text-gray-600 text-xs font-bold" title="Año Anterior">&laquo;</button>
+                                    <button type="button" id="cal-prev-month" class="p-1.5 hover:bg-gray-100 rounded text-gray-600 text-xs font-bold" title="Mes Anterior">&#8249;</button>
+                                </div>
+                                <span id="cal-month-year-title" class="font-bold text-sm text-gray-800">October 2026</span>
+                                <div class="flex space-x-1">
+                                    <button type="button" id="cal-next-month" class="p-1.5 hover:bg-gray-100 rounded text-gray-600 text-xs font-bold" title="Mes Siguiente">&#8250;</button>
+                                    <button type="button" id="cal-next-year" class="p-1.5 hover:bg-gray-100 rounded text-gray-600 text-xs font-bold" title="Año Siguiente">&raquo;</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-400 mb-2">
+                                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                            </div>
+                            <div id="cal-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+                            <div class="flex items-center justify-between mt-3 pt-2 border-t border-gray-100 text-xs">
+                                <button type="button" id="cal-select-all" class="estafeta-red-text font-bold hover:underline">Todas</button>
+                                <button type="button" id="cal-today" class="estafeta-red-text font-bold hover:underline">Today</button>
+                                <button type="button" id="cal-clear-all" class="text-gray-500 font-bold hover:underline">Ninguna</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="open-route-modal" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
+                        <i class="fa-solid fa-route estafeta-red-text"></i>
+                        <span>Filtrar Ruta</span>
+                    </button>
+                    <button id="open-cp-modal" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
+                        <i class="fa-solid fa-map-pin estafeta-red-text"></i>
+                        <span>C.P.</span>
+                    </button>
+                    <div class="relative flex-grow sm:flex-grow-0 sm:w-60">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-red-500">
+                            <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                        </span>
+                        <input type="text" id="global-search-input" placeholder="Buscar cualquier dato..." class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium transition-all">
+                    </div>
+                </div>
+                <div class="flex items-center justify-end w-full lg:w-auto">
+                    <span class="text-xs text-gray-500 font-medium"><span id="search-counter" class="font-bold text-gray-800">0</span> registros</span>
+                </div>
+            </div>
+
+            <!-- Línea de Tiempo -->
+            <div class="bg-white p-6 rounded-xl shadow-sm space-y-5">
+                <div class="border-b border-gray-100 pb-3">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                        <i class="fa-solid fa-timeline estafeta-red-text mr-2"></i> Línea de Tiempo de Entregas (Secuencia Ordenada por Hora)
+                    </h3>
+                </div>
+                <div id="timeline-kpi-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3"></div>
+                <div id="timeline-pagination-container" class="flex items-center justify-center gap-4 pt-3 border-t border-gray-100"></div>
+            </div>
+
+            <!-- Gráfica de Picos -->
+            <div class="bg-white p-6 rounded-xl shadow-sm space-y-5">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-3 gap-3">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                        <i class="fa-solid fa-chart-line estafeta-red-text mr-2"></i> Picos de Mayor Entrega (Intervalos de 30 Minutos)
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full lg:w-auto">
+                        <div class="flex items-center space-x-3 bg-red-50 border border-red-200 px-3.5 py-2 rounded-xl shadow-sm">
+                            <div class="w-9 h-9 rounded-lg bg-[#DA291C] text-white flex items-center justify-center shadow-md flex-shrink-0">
+                                <i class="fa-solid fa-arrow-trend-up text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-red-600 tracking-wider">Pico Máximo</p>
+                                <p id="kpi-max-val" class="text-xs font-extrabold text-gray-800">-</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 bg-emerald-50 border border-emerald-200 px-3.5 py-2 rounded-xl shadow-sm">
+                            <div class="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-md flex-shrink-0">
+                                <i class="fa-solid fa-arrow-trend-down text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-emerald-600 tracking-wider">Pico Mínimo</p>
+                                <p id="kpi-min-val" class="text-xs font-extrabold text-gray-800">-</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 bg-blue-50 border border-blue-200 px-3.5 py-2 rounded-xl shadow-sm">
+                            <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-md flex-shrink-0">
+                                <i class="fa-solid fa-clock text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-blue-600 tracking-wider">Promedio Entrega</p>
+                                <p id="kpi-avg-time-val" class="text-xs font-extrabold text-gray-800">-</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 bg-amber-50 border border-amber-200 px-3.5 py-2 rounded-xl shadow-sm">
+                            <div class="w-9 h-9 rounded-lg bg-amber-600 text-white flex items-center justify-center shadow-md flex-shrink-0">
+                                <i class="fa-solid fa-hourglass-half text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-amber-600 tracking-wider">Tiempo en Ruta</p>
+                                <p id="kpi-sum-dead-time-val" class="text-xs font-extrabold text-gray-800">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative w-full h-72">
+                    <canvas id="time-series-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Mapa -->
+            <div id="map-card" class="bg-white p-6 rounded-xl shadow-sm transition-all duration-300">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                        <i class="fa-solid fa-map-location-dot estafeta-red-text mr-2"></i> Secuencia Cronológica y Ubicaciones en Mapa
+                    </h3>
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <div class="relative w-full sm:w-64">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-red-500">
+                                <i class="fa-solid fa-filter text-sm"></i>
+                            </span>
+                            <input type="text" id="sequence-search-input" placeholder="Filtrar secuencia Ej: 1, 3, 5" class="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium transition-all">
+                        </div>
+                        <button id="toggle-lines-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
+                            <i id="lines-icon" class="fa-solid fa-eye-slash"></i>
+                            <span id="lines-text">Mostrar Líneas</span>
+                        </button>
+                        <button id="toggle-fullscreen-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
+                            <i id="fullscreen-icon" class="fa-solid fa-expand"></i>
+                            <span id="fullscreen-text">Pantalla Completa</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="map" class="h-96 rounded-lg w-full z-10"></div>
+            </div>
+
+            <!-- Tabla -->
+            <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
+                <h3 class="text-lg font-bold text-gray-800">Bitácora de Eventos Ejecutados</h3>
+                <div class="overflow-x-auto">
+                    <table id="data-table" class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50"><tr id="table-headers"></tr></thead>
+                        <tbody id="table-body" class="divide-y divide-gray-200 bg-white"></tbody>
+                    </table>
+                </div>
+                <div id="table-pagination-container" class="flex items-center justify-center gap-4 pt-3 border-t border-gray-100"></div>
+            </div>
+        </div>
+    </main>
+
+    <button id="reset-filters" class="fixed bottom-6 right-6 z-50 bg-gray-900 hover:bg-gray-800 text-white px-4 py-3 rounded-full shadow-2xl transition-all duration-300 flex items-center space-x-2 text-sm font-medium transform scale-0 opacity-0 pointer-events-none">
+        <i class="fa-solid fa-rotate-left estafeta-red-text"></i>
+        <span>Restablecer Filtros</span>
+    </button>
+
+    <!-- Botón flotante para alternar modo oscuro -->
+    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+    </button>
+
+    <!-- CAMPANA: contenedor de toasts -->
+    <div id="notif-toast-container"></div>
+
+    <!-- MODALES -->
+<div id="route-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-filter estafeta-red-text"></i>
+                <h3 class="font-bold text-lg">Filtrar Ruta</h3>
+            </div>
+            <button id="close-route-modal" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
+        </div>
+        <div class="p-6 space-y-4 flex-grow overflow-y-auto">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="route-search-input" placeholder="Buscar ruta..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
+            </div>
+            <div class="flex justify-between items-center text-sm font-semibold px-1">
+                <span class="text-gray-600">Seleccionar rutas:</span>
+                <div class="space-x-3">
+                    <button type="button" id="select-all-routes" class="estafeta-red-text hover:underline">Todas</button>
+                    <span class="text-gray-300">|</span>
+                    <button type="button" id="deselect-all-routes" class="estafeta-red-text hover:underline">Ninguna</button>
+                </div>
+            </div>
+            <div id="route-checkboxes-container" class="border border-gray-200 rounded-xl p-3 space-y-2 max-h-60 overflow-y-auto bg-gray-50"></div>
+        </div>
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+            <button id="cancel-route-modal" class="px-5 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium text-sm transition-all">Cancelar</button>
+            <button id="apply-route-filter" class="px-5 py-2 rounded-xl estafeta-red hover:opacity-90 text-white font-medium text-sm shadow-md transition-all">Aplicar Filtro</button>
+        </div>
+    </div>
+</div>
+
+<div id="cp-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-map-pin estafeta-red-text"></i>
+                <h3 class="font-bold text-lg">Filtrar C.P.</h3>
+            </div>
+            <button id="close-cp-modal" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
+        </div>
+        <div class="p-6 space-y-4 flex-grow overflow-y-auto">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="cp-search-input" placeholder="Buscar código postal..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
+            </div>
+            <div class="flex justify-between items-center text-sm font-semibold px-1">
+                <span class="text-gray-600">Seleccionar C.P.:</span>
+                <div class="space-x-3">
+                    <button type="button" id="select-all-cps" class="estafeta-red-text hover:underline">Todas</button>
+                    <span class="text-gray-300">|</span>
+                    <button type="button" id="deselect-all-cps" class="estafeta-red-text hover:underline">Ninguna</button>
+                </div>
+            </div>
+            <div id="cp-checkboxes-container" class="border border-gray-200 rounded-xl p-3 space-y-2 max-h-60 overflow-y-auto bg-gray-50"></div>
+        </div>
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+            <button id="cancel-cp-modal" class="px-5 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium text-sm transition-all">Cancelar</button>
+            <button id="apply-cp-filter" class="px-5 py-2 rounded-xl estafeta-red hover:opacity-90 text-white font-medium text-sm shadow-md transition-all">Aplicar Filtro</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ============================================================
+       AUTENTICACIÓN
+       ============================================================ */
+    function iniciarSesionExitosa(rolSeleccionado) {
+        const tokenSeguro = btoa(rolSeleccionado + "|" + Date.now());
+        localStorage.setItem('auth_role', tokenSeguro);
+        window.location.href = 'Panel de Control Operativo.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const encodedRole = localStorage.getItem('auth_role');
+        if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
+        let rol = '';
+        try {
+            const decoded = atob(encodedRole);
+            const parts = decoded.split('|');
+            if (parts.length >= 1) rol = parts[0];
+        } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
+        if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
+
+        let inactivityTimer;
+        const maxInactivityMinutes = 30;
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                alert("Su sesión ha expirado por inactividad.");
+                localStorage.removeItem('auth_role');
+                window.location.href = 'Panel de Control Operativo.html';
+            }, maxInactivityMinutes * 60 * 1000);
+        }
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
+            window.addEventListener(event, resetInactivityTimer);
+        });
+        resetInactivityTimer();
+
+        if (rol === 'admin') console.warn("Modo Administrador activo.");
+    });
+
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+
+    function debounce(fn, ms = 250) {
+        let t;
+        return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+    }
+
+    /* ============================================================
+       ESTADO GLOBAL
+       ============================================================ */
+    let rawData = [];
+    let filteredData = [];
+    let mapInstance = null;
+    let markersClusterGroup = null;
+    let routeLinesLayer = null;
+    let showRouteLines = false;
+    let timeChart = null;
+    let isInitialMapLoad = true;
+
+    let plazaKey = '';
+    let dateKey = '';
+    let routeKey = '';
+    let cpKey = '';
+    let latKeyCached = '';
+    let lngKeyCached = '';
+    let statusKeyCached = '';
+    let descKeyCached = '';
+
+    let allPlazasList = [];
+    let selectedPlazasSet = new Set();
+    let allDatesList = [];
+    let selectedDatesSet = new Set();
+    let allRoutesList = [];
+    let allCpList = [];
+    let currentTimelinePage = 0;
+    let currentTablePage = 0;
+    const ITEMS_PER_PAGE = 10;
+
+    let calCurrentYear = 2026;
+    let calCurrentMonth = 9;
+
+    const bannerDropZone = document.getElementById('banner-drop-zone');
+    const fileInput = document.getElementById('file-input');
+
+    window.addEventListener('dragover', (e) => e.preventDefault());
+    window.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) handleFile(e.target.files[0]);
+    });
+
+    const _norm = s => String(s ?? '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().trim();
+
+    function validarArchivo(encabezados) {
+        if (!encabezados || encabezados.length === 0) return false;
+        const n = encabezados.map(_norm);
+        const has = (...frags) => n.some(h => frags.every(f => h.includes(_norm(f))));
+        return has('system', 'name') && has('delivery', 'date') && has('longitude');
+    }
+
+    function handleFile(file) {
+        document.getElementById('file-status').innerText = `Procesando...`;
+        const extension = file.name.split('.').pop().toLowerCase();
+
+        if (extension === 'csv') {
+            Papa.parse(file, {
+                header: true, dynamicTyping: false, skipEmptyLines: true,
+                complete: function(results) {
+                    const headers = results.meta.fields || (results.data.length > 0 ? Object.keys(results.data[0]) : []);
+                    if (!validarArchivo(headers)) {
+                        alert("El archivo no cuenta con los encabezados requeridos (System Name, Delivery Date Time Text, Longitude).");
+                        document.getElementById('file-status').innerText = 'Error de validación';
+                        document.getElementById('file-input').value = "";
+                        return;
+                    }
+                    initDashboard(results.data, file.name);
+                }
+            });
+        } else if (['xlsx', 'xls'].includes(extension)) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const headers = XLSX.utils.sheet_to_json(worksheet, {header: 1})[0] || [];
+                if (!validarArchivo(headers)) {
+                    alert("El archivo no cuenta con los encabezados requeridos (System Name, Delivery Date Time Text, Longitude).");
+                    document.getElementById('file-status').innerText = 'Error de validación';
+                    document.getElementById('file-input').value = "";
+                    return;
+                }
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
+                initDashboard(jsonData, file.name);
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            alert('Formato no soportado. Por favor sube un archivo CSV o Excel.');
+            document.getElementById('file-status').innerText = 'Error de formato';
+            document.getElementById('file-input').value = "";
+        }
+    }
+
+    function initDashboard(data, fileName) {
+        rawData = data.filter(row => Object.keys(row).length > 0);
+        if (rawData.length === 0) {
+            alert('El archivo no contiene filas de datos.');
+            document.getElementById('file-input').value = '';
+            return;
+        }
+
+        const sample = rawData[0] || {};
+        const keys = Object.keys(sample);
+
+        plazaKey = findColumn(sample, ['plaza', 'distrito']) || '';
+        dateKey = findColumn(sample, ['delivery date time', 'delivery date', 'fecha', 'date', 'timestamp', 'hora']) || '';
+        routeKey = findColumn(sample, ['route code', 'route', 'ruta']) || '';
+
+        /* 🔧 FIX CP: priorizar la columna exacta "Postal Code" */
+        if (keys.includes('Postal Code')) {
+            cpKey = 'Postal Code';
+        } else {
+            cpKey = findColumn(sample, ['postal code', 'postal', 'codigo postal', 'cp', 'zip']) || '';
+        }
+
+        latKeyCached = findColumn(sample, ['latitude', 'latitud', 'lat']) || '';
+        lngKeyCached = findColumn(sample, ['longitude', 'longitud', 'lng', 'lon']) || '';
+        statusKeyCached = findColumn(sample, ['status', 'estatus', 'tr2 process', 'estado']) || keys[0];
+        descKeyCached = findColumn(sample, ['receiver name', 'direccion', 'cliente', 'tracking', 'guia']) || keys[0];
+
+        if (dateKey) {
+            rawData.sort((a, b) => {
+                let tA = a[dateKey] ? new Date(a[dateKey]).getTime() : 0;
+                let tB = b[dateKey] ? new Date(b[dateKey]).getTime() : 0;
+                if (isNaN(tA)) tA = 0;
+                if (isNaN(tB)) tB = 0;
+                return tA - tB;
+            });
+        }
+
+        document.getElementById('file-input').value = '';
+
+        extractFilters();
+
+        filteredData = [...rawData];
+        currentTimelinePage = 0;
+        currentTablePage = 0;
+        isInitialMapLoad = true;
+        document.getElementById('file-status').innerText = fileName;
+        document.getElementById('dashboard-content').classList.remove('hidden');
+
+        console.log('🗺️ Columnas mapeadas:', {
+            plaza: plazaKey, fecha: dateKey, ruta: routeKey, cp: cpKey,
+            lat: latKeyCached, lng: lngKeyCached,
+            estatus: statusKeyCached, descripcion: descKeyCached
+        });
+
+        initMap();
+        updateDashboard();
+
+        /* 🔔 CAMPANA: disparar análisis UNA sola vez al cargar el archivo */
+        if (typeof window.__notifAnalyze === 'function') {
+            setTimeout(() => window.__notifAnalyze(), 900);
+        }
+    }
+
+    function parseDateString(val) {
+        if (val === undefined || val === null || val === '') return '';
+        let strVal = String(val).trim();
+        if (strVal.includes('T')) strVal = strVal.split('T')[0];
+        else if (strVal.includes(' ')) strVal = strVal.split(' ')[0];
+        let match = strVal.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+        if (match) return `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
+        return strVal;
+    }
+
+    function extractFilters() {
+        if (plazaKey) {
+            allPlazasList = [...new Set(rawData.map(r => r[plazaKey]).filter(v => v !== undefined && v !== null && v !== ''))];
+            allPlazasList.sort();
+            selectedPlazasSet = new Set(allPlazasList);
+            renderPlazaDropdown();
+            updatePlazaTriggerLabel();
+        }
+        if (dateKey) {
+            allDatesList = [...new Set(rawData.map(r => parseDateString(r[dateKey])).filter(v => v !== ''))];
+            allDatesList.sort();
+            selectedDatesSet = new Set(allDatesList);
+            if (allDatesList.length > 0) {
+                let firstParsed = new Date(allDatesList[0] + 'T00:00:00');
+                if (!isNaN(firstParsed)) {
+                    calCurrentYear = firstParsed.getFullYear();
+                    calCurrentMonth = firstParsed.getMonth();
+                }
+            }
+            renderCalendar();
+            updateDateTriggerLabel();
+        }
+        updateDependentFiltersLists();
+    }
+
+    function updateDependentFiltersLists() {
+        let tempFiltered = rawData.filter(row => {
+            let matchPlaza = plazaKey && selectedPlazasSet.size > 0 ? selectedPlazasSet.has(String(row[plazaKey])) : true;
+            let matchDate = dateKey && selectedDatesSet.size > 0 ? selectedDatesSet.has(parseDateString(row[dateKey])) : true;
+            return matchPlaza && matchDate;
+        });
+        if (routeKey) {
+            allRoutesList = [...new Set(tempFiltered.map(r => r[routeKey]).filter(v => v !== undefined && v !== null && v !== ''))];
+            allRoutesList.sort();
+            renderRouteCheckboxes(allRoutesList);
+        }
+        if (cpKey) {
+            allCpList = [...new Set(tempFiltered.map(r => r[cpKey]).filter(v => v !== undefined && v !== null && v !== ''))];
+            allCpList.sort();
+            renderCpCheckboxes(allCpList);
+        }
+    }
+
+    function renderPlazaDropdown() {
+        const container = document.getElementById('plaza-options-container');
+        if (!container) return;
+        let html = '';
+        allPlazasList.forEach(plaza => {
+            const isSelected = selectedPlazasSet.has(plaza);
+            const count = rawData.filter(r => r[plazaKey] === plaza).length;
+            html += `
+                <div onclick="togglePlazaSelection('${esc(plaza).replace(/'/g, "\\'")}')" class="flex items-center justify-between p-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 text-gray-800">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500 pointer-events-none">
+                        <span class="text-sm font-medium ${isSelected ? 'font-bold text-[#DA291C]' : 'text-gray-700'}">${esc(plaza)}</span>
+                    </div>
+                    <span class="bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">${count}</span>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    window.togglePlazaSelection = function(plaza) {
+        if (selectedPlazasSet.has(plaza)) selectedPlazasSet.delete(plaza);
+        else selectedPlazasSet.add(plaza);
+        renderPlazaDropdown();
+        updatePlazaTriggerLabel();
+        debouncedDependentUpdate();
+        currentTimelinePage = 0; currentTablePage = 0;
+        applyCombinedFilters();
+    }
+
+    window.selectAllPlazas = function() {
+        selectedPlazasSet = new Set(allPlazasList);
+        renderPlazaDropdown();
+        updatePlazaTriggerLabel();
+        debouncedDependentUpdate();
+        currentTimelinePage = 0; currentTablePage = 0;
+        applyCombinedFilters();
+    }
+
+    window.deselectAllPlazas = function() {
+        selectedPlazasSet.clear();
+        renderPlazaDropdown();
+        updatePlazaTriggerLabel();
+        debouncedDependentUpdate();
+        currentTimelinePage = 0; currentTablePage = 0;
+        applyCombinedFilters();
+    }
+
+    const debouncedDependentUpdate = debounce(updateDependentFiltersLists, 150);
+
+    function updatePlazaTriggerLabel() {
+        const labelEl = document.getElementById('plaza-trigger-label');
+        if (!labelEl) return;
+        if (selectedPlazasSet.size === 0) labelEl.innerText = "Ninguna plaza";
+        else if (selectedPlazasSet.size === allPlazasList.length) labelEl.innerText = "Plazas (Todas)";
+        else if (selectedPlazasSet.size === 1) labelEl.innerText = `Plaza: ${Array.from(selectedPlazasSet)[0]}`;
+        else labelEl.innerText = `Plazas (${selectedPlazasSet.size})`;
+    }
+
+    const plazaTrigger = document.getElementById('plaza-picker-trigger');
+    const plazaDropdown = document.getElementById('plaza-picker-dropdown');
+    if (plazaTrigger && plazaDropdown) {
+        plazaTrigger.addEventListener('click', (e) => { e.stopPropagation(); plazaDropdown.classList.toggle('hidden'); });
+        window.addEventListener('click', (e) => { if (!plazaDropdown.contains(e.target) && !plazaTrigger.contains(e.target)) plazaDropdown.classList.add('hidden'); });
+    }
+
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    function renderCalendar() {
+        const titleEl = document.getElementById('cal-month-year-title');
+        const gridEl = document.getElementById('cal-days-grid');
+        titleEl.innerText = `${monthNames[calCurrentMonth]} ${calCurrentYear}`;
+        const firstDayIndex = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
+        const totalDaysInMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
+        const prevMonthDays = new Date(calCurrentYear, calCurrentMonth, 0).getDate();
+
+        let html = '';
+        for (let i = firstDayIndex - 1; i >= 0; i--) {
+            html += `<span class="p-1.5 text-gray-300 cursor-default">${prevMonthDays - i}</span>`;
+        }
+        for (let day = 1; day <= totalDaysInMonth; day++) {
+            let mStr = String(calCurrentMonth + 1).padStart(2, '0');
+            let dStr = String(day).padStart(2, '0');
+            let dateStr = `${calCurrentYear}-${mStr}-${dStr}`;
+            let hasData = allDatesList.includes(dateStr);
+            let isSelected = selectedDatesSet.has(dateStr);
+            if (hasData) {
+                if (isSelected) html += `<button type="button" onclick="toggleCalendarDate('${dateStr}')" class="p-1.5 rounded-lg bg-[#DA291C] text-white font-bold shadow-sm hover:opacity-90 transition-all">${day}</button>`;
+                else html += `<button type="button" onclick="toggleCalendarDate('${dateStr}')" class="p-1.5 rounded-lg bg-red-50 text-gray-800 font-semibold border border-red-200 hover:bg-red-100 transition-all">${day}</button>`;
+            } else {
+                html += `<span class="p-1.5 text-gray-300 cursor-default">${day}</span>`;
+            }
+        }
+        gridEl.innerHTML = html;
+    }
+
+    window.toggleCalendarDate = function(dateStr) {
+        if (selectedDatesSet.has(dateStr)) selectedDatesSet.delete(dateStr);
+        else selectedDatesSet.add(dateStr);
+        renderCalendar();
+        updateDateTriggerLabel();
+        debouncedDependentUpdate();
+        currentTimelinePage = 0; currentTablePage = 0;
+        applyCombinedFilters();
+    }
+
+    document.getElementById('cal-prev-month').addEventListener('click', () => { calCurrentMonth--; if (calCurrentMonth < 0) { calCurrentMonth = 11; calCurrentYear--; } renderCalendar(); });
+    document.getElementById('cal-next-month').addEventListener('click', () => { calCurrentMonth++; if (calCurrentMonth > 11) { calCurrentMonth = 0; calCurrentYear++; } renderCalendar(); });
+    document.getElementById('cal-prev-year').addEventListener('click', () => { calCurrentYear--; renderCalendar(); });
+    document.getElementById('cal-next-year').addEventListener('click', () => { calCurrentYear++; renderCalendar(); });
+    document.getElementById('cal-select-all').addEventListener('click', () => { selectedDatesSet = new Set(allDatesList); renderCalendar(); updateDateTriggerLabel(); debouncedDependentUpdate(); applyCombinedFilters(); });
+    document.getElementById('cal-clear-all').addEventListener('click', () => { selectedDatesSet.clear(); renderCalendar(); updateDateTriggerLabel(); debouncedDependentUpdate(); applyCombinedFilters(); });
+    document.getElementById('cal-today').addEventListener('click', () => { let t = new Date(); calCurrentYear = t.getFullYear(); calCurrentMonth = t.getMonth(); renderCalendar(); });
+
+    function updateDateTriggerLabel() {
+        const labelEl = document.getElementById('date-trigger-label');
+        if (!labelEl) return;
+        if (selectedDatesSet.size === 0) labelEl.innerText = "Ningún día";
+        else if (selectedDatesSet.size === allDatesList.length) labelEl.innerText = "Todos los días";
+        else if (selectedDatesSet.size === 1) labelEl.innerText = Array.from(selectedDatesSet)[0];
+        else labelEl.innerText = `${selectedDatesSet.size} días seleccionados`;
+    }
+
+    const dateTrigger = document.getElementById('date-picker-trigger');
+    const dateDropdown = document.getElementById('date-picker-dropdown');
+    dateTrigger.addEventListener('click', (e) => { e.stopPropagation(); dateDropdown.classList.toggle('hidden'); });
+    window.addEventListener('click', (e) => { if (!dateDropdown.contains(e.target) && !dateTrigger.contains(e.target)) dateDropdown.classList.add('hidden'); });
+
+    function renderRouteCheckboxes(routes) {
+        document.getElementById('route-checkboxes-container').innerHTML = routes.map(r => `
+            <label class="flex items-center space-x-3 p-1.5 hover:bg-white rounded-lg cursor-pointer transition-all">
+                <input type="checkbox" name="route-checkbox" value="${esc(r)}" checked class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                <span class="text-sm text-gray-700">${esc(r)}</span>
+            </label>`).join('');
+    }
+    function renderCpCheckboxes(cps) {
+        document.getElementById('cp-checkboxes-container').innerHTML = cps.map(c => `
+            <label class="flex items-center space-x-3 p-1.5 hover:bg-white rounded-lg cursor-pointer transition-all">
+                <input type="checkbox" name="cp-checkbox" value="${esc(c)}" checked class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                <span class="text-sm text-gray-700">${esc(c)}</span>
+            </label>`).join('');
+    }
+
+    document.getElementById('route-search-input').addEventListener('input', debounce((e) => {
+        renderRouteCheckboxes(allRoutesList.filter(r => String(r).toLowerCase().includes(e.target.value.toLowerCase())));
+    }, 200));
+    document.getElementById('cp-search-input').addEventListener('input', debounce((e) => {
+        renderCpCheckboxes(allCpList.filter(c => String(c).toLowerCase().includes(e.target.value.toLowerCase())));
+    }, 200));
+
+    document.getElementById('global-search-input').addEventListener('input', debounce(() => {
+        currentTimelinePage = 0; currentTablePage = 0; applyCombinedFilters();
+    }, 300));
+
+    document.getElementById('sequence-search-input').addEventListener('input', debounce(() => {
+        currentTimelinePage = 0; currentTablePage = 0; updateDashboard();
+    }, 300));
+
+    document.getElementById('select-all-routes').addEventListener('click', () => document.querySelectorAll('input[name="route-checkbox"]').forEach(cb => cb.checked = true));
+    document.getElementById('deselect-all-routes').addEventListener('click', () => document.querySelectorAll('input[name="route-checkbox"]').forEach(cb => cb.checked = false));
+    document.getElementById('select-all-cps').addEventListener('click', () => document.querySelectorAll('input[name="cp-checkbox"]').forEach(cb => cb.checked = true));
+    document.getElementById('deselect-all-cps').addEventListener('click', () => document.querySelectorAll('input[name="cp-checkbox"]').forEach(cb => cb.checked = false));
+
+    const routeModal = document.getElementById('route-modal');
+    document.getElementById('open-route-modal').addEventListener('click', () => routeModal.classList.remove('hidden'));
+    document.getElementById('close-route-modal').addEventListener('click', () => routeModal.classList.add('hidden'));
+    document.getElementById('cancel-route-modal').addEventListener('click', () => routeModal.classList.add('hidden'));
+    document.getElementById('apply-route-filter').addEventListener('click', () => { applyCombinedFilters(); routeModal.classList.add('hidden'); });
+
+    const cpModal = document.getElementById('cp-modal');
+    document.getElementById('open-cp-modal').addEventListener('click', () => cpModal.classList.remove('hidden'));
+    document.getElementById('close-cp-modal').addEventListener('click', () => cpModal.classList.add('hidden'));
+    document.getElementById('cancel-cp-modal').addEventListener('click', () => cpModal.classList.add('hidden'));
+    document.getElementById('apply-cp-filter').addEventListener('click', () => { applyCombinedFilters(); cpModal.classList.add('hidden'); });
+
+    const toggleFullscreenBtn = document.getElementById('toggle-fullscreen-btn');
+    const mapCard = document.getElementById('map-card');
+    const fullscreenIcon = document.getElementById('fullscreen-icon');
+    const fullscreenText = document.getElementById('fullscreen-text');
+
+    toggleFullscreenBtn.addEventListener('click', () => {
+        mapCard.classList.toggle('fullscreen');
+        const isFullscreen = mapCard.classList.contains('fullscreen');
+        fullscreenIcon.className = isFullscreen ? "fa-solid fa-compress" : "fa-solid fa-expand";
+        fullscreenText.innerText = isFullscreen ? "Restaurar" : "Pantalla Completa";
+        setTimeout(() => { if (mapInstance) mapInstance.invalidateSize(); }, 100);
+    });
+
+    const toggleLinesBtn = document.getElementById('toggle-lines-btn');
+    const linesIcon = document.getElementById('lines-icon');
+    const linesText = document.getElementById('lines-text');
+
+    toggleLinesBtn.addEventListener('click', () => {
+        showRouteLines = !showRouteLines;
+        linesIcon.className = showRouteLines ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
+        linesText.innerText = showRouteLines ? "Ocultar Líneas" : "Mostrar Líneas";
+        if (routeLinesLayer) {
+            if (showRouteLines) { if (!mapInstance.hasLayer(routeLinesLayer)) mapInstance.addLayer(routeLinesLayer); }
+            else { if (mapInstance.hasLayer(routeLinesLayer)) mapInstance.removeLayer(routeLinesLayer); }
+        }
+    });
+
+    function checkActiveFilters() {
+        const globalQuery = document.getElementById('global-search-input').value.trim();
+        const seqQuery = document.getElementById('sequence-search-input').value.trim();
+        let plazaUnselected = plazaKey && selectedPlazasSet.size < allPlazasList.length;
+        let dateUnselected = dateKey && selectedDatesSet.size < allDatesList.length;
+        let routeUnselected = routeKey && document.querySelectorAll('input[name="route-checkbox"]:checked').length < document.querySelectorAll('input[name="route-checkbox"]').length;
+        let cpUnselected = cpKey && document.querySelectorAll('input[name="cp-checkbox"]:checked').length < document.querySelectorAll('input[name="cp-checkbox"]').length;
+        const hasActive = globalQuery !== '' || seqQuery !== '' || plazaUnselected || dateUnselected || routeUnselected || cpUnselected;
+        const resetBtn = document.getElementById('reset-filters');
+        resetBtn.className = hasActive ? "fixed bottom-6 right-6 z-50 bg-gray-900 hover:bg-gray-800 text-white px-4 py-3 rounded-full shadow-2xl transition-all duration-300 flex items-center space-x-2 text-sm font-medium transform scale-100 opacity-100 pointer-events-auto" : "fixed bottom-6 right-6 z-50 bg-gray-900 hover:bg-gray-800 text-white px-4 py-3 rounded-full shadow-2xl transition-all duration-300 flex items-center space-x-2 text-sm font-medium transform scale-0 opacity-0 pointer-events-none";
+    }
+
+    function applyCombinedFilters() {
+        const selectedPlazas = plazaKey ? Array.from(selectedPlazasSet) : null;
+        const selectedRoutes = routeKey ? Array.from(document.querySelectorAll('input[name="route-checkbox"]:checked')).map(cb => cb.value) : null;
+        const selectedCps = cpKey ? Array.from(document.querySelectorAll('input[name="cp-checkbox"]:checked')).map(cb => cb.value) : null;
+        const globalQuery = document.getElementById('global-search-input').value.toLowerCase().trim();
+
+        const doFilter = () => {
+            filteredData = rawData.filter((row) => {
+                let matchPlaza = plazaKey && selectedPlazas ? selectedPlazas.includes(String(row[plazaKey])) : true;
+                let matchDate = dateKey ? selectedDatesSet.has(parseDateString(row[dateKey])) : true;
+                let matchRoute = routeKey && selectedRoutes ? selectedRoutes.includes(String(row[routeKey])) : true;
+                let matchCp = cpKey && selectedCps ? selectedCps.includes(String(row[cpKey])) : true;
+                let matchGlobal = globalQuery !== '' ? Object.values(row).some(val => val !== undefined && val !== null && String(val).toLowerCase().includes(globalQuery)) : true;
+                return matchPlaza && matchDate && matchRoute && matchCp && matchGlobal;
+            });
+
+            if (dateKey) {
+                filteredData.sort((a, b) => {
+                    let tA = a[dateKey] ? new Date(a[dateKey]).getTime() : 0;
+                    let tB = b[dateKey] ? new Date(b[dateKey]).getTime() : 0;
+                    if (isNaN(tA)) tA = 0;
+                    if (isNaN(tB)) tB = 0;
+                    return tA - tB;
+                });
+            }
+
+            checkActiveFilters();
+            updateDashboard();
+        };
+
+        if (document.startViewTransition) {
+            document.startViewTransition(doFilter);
+        } else {
+            doFilter();
+        }
+    }
+
+    function getTargetSequences() {
+        const seqInput = document.getElementById('sequence-search-input').value.trim();
+        if (seqInput === '') return null;
+        const numbers = [];
+        for (let p of seqInput.split(',')) {
+            let num = parseInt(p.trim(), 10);
+            if (!isNaN(num)) numbers.push(num);
+        }
+        return numbers.length > 0 ? numbers : null;
+    }
+
+    function updateDashboard() {
+        renderTimelineKPIs();
+        renderTimeSeriesChart();
+        renderMap();
+        renderTable();
+        document.getElementById('search-counter').innerText = filteredData.length;
+        checkActiveFilters();
+    }
+
+    function findColumn(row, keywords) {
+        const keys = Object.keys(row);
+        for (let kw of keywords) {
+            let found = keys.find(k => _norm(k).includes(_norm(kw)));
+            if (found) return found;
+        }
+        return null;
+    }
+
+    function formatDuration(ms) {
+        if (isNaN(ms) || ms < 0) return '00:00:00';
+        let seconds = Math.floor(ms / 1000);
+        let hours = Math.floor(seconds / 3600);
+        seconds %= 3600;
+        let minutes = Math.floor(seconds / 60);
+        seconds %= 60;
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function renderTimeSeriesChart() {
+        const ctx = document.getElementById('time-series-chart').getContext('2d');
+        const targetSeqs = getTargetSequences();
+
+        let countsByInterval = {};
+        let timestamps = [];
+
+        filteredData.forEach((row, index) => {
+            const seqNum = index + 1;
+            if (targetSeqs !== null && !targetSeqs.includes(seqNum)) return;
+            if (dateKey && row[dateKey]) {
+                let d = new Date(row[dateKey]);
+                if (!isNaN(d)) {
+                    timestamps.push(d.getTime());
+                    let hours = String(d.getHours()).padStart(2, '0');
+                    let minutes = d.getMinutes() < 30 ? '00' : '30';
+                    let timeLabel = `${hours}:${minutes}`;
+                    countsByInterval[timeLabel] = (countsByInterval[timeLabel] || 0) + 1;
+                }
+            }
+        });
+
+        timestamps.sort((a, b) => a - b);
+        let diffs = [];
+        for (let i = 1; i < timestamps.length; i++) {
+            let diff = timestamps[i] - timestamps[i - 1];
+            if (diff >= 0) diffs.push(diff);
+        }
+        let totalDiff = diffs.reduce((acc, curr) => acc + curr, 0);
+        let avgDiff = diffs.length > 0 ? totalDiff / diffs.length : 0;
+
+        document.getElementById('kpi-avg-time-val').innerText = diffs.length > 0 ? formatDuration(avgDiff) : '00:00:00';
+        document.getElementById('kpi-sum-dead-time-val').innerText = diffs.length > 0 ? formatDuration(totalDiff) : '00:00:00';
+
+        let sortedLabels = Object.keys(countsByInterval).sort();
+        let dataValues = sortedLabels.map(label => countsByInterval[label]);
+        let maxVal = dataValues.length > 0 ? Math.max(...dataValues) : 0;
+        let minVal = dataValues.length > 0 ? Math.min(...dataValues) : 0;
+        let maxIndex = dataValues.indexOf(maxVal);
+        let minIndex = dataValues.indexOf(minVal);
+        let maxTimeLabel = maxIndex !== -1 ? sortedLabels[maxIndex] : '-';
+        let minTimeLabel = minIndex !== -1 ? sortedLabels[minIndex] : '-';
+
+        document.getElementById('kpi-max-val').innerText = maxVal > 0 ? `${maxVal} entregas (${maxTimeLabel})` : 'Sin datos';
+        document.getElementById('kpi-min-val').innerText = dataValues.length > 0 ? `${minVal} entregas (${minTimeLabel})` : 'Sin datos';
+
+        const maxEl = document.getElementById('kpi-max-val');
+        if (maxVal >= 10) {
+            maxEl.classList.add('critical-pulse');
+        } else {
+            maxEl.classList.remove('critical-pulse');
+        }
+
+        if (timeChart) timeChart.destroy();
+
+        timeChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: sortedLabels,
+                datasets: [{
+                    label: 'Cantidad de Entregas',
+                    data: dataValues,
+                    borderColor: '#DA291C',
+                    backgroundColor: 'rgba(218, 41, 28, 0.1)',
+                    borderWidth: 2.5, fill: true, tension: 0.3,
+                    pointBackgroundColor: dataValues.map(v => v === maxVal && v > 0 ? '#DA291C' : '#ffffff'),
+                    pointBorderColor: dataValues.map(v => v === maxVal && v > 0 ? '#990000' : '#DA291C'),
+                    pointRadius: dataValues.map(v => v === maxVal && v > 0 ? 6 : 3.5),
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` Entregas: ${c.parsed.y}` } } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 11, weight: '500' }, color: '#6B7280' } },
+                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 }, color: '#6B7280' }, grid: { color: '#F3F4F6' } }
+                }
+            }
+        });
+    }
+
+    function initMap() {
+        if (!mapInstance) {
+            mapInstance = L.map('map').setView([23.6345, -102.5528], 5);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19, attribution: 'Tiles &copy; Esri'
+            }).addTo(mapInstance);
+            markersClusterGroup = L.markerClusterGroup({
+                maxClusterRadius: 50, spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false, zoomToBoundsOnClick: true
+            });
+            mapInstance.addLayer(markersClusterGroup);
+            routeLinesLayer = L.layerGroup();
+        }
+        setTimeout(() => { if (mapInstance) mapInstance.invalidateSize(); }, 200);
+    }
+
+    let mapRenderTimer = null;
+    function renderMap() {
+        if (!mapInstance) return;
+        if (mapRenderTimer) clearTimeout(mapRenderTimer);
+        mapRenderTimer = setTimeout(() => {
+            markersClusterGroup.clearLayers();
+            if (routeLinesLayer) routeLinesLayer.clearLayers();
+
+            const targetSeqs = getTargetSequences();
+            let bounds = [];
+            let markersToAdd = [];
+            let validPointsForLines = [];
+
+            filteredData.forEach((row, index) => {
+                const seqNum = index + 1;
+                if (targetSeqs !== null && !targetSeqs.includes(seqNum)) return;
+                const lat = parseFloat(row[latKeyCached]);
+                const lng = parseFloat(row[lngKeyCached]);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    let timeOnly = '-';
+                    if (dateKey && row[dateKey]) {
+                        let d = new Date(row[dateKey]);
+                        if (!isNaN(d)) {
+                            timeOnly = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} hrs`;
+                        } else {
+                            let parts = String(row[dateKey]).split(' ');
+                            timeOnly = parts.length > 1 ? parts[1] : String(row[dateKey]);
+                        }
+                    }
+                    const pointColor = targetSeqs !== null ? '#DA291C' : '#10B981';
+                    const numberedIcon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color:${pointColor};color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">${seqNum}</div>`,
+                        iconSize: [28, 28], iconAnchor: [14, 14]
+                    });
+                    const marker = L.marker([lat, lng], { icon: numberedIcon })
+                        .bindPopup(`<b>Secuencia #${seqNum}</b><br><i class="fa-regular fa-clock text-red-600 mr-1"></i>Hora: <b>${esc(timeOnly)}</b><br>${esc(row[descKeyCached] || 'Evento')}`);
+                    markersToAdd.push(marker);
+                    bounds.push([lat, lng]);
+                    let rowDate = dateKey ? new Date(row[dateKey]) : null;
+                    validPointsForLines.push({ latLng: L.latLng(lat, lng), seqNum, date: rowDate });
+                }
+            });
+            markersClusterGroup.addLayers(markersToAdd);
+
+            for (let i = 0; i < validPointsForLines.length - 1; i++) {
+                let p1 = validPointsForLines[i];
+                let p2 = validPointsForLines[i + 1];
+                let distMeters = p1.latLng.distanceTo(p2.latLng);
+                let distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(1) + ' metros';
+                let timeText = '';
+                if (p1.date && p2.date && !isNaN(p1.date) && !isNaN(p2.date)) {
+                    let diffMs = p2.date - p1.date;
+                    if (diffMs >= 0) {
+                        let totalMins = Math.floor(diffMs / 60000);
+                        let hrs = Math.floor(totalMins / 60);
+                        let mins = totalMins % 60;
+                        timeText = hrs > 0 ? `<br>Tiempo transcurrido: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo transcurrido: <b>${totalMins} min</b>`;
+                    }
+                }
+                let segmentLine = L.polyline([p1.latLng, p2.latLng], {
+                    color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5'
+                });
+                segmentLine.bindTooltip(`Seq #${p1.seqNum} &rarr; #${p2.seqNum}<br>Distancia: <b>${distText}</b>${timeText}`, {
+                    sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200'
+                });
+                routeLinesLayer.addLayer(segmentLine);
+            }
+
+            if (showRouteLines && routeLinesLayer) {
+                if (!mapInstance.hasLayer(routeLinesLayer)) mapInstance.addLayer(routeLinesLayer);
+            } else {
+                if (mapInstance.hasLayer(routeLinesLayer)) mapInstance.removeLayer(routeLinesLayer);
+            }
+
+            if (bounds.length > 0 && isInitialMapLoad) {
+                mapInstance.fitBounds(bounds, { maxZoom: 14, padding: [50, 50] });
+                isInitialMapLoad = false;
+            }
+            if (mapInstance) mapInstance.invalidateSize();
+        }, 150);
+    }
+
+    function renderTimelineKPIs() {
+        const targetSeqs = getTargetSequences();
+        const container = document.getElementById('timeline-kpi-container');
+        const paginationContainer = document.getElementById('timeline-pagination-container');
+        const indexedData = filteredData.map((row, index) => ({ row, seqNum: index + 1 }));
+        const searchedData = indexedData.filter(item => targetSeqs === null || targetSeqs.includes(item.seqNum));
+
+        if (searchedData.length === 0) {
+            container.innerHTML = `<div class="col-span-full py-6 text-center text-gray-400 text-sm">No se encontraron registros para las secuencias especificadas.</div>`;
+            paginationContainer.innerHTML = '';
+            return;
+        }
+
+        const totalPages = Math.ceil(searchedData.length / ITEMS_PER_PAGE);
+        if (currentTimelinePage >= totalPages) currentTimelinePage = 0;
+        if (currentTimelinePage < 0) currentTimelinePage = totalPages - 1;
+        const currentItems = searchedData.slice(currentTimelinePage * ITEMS_PER_PAGE, (currentTimelinePage + 1) * ITEMS_PER_PAGE);
+
+        container.innerHTML = currentItems.map(item => {
+            const { row, seqNum } = item;
+            const routeVal = routeKey ? (row[routeKey] !== undefined ? row[routeKey] : '-') : '-';
+            const cpVal = cpKey ? (row[cpKey] !== undefined ? row[cpKey] : '-') : '-';
+            const statusVal = row[statusKeyCached] !== undefined ? row[statusKeyCached] : '-';
+            const descVal = row[descKeyCached] !== undefined ? row[descKeyCached] : '-';
+            const timeVal = dateKey && row[dateKey] ? row[dateKey] : '-';
+            return `
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:border-red-300 transition-all flex flex-col justify-between space-y-1.5 border-l-4 estafeta-border">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-xs estafeta-red-text">#${seqNum}</span>
+                        <span class="text-[10px] font-semibold text-red-700 bg-red-50 px-2 py-0.5 rounded">${esc(statusVal)}</span>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-gray-500 font-bold"><i class="fa-regular fa-clock mr-1"></i>${esc(timeVal)}</p>
+                        <p class="text-[11px] text-gray-400 font-medium mt-0.5">Ruta: <span class="text-gray-700 font-bold">${esc(routeVal)}</span> | C.P.: <span class="text-gray-700 font-bold">${esc(cpVal)}</span></p>
+                        <p class="text-xs font-semibold text-gray-800 mt-0.5 truncate" title="${esc(descVal)}">${esc(descVal)}</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        paginationContainer.innerHTML = `
+            <button onclick="changeTimelinePage(${currentTimelinePage - 1}, ${totalPages})" class="px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-sm">Anterior</button>
+            <span class="text-xs font-bold text-gray-800">Página ${currentTimelinePage + 1} de ${totalPages}</span>
+            <button onclick="changeTimelinePage(${currentTimelinePage + 1}, ${totalPages})" class="px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-sm">Siguiente</button>
+        `;
+
+        setTimeout(applyCardStagger, 50);
+    }
+
+    window.changeTimelinePage = function(targetPage, totalPages) {
+        currentTimelinePage = targetPage < 0 ? totalPages - 1 : (targetPage >= totalPages ? 0 : targetPage);
+        renderTimelineKPIs();
+    }
+
+    function renderTable() {
+        const sample = rawData[0] || {};
+        const excludedColumns = ['regional', 'distrito', 'latitude', 'longitude', 'system name', 'tr2 process', 'null'];
+        const originalHeaders = Object.keys(sample).filter(h => h && !excludedColumns.includes(_norm(h)));
+        const headers = ['# Secuencia', ...originalHeaders];
+
+        document.getElementById('table-headers').innerHTML = headers.map(h => `<th class="px-6 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider">${esc(h)}</th>`).join('');
+
+        const targetSeqs = getTargetSequences();
+        const indexedData = filteredData.map((row, index) => ({ row, seqNum: index + 1 }));
+        const searchedData = indexedData.filter(item => targetSeqs === null || targetSeqs.includes(item.seqNum));
+
+        const tbody = document.getElementById('table-body');
+        const tablePaginationContainer = document.getElementById('table-pagination-container');
+
+        if (searchedData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${headers.length}" class="px-6 py-8 text-center text-gray-400 text-sm">No hay registros coincidentes.</td></tr>`;
+            tablePaginationContainer.innerHTML = '';
+            return;
+        }
+
+        const totalPages = Math.ceil(searchedData.length / ITEMS_PER_PAGE);
+        if (currentTablePage >= totalPages) currentTablePage = 0;
+        if (currentTablePage < 0) currentTablePage = totalPages - 1;
+        const currentItems = searchedData.slice(currentTablePage * ITEMS_PER_PAGE, (currentTablePage + 1) * ITEMS_PER_PAGE);
+
+        tbody.innerHTML = currentItems.map(item => {
+            let rowHtml = `<td class="px-6 py-4 whitespace-nowrap font-bold estafeta-red-text">#${item.seqNum}</td>`;
+            rowHtml += originalHeaders.map(h => `<td class="px-6 py-4 whitespace-nowrap text-gray-700">${esc(item.row[h] !== undefined && item.row[h] !== null ? item.row[h] : '')}</td>`).join('');
+            return `<tr class="bg-red-50/40 hover:bg-gray-50 border-l-2 estafeta-border">${rowHtml}</tr>`;
+        }).join('');
+
+        tablePaginationContainer.innerHTML = `
+            <button onclick="changeTablePage(${currentTablePage - 1}, ${totalPages})" class="px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-sm">Anterior</button>
+            <span class="text-xs font-bold text-gray-800">Página ${currentTablePage + 1} de ${totalPages}</span>
+            <button onclick="changeTablePage(${currentTablePage + 1}, ${totalPages})" class="px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-sm">Siguiente</button>
+        `;
+    }
+
+    window.changeTablePage = function(targetPage, totalPages) {
+        currentTablePage = targetPage < 0 ? totalPages - 1 : (targetPage >= totalPages ? 0 : targetPage);
+        renderTable();
+    }
+
+    document.getElementById('reset-filters').addEventListener('click', () => {
+        document.getElementById('global-search-input').value = '';
+        document.getElementById('sequence-search-input').value = '';
+        selectedPlazasSet = new Set(allPlazasList);
+        renderPlazaDropdown();
+        updatePlazaTriggerLabel();
+        selectedDatesSet = new Set(allDatesList);
+        renderCalendar();
+        updateDateTriggerLabel();
+        updateDependentFiltersLists();
+        document.querySelectorAll('input[name="route-checkbox"]').forEach(cb => cb.checked = true);
+        document.querySelectorAll('input[name="cp-checkbox"]').forEach(cb => cb.checked = true);
+        document.getElementById('route-search-input').value = '';
+        document.getElementById('cp-search-input').value = '';
+        renderRouteCheckboxes(allRoutesList);
+        renderCpCheckboxes(allCpList);
+        currentTimelinePage = 0;
+        currentTablePage = 0;
+        isInitialMapLoad = true;
+        applyCombinedFilters();
+    });
+            /* ============================================================
+           EFECTOS VISUALES
+           ============================================================ */
+
+        /* 1.3 Cascada en tarjetas */
+        function applyCardStagger() {
+            const container = document.getElementById('timeline-kpi-container');
+            if (!container) return;
+            Array.from(container.children).forEach((card, i) => {
+                if (card.classList.contains('card-enter')) return;
+                card.classList.add('card-enter');
+                card.style.animationDelay = (i * 45) + 'ms';
+            });
+        }
+
+        /* 2.1 Ripple */
+        function initRipple() {
+            document.body.addEventListener('click', (e) => {
+                const btn = e.target.closest('button, .plaza-picker-trigger, #plaza-picker-trigger, [onclick]');
+                if (!btn || btn.disabled) return;
+                if (!btn.classList.contains('ripple-host')) btn.classList.add('ripple-host');
+
+                const rect = btn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple-effect';
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 650);
+            }, true);
+        }
+
+        /* 2.3 Tilt 3D (solo desktop) */
+        function applyTiltToCards() {
+            if (window.matchMedia('(pointer: coarse)').matches) return;
+            document.querySelectorAll('#timeline-kpi-container > div').forEach(card => {
+                if (card.dataset.tilt === 'on') return;
+                card.dataset.tilt = 'on';
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width - 0.5;
+                    const y = (e.clientY - rect.top) / rect.height - 0.5;
+                    card.style.transform = `perspective(1000px) rotateY(${x * 5}deg) rotateX(${-y * 5}deg) translateY(-4px) scale(1.02)`;
+                });
+                card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+            });
+        }
+
+        /* 3.1 Barras de progreso en KPIs */
+        function injectKPIBars() {
+            const kpiIds = ['kpi-max-val', 'kpi-min-val'];
+            kpiIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const parent = el.closest('.flex.items-center');
+                if (!parent || parent.querySelector('.kpi-bar-track')) return;
+                const track = document.createElement('div');
+                track.className = 'kpi-bar-track';
+                const fill = document.createElement('div');
+                fill.className = 'kpi-bar-fill';
+                fill.style.background = id === 'kpi-max-val' ? '#dc2626' : '#10b981';
+                track.appendChild(fill);
+                parent.appendChild(track);
+            });
+        }
+
+        /* ============================================================
+           5.1 MODO OSCURO (con toggle manual)
+           ============================================================ */
+
+        function aplicarTema(tema) {
+            const icon = document.getElementById('theme-toggle-icon');
+            if (tema === 'dark') {
+                document.body.classList.add('dark-mode');
+                if (icon) icon.className = 'fa-solid fa-sun';
+            } else {
+                document.body.classList.remove('dark-mode');
+                if (icon) icon.className = 'fa-solid fa-moon';
+            }
+        }
+
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.theme) aplicarTema(e.data.theme);
+        });
+
+        (function initTema() {
+            const icon = document.getElementById('theme-toggle-icon');
+
+            function aplicarTemaLocal(tema) {
+                if (tema === 'dark') {
+                    document.body.classList.add('dark-mode');
+                    if (icon) icon.className = 'fa-solid fa-sun';
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    if (icon) icon.className = 'fa-solid fa-moon';
+                }
+            }
+
+            const t = localStorage.getItem('panel-theme');
+            if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                aplicarTemaLocal('dark');
+            }
+
+            const btn = document.getElementById('theme-toggle');
+            if (btn) {
+                btn.onclick = () => {
+                    const isDark = document.body.classList.contains('dark-mode');
+                    const next = isDark ? 'light' : 'dark';
+                    aplicarTemaLocal(next);
+                    localStorage.setItem('panel-theme', next);
+                };
+            }
+
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem('panel-theme')) aplicarTemaLocal(e.matches ? 'dark' : 'light');
+                });
+            }
+        })();
+
+        /* ============================================================
+           ORQUESTADOR DE EFECTOS
+           ============================================================ */
+        document.addEventListener('DOMContentLoaded', () => {
+            initRipple();
+            setTimeout(injectKPIBars, 500);
+            const dash = document.getElementById('dashboard-content');
+            if (dash) {
+                let lastCount = -1;
+                const obs = new MutationObserver(() => {
+                    if (!dash.classList.contains('hidden') && rawData.length > 0 && rawData.length !== lastCount) {
+                        lastCount = rawData.length;
+                        setTimeout(() => {
+                            applyCardStagger();
+                            applyTiltToCards();
+                            injectKPIBars();
+                        }, 300);
+                    }
+                });
+                obs.observe(dash, { attributes: true, attributeFilter: ['class'] });
+            }
+            console.log('%c🎨 Efectos activados: ripple, dark-mode (con toggle), gradiente, cascada, glow, view-transitions, pulse',
+                'background:#DA291C;color:white;padding:6px 10px;border-radius:4px;font-weight:bold;font-size:12px;');
+        });
+    </script>
+
+    <!-- ============================================================
+     🔔 CAMPANA DE NOTIFICACIONES (LOCAL — sin postMessage)
+     ============================================================ -->
+<script>
+(function initNotifBell() {
+    'use strict';
+
+    const CONFIG = {
+        dashboardId: 'entregas-domicilio',
+        storageKey: 'notif_history_entregas-domicilio',
+        maxHistory: 50,
+        maxToasts: 2,
+        toastDuration: 6000
+    };
+
+    const ICONS = {
+        danger:  'fa-solid fa-triangle-exclamation',
+        warning: 'fa-solid fa-circle-exclamation',
+        info:    'fa-solid fa-circle-info',
+        success: 'fa-solid fa-circle-check'
+    };
+
+    /* ---------- Persistencia ---------- */
+    function loadHistory() {
+        try {
+            const raw = localStorage.getItem(CONFIG.storageKey);
+            const arr = raw ? JSON.parse(raw) : [];
+            return Array.isArray(arr) ? arr : [];
+        } catch (e) { return []; }
+    }
+    function saveHistory(list) {
+        try {
+            const trimmed = list.slice(0, CONFIG.maxHistory);
+            localStorage.setItem(CONFIG.storageKey, JSON.stringify(trimmed));
+        } catch (e) { console.warn('No se pudo guardar historial:', e); }
+    }
+
+    let history = loadHistory();
+
+    /* ---------- Inyectar campana ---------- */
+    function injectBell() {
+        const container = document.getElementById('header-actions-container');
+        if (!container || document.getElementById('notif-bell')) return;
+        const btn = document.createElement('button');
+        btn.id = 'notif-bell';
+        btn.setAttribute('aria-label', 'Notificaciones');
+        btn.innerHTML = `
+            <i class="fa-solid fa-bell"></i>
+            <span id="notif-badge" class="hidden">0</span>
+        `;
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePanel();
+        });
+        container.appendChild(btn);
+
+        // Panel
+        const panel = document.createElement('div');
+        panel.id = 'notif-panel';
+        panel.innerHTML = `
+            <div class="notif-panel-header">
+                <h3><i class="fa-solid fa-bell"></i> Notificaciones (<span id="notif-count-label">0</span>)</h3>
+                <button class="notif-panel-close" id="notif-panel-close" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="notif-panel-body" id="notif-panel-body">
+                <div class="notif-empty"><i class="fa-regular fa-bell-slash"></i>No hay notificaciones</div>
+            </div>
+            <div class="notif-panel-footer">
+                <button class="notif-btn-read" id="notif-btn-read">Marcar leídas</button>
+                <button class="notif-btn-clear" id="notif-btn-clear">Limpiar</button>
+            </div>
+        `;
+        document.body.appendChild(panel);
+
+        document.getElementById('notif-panel-close').addEventListener('click', closePanel);
+        document.getElementById('notif-btn-read').addEventListener('click', markAllAsRead);
+        document.getElementById('notif-btn-clear').addEventListener('click', clearHistory);
+
+        // Cerrar al clic fuera
+        document.addEventListener('click', (e) => {
+            const p = document.getElementById('notif-panel');
+            const b = document.getElementById('notif-bell');
+            if (!p || !p.classList.contains('open')) return;
+            if (p.contains(e.target) || (b && b.contains(e.target))) return;
+            closePanel();
+        });
+        // ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePanel();
+        });
+
+        updateBadge();
+        renderPanel();
+    }
+
+    /* ---------- Panel ---------- */
+    function togglePanel() {
+        const p = document.getElementById('notif-panel');
+        if (!p) return;
+        if (p.classList.contains('open')) closePanel();
+        else openPanel();
+    }
+    function openPanel() {
+        const p = document.getElementById('notif-panel');
+        if (!p) return;
+        renderPanel();
+        p.classList.add('open');
+    }
+    function closePanel() {
+        const p = document.getElementById('notif-panel');
+        if (p) p.classList.remove('open');
+    }
+
+    function timeAgo(ts) {
+        const diff = Math.floor((Date.now() - ts) / 1000);
+        if (diff < 5) return 'ahora';
+        if (diff < 60) return `hace ${diff}s`;
+        if (diff < 3600) return `hace ${Math.floor(diff/60)} min`;
+        if (diff < 86400) return `hace ${Math.floor(diff/3600)} h`;
+        return `hace ${Math.floor(diff/86400)} d`;
+    }
+
+    function renderPanel() {
+        const body = document.getElementById('notif-panel-body');
+        const countLabel = document.getElementById('notif-count-label');
+        if (!body) return;
+        if (countLabel) countLabel.textContent = history.length;
+
+        if (history.length === 0) {
+            body.innerHTML = `<div class="notif-empty"><i class="fa-regular fa-bell-slash"></i>No hay notificaciones</div>`;
+            return;
+        }
+
+        body.innerHTML = history.map(n => `
+            <div class="notif-item notif-${n.type} ${n.read ? '' : 'unread'}">
+                <div class="notif-item-icon"><i class="${ICONS[n.type] || ICONS.info}"></i></div>
+                <div class="notif-item-content">
+                    <div class="notif-item-title">${n.title}</div>
+                    <div class="notif-item-msg">${n.message}</div>
+                    <div class="notif-item-time">${timeAgo(n.timestamp)}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    /* ---------- Badge ---------- */
+    function updateBadge() {
+        const badge = document.getElementById('notif-badge');
+        if (!badge) return;
+        const unread = history.filter(n => !n.read).length;
+        if (unread <= 0) {
+            badge.classList.add('hidden');
+        } else {
+            badge.classList.remove('hidden');
+            badge.textContent = unread > 99 ? '99+' : unread;
+            badge.classList.add('pulse');
+            setTimeout(() => badge.classList.remove('pulse'), 650);
+        }
+    }
+
+    /* ---------- Toasts ---------- */
+    function showToast(notif, duration) {
+        const container = document.getElementById('notif-toast-container');
+        if (!container) return;
+        while (container.children.length >= 3) {
+            container.removeChild(container.firstChild);
+        }
+        const el = document.createElement('div');
+        el.className = `notif-toast notif-${notif.type}`;
+        el.innerHTML = `
+            <div class="notif-toast-icon"><i class="${ICONS[notif.type] || ICONS.info}"></i></div>
+            <div class="notif-toast-content">
+                <div class="notif-toast-title">${notif.title}</div>
+                <div class="notif-toast-msg">${notif.message}</div>
+            </div>
+            <button class="notif-toast-close" aria-label="Cerrar">&times;</button>
+        `;
+        el.querySelector('.notif-toast-close').addEventListener('click', () => {
+            el.classList.add('removing');
+            setTimeout(() => el.remove(), 350);
+        });
+        container.appendChild(el);
+        const dur = duration || notif.duration || CONFIG.toastDuration;
+        setTimeout(() => {
+            if (el.parentNode) {
+                el.classList.add('removing');
+                setTimeout(() => el.remove(), 350);
+            }
+        }, dur);
+    }
+
+    /* ---------- Add / Read / Clear ---------- */
+    function addNotifications(notifs) {
+        if (!notifs || notifs.length === 0) return;
+        const enriched = notifs.map((n, i) => ({
+            id: `${CONFIG.dashboardId}-${Date.now()}-${i}`,
+            timestamp: Date.now(),
+            read: false,
+            type: n.type || 'info',
+            title: n.title || 'Notificación',
+            message: n.message || '',
+            duration: n.duration || CONFIG.toastDuration
+        }));
+        const order = { danger: 0, warning: 1, info: 2, success: 3 };
+        enriched.sort((a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9));
+
+        history = [...enriched, ...history].slice(0, CONFIG.maxHistory);
+        saveHistory(history);
+
+        enriched.slice(0, CONFIG.maxToasts).forEach(n => showToast(n, n.duration));
+
+        updateBadge();
+        renderPanel();
+    }
+
+    function markAllAsRead() {
+        history = history.map(n => ({ ...n, read: true }));
+        saveHistory(history);
+        updateBadge();
+        renderPanel();
+    }
+
+    function clearHistory() {
+        if (!confirm('¿Eliminar todas las notificaciones del historial?')) return;
+        history = [];
+        saveHistory(history);
+        updateBadge();
+        renderPanel();
+    }
+
+    /* ============================================================
+       Detección robusta de la columna de Código Postal
+       Prioriza "Postal Code" exacto
+       ============================================================ */
+    function detectCpColumn() {
+        if (typeof filteredData === 'undefined' || !filteredData.length) return '';
+        const sample = filteredData[0] || {};
+        const keys = Object.keys(sample);
+        if (!keys.length) return '';
+
+        // 0) Prioridad absoluta: columna literal "Postal Code"
+        if (keys.includes('Postal Code')) return 'Postal Code';
+
+        // 1) Si cpKey ya está definida, úsala
+        if (typeof cpKey !== 'undefined' && cpKey && keys.includes(cpKey)) return cpKey;
+
+        // 2) Búsqueda por alias
+        const norm = s => String(s ?? '')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase().trim();
+
+        const aliases = [
+            'postal code', 'postal_code', 'postalcode',
+            'codigo postal', 'codigo_postal', 'codigopostal',
+            'cp', 'c.p.', 'c.p', 'cp.', 'zip', 'zipcode', 'zip code',
+            'codigo', 'cod', 'postal'
+        ];
+        const aliasesNorm = aliases.map(norm);
+
+        for (const k of keys) {
+            if (aliasesNorm.includes(norm(k))) return k;
+        }
+        for (const k of keys) {
+            const nk = norm(k);
+            if (aliasesNorm.some(a => nk.includes(a))) return k;
+        }
+        return '';
+    }
+
+    /* ---------- Análisis (solo al cargar Excel) ---------- */
+    function analyzeAndAlert() {
+        if (typeof filteredData === 'undefined' || !filteredData || filteredData.length === 0) {
+            console.warn('🔔 [Campana] filteredData vacío, no se analiza.');
+            return;
+        }
+
+        const total = filteredData.length;
+        const notifs = [];
+
+        const _dateKey   = (typeof dateKey !== 'undefined' && dateKey)         ? dateKey         : '';
+        const _plazaKey  = (typeof plazaKey !== 'undefined' && plazaKey)       ? plazaKey        : '';
+        const _routeKey  = (typeof routeKey !== 'undefined' && routeKey)       ? routeKey        : '';
+        const _cpKey     = detectCpColumn();
+        const _latKey    = (typeof latKeyCached !== 'undefined' && latKeyCached)   ? latKeyCached   : '';
+        const _lngKey    = (typeof lngKeyCached !== 'undefined' && lngKeyCached)   ? lngKeyCached   : '';
+        const _statusKey = (typeof statusKeyCached !== 'undefined' && statusKeyCached) ? statusKeyCached : '';
+
+        console.log('🔔 [Campana] Columnas detectadas:', {
+            fecha: _dateKey, plaza: _plazaKey, ruta: _routeKey, cp: _cpKey,
+            lat: _latKey, lng: _lngKey, estatus: _statusKey, total
+        });
+
+        /* 1. Pico crítico */
+        if (_dateKey) {
+            const intervalos = {};
+            filteredData.forEach(r => {
+                const d = new Date(r[_dateKey]);
+                if (isNaN(d)) return;
+                const h = String(d.getHours()).padStart(2, '0');
+                const m = d.getMinutes() < 30 ? '00' : '30';
+                const k = `${h}:${m}`;
+                intervalos[k] = (intervalos[k] || 0) + 1;
+            });
+            const sorted = Object.entries(intervalos).sort((a, b) => b[1] - a[1]);
+            if (sorted.length > 0 && sorted[0][1] >= 10) {
+                notifs.push({
+                    type: 'danger',
+                    title: '🚨 Pico crítico de entregas',
+                    message: `<b>${sorted[0][1]}</b> entregas en el intervalo <b>${sorted[0][0]}</b>.`
+                });
+            }
+        }
+
+        /* 2. Brecha temporal */
+        if (_dateKey) {
+            const timestamps = filteredData
+                .map(r => new Date(r[_dateKey]).getTime())
+                .filter(t => !isNaN(t))
+                .sort((a, b) => a - b);
+            let maxGap = 0, gapAt = null;
+            for (let i = 1; i < timestamps.length; i++) {
+                const gap = timestamps[i] - timestamps[i - 1];
+                if (gap > maxGap) { maxGap = gap; gapAt = timestamps[i - 1]; }
+            }
+            if (maxGap > 60 * 60 * 1000 && gapAt !== null) {
+                const mins = Math.round(maxGap / 60000);
+                const hh = new Date(gapAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+                notifs.push({
+                    type: 'danger',
+                    title: '🕳️ Brecha temporal crítica',
+                    message: `<b>${mins} min</b> sin entregas a partir de las <b>${hh}</b>.`
+                });
+            }
+        }
+
+        /* 3. Concentración plaza */
+        if (_plazaKey) {
+            const map = {};
+            filteredData.forEach(r => {
+                const p = String(r[_plazaKey] || 'N/D').trim();
+                map[p] = (map[p] || 0) + 1;
+            });
+            const top = Object.entries(map).sort((a, b) => b[1] - a[1])[0];
+            if (top && top[1] > total * 0.4) {
+                notifs.push({
+                    type: 'warning',
+                    title: `🗺️ Concentración en ${top[0]}`,
+                    message: `<b>${top[1]}</b> entregas (${((top[1]/total)*100).toFixed(1)}%) en una sola plaza.`
+                });
+            }
+        }
+
+        /* 4. Sin coordenadas */
+        if (_latKey && _lngKey) {
+            let invalid = 0;
+            filteredData.forEach(r => {
+                const lat = parseFloat(r[_latKey]);
+                const lng = parseFloat(r[_lngKey]);
+                if (isNaN(lat) || isNaN(lng)) invalid++;
+            });
+            if (invalid > total * 0.1) {
+                notifs.push({
+                    type: 'warning',
+                    title: `📍 ${invalid} registros sin coordenadas`,
+                    message: `${((invalid/total)*100).toFixed(1)}% de los registros no tienen ubicación válida.`
+                });
+            }
+        }
+
+        /* 5. Sin estatus */
+        if (_statusKey) {
+            const sin = filteredData.filter(r => {
+                const st = String(r[_statusKey] || '').trim();
+                return st === '' || st === 'N/D' || st === 'null';
+            }).length;
+            if (sin > total * 0.15) {
+                notifs.push({
+                    type: 'warning',
+                    title: `⚠️ ${sin} registros sin estatus`,
+                    message: `${((sin/total)*100).toFixed(1)}% de los paquetes no tienen estado asignado.`
+                });
+            }
+        }
+
+        /* 6. Ruta con más carga */
+        if (_routeKey) {
+            const map = {};
+            filteredData.forEach(r => {
+                const rt = String(r[_routeKey] || 'N/D').trim();
+                map[rt] = (map[rt] || 0) + 1;
+            });
+            const top = Object.entries(map).sort((a, b) => b[1] - a[1])[0];
+            if (top && top[1] > total * 0.3) {
+                notifs.push({
+                    type: 'warning',
+                    title: `📦 Ruta ${top[0]} con más carga`,
+                    message: `<b>${top[1]}</b> entregas (${((top[1]/total)*100).toFixed(1)}%) en una sola ruta.`
+                });
+            }
+        }
+
+        /* 6b. Top 3 C.P. con más entregas (SIEMPRE se muestra) */
+        if (_cpKey) {
+            const map = {};
+            let contadorValidos = 0;
+            filteredData.forEach(r => {
+                let cp = String(r[_cpKey] ?? '').trim();
+                if (!cp || cp === 'N/D' || cp === 'null' || cp === 'undefined') return;
+                cp = cp.replace(/\.0+$/, '');
+                map[cp] = (map[cp] || 0) + 1;
+                contadorValidos++;
+            });
+            const top3 = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 3);
+            console.log('🔔 [Campana] Top 3 CP:', { columna: _cpKey, valoresValidos: contadorValidos, top3 });
+
+            if (top3.length > 0) {
+                const medals = ['🥇', '🥈', '🥉'];
+                const lines = top3.map(([cp, count], i) => {
+                    const pct = ((count/total)*100).toFixed(1);
+                    return `${medals[i]} <b>${cp}</b>: ${count} entregas (${pct}%)`;
+                });
+                notifs.push({
+                    type: 'warning',
+                    title: '📮 Top 3 C.P. con más entregas',
+                    message: lines.join('<br>')
+                });
+            }
+        } else {
+            console.warn('🔔 [Campana] No se detectó columna de C.P., se omite el toast Top 3 CP.');
+        }
+
+        /* 7. Fuera de horario */
+        if (_dateKey) {
+            let fuera = 0;
+            filteredData.forEach(r => {
+                const d = new Date(r[_dateKey]);
+                if (isNaN(d)) return;
+                const h = d.getHours();
+                if (h < 6 || h > 22) fuera++;
+            });
+            if (fuera > 5) {
+                notifs.push({
+                    type: 'info',
+                    title: `🕐 ${fuera} entregas fuera de horario`,
+                    message: `(${((fuera/total)*100).toFixed(1)}%) entre 22:00 y 06:00 hrs.`
+                });
+            }
+        }
+
+        /* 8. Jornada larga */
+        if (_dateKey) {
+            const ts = filteredData
+                .map(r => new Date(r[_dateKey]).getTime())
+                .filter(t => !isNaN(t))
+                .sort((a, b) => a - b);
+            if (ts.length > 1) {
+                const durH = (ts[ts.length - 1] - ts[0]) / 3600000;
+                if (durH > 12) {
+                    notifs.push({
+                        type: 'info',
+                        title: '⏱️ Jornada excesivamente larga',
+                        message: `La operación abarcó <b>${durH.toFixed(1)} h</b> desde la primera a la última entrega.`
+                    });
+                }
+            }
+        }
+
+        /* 9. Cobertura geográfica */
+        if (_plazaKey) {
+            const plazasDistintas = new Set(filteredData.map(r => String(r[_plazaKey] || '').trim()).filter(Boolean)).size;
+            if (plazasDistintas > 0) {
+                notifs.push({
+                    type: 'info',
+                    title: '🌍 Cobertura geográfica',
+                    message: `Se detectaron <b>${plazasDistintas}</b> plaza(s) distintas en el archivo.`
+                });
+            }
+        }
+
+        /* 10. Carga exitosa */
+        notifs.push({
+            type: 'success',
+            title: `✅ ${total.toLocaleString()} entregas procesadas`,
+            message: `Datos cargados y listos para analizar.`,
+            duration: 4000
+        });
+
+        console.log('🔔 [Campana] Notificaciones generadas:', notifs.length, notifs);
+        addNotifications(notifs);
+    }
+
+    window.__notifAnalyze = analyzeAndAlert;
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectBell);
+    } else {
+        injectBell();
+    }
+
+    console.log('%c🔔 Campana de notificaciones lista (local, sin postMessage)',
+        'background:#DA291C;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;font-size:11px;');
+})();
+</script>
+
+</body>
+</html>

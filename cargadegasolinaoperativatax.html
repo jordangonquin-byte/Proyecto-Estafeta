@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desempeño TR2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { estafetaRed: '#DA291C', estafetaDark: '#1e293b', estafetaLight: '#f8fafc' } } }
+        }
+    </script>
+    <style>
+        .top-bar { display: flex; justify-content: flex-end; align-items: center; background: #DA291C; padding: 10px 20px; }
+        .multiselect-dropdown { position: relative; width: 100%; max-width: 220px; }
+        .multiselect-header { background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.375rem 0.75rem; font-size: 0.875rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .multiselect-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); max-height: 220px; overflow-y: auto; z-index: 50; display: none; padding: 0.5rem; }
+        .multiselect-list.show { display: block; }
+
+        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        header.top-bar { background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C) !important; background-size: 300% 100% !important; animation: gradientShift 15s ease infinite; }
+
+        .ripple-host { position: relative; overflow: hidden; }
+        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.55); transform: scale(0); animation: rippleAnim 0.6s ease-out; pointer-events: none; }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+        @keyframes cardEnter { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
+
+        @keyframes pulseCritical { 0%, 100% { background-color: rgba(220, 38, 38, 0.08); } 50% { background-color: rgba(220, 38, 38, 0.28); } }
+        .critical-pulse { animation: pulseCritical 2s ease-in-out infinite; font-weight: 800; color: #dc2626 !important; border-radius: 4px; padding: 2px 6px; display: inline-block; }
+
+        .kpi-bar-track { width: 100%; height: 5px; background: rgba(0, 0, 0, 0.06); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+        .kpi-bar-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        #dashboard-container .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4 > div:hover { box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.15), 0 20px 40px -10px rgba(218, 41, 28, 0.25); }
+
+        /* Botón tema oscuro */
+        #theme-toggle {
+            position: fixed;
+            bottom: 25px;
+            right: 200px;
+            z-index: 9999;
+            width: 48px;
+            height: 48px;
+            border-radius: 999px;
+            background: #1e293b;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        #theme-toggle:hover { transform: scale(1.08) rotate(15deg); background: #334155 !important; }
+        body.dark-mode #theme-toggle { background: #fbbf24 !important; color: #1e293b !important; }
+
+        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
+        body.dark-mode header.top-bar { background: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B) !important; background-size: 300% 100% !important; }
+        body.dark-mode main, body.dark-mode .bg-white, body.dark-mode .bg-slate-50, body.dark-mode .bg-slate-100 { background-color: #1e293b !important; }
+        body.dark-mode .text-slate-800, body.dark-mode .text-slate-700, body.dark-mode .text-slate-600, body.dark-mode .text-slate-900 { color: #e2e8f0 !important; }
+        body.dark-mode .text-slate-500, body.dark-mode .text-slate-400 { color: #94a3b8 !important; }
+        body.dark-mode .border-slate-100, body.dark-mode .border-slate-200, body.dark-mode .border-slate-300 { border-color: #334155 !important; }
+        body.dark-mode .divide-slate-200 > * + * { border-color: #334155 !important; }
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        body.dark-mode .bg-blue-50 { background-color: rgba(30, 58, 138, 0.35) !important; }
+        body.dark-mode .bg-emerald-50 { background-color: rgba(20, 83, 45, 0.35) !important; }
+        body.dark-mode .bg-amber-50 { background-color: rgba(120, 53, 15, 0.35) !important; }
+        body.dark-mode .bg-purple-50 { background-color: rgba(88, 28, 135, 0.35) !important; }
+        body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; }
+        body.dark-mode .bg-emerald-100 { background-color: rgba(20, 83, 45, 0.5) !important; }
+        body.dark-mode .bg-red-100 { background-color: rgba(127, 29, 29, 0.5) !important; }
+        body.dark-mode table thead.bg-slate-50 { background-color: #0f172a !important; }
+        body.dark-mode table tbody tr:hover { background-color: rgba(51, 65, 85, 0.5) !important; }
+        body.dark-mode .multiselect-list { background: #1e293b !important; border-color: #334155 !important; }
+        body.dark-mode .multiselect-header { background-color: #0f172a !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+        body.dark-mode .bg-red-700 { background-color: #991B1B !important; }
+        body.dark-mode .bg-red-900 { background-color: #7f1d1d !important; }
+        body.dark-mode .shadow-sm, body.dark-mode .shadow-md { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important; }
+        body.dark-mode #floatingClearFiltersBtn { background-color: #334155 !important; }
+
+        /* ============================================================
+           SISTEMA DE NOTIFICACIONES - ESTILOS
+           ============================================================ */
+        #notif-bell {
+            position: relative;
+            background: rgba(255,255,255,0.12);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.25);
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        #notif-bell:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
+        #notif-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #dc2626;
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            box-shadow: 0 2px 6px rgba(220,38,38,0.5);
+            border: 2px solid #DA291C;
+        }
+        #notif-badge.hidden { display: none !important; }
+        @keyframes badgePulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        #notif-badge.badge-new { animation: badgePulse 0.5s ease-out; }
+
+        #notif-toast-container {
+            position: fixed; top: 80px; right: 16px; z-index: 99999;
+            display: flex; flex-direction: column; gap: 10px;
+            max-width: 380px; width: calc(100% - 32px); pointer-events: none;
+        }
+        @media (max-width: 640px) { #notif-toast-container { top: auto; bottom: 100px; right: 16px; left: 16px; max-width: none; } }
+        .notif-toast {
+            pointer-events: auto; background: #ffffff; border-radius: 12px; padding: 14px 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.25), 0 8px 10px -6px rgba(0,0,0,0.15);
+            border-left: 4px solid #DA291C; display: flex; align-items: flex-start; gap: 12px;
+            font-size: 13px; color: #1f2937; animation: notifToastIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.3s, transform 0.3s; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .notif-toast.notif-danger  { border-left-color: #dc2626; }
+        .notif-toast.notif-warning { border-left-color: #f59e0b; }
+        .notif-toast.notif-info    { border-left-color: #3b82f6; }
+        .notif-toast.notif-success { border-left-color: #10b981; }
+        .notif-toast.removing { opacity: 0; transform: translateX(40px); }
+        .notif-toast-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+        .notif-toast-body { flex-grow: 1; min-width: 0; }
+        .notif-toast-title { font-weight: 700; font-size: 13px; margin-bottom: 3px; color: #1f2937; }
+        .notif-toast-message { font-size: 12px; color: #6b7280; line-height: 1.5; }
+        .notif-toast-message b { color: #DA291C; font-weight: 700; }
+        .notif-toast-close { flex-shrink: 0; color: #9ca3af; background: transparent; border: none; cursor: pointer; font-size: 15px; padding: 2px 6px; border-radius: 4px; transition: all 0.15s; }
+        .notif-toast-close:hover { background: #f3f4f6; color: #4b5563; }
+        @keyframes notifToastIn { from { opacity: 0; transform: translateX(40px) scale(0.95); } to { opacity: 1; transform: translateX(0) scale(1); } }
+        body.dark-mode .notif-toast { background: #1e293b; color: #f1f5f9; border-color: #334155; border-left-width: 4px; }
+        body.dark-mode .notif-toast-title { color: #f1f5f9; }
+        body.dark-mode .notif-toast-message { color: #cbd5e1; }
+        body.dark-mode .notif-toast-message b { color: #fbbf24; }
+        body.dark-mode .notif-toast-close:hover { background: #334155; color: #f1f5f9; }
+
+        #notif-panel {
+            position: fixed; top: 70px; right: 16px; width: 400px; max-width: calc(100vw - 32px);
+            max-height: 70vh; background: #ffffff; border-radius: 16px;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3), 0 10px 20px -5px rgba(0,0,0,0.15);
+            z-index: 100000; display: none; flex-direction: column; overflow: hidden;
+            animation: notifPanelIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        #notif-panel.show { display: flex; }
+        @keyframes notifPanelIn { from { opacity: 0; transform: translateY(-10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .notif-panel-header { padding: 16px 20px; background: linear-gradient(90deg, #DA291C, #b81810); color: white; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .notif-panel-title { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .notif-panel-close { background: rgba(255,255,255,0.15); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .notif-panel-close:hover { background: rgba(255,255,255,0.3); }
+        .notif-panel-body { flex-grow: 1; overflow-y: auto; padding: 8px; }
+        .notif-panel-body::-webkit-scrollbar { width: 6px; }
+        .notif-panel-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .notif-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 10px; margin-bottom: 6px; transition: background 0.15s; position: relative; border-left: 3px solid transparent; }
+        .notif-item:hover { background: #f8fafc; }
+        .notif-item.unread { background: #fef2f2; }
+        .notif-item.unread:hover { background: #fee2e2; }
+        .notif-item.notif-danger  { border-left-color: #dc2626; }
+        .notif-item.notif-warning { border-left-color: #f59e0b; }
+        .notif-item.notif-info    { border-left-color: #3b82f6; }
+        .notif-item.notif-success { border-left-color: #10b981; }
+        .notif-item-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+        .notif-item-body { flex-grow: 1; min-width: 0; }
+        .notif-item-title { font-weight: 700; font-size: 13px; color: #1f2937; margin-bottom: 3px; }
+        .notif-item-message { font-size: 12px; color: #6b7280; line-height: 1.5; }
+        .notif-item-message b { color: #DA291C; font-weight: 700; }
+        .notif-item-time { font-size: 10px; color: #9ca3af; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600; }
+        .notif-empty { padding: 40px 20px; text-align: center; color: #9ca3af; font-size: 13px; }
+        .notif-empty i { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+        .notif-panel-footer { padding: 12px 16px; border-top: 1px solid #e5e7eb; background: #f8fafc; display: flex; gap: 8px; flex-shrink: 0; }
+        .notif-panel-footer button { flex: 1; padding: 8px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .notif-btn-read { background: #DA291C; color: white; }
+        .notif-btn-read:hover { background: #b81810; }
+        .notif-btn-clear { background: #e5e7eb; color: #374151; }
+        .notif-btn-clear:hover { background: #d1d5db; }
+        body.dark-mode #notif-panel { background: #1e293b; }
+        body.dark-mode .notif-panel-body { background: #1e293b; }
+        body.dark-mode .notif-item:hover { background: #334155; }
+        body.dark-mode .notif-item.unread { background: rgba(127,29,29,0.3); }
+        body.dark-mode .notif-item.unread:hover { background: rgba(127,29,29,0.5); }
+        body.dark-mode .notif-item-title { color: #f1f5f9; }
+        body.dark-mode .notif-item-message { color: #cbd5e1; }
+        body.dark-mode .notif-item-message b { color: #fbbf24; }
+        body.dark-mode .notif-item-time { color: #64748b; }
+        body.dark-mode .notif-panel-footer { background: #0f172a; border-top-color: #334155; }
+        body.dark-mode .notif-btn-clear { background: #334155; color: #cbd5e1; }
+        body.dark-mode .notif-empty { color: #64748b; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased">
+
+    <header class="top-bar text-white shadow-md border-b-4 border-slate-900">
+        <div class="max-w-7xl mx-auto w-full px-4 py-2 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-[#DA291C] p-3 rounded-lg font-black text-xl tracking-wider shadow">ESTAFETA</div>
+                <div>
+                    <h1 class="text-xl font-bold">Desempeño TR2</h1>
+                    <p class="text-xs text-slate-100">Torre de Control & Operación Logística</p>
+                </div>
+            </div>
+            <div id="header-actions-container" class="flex items-center gap-3">
+                <div id="drop-zone" class="bg-red-700 hover:bg-red-800 text-sm px-4 py-2 rounded-lg border border-red-600 flex items-center space-x-2 cursor-pointer transition">
+                    <i class="fa-solid fa-cloud-arrow-up text-white"></i>
+                    <span id="file-name" class="truncate max-w-[200px]">Cargar / Arrastrar Excel</span>
+                    <input type="file" id="excel-file" class="hidden" accept=".xlsx, .xls, .xlsb, .xlsm, .csv">
+                </div>
+                <button id="header-reset-btn" class="bg-red-900 hover:bg-red-950 text-slate-200 text-sm font-semibold px-4 py-2 rounded-lg border border-red-800 transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-trash-can text-white"></i>
+                    <span>Limpiar</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="dashboard-container" class="max-w-7xl mx-auto px-4 py-6 space-y-6 hidden">
+
+        <div class="bg-white p-4 rounded-xl shadow-sm flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex flex-wrap gap-3 items-center w-full">
+                <span class="font-semibold text-sm text-slate-700"><i class="fa-solid fa-filter text-[#DA291C] mr-1"></i> Filtros Activos:</span>
+                <select id="filter-regional" class="bg-slate-50 border border-slate-300 text-sm rounded-lg px-3 py-1.5 focus:ring-[#DA291C] focus:border-[#DA291C]">
+                    <option value="">Todas las Regionales</option>
+                </select>
+                <select id="filter-plaza" class="bg-slate-50 border border-slate-300 text-sm rounded-lg px-3 py-1.5 focus:ring-[#DA291C] focus:border-[#DA291C]">
+                    <option value="">Todas las Plazas</option>
+                </select>
+                <div class="multiselect-dropdown" id="multiselect-rutas-container">
+                    <div class="multiselect-header" id="rutas-header">
+                        <span id="rutas-header-text">Rutas (Todas)</span>
+                        <i class="fa-solid fa-chevron-down text-xs text-slate-500"></i>
+                    </div>
+                    <div class="multiselect-list" id="rutas-list-box">
+                        <div class="flex justify-between items-center mb-2 pb-1 border-b border-slate-200 text-xs font-semibold">
+                            <span id="rutas-select-all" class="text-[#DA291C] cursor-pointer hover:underline">Todas</span>
+                            <span id="rutas-clear-all" class="text-slate-500 cursor-pointer hover:underline">Ninguna</span>
+                        </div>
+                        <div id="rutas-checkboxes-container" class="space-y-1">
+                            <div class="text-xs text-slate-400">Sin datos cargados</div>
+                        </div>
+                    </div>
+                </div>
+                <select id="filter-vehiculo" class="bg-slate-50 border border-slate-300 text-sm rounded-lg px-3 py-1.5 focus:ring-[#DA291C] focus:border-[#DA291C]">
+                    <option value="">Todos los Tipos de Vehículo</option>
+                </select>
+                <select id="filter-cumplimiento" class="bg-slate-50 border border-slate-300 text-sm rounded-lg px-3 py-1.5 focus:ring-[#DA291C] focus:border-[#DA291C]">
+                    <option value="">Todo Cumplimiento</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-600 transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex items-center justify-between">
+                <div class="flex-grow">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rendimiento Objetivo</p>
+                    <h3 id="kpi-rendimiento-objetivo" class="text-2xl font-bold text-slate-800 mt-1">0.00 Km/L</h3>
+                    <span class="text-xs text-slate-400">Meta promedio</span>
+                    <div class="kpi-bar-track"><div class="kpi-bar-fill" id="bar-rend-obj" style="background:#2563eb"></div></div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-inner flex-shrink-0 ml-3">
+                    <i class="fa-solid fa-bullseye"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-emerald-600 transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex items-center justify-between">
+                <div class="flex-grow">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Recorrido Total</p>
+                    <h3 id="kpi-recorrido" class="text-2xl font-bold text-slate-800 mt-1">0 Km</h3>
+                    <span class="text-xs text-slate-400">Kilometraje acumulado</span>
+                    <div class="kpi-bar-track"><div class="kpi-bar-fill" id="bar-recorrido" style="background:#059669"></div></div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-inner flex-shrink-0 ml-3">
+                    <i class="fa-solid fa-route"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-amber-500 transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex items-center justify-between">
+                <div class="flex-grow">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pérdida Económica</p>
+                    <h3 id="kpi-perdida" class="text-2xl font-bold text-slate-800 mt-1">$0.00</h3>
+                    <span class="text-xs text-slate-400">Desviaciones vs objetivo</span>
+                    <div class="kpi-bar-track"><div class="kpi-bar-fill" id="bar-perdida" style="background:#f59e0b"></div></div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-xl shadow-inner flex-shrink-0 ml-3">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-purple-600 transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex items-center justify-between">
+                <div class="flex-grow">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rendimiento Real</p>
+                    <h3 id="kpi-rendimiento-real" class="text-2xl font-bold text-slate-800 mt-1">0.00 Km/L</h3>
+                    <span class="text-xs text-slate-400">Promedio real</span>
+                    <div class="kpi-bar-track"><div class="kpi-bar-fill" id="bar-rend-real" style="background:#9333ea"></div></div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-xl shadow-inner flex-shrink-0 ml-3">
+                    <i class="fa-solid fa-gauge-high"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-white p-5 rounded-xl shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-700 text-base"><i class="fa-solid fa-chart-bar text-[#DA291C] mr-2"></i>Ruta por plaza</h3>
+                    <span class="text-xs text-slate-400">Filtrado por Ruta 2</span>
+                </div>
+                <div class="relative h-72"><canvas id="chartRegional"></canvas></div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-700 text-base"><i class="fa-solid fa-table text-[#DA291C] mr-2"></i>Rendimiento X Ruta</h3>
+                    <div class="flex items-center space-x-2">
+                        <select id="sort-rendimiento-real" class="bg-slate-50 border border-slate-300 text-xs rounded-lg px-2 py-1 focus:ring-[#DA291C] focus:border-[#DA291C]">
+                            <option value="">Ordenar Rend. Real</option>
+                            <option value="desc">Mayor a menor</option>
+                            <option value="asc">Menor a mayor</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto h-72">
+                    <table class="min-w-full divide-y divide-slate-200 text-xs text-left" id="table-rendimiento-x-ruta">
+                        <thead class="bg-slate-50 sticky top-0">
+                            <tr>
+                                <th class="px-3 py-2 font-semibold text-slate-600" id="th-rendimiento-c">Columna C</th>
+                                <th class="px-3 py-2 font-semibold text-slate-600" id="th-rendimiento-y">Columna Y</th>
+                                <th class="px-3 py-2 font-semibold text-slate-600" id="th-rendimiento-z">Columna Z</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-rendimiento-x-ruta" class="divide-y divide-slate-200 bg-white">
+                            <tr><td colspan="3" class="px-3 py-4 text-center text-slate-400">Sin datos cargados</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3 pt-2 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500">
+                    <span id="contador-rendimiento-ruta">0 registros</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-700 text-base"><i class="fa-solid fa-circle-check text-[#DA291C] mr-2"></i>Cumplimiento</h3>
+                    <span class="text-xs text-slate-400">Clic para filtrar</span>
+                </div>
+                <div class="relative h-72 flex justify-center"><canvas id="chartCumplimiento"></canvas></div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                <h3 class="font-bold text-slate-800 text-lg"><i class="fa-solid fa-table text-[#DA291C] mr-2"></i>Detalle de Registros de Rendimiento</h3>
+                <div class="flex items-center space-x-2 w-full md:w-auto">
+                    <input type="text" id="table-search" placeholder="Buscar económico, operador, plaza..." class="bg-slate-50 border border-slate-300 text-sm rounded-lg px-3 py-1.5 w-full md:w-64 focus:ring-[#DA291C] focus:border-[#DA291C]">
+                    <button id="export-csv" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition whitespace-nowrap">
+                        <i class="fa-solid fa-file-excel mr-1"></i> Exportar Excel/CSV
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table id="data-table" class="min-w-full text-xs text-left">
+                    <thead class="bg-slate-50 sticky top-0">
+                        <tr>
+                            <th class="px-3 py-3 font-semibold text-slate-600">Fecha</th>
+                            <th id="th-col-c" class="px-3 py-3 font-semibold text-slate-600">Rutas</th>
+                            <th class="px-3 py-3 font-semibold text-slate-600">Regional</th>
+                            <th class="px-3 py-3 font-semibold text-slate-600">Plaza</th>
+                            <th class="px-3 py-3 font-semibold text-slate-600">Vehículo</th>
+                            <th class="px-3 py-3 font-semibold text-slate-600">Litros Consumidos</th>
+                            <th class="px-3 py-3 font-semibold text-slate-600">Rend. Objetivo</th>
+                            <th class="px-3 py-3 font-semibold text-slate-600">Rend. Real</th>
+                            <th class="px-3 py-3 font-semibold text-slate-600">Cumplimiento</th>
+                            <th class="px-3 py-3 font-semibold text-slate-600">Operador</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="bg-white">
+                        <tr><td colspan="10" class="px-3 py-4 text-center text-slate-400">Sin datos cargados</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
+                <span id="table-count">Mostrando 0 de 0 registros</span>
+                <div id="pagination-controls" class="flex items-center space-x-1"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="welcome-state" class="max-w-4xl mx-auto px-4 py-20 text-center hidden">
+        <div class="bg-white p-10 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center justify-center space-y-4">
+            <div class="w-20 h-20 bg-[#DA291C]/10 text-[#DA291C] rounded-full flex items-center justify-center text-3xl shadow-inner">
+                <i class="fa-solid fa-file-excel"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 hidden">Ningún archivo cargado</h2>
+            <p class="text-sm text-slate-500 max-w-md hidden">Por favor, carga o arrastra un archivo de Excel compatible.</p>
+        </div>
+    </div>
+
+    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+    </button>
+
+    <button id="floatingClearFiltersBtn" onclick="resetAllFilters()" style="position: fixed; bottom: 25px; right: 25px; background-color: #1e293b; color: #ffffff; border: none; padding: 12px 22px; border-radius: 30px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); z-index: 9999; transition: background-color 0.2s ease, transform 0.2s ease;" onmouseover="this.style.backgroundColor='#0f172a'" onmouseout="this.style.backgroundColor='#1e293b'">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span id="floatingClearFiltersText">Limpiar Filtros (0)</span>
+    </button>
+
+    <footer class="bg-white border-t border-slate-200 mt-12 py-6 text-center text-xs text-slate-500">
+        <p class="hidden">Dashboard Analítico Estafeta</p>
+    </footer>
+
+    <!-- Contenedores del sistema de notificaciones -->
+    <div id="notif-toast-container"></div>
+    <div id="notif-panel">
+        <div class="notif-panel-header">
+            <div class="notif-panel-title">
+                <i class="fa-solid fa-bell"></i>
+                <span>Notificaciones <span id="notif-panel-count">(0)</span></span>
+            </div>
+            <button class="notif-panel-close" onclick="closeNotifPanel()" aria-label="Cerrar">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="notif-panel-body" id="notif-panel-body"></div>
+        <div class="notif-panel-footer">
+            <button class="notif-btn-read" onclick="markAllAsRead()">
+                <i class="fa-solid fa-check-double"></i> Marcar leídas
+            </button>
+            <button class="notif-btn-clear" onclick="clearNotifHistory()">
+                <i class="fa-solid fa-trash-can"></i> Limpiar
+            </button>
+        </div>
+    </div>
+    
+    
+    
+    
+    
+    
+    
+    
+   <script>
+/* ============================================================
+   AUTENTICACIÓN
+   ============================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+    const encodedRole = localStorage.getItem('auth_role');
+    if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
+    let rol = '';
+    try {
+        const decoded = atob(encodedRole);
+        const parts = decoded.split('|');
+        if (parts.length >= 1) rol = parts[0];
+    } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
+    if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
+    let inactivityTimer;
+    const maxInactivityMinutes = 30;
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            alert("Su sesión ha expirado por inactividad.");
+            localStorage.removeItem('auth_role');
+            window.location.href = 'Panel de Control Operativo.html';
+        }, maxInactivityMinutes * 60 * 1000);
+    }
+    ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
+        window.addEventListener(event, resetInactivityTimer);
+    });
+    resetInactivityTimer();
+    if (rol === 'admin') console.warn("Modo Administrador activo.");
+});
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c]));
+
+function debounce(fn, ms = 250) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+/* ============================================================
+   PARSE NÚMEROS ROBUSTO
+   Acepta: 1234.5, "1,234.5", "$500", "1234 km", null, undefined
+   ============================================================ */
+function parseNumero(val) {
+    if (val === null || val === undefined || val === '') return 0;
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    let s = String(val).trim();
+    if (s === '') return 0;
+    s = s.replace(/[$,\s]/g, '');
+    s = s.replace(/km\/l|km|Km|KM|L\/km|litros|Litros|L/gi, '');
+    if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) {
+        s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+        s = s.replace(/,/g, '');
+    }
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+}
+
+/* ============================================================
+   ESTADO GLOBAL
+   ============================================================ */
+let rawData = [];
+let filteredData = [];
+let charts = {};
+let colWKey = 'Litros consumidos';
+let colYKey = '';
+let colZKey = '';
+let plazaKey = 'Plaza';
+let rutasKey = '';
+let recorridoKey = 'Recorrido';
+let perdidaKey = 'Perdida economica';
+let selectedRutas = new Set();
+let allAvailableRutas = [];
+
+let currentPage = 1;
+const rowsPerPage = 10;
+const minRows = 9;
+
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('excel-file');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-white', 'bg-red-800'); });
+dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-white', 'bg-red-800'); });
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('border-white', 'bg-red-800');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) handleFile(e.target.files[0]);
+});
+
+const _norm = s => String(s ?? '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().trim();
+
+function validarArchivo(encabezados) {
+    if (!encabezados || encabezados.length === 0) return false;
+    const n = encabezados.map(_norm);
+    const has = (...frags) => n.some(h => frags.every(f => h.includes(_norm(f))));
+    return has('Estatus') && has('Estado') && has('Recorrido');
+}
+
+function findColumn(headers, ...keywords) {
+    for (const kw of keywords) {
+        const found = headers.find(h => _norm(h).includes(_norm(kw)));
+        if (found) return found;
+    }
+    return '';
+}
+
+function updateFloatingClearFiltersButton() {
+    let activeFiltersCount = 0;
+    const regVal = document.getElementById('filter-regional').value;
+    const plazaVal = document.getElementById('filter-plaza').value;
+    const vehiculoVal = document.getElementById('filter-vehiculo').value;
+    const cumplimientoVal = document.getElementById('filter-cumplimiento').value;
+    const searchTerm = document.getElementById('table-search').value.trim();
+    if (regVal) activeFiltersCount++;
+    if (plazaVal) activeFiltersCount++;
+    if (vehiculoVal) activeFiltersCount++;
+    if (cumplimientoVal) activeFiltersCount++;
+    if (searchTerm) activeFiltersCount++;
+    if (allAvailableRutas.length > 0 && selectedRutas.size < allAvailableRutas.length) activeFiltersCount++;
+    const floatingBtn = document.getElementById('floatingClearFiltersBtn');
+    const floatingText = document.getElementById('floatingClearFiltersText');
+    if (floatingBtn && floatingText) {
+        floatingText.textContent = `Limpiar Filtros (${activeFiltersCount})`;
+        floatingBtn.style.display = activeFiltersCount > 0 ? 'inline-flex' : 'none';
+    }
+}
+
+function resetAllFilters() {
+    document.getElementById('filter-regional').value = '';
+    document.getElementById('filter-plaza').value = '';
+    document.getElementById('filter-vehiculo').value = '';
+    document.getElementById('filter-cumplimiento').value = '';
+    document.getElementById('table-search').value = '';
+    document.getElementById('sort-rendimiento-real').value = '';
+    if (allAvailableRutas.length > 0) selectedRutas = new Set(allAvailableRutas);
+    document.querySelectorAll('#rutas-checkboxes-container input[type="checkbox"]').forEach(cb => cb.checked = true);
+    updateRutasHeaderText();
+    currentPage = 1;
+    applyFilters();
+}
+
+document.getElementById('header-reset-btn').addEventListener('click', () => {
+    rawData = [];
+    filteredData = [];
+    selectedRutas.clear();
+    allAvailableRutas = [];
+    fileInput.value = '';
+    currentPage = 1;
+    document.getElementById('file-name').textContent = 'Cargar / Arrastrar Excel';
+    document.getElementById('dashboard-container').classList.add('hidden');
+    document.getElementById('welcome-state').classList.add('hidden');
+    document.getElementById('filter-regional').innerHTML = '<option value="">Todas las Regionales</option>';
+    document.getElementById('filter-plaza').innerHTML = '<option value="">Todas las Plazas</option>';
+    document.getElementById('filter-vehiculo').innerHTML = '<option value="">Todos los Tipos de Vehículo</option>';
+    document.getElementById('filter-cumplimiento').innerHTML = '<option value="">Todo Cumplimiento</option>';
+    document.getElementById('table-search').value = '';
+    document.getElementById('sort-rendimiento-real').value = '';
+    document.getElementById('rutas-checkboxes-container').innerHTML = `<div class="text-xs text-slate-400">Sin datos cargados</div>`;
+    document.getElementById('rutas-header-text').textContent = 'Rutas (Todas)';
+    document.getElementById('kpi-rendimiento-objetivo').textContent = '0.00 Km/L';
+    document.getElementById('kpi-recorrido').textContent = '0 Km';
+    document.getElementById('kpi-perdida').textContent = '$0.00';
+    document.getElementById('kpi-rendimiento-real').textContent = '0.00 Km/L';
+    Object.values(charts).forEach(chart => chart.destroy());
+    charts = {};
+    document.getElementById('tbody-rendimiento-x-ruta').innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-slate-400">Sin datos cargados</td></tr>`;
+    document.getElementById('contador-rendimiento-ruta').textContent = '0 registros';
+    document.getElementById('table-body').innerHTML = `<tr><td colspan="10" class="px-3 py-4 text-center text-slate-400">Sin datos cargados</td></tr>`;
+    document.getElementById('table-count').textContent = 'Mostrando 0 de 0 registros';
+    document.getElementById('pagination-controls').innerHTML = '';
+    updateFloatingClearFiltersButton();
+});
+
+const rutasHeader = document.getElementById('rutas-header');
+const rutasListBox = document.getElementById('rutas-list-box');
+rutasHeader.addEventListener('click', (e) => {
+    e.stopPropagation();
+    rutasListBox.classList.toggle('show');
+});
+document.addEventListener('click', (e) => {
+    if (!document.getElementById('multiselect-rutas-container').contains(e.target)) {
+        rutasListBox.classList.remove('show');
+    }
+});
+
+document.getElementById('sort-rendimiento-real').addEventListener('change', updateRendimientoXRutaTable);
+
+function handleFile(file) {
+    document.getElementById('file-name').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+        if (jsonRows.length > 0) {
+            const headers = jsonRows[0];
+
+            if (!validarArchivo(headers)) {
+                alert('El archivo cargado no contiene la estructura o encabezados requeridos ("Estatus", "Estado", "Recorrido").');
+                document.getElementById('header-reset-btn').click();
+                return;
+            }
+
+            /* Mapeo de TODAS las columnas por nombre */
+            rutasKey      = findColumn(headers, 'ruta') || headers[2] || '';
+            plazaKey      = findColumn(headers, 'plaza') || headers[5] || 'Plaza';
+            colWKey       = findColumn(headers, 'litros') || findColumn(headers, 'consumo') || headers[22] || 'Litros consumidos';
+            colYKey       = findColumn(headers, 'rendimiento objetivo') || findColumn(headers, 'objetivo') || headers[24] || 'Rendimiento Objetivo';
+            colZKey       = findColumn(headers, 'rendimiento real') || findColumn(headers, 'real') || headers[25] || 'Rendimiento Real';
+            recorridoKey  = findColumn(headers, 'recorrido', 'kilometraje', 'km total', 'distancia total', 'distancia') || 'Recorrido';
+            perdidaKey    = findColumn(headers, 'perdida', 'pérdida', 'monto perdida', 'monto pérdida') || 'Perdida economica';
+
+            if (rutasKey) {
+                document.getElementById('th-col-c').textContent = rutasKey;
+                const thC = document.getElementById('th-rendimiento-c');
+                if (thC) thC.textContent = rutasKey;
+            }
+            if (colYKey) {
+                const thY = document.getElementById('th-rendimiento-y');
+                if (thY) thY.textContent = colYKey;
+            }
+            if (colZKey) {
+                const thZ = document.getElementById('th-rendimiento-z');
+                if (thZ) thZ.textContent = colZKey;
+            }
+
+            console.log('🗺️ Columnas mapeadas:', {
+                rutas: rutasKey, plaza: plazaKey, litros: colWKey,
+                rendObj: colYKey, rendReal: colZKey,
+                recorrido: recorridoKey, perdida: perdidaKey
+            });
+
+            rawData = XLSX.utils.sheet_to_json(worksheet, { defval: '', raw: false });
+
+            if (rawData.length > 0) {
+                const sample = rawData[0];
+                console.log('🔍 Muestra de valores:');
+                console.log('  Recorrido:', sample[recorridoKey], '→ parseNumero:', parseNumero(sample[recorridoKey]));
+                console.log('  Pérdida:', sample[perdidaKey], '→ parseNumero:', parseNumero(sample[perdidaKey]));
+                console.log('  Rend. Obj:', sample[colYKey], '→ parseNumero:', parseNumero(sample[colYKey]));
+                console.log('  Rend. Real:', sample[colZKey], '→ parseNumero:', parseNumero(sample[colZKey]));
+            }
+        } else {
+            rawData = [];
+        }
+
+        document.getElementById('welcome-state').classList.add('hidden');
+        document.getElementById('dashboard-container').classList.remove('hidden');
+        fileInput.value = '';
+        initializeDashboard();
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function initializeDashboard() {
+    filteredData = [...rawData];
+    currentPage = 1;
+    allAvailableRutas = [...new Set(rawData.map(row => row[rutasKey]).filter(Boolean))];
+    selectedRutas = new Set(allAvailableRutas);
+    document.getElementById('filter-regional').value = '';
+    document.getElementById('filter-plaza').value = '';
+    document.getElementById('filter-vehiculo').value = '';
+    document.getElementById('filter-cumplimiento').value = '';
+    document.getElementById('table-search').value = '';
+    updateFilterOptions(rawData);
+    updateDashboard();
+    updateFloatingClearFiltersButton();
+}
+
+function updateFilterOptions(currentDataset) {
+    const regVal = document.getElementById('filter-regional').value;
+    const plazaVal = document.getElementById('filter-plaza').value;
+    const vehiculoVal = document.getElementById('filter-vehiculo').value;
+    const cumplimientoVal = document.getElementById('filter-cumplimiento').value;
+    const getUnique = (keySelector) => [...new Set(currentDataset.map(keySelector).filter(Boolean))].sort();
+    const regionales = getUnique(row => row['Regional']);
+    const plazas = getUnique(row => row[plazaKey]);
+    const vehiculos = getUnique(row => row['Tipo de Vehiculo'] || row['Vehiculo']);
+    const cumplimientos = getUnique(row => row['Cumplimiento']);
+    populateSelect('filter-regional', regionales, regVal);
+    populateSelect('filter-plaza', plazas, plazaVal);
+    populateRutasCheckboxes(currentDataset);
+    populateSelect('filter-vehiculo', vehiculos, vehiculoVal);
+    populateSelect('filter-cumplimiento', cumplimientos, cumplimientoVal);
+}
+
+function populateSelect(id, items, currentValue) {
+    const select = document.getElementById(id);
+    const defaultText = select.options[0].text;
+    select.innerHTML = `<option value="">${defaultText}</option>`;
+    items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.textContent = item;
+        if (item === currentValue) opt.selected = true;
+        select.appendChild(opt);
+    });
+}
+
+function populateRutasCheckboxes(currentDataset) {
+    const container = document.getElementById('rutas-checkboxes-container');
+    const uniqueRutas = [...new Set(currentDataset.map(row => row[rutasKey]).filter(Boolean))].sort();
+    if (uniqueRutas.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400">No hay rutas disponibles</div>`;
+        return;
+    }
+    container.innerHTML = '';
+    uniqueRutas.forEach(ruta => {
+        const label = document.createElement('label');
+        label.className = 'flex items-center space-x-2 text-xs py-1 px-1 hover:bg-slate-50 rounded cursor-pointer';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = ruta;
+        checkbox.checked = selectedRutas.has(ruta);
+        checkbox.className = 'rounded border-slate-300 text-[#DA291C] focus:ring-[#DA291C]';
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) selectedRutas.add(ruta);
+            else selectedRutas.delete(ruta);
+            updateRutasHeaderText();
+            applyFilters();
+        });
+        const span = document.createElement('span');
+        span.textContent = ruta;
+        span.className = 'text-slate-700 truncate';
+        label.appendChild(checkbox);
+        label.appendChild(span);
+        container.appendChild(label);
+    });
+    updateRutasHeaderText();
+}
+
+function updateRutasHeaderText() {
+    const checkboxes = document.querySelectorAll('#rutas-checkboxes-container input[type="checkbox"]');
+    const totalRutasCount = checkboxes.length;
+    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+    const headerText = document.getElementById('rutas-header-text');
+    if (checkedCount === 0) headerText.textContent = 'Rutas (Ninguna)';
+    else if (checkedCount === totalRutasCount) headerText.textContent = 'Rutas (Todas)';
+    else headerText.textContent = `Rutas (${checkedCount} sel.)`;
+}
+
+document.getElementById('rutas-select-all').addEventListener('click', () => {
+    document.querySelectorAll('#rutas-checkboxes-container input[type="checkbox"]').forEach(cb => {
+        cb.checked = true;
+        selectedRutas.add(cb.value);
+    });
+    updateRutasHeaderText();
+    applyFilters();
+});
+
+document.getElementById('rutas-clear-all').addEventListener('click', () => {
+    selectedRutas.clear();
+    document.querySelectorAll('#rutas-checkboxes-container input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+    });
+    updateRutasHeaderText();
+    applyFilters();
+});
+
+document.getElementById('filter-regional').addEventListener('change', () => { currentPage = 1; applyFilters(); });
+document.getElementById('filter-plaza').addEventListener('change', () => { currentPage = 1; applyFilters(); });
+document.getElementById('filter-vehiculo').addEventListener('change', () => { currentPage = 1; applyFilters(); });
+document.getElementById('filter-cumplimiento').addEventListener('change', () => { currentPage = 1; applyFilters(); });
+
+document.getElementById('table-search').addEventListener('input', debounce(() => {
+    currentPage = 1;
+    applyFilters();
+}, 300));
+
+function applyFilters() {
+    const regVal = document.getElementById('filter-regional').value;
+    const plazaVal = document.getElementById('filter-plaza').value;
+    const vehiculoVal = document.getElementById('filter-vehiculo').value;
+    const cumplimientoVal = document.getElementById('filter-cumplimiento').value;
+    const searchTerm = document.getElementById('table-search').value.toLowerCase();
+
+    const doFilter = () => {
+        filteredData = rawData.filter(row => {
+            const r = row['Regional'] || '';
+            const p = row[plazaKey] || '';
+            const rt = row[rutasKey] || '';
+            const v = row['Tipo de Vehiculo'] || row['Vehiculo'] || '';
+            const c = row['Cumplimiento'] || '';
+            const matchesRuta = selectedRutas.has(rt);
+            const matchesFilters = (!regVal || r === regVal) && (!plazaVal || p === plazaVal) && matchesRuta && (!vehiculoVal || v === vehiculoVal) && (!cumplimientoVal || c === cumplimientoVal);
+            if (!matchesFilters) return false;
+            if (searchTerm) {
+                const rowString = Object.values(row).join(' ').toLowerCase();
+                return rowString.includes(searchTerm);
+            }
+            return true;
+        });
+        updateCascadingOptions(regVal, plazaVal, vehiculoVal, cumplimientoVal);
+        updateDashboard();
+        updateFloatingClearFiltersButton();
+    };
+
+    if (document.startViewTransition) document.startViewTransition(doFilter);
+    else doFilter();
+}
+
+/* ============================================================
+   FILTROS CASCADEADOS
+   - Si TODAS las rutas están seleccionadas → Plaza muestra TODAS
+   - Si NO todas las rutas → Plaza muestra solo las plazas de esas rutas
+   ============================================================ */
+function updateCascadingOptions(reg, plaza, vehiculo, cump) {
+    const todasLasRutasSeleccionadas =
+        (allAvailableRutas.length === 0) ||
+        (selectedRutas.size === allAvailableRutas.length);
+
+    const filterByOthers = (excludeField) => {
+        return rawData.filter(row => {
+            const r = row['Regional'] || '';
+            const p = row[plazaKey] || '';
+            const rt = row[rutasKey] || '';
+            const v = row['Tipo de Vehiculo'] || row['Vehiculo'] || '';
+            const c = row['Cumplimiento'] || '';
+            if (excludeField !== 'reg' && reg && r !== reg) return false;
+            if (excludeField !== 'plaza' && plaza && p !== plaza) return false;
+
+            /* 🆕 Si estamos recalculando PLAZA y TODAS las rutas están marcadas,
+               NO filtrar por rutas → mostrar todas las plazas disponibles */
+            if (excludeField === 'plaza' && todasLasRutasSeleccionadas) {
+                // sin filtro de rutas para el dropdown de plaza
+            } else {
+                if (excludeField !== 'rutas' && selectedRutas.size > 0 && !selectedRutas.has(rt)) return false;
+            }
+
+            if (excludeField !== 'vehiculo' && vehiculo && v !== vehiculo) return false;
+            if (excludeField !== 'cump' && cump && c !== cump) return false;
+            return true;
+        });
+    };
+
+    const getUniqueFromSub = (subData, selectorFn) =>
+        [...new Set(subData.map(selectorFn).filter(Boolean))].sort();
+
+    /* Región */
+    const subReg = filterByOthers('reg');
+    populateSelect('filter-regional', getUniqueFromSub(subReg, r => r['Regional']), reg);
+
+    /* Plaza */
+    const subPlaza = filterByOthers('plaza');
+    populateSelect('filter-plaza', getUniqueFromSub(subPlaza, r => r[plazaKey]), plaza);
+
+    /* Rutas */
+    const subRutasData = filterByOthers('rutas');
+    populateRutasCheckboxes(subRutasData);
+
+    /* Vehículo */
+    const subVeh = filterByOthers('vehiculo');
+    populateSelect('filter-vehiculo', getUniqueFromSub(subVeh, r => r['Tipo de Vehiculo'] || r['Vehiculo']), vehiculo);
+
+    /* Cumplimiento */
+    const subCump = filterByOthers('cump');
+    populateSelect('filter-cumplimiento', getUniqueFromSub(subCump, r => r['Cumplimiento']), cump);
+}
+
+function updateDashboard() {
+    updateKPIs();
+    updateCharts();
+    updateRendimientoXRutaTable();
+    updateTable();
+}
+
+function animateNumber(el, to, duration = 800) {
+    if (!el) return;
+    const from = 0;
+    const start = performance.now();
+    const step = (now) => {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.floor(from + (to - from) * eased).toLocaleString();
+        if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+}
+
+function updateKPIs() {
+    let totalRecorrido = 0, totalPerdida = 0;
+    let sumRendReal = 0, countRendReal = 0;
+    let sumRendObj = 0, countRendObj = 0;
+    let skippedRecorrido = 0, skippedPerdida = 0;
+
+    filteredData.forEach(row => {
+        const recVal = parseNumero(row[recorridoKey]);
+        const perdVal = parseNumero(row[perdidaKey]);
+        if (recVal === 0 && row[recorridoKey] !== '' && row[recorridoKey] !== null) skippedRecorrido++;
+        if (perdVal === 0 && row[perdidaKey] !== '' && row[perdidaKey] !== null) skippedPerdida++;
+        totalRecorrido += recVal;
+        totalPerdida += perdVal;
+
+        const rendReal = parseNumero(row[colZKey]);
+        if (rendReal > 0) { sumRendReal += rendReal; countRendReal++; }
+
+        const rendObj = parseNumero(row[colYKey]);
+        if (rendObj > 0) { sumRendObj += rendObj; countRendObj++; }
+    });
+
+    const rendObjAvg = countRendObj ? sumRendObj / countRendObj : 0;
+    const rendRealAvg = countRendReal ? sumRendReal / countRendReal : 0;
+
+    if (skippedRecorrido > 0) console.warn(`⚠️ ${skippedRecorrido} filas con Recorrido no numérico`);
+    if (skippedPerdida > 0) console.warn(`⚠️ ${skippedPerdida} filas con Pérdida no numérica`);
+
+    const elObj = document.getElementById('kpi-rendimiento-objetivo');
+    elObj.textContent = '0.00 Km/L';
+    setTimeout(() => { elObj.textContent = rendObjAvg.toFixed(2) + ' Km/L'; }, 100);
+
+    const elRec = document.getElementById('kpi-recorrido');
+    elRec.textContent = '0 Km';
+    animateNumber(elRec, Math.round(totalRecorrido), 800);
+    setTimeout(() => { elRec.textContent = totalRecorrido.toLocaleString('es-MX', {maximumFractionDigits: 0}) + ' Km'; }, 850);
+
+    const elPerd = document.getElementById('kpi-perdida');
+    elPerd.textContent = '$0.00';
+    setTimeout(() => { elPerd.textContent = '$' + totalPerdida.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }, 100);
+
+    const elReal = document.getElementById('kpi-rendimiento-real');
+    elReal.textContent = '0.00 Km/L';
+    setTimeout(() => { elReal.textContent = rendRealAvg.toFixed(2) + ' Km/L'; }, 100);
+
+    if (totalPerdida > 10000) elPerd.classList.add('critical-pulse');
+    else elPerd.classList.remove('critical-pulse');
+
+    setTimeout(() => {
+        const barObj = document.getElementById('bar-rend-obj');
+        if (barObj) barObj.style.width = Math.min(rendObjAvg * 10, 100) + '%';
+        const barRec = document.getElementById('bar-recorrido');
+        if (barRec) barRec.style.width = '100%';
+        const barPerd = document.getElementById('bar-perdida');
+        if (barPerd) barPerd.style.width = Math.min((totalPerdida / 10000) * 100, 100) + '%';
+        const barReal = document.getElementById('bar-rend-real');
+        if (barReal) barReal.style.width = Math.min(rendRealAvg * 10, 100) + '%';
+    }, 200);
+}
+
+let chartsRenderTimer = null;
+function updateCharts() {
+    if (chartsRenderTimer) clearTimeout(chartsRenderTimer);
+    chartsRenderTimer = setTimeout(() => {
+        Object.values(charts).forEach(chart => chart.destroy());
+        const chartLabels = [];
+        const valuesZ = [];
+        const valuesY = [];
+        const ruta2Data = filteredData.filter(row => {
+            const rt = String(row[rutasKey] || '').toLowerCase();
+            return rt.includes('ruta 2') || rt === '2' || rt.includes('2');
+        });
+        const targetRegionalData = ruta2Data.length > 0 ? ruta2Data : filteredData;
+        targetRegionalData.forEach(row => {
+            const label = row[plazaKey] || row['Regional'] || 'N/D';
+            chartLabels.push(label);
+            valuesZ.push(parseNumero(row[colZKey]));
+            valuesY.push(parseNumero(row[colYKey]));
+        });
+        charts.regional = new Chart(document.getElementById('chartRegional'), {
+            type: 'bar',
+            data: {
+                labels: chartLabels,
+                datasets: [
+                    { label: colZKey || 'Rend. Real', data: valuesZ, backgroundColor: '#DA291C', borderRadius: 4 },
+                    { label: colYKey || 'Rend. Objetivo', data: valuesY, backgroundColor: '#1e293b', borderRadius: 4 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top' },
+                    tooltip: { callbacks: { title: function(tooltipItems) { return `Plaza: ${tooltipItems[0].label}`; } } }
+                }
+            }
+        });
+        const cumplimientoData = {};
+        filteredData.forEach(row => {
+            let c = row['Cumplimiento'] || 'N/D';
+            const cUpper = c.toUpperCase();
+            if (cUpper === 'CUMPLE') c = 'Cumple';
+            else if (cUpper === 'MALA CAPTURA') c = 'Mala Captura';
+            else if (cUpper === 'NO CUMPLE' || cUpper === 'NO-CUMPLE') c = 'No Cumple';
+            cumplimientoData[c] = (cumplimientoData[c] || 0) + 1;
+        });
+        const labelsCumplimiento = Object.keys(cumplimientoData);
+        const backgroundColors = labelsCumplimiento.map(label => {
+            const l = label.toLowerCase();
+            if (l.includes('mala captura')) return '#000000';
+            if (l.includes('no')) return '#ef4444';
+            return '#10b981';
+        });
+        charts.cumplimiento = new Chart(document.getElementById('chartCumplimiento'), {
+            type: 'pie',
+            data: {
+                labels: labelsCumplimiento,
+                datasets: [{ data: Object.values(cumplimientoData), backgroundColor: backgroundColors }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                onClick: (e, elements) => {
+                    if (elements.length) {
+                        document.getElementById('filter-cumplimiento').value = labelsCumplimiento[elements[0].index];
+                        applyFilters();
+                    }
+                }
+            }
+        });
+    }, 150);
+}
+
+function updateRendimientoXRutaTable() {
+    const tbody = document.getElementById('tbody-rendimiento-x-ruta');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (filteredData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-slate-400">No hay registros coincidentes</td></tr>`;
+        const counterBadge = document.getElementById('contador-rendimiento-ruta');
+        if (counterBadge) counterBadge.textContent = '0 registros';
+        return;
+    }
+    let dataToDisplay = [...filteredData];
+    const sortVal = document.getElementById('sort-rendimiento-real')?.value;
+    if (sortVal) {
+        dataToDisplay.sort((a, b) => {
+            const valA = parseNumero(a['Rendimiento Real']);
+            const valB = parseNumero(b['Rendimiento Real']);
+            if (sortVal === 'desc') return valB - valA;
+            else if (sortVal === 'asc') return valA - valB;
+            return 0;
+        });
+    }
+    dataToDisplay.forEach((row, i) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition card-enter';
+        tr.style.animationDelay = (i * 25) + 'ms';
+        tr.innerHTML = `
+            <td class="px-3 py-2 font-medium">${esc(row[rutasKey] || '')}</td>
+            <td class="px-3 py-2 font-semibold text-estafetaDark">${parseNumero(row[colYKey]).toFixed(2)}</td>
+            <td class="px-3 py-2">${parseNumero(row[colZKey]).toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    const counterBadge = document.getElementById('contador-rendimiento-ruta');
+    if (counterBadge) {
+        counterBadge.textContent = `${dataToDisplay.length} registro${dataToDisplay.length === 1 ? '' : 's'}`;
+    }
+}
+
+function updateTable() {
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = '';
+    const totalRecords = filteredData.length;
+    const totalPages = Math.ceil(totalRecords / rowsPerPage) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    const pageItems = filteredData.slice(startIndex, endIndex);
+    let renderCount = pageItems.length;
+    if (renderCount < minRows) renderCount = minRows;
+    for (let i = 0; i < renderCount; i++) {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition';
+        if (i < pageItems.length) {
+            tr.classList.add('card-enter');
+            tr.style.animationDelay = (i * 20) + 'ms';
+            const row = pageItems[i];
+            let rawCump = row['Cumplimiento'] || 'N/D';
+            let displayCump = rawCump;
+            let badgeClass = 'bg-emerald-100 text-emerald-800';
+            const rawCumpUpper = rawCump.toUpperCase();
+            if (rawCumpUpper === 'CUMPLE') { displayCump = 'Cumple'; badgeClass = 'bg-emerald-100 text-emerald-800'; }
+            else if (rawCumpUpper === 'MALA CAPTURA') { displayCump = 'Mala Captura'; badgeClass = 'bg-slate-900 text-white'; }
+            else if (rawCumpUpper === 'NO CUMPLE' || rawCumpUpper === 'NO-CUMPLE') { displayCump = 'No Cumple'; badgeClass = 'bg-red-100 text-red-800'; }
+            else if (rawCump.toLowerCase().includes('mala')) { displayCump = 'Mala Captura'; badgeClass = 'bg-slate-900 text-white'; }
+            else if (rawCump.toLowerCase().includes('no')) { badgeClass = 'bg-red-100 text-red-800'; }
+            tr.innerHTML = `
+                <td class="px-3 py-2.5">${esc(row['Fecha'] || '')}</td>
+                <td class="px-3 py-2.5 font-medium">${esc(row[rutasKey] || '')}</td>
+                <td class="px-3 py-2.5">${esc(row['Regional'] || '')}</td>
+                <td class="px-3 py-2.5 font-semibold text-estafetaDark">${esc(row[plazaKey] || '')}</td>
+                <td class="px-3 py-2.5">${esc(row['Tipo de Vehiculo'] || row['Vehiculo'] || '')}</td>
+                <td class="px-3 py-2.5 font-semibold text-[#DA291C]">${parseNumero(row[colWKey]).toLocaleString('es-MX')} L</td>
+                <td class="px-3 py-2.5">${parseNumero(row[colYKey]).toFixed(2)}</td>
+                <td class="px-3 py-2.5">${parseNumero(row[colZKey]).toFixed(2)}</td>
+                <td class="px-3 py-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">${esc(displayCump)}</span></td>
+                <td class="px-3 py-2.5 truncate max-w-[120px]">${esc(row['Nombre de operador'] || '')}</td>
+            `;
+        } else {
+            tr.innerHTML = `<td colspan="10" class="px-3 py-2.5 text-transparent select-none">&nbsp;</td>`;
+        }
+        tbody.appendChild(tr);
+    }
+    const startDisplay = totalRecords > 0 ? startIndex + 1 : 0;
+    const endDisplay = Math.min(endIndex, totalRecords);
+    document.getElementById('table-count').textContent = `Mostrando ${startDisplay}-${endDisplay} de ${totalRecords} registros`;
+    renderPaginationControls(totalPages);
+}
+
+function renderPaginationControls(totalPages) {
+    const container = document.getElementById('pagination-controls');
+    if (!container) return;
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+    const prev = document.createElement('button');
+    prev.className = `px-2.5 py-1 rounded border text-xs ${currentPage === 1 ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`;
+    prev.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+    prev.disabled = currentPage === 1;
+    prev.addEventListener('click', () => { if (currentPage > 1) { currentPage--; updateTable(); } });
+    container.appendChild(prev);
+    const pageInfo = document.createElement('span');
+    pageInfo.className = 'px-2 py-1 text-xs font-semibold text-slate-700';
+    pageInfo.textContent = `Pág. ${currentPage} de ${totalPages}`;
+    container.appendChild(pageInfo);
+    const next = document.createElement('button');
+    next.className = `px-2.5 py-1 rounded border text-xs ${currentPage === totalPages ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`;
+    next.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+    next.disabled = currentPage === totalPages;
+    next.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; updateTable(); } });
+    container.appendChild(next);
+}
+
+document.getElementById('export-csv').addEventListener('click', () => {
+    if (!filteredData.length) return alert('No hay datos para exportar');
+    const worksheet = XLSX.utils.json_to_sheet(filteredData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Rendimiento Filtrado");
+    XLSX.writeFile(workbook, "Reporte_Rendimiento_Estafeta.xlsx");
+});
+
+/* ============================================================
+   EFECTOS VISUALES
+   ============================================================ */
+function initRipple() {
+    document.body.addEventListener('click', (e) => {
+        const btn = e.target.closest('button, .multiselect-header, [onclick], #drop-zone');
+        if (!btn || btn.disabled) return;
+        if (!btn.classList.contains('ripple-host')) btn.classList.add('ripple-host');
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple-effect';
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+        ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+        btn.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 650);
+    }, true);
+}
+
+function applyTiltToKPI() {
+    if (window.matchMedia('(pointer: coarse)').matches) return;
+    document.querySelectorAll('#dashboard-container .border-l-4').forEach(card => {
+        if (card.dataset.tilt === 'on') return;
+        card.dataset.tilt = 'on';
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width - 0.5;
+            const y = (e.clientY - rect.top) / rect.height - 0.5;
+            card.style.transform = `perspective(1000px) rotateY(${x * 5}deg) rotateX(${-y * 5}deg) translateY(-4px) scale(1.02)`;
+        });
+        card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+    });
+}
+
+/* ============================================================
+   MODO OSCURO
+   ============================================================ */
+function aplicarTema(tema) {
+    const icon = document.getElementById('theme-toggle-icon');
+    if (tema === 'dark') {
+        document.body.classList.add('dark-mode');
+        if (icon) icon.className = 'fa-solid fa-sun';
+    } else {
+        document.body.classList.remove('dark-mode');
+        if (icon) icon.className = 'fa-solid fa-moon';
+    }
+}
+
+function initTemaConBoton() {
+    const stored = localStorage.getItem('panel-theme');
+    let temaInicial = 'light';
+    if (stored === 'dark' || stored === 'light') {
+        temaInicial = stored;
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        temaInicial = 'dark';
+    }
+    aplicarTema(temaInicial);
+
+    const btn = document.getElementById('theme-toggle');
+    if (btn) {
+        btn.addEventListener('click', () => {
+            const isDark = document.body.classList.contains('dark-mode');
+            const next = isDark ? 'light' : 'dark';
+            aplicarTema(next);
+            localStorage.setItem('panel-theme', next);
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ theme: next, from: 'carga-gasolina' }, '*');
+                }
+            } catch (e) {}
+        });
+    }
+
+    window.addEventListener('message', (e) => {
+        if (e.data && e.data.theme) {
+            aplicarTema(e.data.theme);
+            localStorage.setItem('panel-theme', e.data.theme);
+        }
+    });
+
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('panel-theme')) {
+                aplicarTema(e.matches ? 'dark' : 'light');
+            }
+        });
+    }
+}
+
+/* ============================================================
+   ORQUESTADOR
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+    initRipple();
+    initTemaConBoton();
+    const dash = document.getElementById('dashboard-container');
+    if (dash) {
+        let lastCount = -1;
+        const obs = new MutationObserver(() => {
+            if (!dash.classList.contains('hidden') && rawData.length > 0 && rawData.length !== lastCount) {
+                lastCount = rawData.length;
+                setTimeout(() => applyTiltToKPI(), 300);
+            }
+        });
+        obs.observe(dash, { attributes: true, attributeFilter: ['class'] });
+    }
+    console.log('%c🎨 Efectos TR2: ripple, dark-mode, gradiente, cascada, glow, tilt, contadores, barras',
+        'background:#DA291C;color:white;padding:6px 10px;border-radius:4px;font-weight:bold;font-size:12px;');
+});
+</script>
+
+
+
+
+
+
+
+    <!-- ============================================================
+         SISTEMA DE NOTIFICACIONES CON CAMPANA
+         100% independiente (sin index, sin postMessage)
+         Toasts: pérdida económica, cumplimiento, top rutas con peor
+         rendimiento, top plazas con pérdida, top vehículos, brecha
+         y carga exitosa
+         ============================================================ -->
+    <script>
+    (function initGasolinaNotifications() {
+        'use strict';
+
+        const CONFIG = {
+            dashboardId: 'carga-gasolina',
+            storageKey: 'notif_history_carga-gasolina',
+            maxHistory: 50
+        };
+
+        const iconMap = {
+            danger:  { icon: 'fa-solid fa-triangle-exclamation', color: '#dc2626' },
+            warning: { icon: 'fa-solid fa-circle-exclamation',   color: '#f59e0b' },
+            info:    { icon: 'fa-solid fa-circle-info',          color: '#3b82f6' },
+            success: { icon: 'fa-solid fa-circle-check',         color: '#10b981' }
+        };
+
+        function loadHistory() {
+            try { return JSON.parse(localStorage.getItem(CONFIG.storageKey) || '[]'); }
+            catch (e) { return []; }
+        }
+        function saveHistory(history) {
+            try { localStorage.setItem(CONFIG.storageKey, JSON.stringify(history.slice(-CONFIG.maxHistory))); } catch (e) {}
+        }
+        function formatRelativeTime(ts) {
+            const diff = Date.now() - ts;
+            const min = Math.floor(diff / 60000);
+            if (min < 1) return 'Ahora mismo';
+            if (min < 60) return `Hace ${min} min`;
+            const hr = Math.floor(min / 60);
+            if (hr < 24) return `Hace ${hr} h`;
+            const d = Math.floor(hr / 24);
+            return `Hace ${d} día${d > 1 ? 's' : ''}`;
+        }
+
+        function injectBell() {
+            const headerActions = document.getElementById('header-actions-container');
+            if (!headerActions || document.getElementById('notif-bell')) return;
+            const bell = document.createElement('button');
+            bell.id = 'notif-bell';
+            bell.title = 'Notificaciones';
+            bell.setAttribute('aria-label', 'Notificaciones');
+            bell.innerHTML = `<i class="fa-solid fa-bell"></i><span id="notif-badge" class="hidden">0</span>`;
+            headerActions.appendChild(bell);
+            bell.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const panel = document.getElementById('notif-panel');
+                if (panel.classList.contains('show')) window.closeNotifPanel();
+                else window.openNotifPanel();
+            });
+        }
+
+        function updateBadge() {
+            const history = loadHistory();
+            const unread = history.filter(n => !n.read).length;
+            const badge = document.getElementById('notif-badge');
+            if (!badge) return;
+            if (unread > 0) {
+                badge.textContent = unread > 99 ? '99+' : unread;
+                badge.classList.remove('hidden');
+                badge.classList.remove('badge-new');
+                void badge.offsetWidth;
+                badge.classList.add('badge-new');
+            } else badge.classList.add('hidden');
+            const countEl = document.getElementById('notif-panel-count');
+            if (countEl) countEl.textContent = `(${history.length})`;
+        }
+
+        function renderPanel() {
+            const history = loadHistory();
+            const body = document.getElementById('notif-panel-body');
+            if (!body) return;
+            if (history.length === 0) {
+                body.innerHTML = `<div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><div>Sin notificaciones</div><div style="font-size:11px;margin-top:6px;opacity:0.7;">Se mostrarán aquí las alertas del dashboard</div></div>`;
+                return;
+            }
+            body.innerHTML = history.slice().reverse().map(n => {
+                const conf = iconMap[n.type] || iconMap.info;
+                const unreadClass = n.read ? '' : 'unread';
+                return `<div class="notif-item ${unreadClass} notif-${n.type}" data-id="${n.id}">
+                    <i class="${conf.icon} notif-item-icon" style="color:${conf.color};"></i>
+                    <div class="notif-item-body">
+                        <div class="notif-item-title">${n.title}</div>
+                        <div class="notif-item-message">${n.message}</div>
+                        <div class="notif-item-time">${formatRelativeTime(n.timestamp)}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function showToast(notif, duration = 6000) {
+            const container = document.getElementById('notif-toast-container');
+            if (!container) return;
+            const conf = iconMap[notif.type] || iconMap.info;
+            const toast = document.createElement('div');
+            toast.className = `notif-toast notif-${notif.type}`;
+            toast.innerHTML = `<i class="${conf.icon} notif-toast-icon" style="color:${conf.color};"></i>
+                <div class="notif-toast-body">
+                    <div class="notif-toast-title">${notif.title}</div>
+                    <div class="notif-toast-message">${notif.message}</div>
+                </div>
+                <button class="notif-toast-close" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>`;
+            const remove = () => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 350); };
+            toast.querySelector('.notif-toast-close').onclick = remove;
+            container.appendChild(toast);
+            const toasts = container.querySelectorAll('.notif-toast:not(.removing)');
+            if (toasts.length > 3) { toasts[0].classList.add('removing'); setTimeout(() => toasts[0].remove(), 350); }
+            if (duration > 0) setTimeout(remove, duration);
+        }
+
+        function addNotifications(notifs) {
+            if (!notifs || notifs.length === 0) return;
+            const priority = { danger: 0, warning: 1, info: 2, success: 3 };
+            notifs.sort((a, b) => (priority[a.type] ?? 99) - (priority[b.type] ?? 99));
+            const now = Date.now();
+            const enriched = notifs.map((n, i) => ({ ...n, id: `${CONFIG.dashboardId}-${now}-${i}`, timestamp: now, read: false }));
+            const history = loadHistory();
+            saveHistory([...history, ...enriched]);
+            enriched.slice(0, 2).forEach((n, i) => {
+                setTimeout(() => showToast(n, n.duration || 6000), i * 300);
+            });
+            updateBadge();
+            renderPanel();
+        }
+
+        window.openNotifPanel = function() {
+            const panel = document.getElementById('notif-panel');
+            if (!panel) return;
+            renderPanel();
+            panel.classList.add('show');
+        };
+        window.closeNotifPanel = function() {
+            const panel = document.getElementById('notif-panel');
+            if (panel) panel.classList.remove('show');
+        };
+        window.markAllAsRead = function() {
+            const history = loadHistory();
+            history.forEach(n => n.read = true);
+            saveHistory(history);
+            updateBadge();
+            renderPanel();
+        };
+        window.clearNotifHistory = function() {
+            if (!confirm('¿Eliminar todas las notificaciones?')) return;
+            saveHistory([]);
+            updateBadge();
+            renderPanel();
+        };
+
+        /* ============================================================
+           ANÁLISIS DE DATOS → 7 TOASTS PERSONALIZADOS
+           ============================================================ */
+        function analyzeAndAlert() {
+            if (typeof filteredData === 'undefined' || !filteredData || filteredData.length === 0) return;
+            const data = filteredData;
+            const total = data.length;
+            if (total === 0) return;
+
+            const notifs = [];
+            const fmtMoney = v => '$' + v.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            /* Referencias seguras a las claves mapeadas en Bloque 2 */
+            const recKey = (typeof recorridoKey !== 'undefined' && recorridoKey) ? recorridoKey : 'Recorrido';
+            const perdKey = (typeof perdidaKey !== 'undefined' && perdidaKey) ? perdidaKey : 'Perdida economica';
+            const rutasK = (typeof rutasKey !== 'undefined' && rutasKey) ? rutasKey : '';
+            const plazaK = (typeof plazaKey !== 'undefined' && plazaKey) ? plazaKey : 'Plaza';
+            const yKey = (typeof colYKey !== 'undefined' && colYKey) ? colYKey : 'Rendimiento Objetivo';
+            const zKey = (typeof colZKey !== 'undefined' && colZKey) ? colZKey : 'Rendimiento Real';
+            const pNum = (typeof parseNumero === 'function') ? parseNumero : (v => { const n = Number(v); return isNaN(n) ? 0 : n; });
+
+            /* ═══════════════════════════════════════════════════════
+               TOAST 1: PÉRDIDA ECONÓMICA TOTAL
+               ═══════════════════════════════════════════════════════ */
+            let totalPerdida = 0;
+            data.forEach(r => { totalPerdida += pNum(r[perdKey]); });
+            if (totalPerdida > 0) {
+                const perdidaProm = totalPerdida / total;
+                let tipo = 'info';
+                if (totalPerdida >= 100000) tipo = 'danger';
+                else if (totalPerdida >= 30000) tipo = 'warning';
+
+                notifs.push({
+                    type: tipo,
+                    title: `💸 Pérdida Económica Total`,
+                    message: `<b>${fmtMoney(totalPerdida)}</b> acumulada<br><span style="opacity:0.8;font-size:11px;">Promedio: ${fmtMoney(perdidaProm)} por registro</span>`
+                });
+            }
+
+            /* ═══════════════════════════════════════════════════════
+               TOAST 2: % CUMPLIMIENTO
+               ═══════════════════════════════════════════════════════ */
+            const cumplMap = { 'Cumple': 0, 'No Cumple': 0, 'Mala Captura': 0, 'Otro': 0 };
+            data.forEach(r => {
+                const c = String(r['Cumplimiento'] || '').trim().toUpperCase();
+                if (c === 'CUMPLE') cumplMap['Cumple']++;
+                else if (c === 'NO CUMPLE' || c === 'NO-CUMPLE') cumplMap['No Cumple']++;
+                else if (c === 'MALA CAPTURA') cumplMap['Mala Captura']++;
+                else cumplMap['Otro']++;
+            });
+            const pctCumple = ((cumplMap['Cumple'] / total) * 100).toFixed(1);
+            const pctNoCumple = ((cumplMap['No Cumple'] / total) * 100).toFixed(1);
+            const pctMala = ((cumplMap['Mala Captura'] / total) * 100).toFixed(1);
+
+            let tipoCump = 'info';
+            if (parseFloat(pctCumple) >= 80) tipoCump = 'success';
+            else if (parseFloat(pctCumple) >= 60) tipoCump = 'warning';
+            else tipoCump = 'danger';
+
+            let msgCump = `<b>${pctCumple}%</b> Cumple (${cumplMap['Cumple'].toLocaleString()})<br>`;
+            if (cumplMap['No Cumple'] > 0) msgCump += `<b>${pctNoCumple}%</b> No Cumple (${cumplMap['No Cumple'].toLocaleString()})<br>`;
+            if (cumplMap['Mala Captura'] > 0) msgCump += `<b>${pctMala}%</b> Mala Captura (${cumplMap['Mala Captura'].toLocaleString()})`;
+
+            notifs.push({
+                type: tipoCump,
+                title: `✅ % Cumplimiento de Rendimiento`,
+                message: msgCump
+            });
+
+            /* ═══════════════════════════════════════════════════════
+               TOAST 3: TOP 3 RUTAS CON PEOR RENDIMIENTO
+               ═══════════════════════════════════════════════════════ */
+            if (rutasK && yKey && zKey) {
+                const rutasMap = {};
+                data.forEach(r => {
+                    const ruta = String(r[rutasK] || 'N/D').trim();
+                    if (!rutasMap[ruta]) rutasMap[ruta] = { real: 0, obj: 0, count: 0 };
+                    const real = pNum(r[zKey]);
+                    const obj = pNum(r[yKey]);
+                    if (real > 0) rutasMap[ruta].real += real;
+                    if (obj > 0) rutasMap[ruta].obj += obj;
+                    rutasMap[ruta].count++;
+                });
+                const peores = Object.entries(rutasMap)
+                    .map(([ruta, v]) => {
+                        const promReal = v.count > 0 ? v.real / v.count : 0;
+                        const promObj = v.count > 0 ? v.obj / v.count : 0;
+                        const desviacion = promObj > 0 ? ((promObj - promReal) / promObj) * 100 : 0;
+                        return { ruta, promReal, promObj, desviacion, count: v.count };
+                    })
+                    .filter(r => r.desviacion > 0 && r.count >= 2)
+                    .sort((a, b) => b.desviacion - a.desviacion)
+                    .slice(0, 3);
+
+                if (peores.length > 0) {
+                    const medallas = ['🥇', '🥈', '🥉'];
+                    const lista = peores.map((r, i) => {
+                        return `${medallas[i]} <b>-${r.desviacion.toFixed(1)}%</b> ${r.ruta} <span style="opacity:0.7;">(${r.promReal.toFixed(2)} vs ${r.promObj.toFixed(2)} Km/L)</span>`;
+                    }).join('<br>');
+                    const tipo = peores[0].desviacion >= 20 ? 'danger' : (peores[0].desviacion >= 10 ? 'warning' : 'info');
+
+                    notifs.push({
+                        type: tipo,
+                        title: `🚨 Top 3 Rutas con Peor Rendimiento`,
+                        message: lista
+                    });
+                }
+            }
+
+            /* ═══════════════════════════════════════════════════════
+               TOAST 4: TOP 3 PLAZAS CON MÁS PÉRDIDA ECONÓMICA
+               ═══════════════════════════════════════════════════════ */
+            if (plazaK && totalPerdida > 0) {
+                const plazasMap = {};
+                data.forEach(r => {
+                    const plaza = String(r[plazaK] || 'N/D').trim();
+                    if (!plazasMap[plaza]) plazasMap[plaza] = 0;
+                    plazasMap[plaza] += pNum(r[perdKey]);
+                });
+                const topPlazas = Object.entries(plazasMap)
+                    .filter(([_, v]) => v > 0)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3);
+
+                if (topPlazas.length > 0) {
+                    const medallas = ['🥇', '🥈', '🥉'];
+                    const lista = topPlazas.map(([plaza, perdida], i) => {
+                        const pct = ((perdida / totalPerdida) * 100).toFixed(1);
+                        return `${medallas[i]} <b>${fmtMoney(perdida)}</b> ${plaza} <span style="opacity:0.7;">(${pct}%)</span>`;
+                    }).join('<br>');
+                    const pctTop1 = (topPlazas[0][1] / totalPerdida) * 100;
+                    const tipo = pctTop1 >= 40 ? 'danger' : (pctTop1 >= 20 ? 'warning' : 'info');
+
+                    notifs.push({
+                        type: tipo,
+                        title: `🗺️ Top 3 Plazas con Más Pérdida`,
+                        message: lista
+                    });
+                }
+            }
+
+            /* ═══════════════════════════════════════════════════════
+               TOAST 5: TOP 3 VEHÍCULOS CON PEOR RENDIMIENTO
+               ═══════════════════════════════════════════════════════ */
+            if (yKey && zKey) {
+                const vehiculosMap = {};
+                data.forEach(r => {
+                    const veh = String(r['Tipo de Vehiculo'] || r['Vehiculo'] || 'N/D').trim();
+                    if (veh === 'N/D' || veh === '') return;
+                    if (!vehiculosMap[veh]) vehiculosMap[veh] = { real: 0, obj: 0, count: 0 };
+                    const real = pNum(r[zKey]);
+                    const obj = pNum(r[yKey]);
+                    if (real > 0) vehiculosMap[veh].real += real;
+                    if (obj > 0) vehiculosMap[veh].obj += obj;
+                    vehiculosMap[veh].count++;
+                });
+                const peoresVeh = Object.entries(vehiculosMap)
+                    .map(([veh, v]) => {
+                        const promReal = v.count > 0 ? v.real / v.count : 0;
+                        const promObj = v.count > 0 ? v.obj / v.count : 0;
+                        const desviacion = promObj > 0 ? ((promObj - promReal) / promObj) * 100 : 0;
+                        return { veh, promReal, promObj, desviacion, count: v.count };
+                    })
+                    .filter(v => v.desviacion > 0 && v.count >= 2)
+                    .sort((a, b) => b.desviacion - a.desviacion)
+                    .slice(0, 3);
+
+                if (peoresVeh.length > 0) {
+                    const medallas = ['🥇', '🥈', '🥉'];
+                    const lista = peoresVeh.map((v, i) => {
+                        return `${medallas[i]} <b>-${v.desviacion.toFixed(1)}%</b> ${v.veh} <span style="opacity:0.7;">(${v.promReal.toFixed(2)} vs ${v.promObj.toFixed(2)} Km/L)</span>`;
+                    }).join('<br>');
+                    const tipo = peoresVeh[0].desviacion >= 20 ? 'danger' : (peoresVeh[0].desviacion >= 10 ? 'warning' : 'info');
+
+                    notifs.push({
+                        type: tipo,
+                        title: `🚛 Top 3 Vehículos con Peor Rendimiento`,
+                        message: lista
+                    });
+                }
+            }
+
+            /* ═══════════════════════════════════════════════════════
+               TOAST 6: BRECHA RENDIMIENTO REAL vs OBJETIVO
+               ═══════════════════════════════════════════════════════ */
+            if (yKey && zKey) {
+                let sumReal = 0, cntReal = 0, sumObj = 0, cntObj = 0;
+                data.forEach(r => {
+                    const real = pNum(r[zKey]);
+                    const obj = pNum(r[yKey]);
+                    if (real > 0) { sumReal += real; cntReal++; }
+                    if (obj > 0) { sumObj += obj; cntObj++; }
+                });
+                const promReal = cntReal > 0 ? sumReal / cntReal : 0;
+                const promObj = cntObj > 0 ? sumObj / cntObj : 0;
+                if (promObj > 0 && promReal > 0) {
+                    const brecha = ((promObj - promReal) / promObj) * 100;
+                    let tipo = 'success';
+                    if (brecha >= 15) tipo = 'danger';
+                    else if (brecha >= 8) tipo = 'warning';
+                    else if (brecha > 0) tipo = 'info';
+
+                    let msg = `Real: <b>${promReal.toFixed(2)}</b> Km/L vs Objetivo: <b>${promObj.toFixed(2)}</b> Km/L<br>`;
+                    if (brecha > 0) {
+                        msg += `<span style="color:${brecha >= 15 ? '#dc2626' : (brecha >= 8 ? '#f59e0b' : '#6b7280')};font-weight:700;">-${brecha.toFixed(1)}%</span> por debajo del objetivo`;
+                    } else if (brecha < 0) {
+                        msg += `<span style="color:#10b981;font-weight:700;">+${Math.abs(brecha).toFixed(1)}%</span> por encima del objetivo 🎉`;
+                    } else {
+                        msg += `En el objetivo exacto`;
+                    }
+
+                    notifs.push({
+                        type: tipo,
+                        title: `⚖️ Brecha de Rendimiento`,
+                        message: msg
+                    });
+                }
+            }
+
+            /* ═══════════════════════════════════════════════════════
+               TOAST 7: CARGA EXITOSA
+               ═══════════════════════════════════════════════════════ */
+            notifs.push({
+                type: 'success',
+                title: `✅ ${total.toLocaleString()} registros procesados`,
+                message: `Desempeño TR2 listo para analizar.`,
+                duration: 4000
+            });
+
+            addNotifications(notifs);
+        }
+
+        /* ============================================================
+           DETECCIÓN DE CARGA + INIT
+           ============================================================ */
+        let lastAnalyzed = 0;
+
+        function tryAnalyze() {
+            if (typeof filteredData !== 'undefined' && filteredData.length > 0 && filteredData.length !== lastAnalyzed) {
+                lastAnalyzed = filteredData.length;
+                setTimeout(analyzeAndAlert, 800);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            injectBell();
+
+            document.addEventListener('click', (e) => {
+                const panel = document.getElementById('notif-panel');
+                const bell = document.getElementById('notif-bell');
+                if (panel && panel.classList.contains('show')) {
+                    if (!panel.contains(e.target) && bell && !bell.contains(e.target)) {
+                        window.closeNotifPanel();
+                    }
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') window.closeNotifPanel();
+            });
+
+            updateBadge();
+            renderPanel();
+
+            const dash = document.getElementById('dashboard-container');
+            if (dash) {
+                const obs = new MutationObserver(() => {
+                    if (!dash.classList.contains('hidden')) tryAnalyze();
+                });
+                obs.observe(dash, { attributes: true, attributeFilter: ['class'] });
+            }
+
+            console.log('%c🔔 Notificaciones Desempeño TR2: activas (pérdida, cumplimiento, top rutas/plazas/vehículos, brecha)',
+                'color:#10b981;font-weight:bold;font-size:11px;');
+        });
+    })();
+    </script>
+</body>
+</html>

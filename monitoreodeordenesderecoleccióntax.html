@@ -1,0 +1,2023 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Órdenes de Recolección - Estafeta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .estafeta-red { background-color: #DA291C; }
+        .estafeta-red-text { color: #DA291C; }
+        .estafeta-border { border-color: #DA291C; }
+
+        .fullscreen-card {
+            position: fixed !important; top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            z-index: 9999 !important; border-radius: 0 !important;
+            padding: 24px !important; background-color: white !important;
+            display: flex; flex-direction: column;
+        }
+        .fullscreen-card canvas,
+        .fullscreen-card .overflow-x-auto {
+            flex-grow: 1 !important; height: auto !important; max-height: none !important;
+        }
+        body.dark-mode .fullscreen-card { background-color: #1e293b !important; }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50%      { background-position: 100% 50%; }
+        }
+        header.estafeta-red {
+            background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C) !important;
+            background-size: 300% 100% !important;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        .ripple-host { position: relative; overflow: hidden; }
+        .ripple-effect {
+            position: absolute; border-radius: 50%; background: rgba(255,255,255,0.55);
+            transform: scale(0); animation: rippleAnim 0.6s ease-out; pointer-events: none;
+        }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(20px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
+
+        @keyframes pulseCritical {
+            0%, 100% { background-color: rgba(220, 38, 38, 0.08); }
+            50%      { background-color: rgba(220, 38, 38, 0.28); }
+        }
+        .critical-pulse {
+            animation: pulseCritical 2s ease-in-out infinite;
+            font-weight: 800; color: #dc2626 !important;
+            border-radius: 4px; padding: 2px 6px; display: inline-block;
+        }
+
+        .kpi-bar-track {
+            width: 100%; height: 6px; background: rgba(0,0,0,0.06);
+            border-radius: 999px; overflow: hidden; margin-top: 6px;
+        }
+        .kpi-bar-fill {
+            height: 100%; width: 0%; border-radius: 999px;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .kpi-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .kpi-card:hover {
+            box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.18), 0 20px 40px -10px rgba(218, 41, 28, 0.28) !important;
+        }
+
+        /* ============ BOTÓN TOGGLE MODO OSCURO ============ */
+        #theme-toggle {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 40;
+            width: 48px;
+            height: 48px;
+            border-radius: 999px;
+            background: #1e293b;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        #theme-toggle:hover { transform: scale(1.08) rotate(15deg); background: #334155; }
+        body.dark-mode #theme-toggle { background: #fbbf24; color: #1e293b; }
+        body.dark-mode #theme-toggle:hover { background: #f59e0b; }
+
+        /* ============ MODO OSCURO COMPLETO ============ */
+        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
+        body.dark-mode header.estafeta-red { background: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B) !important; background-size: 300% 100% !important; }
+
+        body.dark-mode main { background: transparent; }
+        body.dark-mode .bg-white,
+        body.dark-mode .bg-gray-50 { background-color: #1e293b !important; }
+        body.dark-mode .bg-gray-100 { background-color: #0f172a !important; }
+        body.dark-mode .bg-gray-200 { background-color: #334155 !important; }
+
+        body.dark-mode .text-gray-800,
+        body.dark-mode .text-gray-700,
+        body.dark-mode .text-gray-900 { color: #e2e8f0 !important; }
+        body.dark-mode .text-gray-600,
+        body.dark-mode .text-gray-500,
+        body.dark-mode .text-gray-400 { color: #94a3b8 !important; }
+
+        body.dark-mode .border-gray-100,
+        body.dark-mode .border-gray-200,
+        body.dark-mode .border-gray-300 { border-color: #334155 !important; }
+        body.dark-mode .divide-gray-200 > * + * { border-color: #334155 !important; }
+
+        body.dark-mode .shadow-sm,
+        body.dark-mode .shadow-xl,
+        body.dark-mode .shadow-2xl { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important; }
+
+        body.dark-mode input,
+        body.dark-mode select { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        body.dark-mode input::placeholder { color: #64748b !important; }
+
+        body.dark-mode .bg-red-800 { background-color: rgba(127, 29, 29, 0.6) !important; }
+        body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; }
+        body.dark-mode .bg-red-100 { background-color: rgba(127, 29, 29, 0.5) !important; }
+        body.dark-mode .bg-blue-50,
+        body.dark-mode .bg-blue-50\/60 { background-color: rgba(30, 58, 138, 0.3) !important; }
+        body.dark-mode .bg-green-50,
+        body.dark-mode .bg-green-50\/60 { background-color: rgba(20, 83, 45, 0.3) !important; }
+        body.dark-mode .bg-red-50\/60 { background-color: rgba(127, 29, 29, 0.3) !important; }
+        body.dark-mode .bg-yellow-50,
+        body.dark-mode .bg-yellow-50\/60 { background-color: rgba(120, 53, 15, 0.3) !important; }
+
+        body.dark-mode .fullscreen-card { background-color: #1e293b !important; }
+        body.dark-mode .modal-overlay > div,
+        body.dark-mode #route-modal > div,
+        body.dark-mode #operator-modal > div { background: #1e293b !important; }
+
+        body.dark-mode table thead tr,
+        body.dark-mode table thead.bg-gray-50 { background: #0f172a !important; color: #94a3b8 !important; }
+        body.dark-mode table th { color: #cbd5e1 !important; border-color: #334155 !important; }
+        body.dark-mode table td { border-color: #334155 !important; color: #cbd5e1 !important; }
+        body.dark-mode tbody tr:hover { background-color: #334155 !important; }
+
+        body.dark-mode .border-gray-900,
+        body.dark-mode .bg-gray-900 { background-color: #0f172a !important; }
+
+        body.dark-mode #plaza-picker-trigger,
+        body.dark-mode #date-picker-trigger,
+        body.dark-mode #open-route-modal,
+        body.dark-mode #open-operator-modal { background-color: #334155 !important; color: #e2e8f0 !important; border-color: #475569 !important; }
+
+        body.dark-mode #plaza-picker-dropdown,
+        body.dark-mode #date-picker-dropdown { background-color: #1e293b !important; border-color: #334155 !important; }
+
+        body.dark-mode .kpi-card .border-t { border-color: #334155 !important; }
+        body.dark-mode .kpi-bar-track { background: rgba(255,255,255,0.1) !important; }
+
+        body.dark-mode button.bg-gray-50,
+        body.dark-mode button.bg-gray-100 { background-color: #334155 !important; color: #e2e8f0 !important; border-color: #475569 !important; }
+        body.dark-mode button.hover\:bg-gray-100:hover,
+        body.dark-mode button.hover\:bg-gray-200:hover { background-color: #475569 !important; }
+
+        body.dark-mode #map { background-color: #1e293b !important; }
+        body.dark-mode #map .leaflet-tile { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) !important; }
+        body.dark-mode #map .leaflet-container { background: #1e293b !important; }
+
+        body.dark-mode .leaflet-popup-content-wrapper,
+        body.dark-mode .leaflet-popup-tip { background: #1e293b !important; color: #e2e8f0 !important; }
+        body.dark-mode .leaflet-popup-content b { color: #f1f5f9 !important; }
+
+        body.dark-mode .text-red-600 { color: #f87171 !important; }
+        body.dark-mode .text-\[\#DA291C\] { color: #f87171 !important; }
+
+        body.dark-mode #client-loop-btn { background-color: #334155 !important; color: #f87171 !important; }
+        body.dark-mode #client-loop-btn.bg-red-600 { background-color: #b91c1c !important; color: white !important; }
+
+        body.dark-mode .modal-overlay.bg-black\/50 { background-color: rgba(0,0,0,0.75) !important; }
+        body.dark-mode .bg-gray-900.text-white { background-color: #0f172a !important; }
+
+        body.dark-mode::-webkit-scrollbar { width: 8px; height: 8px; }
+        body.dark-mode::-webkit-scrollbar-track { background: #0f172a; }
+        body.dark-mode::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        body.dark-mode::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        /* ============ CAMPANA DE NOTIFICACIONES ============ */
+        #notif-bell {
+            position: relative;
+            width: 46px; height: 46px;
+            border-radius: 12px;
+            background: #ffffff;
+            border: 2px solid rgba(255,255,255,0.9);
+            color: #DA291C;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        #notif-bell:hover { background: #fef2f2; transform: translateY(-1px) scale(1.04); }
+        #notif-bell i { color: #DA291C; }
+        body.dark-mode #notif-bell { background: #1e293b; border-color: #475569; }
+        body.dark-mode #notif-bell i { color: #fbbf24; }
+
+        #notif-badge {
+            position: absolute;
+            top: -7px; right: -7px;
+            min-width: 22px; height: 22px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: #dc2626;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #fff;
+            animation: badgePulse 1.6s ease-in-out infinite;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        }
+        body.dark-mode #notif-badge { border-color: #1e293b; }
+        #notif-badge.hidden { display: none; }
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.15); }
+        }
+
+        #notif-toast-container {
+            position: fixed;
+            top: 88px; right: 20px;
+            z-index: 10000;
+            display: flex; flex-direction: column; gap: 10px;
+            max-width: 380px;
+            pointer-events: none;
+        }
+        .notif-toast {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 18px 40px -12px rgba(0,0,0,0.3);
+            border-left: 4px solid #3b82f6;
+            padding: 14px 16px;
+            animation: notifToastIn 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        .notif-toast.danger  { border-left-color: #dc2626; }
+        .notif-toast.warning { border-left-color: #f59e0b; }
+        .notif-toast.info    { border-left-color: #3b82f6; }
+        .notif-toast.success { border-left-color: #10b981; }
+        .notif-toast .notif-toast-title { font-weight: 800; font-size: 13px; color: #111827; margin-bottom: 4px; }
+        .notif-toast .notif-toast-msg   { font-size: 12px; color: #4b5563; line-height: 1.45; }
+        body.dark-mode .notif-toast { background: #1e293b; }
+        body.dark-mode .notif-toast .notif-toast-title { color: #f1f5f9; }
+        body.dark-mode .notif-toast .notif-toast-msg { color: #cbd5e1; }
+        @keyframes notifToastIn {
+            from { opacity: 0; transform: translateX(40px) scale(0.95); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
+        #notif-panel {
+            position: fixed;
+            top: 88px; right: 20px;
+            width: 400px;
+            max-width: calc(100vw - 40px);
+            max-height: 70vh;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 25px 60px -15px rgba(0,0,0,0.4);
+            z-index: 10001;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            animation: notifPanelIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        body.dark-mode #notif-panel { background: #1e293b; }
+        #notif-panel.hidden { display: none; }
+        @keyframes notifPanelIn {
+            from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .notif-panel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 800; font-size: 14px; color: #111827;
+        }
+        body.dark-mode .notif-panel-header { border-color: #334155; color: #f1f5f9; }
+        .notif-panel-body {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 8px;
+        }
+        .notif-panel-body::-webkit-scrollbar { width: 6px; }
+        .notif-panel-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        body.dark-mode .notif-panel-body::-webkit-scrollbar-thumb { background: #475569; }
+        .notif-item {
+            padding: 12px 14px;
+            border-radius: 10px;
+            border-left: 3px solid #3b82f6;
+            margin-bottom: 8px;
+            background: #f9fafb;
+            cursor: default;
+        }
+        .notif-item.unread { background: #fef2f2; }
+        .notif-item.danger  { border-left-color: #dc2626; }
+        .notif-item.warning { border-left-color: #f59e0b; }
+        .notif-item.info    { border-left-color: #3b82f6; }
+        .notif-item.success { border-left-color: #10b981; }
+        .notif-item .notif-item-title { font-weight: 800; font-size: 12.5px; color: #111827; margin-bottom: 3px; }
+        .notif-item .notif-item-msg   { font-size: 11.5px; color: #4b5563; line-height: 1.45; }
+        .notif-item .notif-item-time  { font-size: 10.5px; color: #9ca3af; margin-top: 6px; font-weight: 600; }
+        body.dark-mode .notif-item { background: #0f172a; }
+        body.dark-mode .notif-item.unread { background: rgba(127,29,29,0.35); }
+        body.dark-mode .notif-item .notif-item-title { color: #f1f5f9; }
+        body.dark-mode .notif-item .notif-item-msg { color: #cbd5e1; }
+        body.dark-mode .notif-item .notif-item-time { color: #64748b; }
+        .notif-panel-footer {
+            display: flex; gap: 8px;
+            padding: 12px 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+        body.dark-mode .notif-panel-footer { border-color: #334155; }
+        .notif-panel-footer button {
+            flex: 1;
+            padding: 9px 12px;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .notif-panel-footer button:hover { background: #f3f4f6; }
+        .notif-panel-footer button.notif-clear-btn { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+        .notif-panel-footer button.notif-clear-btn:hover { background: #fee2e2; }
+        body.dark-mode .notif-panel-footer button { background: #0f172a; border-color: #334155; color: #cbd5e1; }
+        body.dark-mode .notif-panel-footer button:hover { background: #334155; }
+        body.dark-mode .notif-panel-footer button.notif-clear-btn { background: rgba(127,29,29,0.35); border-color: #7f1d1d; color: #fca5a5; }
+
+        @media (max-width: 640px) {
+            #notif-toast-container { top: auto; bottom: 20px; right: 12px; left: 12px; max-width: none; }
+            #notif-panel { top: 76px; right: 12px; left: 12px; width: auto; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased min-h-screen flex flex-col relative">
+
+    <header class="estafeta-red text-white shadow-md z-20">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-boxes-stacked text-3xl"></i>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-wide">ESTAFETA</h1>
+                    <p class="text-xs uppercase tracking-wider opacity-90">Monitoreo de Órdenes de Recolección</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-3 bg-red-800 bg-opacity-60 px-4 py-2 rounded-xl border border-red-600 hover:bg-opacity-80 transition-all cursor-pointer shadow-inner" id="banner-drop-zone" onclick="document.getElementById('file-input').click()">
+                    <input type="file" id="file-input" class="hidden" accept=".csv, .xlsx, .xls">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-white"></i>
+                    <div class="text-left">
+                        <p id="file-status" class="text-sm font-semibold">Cargar Excel / CSV</p>
+                        <p class="text-xs text-red-200">Arrastra o haz clic aquí</p>
+                    </div>
+                </div>
+                <!-- 🔔 CAMPANA HARDCODEADA: visible siempre -->
+                <button id="notif-bell" aria-label="Notificaciones">
+                    <i class="fa-solid fa-bell"></i>
+                    <span id="notif-badge" class="hidden">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="notif-toast-container"></div>
+
+    <div id="notif-panel" class="hidden">
+        <div class="notif-panel-header">
+            <span id="notif-panel-title">Notificaciones</span>
+            <button id="notif-panel-close" class="text-gray-400 hover:text-gray-700 text-lg leading-none" aria-label="Cerrar">&times;</button>
+        </div>
+        <div class="notif-panel-body" id="notif-panel-body"></div>
+        <div class="notif-panel-footer">
+            <button id="notif-mark-read-btn">Marcar leídas</button>
+            <button id="notif-clear-btn" class="notif-clear-btn">Limpiar</button>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+        <div id="dashboard-content" class="hidden space-y-6">
+
+            <div class="bg-white p-4 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto relative">
+                    <div class="relative">
+                        <div id="plaza-picker-trigger" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-300 px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 cursor-pointer shadow-sm">
+                            <i class="fa-solid fa-map-marked-alt estafeta-red-text"></i>
+                            <span id="plaza-trigger-label" class="font-bold text-gray-800">Plazas (Todas)</span>
+                            <i class="fa-solid fa-chevron-down text-xs text-gray-400 ml-1"></i>
+                        </div>
+                        <div id="plaza-picker-dropdown" class="absolute left-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 w-72 z-50 hidden">
+                            <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-3">
+                                <span class="font-bold text-gray-800 tracking-wide text-sm">PLAZAS</span>
+                                <span id="plaza-selected-count-badge" class="bg-red-50 text-red-600 rounded-full text-xs font-bold px-2 py-0.5">1</span>
+                            </div>
+                            <div id="plaza-options-container" class="space-y-1.5 max-h-60 overflow-y-auto"></div>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <div id="date-picker-trigger" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-300 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 cursor-pointer shadow-sm">
+                            <span class="text-xs font-semibold text-gray-500">Fecha</span>
+                            <span id="date-trigger-label" class="font-bold text-gray-800">Todos los días</span>
+                            <i class="fa-solid fa-calendar-days estafeta-red-text ml-1"></i>
+                        </div>
+                        <div id="date-picker-dropdown" class="absolute left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl p-4 w-80 z-50 hidden">
+                            <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+                                <div class="flex space-x-1">
+                                    <button type="button" id="cal-prev-year" class="p-1.5 hover:bg-gray-100 rounded text-gray-600 text-xs font-bold">&laquo;</button>
+                                    <button type="button" id="cal-prev-month" class="p-1.5 hover:bg-gray-100 rounded text-gray-600 text-xs font-bold">&#8249;</button>
+                                </div>
+                                <span id="cal-month-year-title" class="font-bold text-sm text-gray-800">—</span>
+                                <div class="flex space-x-1">
+                                    <button type="button" id="cal-next-month" class="p-1.5 hover:bg-gray-100 rounded text-gray-600 text-xs font-bold">&#8250;</button>
+                                    <button type="button" id="cal-next-year" class="p-1.5 hover:bg-gray-100 rounded text-gray-600 text-xs font-bold">&raquo;</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-400 mb-2">
+                                <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+                            </div>
+                            <div id="cal-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+                        </div>
+                    </div>
+
+                    <button id="open-route-modal" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
+                        <i class="fa-solid fa-route estafeta-red-text"></i><span>Filtrar Ruta</span>
+                    </button>
+                    <button id="open-operator-modal" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
+                        <i class="fa-solid fa-user-tie estafeta-red-text"></i><span>Operador</span>
+                    </button>
+
+                    <div class="relative flex-grow sm:flex-grow-0 sm:w-60">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-red-500">
+                            <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                        </span>
+                        <input type="text" id="global-search-input" placeholder="Buscar orden, cliente..." class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium transition-all">
+                    </div>
+                </div>
+                <div class="flex items-center justify-end w-full lg:w-auto">
+                    <span class="text-xs text-gray-500 font-medium"><span id="search-counter" class="font-bold text-gray-800">0</span> registros</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="kpi-card bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between cursor-pointer">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500">OR's Programadas</p>
+                                <h3 id="kpi-prog-count" class="text-xl font-bold text-gray-800">0</h3>
+                            </div>
+                            <div class="w-24 h-16"><canvas id="miniChartProg"></canvas></div>
+                        </div>
+                        <div class="kpi-bar-track"><div class="kpi-bar-fill" id="bar-prog" style="background:#3B82F6;"></div></div>
+                        <div class="mt-4 pt-3 border-t border-gray-100">
+                            <p class="text-xs font-semibold text-gray-500">OR's Adicionales</p>
+                            <h3 id="kpi-adic-count" class="text-xl font-bold text-gray-800">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between cursor-pointer">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500">Eficiencia de Visita</p>
+                                <h3 id="kpi-visita-pct" class="text-xl font-bold text-gray-800">0%</h3>
+                            </div>
+                            <div class="w-28 h-16"><canvas id="miniChartVisita"></canvas></div>
+                        </div>
+                        <div class="kpi-bar-track"><div class="kpi-bar-fill" id="bar-visita" style="background:#10B981;"></div></div>
+                        <div class="mt-4 pt-3 border-t border-gray-100">
+                            <p class="text-xs font-semibold text-gray-500">OR's No Visitado</p>
+                            <h3 id="kpi-novisita-count" class="text-xl font-bold text-gray-800">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between cursor-pointer">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500">Eficiencia de Recolección</p>
+                                <h3 id="kpi-reco-pct" class="text-xl font-bold text-gray-800">0%</h3>
+                            </div>
+                            <div class="w-32 h-16"><canvas id="miniChartReco"></canvas></div>
+                        </div>
+                        <div class="kpi-bar-track"><div class="kpi-bar-fill" id="bar-reco" style="background:#10B981;"></div></div>
+                        <div class="mt-4 pt-3 border-t border-gray-100">
+                            <p class="text-xs font-semibold text-gray-500">OR's No Recolectado</p>
+                            <h3 id="kpi-noreco-count" class="text-xl font-bold text-gray-800">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between cursor-pointer">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500">No Show</p>
+                                <h3 id="kpi-noshow-pct" class="text-xl font-bold text-gray-800">0%</h3>
+                            </div>
+                            <div class="w-32 h-16"><canvas id="miniChartNoShow"></canvas></div>
+                        </div>
+                        <div class="kpi-bar-track"><div class="kpi-bar-fill" id="bar-noshow" style="background:#EF4444;"></div></div>
+                        <div class="mt-4 pt-3 border-t border-gray-100">
+                            <p class="text-xs font-semibold text-gray-500">OR's No Show</p>
+                            <h3 id="kpi-noshow-count" class="text-xl font-bold text-gray-800">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 space-y-3">
+                    <h3 class="text-sm font-bold text-gray-800 border-b pb-2">Ubicación</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs text-left">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-600 border-b">
+                                    <th class="py-2 px-3">Total OR's</th>
+                                    <th class="py-2 px-3">Eficiencia Visita</th>
+                                    <th class="py-2 px-3">Eficiencia Recolección</th>
+                                    <th class="py-2 px-3">% No Show</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ubicacion-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="card-clients" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between transition-all duration-300">
+                    <div class="space-y-3 flex flex-col h-full">
+                        <div class="flex justify-between items-center border-b pb-2">
+                            <h3 class="text-sm font-bold text-gray-800">Clientes No Show</h3>
+                            <div class="flex items-center space-x-2">
+                                <button id="client-loop-btn" onclick="toggleClientLoop()" class="bg-red-50 hover:bg-red-100 text-[#DA291C] px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center space-x-1 shadow-sm">
+                                    <i id="client-loop-icon" class="fa-solid fa-play"></i>
+                                    <span id="client-loop-text">Bucle</span>
+                                </button>
+                                <div id="client-pagination-controls" class="flex items-center space-x-1">
+                                    <button onclick="changeClientPage(-1)" class="p-1 hover:bg-gray-100 rounded text-gray-600"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                                    <span id="client-page-indicator" class="text-xs font-bold text-gray-700">1 / 1</span>
+                                    <button onclick="changeClientPage(1)" class="p-1 hover:bg-gray-100 rounded text-gray-600"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                                </div>
+                                <button onclick="toggleCardFullscreen('card-clients', 'icon-clients')" class="bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200 p-1.5 rounded-lg text-xs transition-all shadow-sm ml-2">
+                                    <i id="icon-clients" class="fa-solid fa-expand text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="client-table-scroll-container" class="overflow-x-auto min-h-[220px] max-h-[260px]">
+                            <table class="min-w-full text-xs text-left">
+                                <thead>
+                                    <tr class="bg-gray-50 text-gray-600 border-b select-none">
+                                        <th onclick="sortClients('name')" class="py-2 px-3 cursor-pointer hover:bg-gray-100">Cliente <i id="sort-icon-name" class="fa-solid fa-sort ml-1 text-gray-400"></i></th>
+                                        <th onclick="sortClients('total')" class="py-2 px-3 cursor-pointer hover:bg-gray-100">Total <i id="sort-icon-total" class="fa-solid fa-sort ml-1 text-gray-400"></i></th>
+                                        <th onclick="sortClients('visita')" class="py-2 px-3 cursor-pointer hover:bg-gray-100">Visita <i id="sort-icon-visita" class="fa-solid fa-sort ml-1 text-gray-400"></i></th>
+                                        <th onclick="sortClients('reco')" class="py-2 px-3 cursor-pointer hover:bg-gray-100">Reco <i id="sort-icon-reco" class="fa-solid fa-sort ml-1 text-gray-400"></i></th>
+                                        <th onclick="sortClients('noshow')" class="py-2 px-3 cursor-pointer hover:bg-gray-100">NoShow <i id="sort-icon-noshow" class="fa-solid fa-sort ml-1 text-gray-400"></i></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clientes-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div id="card-motivos" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 space-y-3 transition-all duration-300">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h3 class="text-xs font-bold text-gray-800">Motivos No Recolección</h3>
+                        <button onclick="toggleCardFullscreen('card-motivos', 'icon-motivos')" class="bg-gray-50 hover:bg-gray-100 text-gray-500 border border-gray-200 p-1.5 rounded-lg text-xs shadow-sm">
+                            <i id="icon-motivos" class="fa-solid fa-expand text-xs"></i>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto max-h-48 overflow-y-auto"><table class="min-w-full text-xs text-left"><tbody id="motivos-table-body"></tbody></table></div>
+                </div>
+
+                <div id="card-items" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 space-y-3 transition-all duration-300">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h3 class="text-xs font-bold text-gray-800 truncate pr-2">Pickup Plan | Items</h3>
+                        <button onclick="toggleCardFullscreen('card-items', 'icon-items')" class="bg-gray-50 hover:bg-gray-100 text-gray-500 border border-gray-200 p-1.5 rounded-lg text-xs shadow-sm flex-shrink-0">
+                            <i id="icon-items" class="fa-solid fa-expand text-xs"></i>
+                        </button>
+                    </div>
+                    <div class="h-48 relative"><canvas id="itemsChart"></canvas></div>
+                </div>
+
+                <div id="card-horarios" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 space-y-3 transition-all duration-300">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h3 class="text-xs font-bold text-gray-800">Horarios de Excepción</h3>
+                        <button onclick="toggleCardFullscreen('card-horarios', 'icon-horarios')" class="bg-gray-50 hover:bg-gray-100 text-gray-500 border border-gray-200 p-1.5 rounded-lg text-xs shadow-sm">
+                            <i id="icon-horarios" class="fa-solid fa-expand text-xs"></i>
+                        </button>
+                    </div>
+                    <div class="h-48 relative"><canvas id="horariosChart"></canvas></div>
+                </div>
+
+                <div id="card-noshow" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 space-y-3 flex flex-col justify-between transition-all duration-300">
+                    <div>
+                        <div class="flex justify-between items-center border-b pb-2">
+                            <h3 class="text-xs font-bold text-gray-800">No Show | Validación</h3>
+                            <button onclick="toggleCardFullscreen('card-noshow', 'icon-noshow')" class="bg-gray-50 hover:bg-gray-100 text-gray-500 border border-gray-200 p-1.5 rounded-lg text-xs shadow-sm">
+                                <i id="icon-noshow" class="fa-solid fa-expand text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="h-40 relative flex items-center justify-center my-auto"><canvas id="noshowDonutChart"></canvas></div>
+                    <p class="text-center text-[10px] text-gray-500 font-semibold pt-2 border-t border-gray-100">Dirección Planeada vs Real</p>
+                </div>
+            </div>
+
+            <div id="map-card" class="bg-white p-6 rounded-xl shadow-sm transition-all duration-300">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                        <i class="fa-solid fa-map-location-dot estafeta-red-text mr-2"></i> Ubicaciones Geográficas
+                    </h3>
+                    <button id="toggle-fullscreen-btn" class="bg-gray-50 hover:bg-gray-100 text-gray-500 border border-gray-200 p-2 rounded-lg text-xs shadow-sm">
+                        <i id="fullscreen-icon" class="fa-solid fa-expand text-xs"></i>
+                    </button>
+                </div>
+                <div id="map" class="h-96 rounded-lg w-full z-10"></div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
+                <div class="flex justify-between items-center cursor-pointer select-none" onclick="toggleBitacora()">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center space-x-2">
+                        <i id="bitacora-toggle-icon" class="fa-solid fa-chevron-right estafeta-red-text text-sm mr-2 transition-transform duration-200"></i>
+                        <span>Bitácora de Órdenes</span>
+                    </h3>
+                    <span class="text-xs text-gray-400">Clic para expandir</span>
+                </div>
+                <div id="bitacora-content" class="hidden space-y-4 pt-2 border-t border-gray-100">
+                    <div class="overflow-x-auto">
+                        <table id="data-table" class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50"><tr id="table-headers"></tr></thead>
+                            <tbody id="table-body" class="divide-y divide-gray-200 bg-white"></tbody>
+                        </table>
+                    </div>
+                    <div id="table-pagination-container" class="flex items-center justify-center gap-4 pt-3 border-t border-gray-100"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="route-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2"><i class="fa-solid fa-filter estafeta-red-text"></i><h3 class="font-bold text-lg">Filtrar Ruta Local</h3></div>
+                <button id="close-route-modal" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
+            </div>
+            <div class="p-6 space-y-4 flex-grow overflow-y-auto">
+                <input type="text" id="route-search-input" placeholder="Buscar ruta..." class="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm">
+                <div class="flex justify-between items-center text-sm font-semibold px-1">
+                    <span class="text-gray-600">Seleccionar rutas:</span>
+                    <div class="space-x-3"><button type="button" id="select-all-routes" class="estafeta-red-text hover:underline">Todas</button><span class="text-gray-300">|</span><button type="button" id="deselect-all-routes" class="estafeta-red-text hover:underline">Ninguna</button></div>
+                </div>
+                <div id="route-checkboxes-container" class="border border-gray-200 rounded-xl p-3 space-y-2 max-h-60 overflow-y-auto bg-gray-50"></div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 border-t flex justify-end space-x-3">
+                <button id="cancel-route-modal" class="px-5 py-2 rounded-xl bg-gray-200 text-gray-700 text-sm">Cancelar</button>
+                <button id="apply-route-filter" class="px-5 py-2 rounded-xl estafeta-red text-white text-sm shadow-md">Aplicar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="operator-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2"><i class="fa-solid fa-user-tie estafeta-red-text"></i><h3 class="font-bold text-lg">Filtrar Operador</h3></div>
+                <button id="close-operator-modal" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
+            </div>
+            <div class="p-6 space-y-4 flex-grow overflow-y-auto">
+                <input type="text" id="operator-search-input" placeholder="Buscar operador..." class="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm">
+                <div class="flex justify-between items-center text-sm font-semibold px-1">
+                    <span class="text-gray-600">Seleccionar operadores:</span>
+                    <div class="space-x-3"><button type="button" id="select-all-operators" class="estafeta-red-text hover:underline">Todos</button><span class="text-gray-300">|</span><button type="button" id="deselect-all-operators" class="estafeta-red-text hover:underline">Ninguno</button></div>
+                </div>
+                <div id="operator-checkboxes-container" class="border border-gray-200 rounded-xl p-3 space-y-2 max-h-60 overflow-y-auto bg-gray-50"></div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 border-t flex justify-end space-x-3">
+                <button id="cancel-operator-modal" class="px-5 py-2 rounded-xl bg-gray-200 text-gray-700 text-sm">Cancelar</button>
+                <button id="apply-operator-filter" class="px-5 py-2 rounded-xl estafeta-red text-white text-sm shadow-md">Aplicar</button>
+            </div>
+        </div>
+    </div>
+
+    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+    </button>
+    <script>
+    /* ============================================================
+       HELPERS
+       ============================================================ */
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+
+    const _norm = s => String(s ?? '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().trim();
+
+    function debounce(fn, ms = 250) {
+        let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+    }
+
+    /* ============================================================
+       MODO OSCURO
+       ============================================================ */
+    function aplicarTema(tema) {
+        const body = document.body;
+        const icon = document.getElementById('theme-toggle-icon');
+        if (tema === 'dark') {
+            body.classList.add('dark-mode');
+            if (icon) icon.className = 'fa-solid fa-sun';
+        } else {
+            body.classList.remove('dark-mode');
+            if (icon) icon.className = 'fa-solid fa-moon';
+        }
+    }
+
+    function initTema() {
+        const stored = localStorage.getItem('panel-theme');
+        if (stored === 'dark' || stored === 'light') {
+            aplicarTema(stored);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            aplicarTema('dark');
+        }
+
+        const btn = document.getElementById('theme-toggle');
+        if (btn) {
+            btn.onclick = () => {
+                const isDark = document.body.classList.contains('dark-mode');
+                const next = isDark ? 'light' : 'dark';
+                aplicarTema(next);
+                localStorage.setItem('panel-theme', next);
+            };
+        }
+
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                if (!localStorage.getItem('panel-theme')) aplicarTema(e.matches ? 'dark' : 'light');
+            });
+        }
+    }
+
+    /* ============================================================
+       AUTENTICACIÓN + INICIALIZACIÓN
+       ============================================================ */
+    window.addEventListener('DOMContentLoaded', () => {
+        initTema();
+        initRipple();
+        initNotificaciones();
+
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.theme) aplicarTema(e.data.theme);
+        });
+
+        const encodedRole = localStorage.getItem('auth_role');
+        if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
+
+        let rol = '';
+        try {
+            const decoded = atob(encodedRole);
+            const parts = decoded.split('|');
+            if (parts.length >= 1) rol = parts[0];
+        } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
+        if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
+
+        let inactivityTimer;
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                alert("Su sesión ha expirado por inactividad.");
+                localStorage.removeItem('auth_role');
+                window.location.href = 'Panel de Control Operativo.html';
+            }, 30 * 60 * 1000);
+        }
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(ev => window.addEventListener(ev, resetInactivityTimer));
+        resetInactivityTimer();
+
+        if (rol !== 'admin') {
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('selectstart', e => e.preventDefault());
+            document.addEventListener('copy', e => e.preventDefault());
+        }
+    });
+
+    function initRipple() {
+        document.body.addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn || btn.disabled) return;
+            if (!btn.classList.contains('ripple-host')) btn.classList.add('ripple-host');
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple-effect';
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+            ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+            btn.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 650);
+        }, true);
+    }
+
+    /* ============================================================
+       ESTADO GLOBAL
+       ============================================================ */
+    let rawData = [];
+    let filteredData = [];
+    let mapInstance = null;
+    let markersClusterGroup = null;
+    let plazaKey='', dateKey='', routeKey='', operatorKey='', statusKey='', reasonKey='', eventKey='', clientKey='', itemsKey='', validationNoShowKey='', fechaExcepcionKey='';
+    let latKey='', lngKey='';
+
+    let allPlazasList = [], selectedPlazasSet = new Set();
+    let allDatesList = [], selectedDatesSet = new Set();
+    let allRoutesList = [], allOperatorList = [];
+
+    let currentTablePage = 0;
+    const ITEMS_PER_PAGE = 10;
+    let currentClientPage = 0;
+    const CLIENTS_PER_PAGE = 5;
+    let clientLoopTimer = null;
+    let isClientLoopActive = false;
+    let currentClientSortField = null;
+    let currentClientSortAsc = true;
+
+    let calCurrentYear = new Date().getFullYear();
+    let calCurrentMonth = new Date().getMonth();
+    let searchTimeout = null;
+
+    let itemsChartInstance = null, horariosChartInstance = null, noshowDonutChartInstance = null;
+
+    const fileInput = document.getElementById('file-input');
+    fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+    /* ============================================================
+       CARGA DE ARCHIVO
+       ============================================================ */
+    function handleFile(file) {
+        document.getElementById('file-status').innerText = `Procesando...`;
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        if (ext === 'csv') {
+            Papa.parse(file, {
+                header: true, dynamicTyping: false, skipEmptyLines: true,
+                complete: (res) => {
+                    const headers = res.meta.fields || [];
+                    if (!validarArchivo(headers)) {
+                        alert('El archivo no tiene las columnas esperadas (Plaza, Estatus, Ruta, etc.)');
+                        document.getElementById('file-status').innerText = 'Error de validación';
+                        return;
+                    }
+                    initDashboard(res.data, file.name);
+                }
+            });
+        } else if (['xlsx','xls'].includes(ext)) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data, { type:'array', cellDates:true });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(ws, { defval:'', raw:false });
+                const headers = Object.keys(json[0] || {});
+                if (!validarArchivo(headers)) {
+                    alert('El archivo no tiene las columnas esperadas.');
+                    document.getElementById('file-status').innerText = 'Error de validación';
+                    return;
+                }
+                initDashboard(json, file.name);
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            alert('Formato no soportado');
+            document.getElementById('file-status').innerText = 'Error de formato';
+        }
+    }
+
+    function validarArchivo(headers) {
+        if (!headers || headers.length === 0) return false;
+        const n = headers.map(_norm);
+        const has = (...frags) => n.some(h => frags.every(f => h.includes(_norm(f))));
+        return has('plaza') && (has('estatus') || has('status')) && (has('ruta'));
+    }
+
+    function initDashboard(data, fileName) {
+        rawData = data.filter(r => {
+            const plaza = String(r['Plaza'] || r['PLAZA'] || '').trim();
+            return plaza !== 'Total' && plaza !== '';
+        });
+
+        if (rawData.length === 0) {
+            alert('El archivo no contiene filas de datos');
+            document.getElementById('file-status').innerText = 'Archivo vacío';
+            return;
+        }
+
+        const sample = rawData[0];
+        plazaKey        = findColumn(sample, ['plaza']);
+        dateKey         = findColumn(sample, ['fecha evento']) || findColumn(sample, ['fecha']);
+        routeKey        = findColumn(sample, ['ruta local']) || findColumn(sample, ['ruta']);
+        operatorKey     = findColumn(sample, ['operador']);
+        statusKey       = findColumn(sample, ['estatus de ordenes', 'estatus']);
+        reasonKey       = findColumn(sample, ['motivo de no recoleccion', 'motivo']);
+        eventKey        = findColumn(sample, ['evento or recos', 'evento']);
+        clientKey       = findColumn(sample, ['razon social', 'cliente ajustado']);
+        itemsKey        = findColumn(sample, ['cant or items pactados', 'items']);
+        validationNoShowKey = findColumn(sample, ['validacion no show']);
+        fechaExcepcionKey = findColumn(sample, ['fecha excepcion']);
+        latKey          = findColumn(sample, ['latitud']);
+        lngKey          = findColumn(sample, ['longitud']);
+
+        extractFilters();
+        filteredData = [...rawData];
+        currentTablePage = 0;
+        currentClientPage = 0;
+
+        document.getElementById('file-status').innerText = fileName;
+        document.getElementById('dashboard-content').classList.remove('hidden');
+
+        initMap();
+        updateDashboard();
+        analyzeAndAlert(fileName);
+        document.getElementById('file-input').value = '';
+    }
+
+    function findColumn(row, keywords) {
+        const keys = Object.keys(row || {});
+        for (let kw of keywords) {
+            const normKw = _norm(kw);
+            const found = keys.find(k => _norm(k).includes(normKw));
+            if (found) return found;
+        }
+        return null;
+    }
+
+    function parseDateString(val) {
+        if (!val) return '';
+        if (val instanceof Date) {
+            return `${val.getFullYear()}-${String(val.getMonth()+1).padStart(2,'0')}-${String(val.getDate()).padStart(2,'0')}`;
+        }
+        let strVal = String(val).trim();
+        if (strVal.includes('T')) strVal = strVal.split('T')[0];
+        else if (strVal.includes(' ')) strVal = strVal.split(' ')[0];
+        let match = strVal.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+        if (match) return `${match[1]}-${match[2].padStart(2,'0')}-${match[3].padStart(2,'0')}`;
+        if (/^\d+(\.\d+)?$/.test(strVal)) {
+            const n = parseFloat(strVal);
+            if (n > 20000 && n < 80000) {
+                const d = new Date(Math.round((n - 25569) * 86400 * 1000));
+                return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            }
+        }
+        return strVal;
+    }
+
+    function extractFilters() {
+        if (plazaKey) {
+            allPlazasList = [...new Set(rawData.map(r => r[plazaKey]).filter(Boolean))].sort();
+            selectedPlazasSet = new Set(allPlazasList);
+            renderPlazaDropdown();
+            updatePlazaTriggerLabel();
+        }
+        if (dateKey) {
+            allDatesList = [...new Set(rawData.map(r => parseDateString(r[dateKey])).filter(Boolean))].sort();
+            selectedDatesSet = new Set(allDatesList);
+            if (allDatesList.length > 0) {
+                const lastDate = allDatesList[allDatesList.length - 1];
+                calCurrentYear = parseInt(lastDate.split('-')[0]);
+                calCurrentMonth = parseInt(lastDate.split('-')[1]) - 1;
+            }
+            renderCalendar();
+            updateDateTriggerLabel();
+        }
+        if (routeKey) {
+            allRoutesList = [...new Set(rawData.map(r => r[routeKey]).filter(Boolean))].sort();
+            renderRouteCheckboxes(allRoutesList);
+        }
+        if (operatorKey) {
+            allOperatorList = [...new Set(rawData.map(r => r[operatorKey]).filter(Boolean))].sort();
+            renderOperatorCheckboxes(allOperatorList);
+        }
+    }
+
+    /* ============================================================
+       PLAZAS
+       ============================================================ */
+    function renderPlazaDropdown() {
+        const container = document.getElementById('plaza-options-container');
+        if (!container) return;
+        const allSelected = selectedPlazasSet.size === allPlazasList.length;
+        let html = `<div onclick="toggleSelectAllPlazas()" class="flex items-center justify-between p-2 rounded-xl cursor-pointer ${allSelected ? 'bg-red-50 text-[#DA291C] font-bold' : 'hover:bg-gray-50'}"><span class="text-sm">Todas las Plazas</span><span class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">${rawData.length}</span></div>`;
+        allPlazasList.forEach(plaza => {
+            const isSelected = selectedPlazasSet.has(plaza);
+            const count = rawData.filter(r => r[plazaKey] === plaza).length;
+            html += `<div onclick="togglePlazaSelection('${esc(plaza).replace(/'/g, "\\'")}')" class="flex items-center justify-between p-2 rounded-xl cursor-pointer hover:bg-gray-50"><div class="flex items-center space-x-2"><input type="checkbox" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-red-600 pointer-events-none"><span class="text-sm ${isSelected ? 'font-bold text-[#DA291C]' : 'text-gray-700'}">${esc(plaza)}</span></div><span class="bg-gray-100 text-xs px-2 py-0.5 rounded-full">${count}</span></div>`;
+        });
+        container.innerHTML = html;
+        document.getElementById('plaza-selected-count-badge').innerText = selectedPlazasSet.size;
+    }
+
+    window.togglePlazaSelection = function(plaza) {
+        if (selectedPlazasSet.has(plaza)) { if (selectedPlazasSet.size > 1) selectedPlazasSet.delete(plaza); else selectedPlazasSet.clear(); }
+        else selectedPlazasSet.add(plaza);
+        renderPlazaDropdown(); updatePlazaTriggerLabel(); applyCombinedFilters();
+    }
+    window.toggleSelectAllPlazas = function() {
+        if (selectedPlazasSet.size === allPlazasList.length) selectedPlazasSet.clear();
+        else selectedPlazasSet = new Set(allPlazasList);
+        renderPlazaDropdown(); updatePlazaTriggerLabel(); applyCombinedFilters();
+    }
+    function updatePlazaTriggerLabel() {
+        const labelEl = document.getElementById('plaza-trigger-label');
+        labelEl.innerText = selectedPlazasSet.size === allPlazasList.length ? "Plazas (Todas)" : `Plazas (${selectedPlazasSet.size})`;
+    }
+
+    const plazaTrigger = document.getElementById('plaza-picker-trigger');
+    const plazaDropdown = document.getElementById('plaza-picker-dropdown');
+    plazaTrigger.addEventListener('click', e => { e.stopPropagation(); plazaDropdown.classList.toggle('hidden'); });
+    window.addEventListener('click', e => { if (!plazaDropdown.contains(e.target) && !plazaTrigger.contains(e.target)) plazaDropdown.classList.add('hidden'); });
+
+    /* ============================================================
+       CALENDARIO
+       ============================================================ */
+    function renderCalendar() {
+        const titleEl = document.getElementById('cal-month-year-title');
+        const gridEl = document.getElementById('cal-days-grid');
+        const monthNames = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+        titleEl.innerText = `${monthNames[calCurrentMonth]} ${calCurrentYear}`;
+        const firstDayIndex = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
+        const totalDays = new Date(calCurrentYear, calCurrentMonth+1, 0).getDate();
+        let html = '';
+        for (let i = 0; i < firstDayIndex; i++) html += `<span></span>`;
+        for (let day = 1; day <= totalDays; day++) {
+            const dateStr = `${calCurrentYear}-${String(calCurrentMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const hasData = allDatesList.includes(dateStr);
+            const isSelected = selectedDatesSet.has(dateStr);
+            if (hasData) {
+                html += `<button type="button" onclick="toggleCalendarDate('${dateStr}')" class="p-1.5 rounded-lg ${isSelected ? 'bg-[#DA291C] text-white font-bold' : 'bg-red-50 text-gray-800'}">${day}</button>`;
+            } else {
+                html += `<span class="p-1.5 text-gray-300">${day}</span>`;
+            }
+        }
+        gridEl.innerHTML = html;
+    }
+
+    window.toggleCalendarDate = function(dateStr) {
+        if (selectedDatesSet.has(dateStr)) selectedDatesSet.delete(dateStr);
+        else selectedDatesSet.add(dateStr);
+        renderCalendar(); updateDateTriggerLabel(); applyCombinedFilters();
+    }
+
+    document.getElementById('cal-prev-month').addEventListener('click', () => { calCurrentMonth--; if (calCurrentMonth < 0) { calCurrentMonth = 11; calCurrentYear--; } renderCalendar(); });
+    document.getElementById('cal-next-month').addEventListener('click', () => { calCurrentMonth++; if (calCurrentMonth > 11) { calCurrentMonth = 0; calCurrentYear++; } renderCalendar(); });
+    document.getElementById('cal-prev-year').addEventListener('click', () => { calCurrentYear--; renderCalendar(); });
+    document.getElementById('cal-next-year').addEventListener('click', () => { calCurrentYear++; renderCalendar(); });
+
+    function updateDateTriggerLabel() {
+        const labelEl = document.getElementById('date-trigger-label');
+        labelEl.innerText = selectedDatesSet.size === allDatesList.length ? "Todos los días" : `${selectedDatesSet.size} días`;
+    }
+
+    const dateTrigger = document.getElementById('date-picker-trigger');
+    const dateDropdown = document.getElementById('date-picker-dropdown');
+    dateTrigger.addEventListener('click', e => { e.stopPropagation(); dateDropdown.classList.toggle('hidden'); });
+    window.addEventListener('click', e => { if (!dateDropdown.contains(e.target) && !dateTrigger.contains(e.target)) dateDropdown.classList.add('hidden'); });
+
+    function renderRouteCheckboxes(routes) {
+        document.getElementById('route-checkboxes-container').innerHTML = routes.map(r => `<label class="flex items-center space-x-3 p-1.5 hover:bg-white rounded-lg cursor-pointer"><input type="checkbox" name="route-checkbox" value="${esc(r)}" checked class="w-4 h-4 text-red-600"><span class="text-sm text-gray-700">${esc(r)}</span></label>`).join('');
+    }
+    function renderOperatorCheckboxes(ops) {
+        document.getElementById('operator-checkboxes-container').innerHTML = ops.map(op => `<label class="flex items-center space-x-3 p-1.5 hover:bg-white rounded-lg cursor-pointer"><input type="checkbox" name="operator-checkbox" value="${esc(op)}" checked class="w-4 h-4 text-red-600"><span class="text-sm text-gray-700">${esc(op)}</span></label>`).join('');
+    }
+
+    document.getElementById('route-search-input').addEventListener('input', e => renderRouteCheckboxes(allRoutesList.filter(r => String(r).toLowerCase().includes(e.target.value.toLowerCase()))));
+    document.getElementById('operator-search-input').addEventListener('input', e => renderOperatorCheckboxes(allOperatorList.filter(op => String(op).toLowerCase().includes(e.target.value.toLowerCase()))));
+
+    const debouncedGlobalSearch = debounce(() => { currentTablePage = 0; currentClientPage = 0; applyCombinedFilters(); }, 300);
+    document.getElementById('global-search-input').addEventListener('input', debouncedGlobalSearch);
+
+    document.getElementById('select-all-routes').addEventListener('click', () => document.querySelectorAll('input[name="route-checkbox"]').forEach(cb => cb.checked = true));
+    document.getElementById('deselect-all-routes').addEventListener('click', () => document.querySelectorAll('input[name="route-checkbox"]').forEach(cb => cb.checked = false));
+    document.getElementById('select-all-operators').addEventListener('click', () => document.querySelectorAll('input[name="operator-checkbox"]').forEach(cb => cb.checked = true));
+    document.getElementById('deselect-all-operators').addEventListener('click', () => document.querySelectorAll('input[name="operator-checkbox"]').forEach(cb => cb.checked = false));
+
+    const routeModal = document.getElementById('route-modal');
+    document.getElementById('open-route-modal').addEventListener('click', () => routeModal.classList.remove('hidden'));
+    document.getElementById('close-route-modal').addEventListener('click', () => routeModal.classList.add('hidden'));
+    document.getElementById('cancel-route-modal').addEventListener('click', () => routeModal.classList.add('hidden'));
+    document.getElementById('apply-route-filter').addEventListener('click', () => { applyCombinedFilters(); routeModal.classList.add('hidden'); });
+
+    const operatorModal = document.getElementById('operator-modal');
+    document.getElementById('open-operator-modal').addEventListener('click', () => operatorModal.classList.remove('hidden'));
+    document.getElementById('close-operator-modal').addEventListener('click', () => operatorModal.classList.add('hidden'));
+    document.getElementById('cancel-operator-modal').addEventListener('click', () => operatorModal.classList.add('hidden'));
+    document.getElementById('apply-operator-filter').addEventListener('click', () => { applyCombinedFilters(); operatorModal.classList.add('hidden'); });
+
+    function toggleCardFullscreen(cardId, iconId) {
+        const card = document.getElementById(cardId);
+        const icon = document.getElementById(iconId);
+        card.classList.toggle('fullscreen-card');
+        const scrollContainer = document.getElementById('client-table-scroll-container');
+        const paginationControls = document.getElementById('client-pagination-controls');
+
+        if (card.classList.contains('fullscreen-card')) {
+            icon.className = "fa-solid fa-compress text-xs";
+            if (cardId === 'card-clients') { scrollContainer.style.maxHeight = 'none'; scrollContainer.style.height = 'calc(100vh - 120px)'; paginationControls.classList.add('hidden'); }
+        } else {
+            icon.className = "fa-solid fa-expand text-xs";
+            if (cardId === 'card-clients') { scrollContainer.style.maxHeight = '260px'; scrollContainer.style.height = 'auto'; paginationControls.classList.remove('hidden'); }
+        }
+        setTimeout(() => {
+            if (itemsChartInstance && cardId === 'card-items') itemsChartInstance.resize();
+            if (horariosChartInstance && cardId === 'card-horarios') horariosChartInstance.resize();
+            if (noshowDonutChartInstance && cardId === 'card-noshow') noshowDonutChartInstance.resize();
+        }, 100);
+        renderClientsTable();
+    }
+
+    const toggleFullscreenBtn = document.getElementById('toggle-fullscreen-btn');
+    const mapCard = document.getElementById('map-card');
+    const fullscreenIcon = document.getElementById('fullscreen-icon');
+
+    toggleFullscreenBtn.addEventListener('click', () => {
+        mapCard.classList.toggle('fullscreen-card');
+        fullscreenIcon.className = mapCard.classList.contains('fullscreen-card') ? "fa-solid fa-compress text-xs" : "fa-solid fa-expand text-xs";
+        setTimeout(() => { if (mapInstance) mapInstance.invalidateSize(); }, 100);
+    });
+
+    function toggleBitacora() {
+        document.getElementById('bitacora-content').classList.toggle('hidden');
+        document.getElementById('bitacora-toggle-icon').classList.toggle('rotate-90');
+    }
+
+    /* ============================================================
+       FILTROS
+       ============================================================ */
+    function applyCombinedFilters() {
+        const selectedPlazas = plazaKey ? Array.from(selectedPlazasSet) : null;
+        const selectedRoutes = routeKey ? Array.from(document.querySelectorAll('input[name="route-checkbox"]:checked')).map(cb => cb.value) : null;
+        const selectedOperators = operatorKey ? Array.from(document.querySelectorAll('input[name="operator-checkbox"]:checked')).map(cb => cb.value) : null;
+        const globalQuery = _norm(document.getElementById('global-search-input').value);
+
+        filteredData = rawData.filter((row) => {
+            const matchPlaza = !plazaKey || !selectedPlazas || selectedPlazas.includes(String(row[plazaKey]));
+            const matchDate = !dateKey || selectedDatesSet.has(parseDateString(row[dateKey]));
+            const matchRoute = !routeKey || !selectedRoutes || selectedRoutes.includes(String(row[routeKey]));
+            const matchOperator = !operatorKey || !selectedOperators || selectedOperators.includes(String(row[operatorKey]));
+            const matchGlobal = globalQuery === '' || Object.values(row).some(val => val !== undefined && val !== null && _norm(val).includes(globalQuery));
+            return matchPlaza && matchDate && matchRoute && matchOperator && matchGlobal;
+        });
+
+        currentClientPage = 0;
+        updateDashboard();
+    }
+
+    /* ============================================================
+       UPDATE
+       ============================================================ */
+    function updateDashboard() {
+        renderKPIs();
+        renderCharts();
+        renderTablesMatrix();
+        renderMap();
+        renderTable();
+        document.getElementById('search-counter').innerText = filteredData.length;
+
+        if (document.startViewTransition) {
+            document.startViewTransition(() => {
+                document.querySelectorAll('.card-enter').forEach(c => c.classList.remove('card-enter'));
+                document.querySelectorAll('.kpi-card').forEach(c => c.classList.add('card-enter'));
+            });
+        }
+    }
+
+    /* ============================================================
+       KPIs
+       ============================================================ */
+    function renderKPIs() {
+        let prog = 0, adic = 0, visitados = 0, novisitados = 0, recolectados = 0, noreco = 0, noshow = 0;
+
+        filteredData.forEach(row => {
+            const ev = _norm(row[eventKey]);
+            if (ev.includes('solicitada') || ev.includes('programada')) prog++;
+            else adic++;
+
+            const st = _norm(row[statusKey]);
+            if (st.includes('recolectado')) { visitados++; recolectados++; }
+            else if (st.includes('no show') || st.includes('no exitosa')) { visitados++; noreco++; noshow++; }
+            else if (st.includes('visitado') || st.includes('pendiente')) visitados++;
+            else if (st.includes('no visitado') || st === '') novisitados++;
+            else novisitados++;
+        });
+
+        const total = filteredData.length;
+        const effVisita = total > 0 ? ((visitados / total) * 100).toFixed(1) : 0;
+        const effReco = total > 0 ? ((recolectados / total) * 100).toFixed(1) : 0;
+        const pctNoShow = total > 0 ? ((noshow / total) * 100).toFixed(1) : 0;
+
+        animateNumber(document.getElementById('kpi-prog-count'), prog);
+        animateNumber(document.getElementById('kpi-adic-count'), adic);
+        animateNumber(document.getElementById('kpi-visita-pct'), parseFloat(effVisita), '%');
+        animateNumber(document.getElementById('kpi-novisita-count'), novisitados);
+        animateNumber(document.getElementById('kpi-reco-pct'), parseFloat(effReco), '%');
+        animateNumber(document.getElementById('kpi-noreco-count'), noreco);
+        animateNumber(document.getElementById('kpi-noshow-pct'), parseFloat(pctNoShow), '%');
+        animateNumber(document.getElementById('kpi-noshow-count'), noshow);
+
+        setTimeout(() => {
+            document.getElementById('bar-prog').style.width = total > 0 ? ((prog/total)*100) + '%' : '0%';
+            document.getElementById('bar-visita').style.width = effVisita + '%';
+            document.getElementById('bar-reco').style.width = effReco + '%';
+            document.getElementById('bar-noshow').style.width = pctNoShow + '%';
+        }, 150);
+
+        const noShowEl = document.getElementById('kpi-noshow-pct');
+        if (parseFloat(pctNoShow) > 8.5) noShowEl.classList.add('critical-pulse');
+        else noShowEl.classList.remove('critical-pulse');
+
+        renderMiniBarChart('miniChartProg', [prog, adic], ['Prog', 'Adic'], ['#3B82F6', '#93C5FD']);
+        renderMiniBarChart('miniChartVisita', [visitados, novisitados], ['Vis', 'NoVis'], ['#10B981', '#E5E7EB']);
+        renderMiniBarChart('miniChartReco', [recolectados, noreco], ['Reco', 'NoReco'], ['#10B981', '#EF4444']);
+        renderMiniBarChart('miniChartNoShow', [noshow, total - noshow], ['NoShow', 'Ok'], ['#EF4444', '#3B82F6']);
+    }
+
+    function animateNumber(el, target, suffix = '') {
+        if (!el) return;
+        const start = parseFloat(el.textContent) || 0;
+        const duration = 700;
+        const t0 = performance.now();
+        const step = (now) => {
+            const p = Math.min((now - t0) / duration, 1);
+            const eased = 1 - Math.pow(1 - p, 3);
+            const val = start + (target - start) * eased;
+            el.textContent = (Number.isInteger(target) ? Math.floor(val) : val.toFixed(1)) + suffix;
+            if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+    }
+
+    function renderMiniBarChart(canvasId, dataVals, labels, colors) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        if (window[canvasId + 'Instance']) window[canvasId + 'Instance'].destroy();
+        window[canvasId + 'Instance'] = new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ data: dataVals, backgroundColor: colors, borderRadius: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+        });
+    }
+
+    /* ============================================================
+       TABLAS MATRIZ
+       ============================================================ */
+    function renderTablesMatrix() {
+        const total = filteredData.length;
+        let reco = 0, noshow = 0;
+        filteredData.forEach(r => {
+            const st = _norm(r[statusKey]);
+            if (st.includes('recolectado')) reco++;
+            else if (st.includes('no show') || st.includes('no exitosa')) noshow++;
+        });
+        const effVis = total > 0 ? 100 : 0;
+        const effReco = total > 0 ? ((reco / total) * 100).toFixed(1) : 0;
+        const pctNoShow = total > 0 ? ((noshow / total) * 100).toFixed(1) : 0;
+
+        document.getElementById('ubicacion-table-body').innerHTML = `
+            <tr class="border-b">
+                <td class="py-2 px-3 font-bold">${total}</td>
+                <td class="py-2 px-3">${effVis.toFixed(1)}% | 0</td>
+                <td class="py-2 px-3">${effReco}% | ${reco}</td>
+                <td class="py-2 px-3">${pctNoShow}% | ${noshow}</td>
+            </tr>
+        `;
+
+        renderClientsTable();
+
+        let motivoMap = {};
+        filteredData.forEach(r => {
+            const st = _norm(r[statusKey]);
+            if (st.includes('no show') || st.includes('no exitosa')) {
+                const mot = r[reasonKey] || 'Sin motivo';
+                motivoMap[mot] = (motivoMap[mot] || 0) + 1;
+            }
+        });
+        let motivoHtml = '';
+        Object.keys(motivoMap).forEach(m => {
+            motivoHtml += `<tr class="border-b"><td class="py-2 px-2 text-gray-700 truncate max-w-[140px]" title="${esc(m)}">${esc(m)}</td><td class="py-2 px-2 font-bold">${motivoMap[m]}</td></tr>`;
+        });
+        if (Object.keys(motivoMap).length === 0) motivoHtml = `<tr><td colspan="2" class="py-2 text-center text-gray-400">Sin excepciones</td></tr>`;
+        document.getElementById('motivos-table-body').innerHTML = motivoHtml;
+    }
+
+    function renderClientsTable() {
+        let clientMap = {};
+        filteredData.forEach(r => {
+            const cli = r[clientKey] || 'S/C';
+            if (!clientMap[cli]) clientMap[cli] = { name: cli, total: 0, reco: 0, noshow: 0 };
+            clientMap[cli].total++;
+            const st = _norm(r[statusKey]);
+            if (st.includes('recolectado')) clientMap[cli].reco++;
+            else if (st.includes('no show') || st.includes('no exitosa')) clientMap[cli].noshow++;
+        });
+
+        let clientArray = Object.values(clientMap).map(d => ({
+            name: d.name,
+            total: d.total,
+            visita: 100,
+            reco: d.total > 0 ? parseFloat(((d.reco / d.total) * 100).toFixed(1)) : 0,
+            noshow: d.total > 0 ? parseFloat(((d.noshow / d.total) * 100).toFixed(1)) : 0
+        }));
+
+        if (currentClientSortField) {
+            clientArray.sort((a, b) => {
+                let valA = a[currentClientSortField];
+                let valB = b[currentClientSortField];
+                if (typeof valA === 'string') { valA = valA.toLowerCase(); valB = valB.toLowerCase(); }
+                if (valA < valB) return currentClientSortAsc ? -1 : 1;
+                if (valA > valB) return currentClientSortAsc ? 1 : -1;
+                return 0;
+            });
+        }
+
+        const isFullscreen = document.getElementById('card-clients').classList.contains('fullscreen-card');
+        let displayedClients = [];
+        const totalPages = Math.ceil(clientArray.length / CLIENTS_PER_PAGE) || 1;
+
+        if (isFullscreen) displayedClients = clientArray;
+        else {
+            if (currentClientPage >= totalPages) currentClientPage = 0;
+            if (currentClientPage < 0) currentClientPage = totalPages - 1;
+            displayedClients = clientArray.slice(currentClientPage * CLIENTS_PER_PAGE, (currentClientPage + 1) * CLIENTS_PER_PAGE);
+        }
+
+        let clientHtml = '';
+        displayedClients.forEach((d, i) => {
+            clientHtml += `
+                <tr class="border-b hover:bg-gray-50 card-enter" style="animation-delay:${i * 40}ms">
+                    <td class="py-2 px-3 font-semibold text-gray-800 truncate max-w-[200px]" title="${esc(d.name)}">${esc(d.name)}</td>
+                    <td class="py-2 px-3">${d.total}</td>
+                    <td class="py-2 px-3">${d.visita}% | 0</td>
+                    <td class="py-2 px-3">${d.reco}%</td>
+                    <td class="py-2 px-3 ${d.noshow > 20 ? 'critical-pulse' : ''}">${d.noshow}%</td>
+                </tr>
+            `;
+        });
+
+        if (clientArray.length === 0) clientHtml = `<tr><td colspan="5" class="py-6 text-center text-gray-400">Sin datos de clientes</td></tr>`;
+
+        document.getElementById('clientes-table-body').innerHTML = clientHtml;
+        document.getElementById('client-page-indicator').innerText = `${currentClientPage + 1} / ${totalPages}`;
+        updateClientSortIcons();
+    }
+
+    window.sortClients = function(field) {
+        if (currentClientSortField === field) currentClientSortAsc = !currentClientSortAsc;
+        else { currentClientSortField = field; currentClientSortAsc = true; }
+        currentClientPage = 0;
+        renderClientsTable();
+    }
+
+    function updateClientSortIcons() {
+        const fields = ['name', 'total', 'visita', 'reco', 'noshow'];
+        fields.forEach(f => {
+            const icon = document.getElementById(`sort-icon-${f}`);
+            if (!icon) return;
+            if (currentClientSortField === f) icon.className = currentClientSortAsc ? "fa-solid fa-sort-up ml-1 text-red-600" : "fa-solid fa-sort-down ml-1 text-red-600";
+            else icon.className = "fa-solid fa-sort ml-1 text-gray-400";
+        });
+    }
+
+    window.changeClientPage = function(direction) {
+        let clientMap = {};
+        filteredData.forEach(r => {
+            const cli = r[clientKey] || 'S/C';
+            if (!clientMap[cli]) clientMap[cli] = 1;
+        });
+        const totalPages = Math.ceil(Object.keys(clientMap).length / CLIENTS_PER_PAGE) || 1;
+        currentClientPage = (currentClientPage + direction + totalPages) % totalPages;
+        renderClientsTable();
+    }
+
+    window.toggleClientLoop = function() {
+        const btnText = document.getElementById('client-loop-text');
+        const btnIcon = document.getElementById('client-loop-icon');
+        const btnEl = document.getElementById('client-loop-btn');
+
+        if (isClientLoopActive) {
+            clearInterval(clientLoopTimer);
+            isClientLoopActive = false;
+            btnText.innerText = "Bucle";
+            btnIcon.className = "fa-solid fa-play";
+            btnEl.classList.remove('bg-red-600', 'text-white');
+            btnEl.classList.add('bg-red-50', 'text-[#DA291C]');
+        } else {
+            isClientLoopActive = true;
+            btnText.innerText = "Pausar";
+            btnIcon.className = "fa-solid fa-pause";
+            btnEl.classList.remove('bg-red-50', 'text-[#DA291C]');
+            btnEl.classList.add('bg-red-600', 'text-white');
+            clientLoopTimer = setInterval(() => changeClientPage(1), 3000);
+        }
+    }
+
+    /* ============================================================
+       GRÁFICAS
+       ============================================================ */
+    function renderCharts() {
+        let bins = { '1': 0, '2 a 5': 0, '6 a 10': 0, '11 a 20': 0, '20+': 0 };
+        filteredData.forEach(r => {
+            const it = parseInt(r[itemsKey]) || 0;
+            if (it === 1) bins['1']++;
+            else if (it >= 2 && it <= 5) bins['2 a 5']++;
+            else if (it >= 6 && it <= 10) bins['6 a 10']++;
+            else if (it >= 11 && it <= 20) bins['11 a 20']++;
+            else if (it > 20) bins['20+']++;
+        });
+
+        const ctxItems = document.getElementById('itemsChart').getContext('2d');
+        if (itemsChartInstance) itemsChartInstance.destroy();
+        itemsChartInstance = new Chart(ctxItems, {
+            type: 'bar',
+            data: { labels: Object.keys(bins), datasets: [{ data: Object.values(bins), backgroundColor: '#3B82F6', borderRadius: 4 }] },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end', align: 'right', color: '#374151',
+                        font: { weight: 'bold', size: 11 },
+                        formatter: (value, ctx) => {
+                            const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            if (sum === 0 || value === 0) return '0';
+                            return `${value} | ${((value * 100) / sum).toFixed(0)}%`;
+                        }
+                    }
+                },
+                scales: {
+                    x: { display: false, grid: { display: false }, max: Math.max(...Object.values(bins)) * 1.3 || 10 },
+                    y: { grid: { display: false } }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+
+        const hoursCount = { '14:00':0, '14:30':0, '15:00':0, '15:30':0, '16:00':0, '16:30':0, '17:00':0, '17:30':0, '18:00':0, '18:30':0 };
+        filteredData.forEach(r => {
+            const fe = r[fechaExcepcionKey];
+            if (!fe) return;
+            let dObj = fe instanceof Date ? fe : new Date(fe);
+            if (isNaN(dObj)) return;
+            const h = dObj.getHours(), m = dObj.getMinutes();
+            if (h >= 14 && h <= 18) {
+                const key = `${String(h).padStart(2,'0')}:${m < 30 ? '00' : '30'}`;
+                if (hoursCount[key] !== undefined) hoursCount[key]++;
+            }
+        });
+
+        const labels = ['2:00 p.m.','2:30 p.m.','3:00 p.m.','3:30 p.m.','4:00 p.m.','4:30 p.m.','5:00 p.m.','5:30 p.m.','6:00 p.m.','6:30 p.m.'];
+        const ctxHorarios = document.getElementById('horariosChart').getContext('2d');
+        if (horariosChartInstance) horariosChartInstance.destroy();
+        horariosChartInstance = new Chart(ctxHorarios, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ data: Object.values(hoursCount), borderColor: '#EF4444', backgroundColor: '#EF4444', tension: 0.1, pointRadius: 4 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+                    x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 } }
+                }
+            }
+        });
+
+        let fuera = 0, dentro = 0;
+        filteredData.forEach(r => {
+            const val = _norm(r[validationNoShowKey]);
+            if (val.includes('fuera')) fuera++;
+            else dentro++;
+        });
+
+        const ctxDonut = document.getElementById('noshowDonutChart').getContext('2d');
+        if (noshowDonutChartInstance) noshowDonutChartInstance.destroy();
+        noshowDonutChartInstance = new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: { labels: ['Fuera de Rango', 'Dentro de Rango'], datasets: [{ data: [fuera, dentro], backgroundColor: ['#EF4444', '#3B82F6'] }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                    datalabels: {
+                        color: '#ffffff', font: { weight: 'bold', size: 11 },
+                        formatter: (value, ctx) => {
+                            const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            if (sum === 0) return '0%';
+                            return (value * 100 / sum).toFixed(0) + '%';
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
+
+    /* ============================================================
+       MAPA
+       ============================================================ */
+    function initMap() {
+        if (!mapInstance) {
+            mapInstance = L.map('map').setView([18.55, -99.60], 12);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Esri' }).addTo(mapInstance);
+            markersClusterGroup = L.markerClusterGroup();
+            mapInstance.addLayer(markersClusterGroup);
+        }
+    }
+
+    function renderMap() {
+        if (!mapInstance) return;
+        markersClusterGroup.clearLayers();
+        let bounds = [], markersToAdd = [];
+
+        filteredData.forEach(row => {
+            const lat = parseFloat(row[latKey]);
+            const lng = parseFloat(row[lngKey]);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                const marker = L.marker([lat, lng]).bindPopup(`<b>${esc(row[clientKey] || 'Cliente')}</b>`);
+                markersToAdd.push(marker);
+                bounds.push([lat, lng]);
+            }
+        });
+        markersClusterGroup.addLayers(markersToAdd);
+        if (bounds.length > 0) mapInstance.fitBounds(bounds, { maxZoom: 14 });
+    }
+
+    /* ============================================================
+       BITÁCORA
+       ============================================================ */
+    function renderTable() {
+        const sample = rawData[0] || {};
+        const originalHeaders = Object.keys(sample).filter(h => h && !_norm(h).includes('unnamed'));
+        const headers = ['#', ...originalHeaders];
+        document.getElementById('table-headers').innerHTML = headers.map(h => `<th class="px-6 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider">${esc(h)}</th>`).join('');
+
+        const tbody = document.getElementById('table-body');
+        const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE) || 1;
+        if (currentTablePage >= totalPages) currentTablePage = 0;
+        const currentItems = filteredData.slice(currentTablePage * ITEMS_PER_PAGE, (currentTablePage + 1) * ITEMS_PER_PAGE);
+
+        tbody.innerHTML = currentItems.map((row, idx) => {
+            const seq = (currentTablePage * ITEMS_PER_PAGE) + idx + 1;
+            let rowHtml = `<td class="px-6 py-4 whitespace-nowrap font-bold text-gray-500">${seq}</td>`;
+            rowHtml += originalHeaders.map(h => `<td class="px-6 py-4 whitespace-nowrap text-gray-700">${esc(row[h] !== undefined ? row[h] : '')}</td>`).join('');
+            return `<tr class="hover:bg-gray-50 border-b card-enter" style="animation-delay:${idx * 30}ms">${rowHtml}</tr>`;
+        }).join('');
+
+        document.getElementById('table-pagination-container').innerHTML = `
+            <button onclick="changeTablePage(${currentTablePage - 1}, ${totalPages})" class="px-4 py-2 bg-gray-50 border rounded-xl text-xs font-bold">Anterior</button>
+            <span class="text-xs font-bold text-gray-800">Página ${currentTablePage + 1} de ${totalPages}</span>
+            <button onclick="changeTablePage(${currentTablePage + 1}, ${totalPages})" class="px-4 py-2 bg-gray-50 border rounded-xl text-xs font-bold">Siguiente</button>
+        `;
+    }
+
+    window.changeTablePage = function(p, t) {
+        currentTablePage = p < 0 ? t - 1 : (p >= t ? 0 : p);
+        renderTable();
+    }
+
+    /* ============================================================
+       🔔 CAMPANA DE NOTIFICACIONES
+       ============================================================ */
+    const NOTIF_CONFIG = {
+        dashboardId: 'monitoreo-recoleccion',
+        storageKey: 'notif_history_monitoreo-recoleccion',
+        maxHistory: 50,
+        maxToasts: 3,
+        defaultDuration: 6000
+    };
+
+    const NOTIF_ICONS = {
+        danger: '🚨',
+        warning: '⚠️',
+        info: 'ℹ️',
+        success: '✅'
+    };
+
+    const NOTIF_PRIORITY = { danger: 0, warning: 1, info: 2, success: 3 };
+
+    let notifHistory = [];
+
+    function initNotificaciones() {
+        injectBell();
+        loadNotifHistory();
+        updateBadge();
+        bindNotifEvents();
+    }
+
+    function injectBell() {
+        const existing = document.getElementById('notif-bell');
+        if (existing) {
+            if (!existing.dataset.bound) {
+                existing.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleNotifPanel();
+                });
+                existing.dataset.bound = '1';
+            }
+            return;
+        }
+        const header = document.querySelector('header');
+        if (!header) return;
+        const btn = document.createElement('button');
+        btn.id = 'notif-bell';
+        btn.setAttribute('aria-label', 'Notificaciones');
+        btn.innerHTML = `<i class="fa-solid fa-bell"></i><span id="notif-badge" class="hidden">0</span>`;
+        btn.style.cssText = 'position:relative;width:46px;height:46px;border-radius:12px;background:#fff;border:2px solid rgba(255,255,255,0.9);color:#DA291C;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 4px 12px rgba(0,0,0,0.2);flex-shrink:0;';
+        header.querySelector('.max-w-7xl').appendChild(btn);
+    }
+
+    function loadNotifHistory() {
+        try {
+            const raw = localStorage.getItem(NOTIF_CONFIG.storageKey);
+            notifHistory = raw ? JSON.parse(raw) : [];
+            if (!Array.isArray(notifHistory)) notifHistory = [];
+        } catch (e) {
+            notifHistory = [];
+        }
+    }
+
+    function saveNotifHistory() {
+        if (notifHistory.length > NOTIF_CONFIG.maxHistory) {
+            notifHistory = notifHistory.slice(0, NOTIF_CONFIG.maxHistory);
+        }
+        try {
+            localStorage.setItem(NOTIF_CONFIG.storageKey, JSON.stringify(notifHistory));
+        } catch (e) {
+            console.warn('No se pudo guardar historial de notificaciones', e);
+        }
+    }
+
+    function bindNotifEvents() {
+        const bell = document.getElementById('notif-bell');
+        if (bell && !bell.dataset.bound) {
+            bell.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleNotifPanel();
+            });
+            bell.dataset.bound = '1';
+        }
+
+        const closeBtn = document.getElementById('notif-panel-close');
+        if (closeBtn && !closeBtn.dataset.bound) {
+            closeBtn.addEventListener('click', closeNotifPanel);
+            closeBtn.dataset.bound = '1';
+        }
+
+        const markReadBtn = document.getElementById('notif-mark-read-btn');
+        if (markReadBtn && !markReadBtn.dataset.bound) {
+            markReadBtn.addEventListener('click', markAllAsRead);
+            markReadBtn.dataset.bound = '1';
+        }
+
+        const clearBtn = document.getElementById('notif-clear-btn');
+        if (clearBtn && !clearBtn.dataset.bound) {
+            clearBtn.addEventListener('click', clearNotifHistory);
+            clearBtn.dataset.bound = '1';
+        }
+
+        if (!document.dataset.notifOutsideBound) {
+            document.addEventListener('click', (e) => {
+                const panel = document.getElementById('notif-panel');
+                const bell = document.getElementById('notif-bell');
+                if (!panel || panel.classList.contains('hidden')) return;
+                if (!panel.contains(e.target) && (!bell || !bell.contains(e.target))) {
+                    closeNotifPanel();
+                }
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeNotifPanel();
+            });
+            document.dataset.notifOutsideBound = '1';
+        }
+    }
+
+    function toggleNotifPanel() {
+        const panel = document.getElementById('notif-panel');
+        if (!panel) return;
+        if (panel.classList.contains('hidden')) openNotifPanel();
+        else closeNotifPanel();
+    }
+
+    function openNotifPanel() {
+        const panel = document.getElementById('notif-panel');
+        if (!panel) return;
+        renderNotifPanel();
+        panel.classList.remove('hidden');
+    }
+
+    function closeNotifPanel() {
+        const panel = document.getElementById('notif-panel');
+        if (panel) panel.classList.add('hidden');
+    }
+
+    function renderNotifPanel() {
+        const body = document.getElementById('notif-panel-body');
+        const titleEl = document.getElementById('notif-panel-title');
+        if (!body) return;
+
+        if (titleEl) titleEl.textContent = `Notificaciones (${notifHistory.length})`;
+
+        if (notifHistory.length === 0) {
+            body.innerHTML = `<div style="text-align:center;padding:32px 16px;color:#9ca3af;font-size:12.5px;">Sin notificaciones por ahora</div>`;
+            return;
+        }
+
+        body.innerHTML = notifHistory.map(n => {
+            const icon = NOTIF_ICONS[n.type] || 'ℹ️';
+            return `
+                <div class="notif-item ${n.type} ${n.read ? '' : 'unread'}">
+                    <div class="notif-item-title">${icon} ${esc(n.title)}</div>
+                    <div class="notif-item-msg">${n.message}</div>
+                    <div class="notif-item-time">${timeAgo(n.timestamp)}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function updateBadge() {
+        const badge = document.getElementById('notif-badge');
+        if (!badge) return;
+        const unread = notifHistory.filter(n => !n.read).length;
+        if (unread > 0) {
+            badge.textContent = unread > 99 ? '99+' : String(unread);
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+
+    function timeAgo(ts) {
+        const diff = Math.floor((Date.now() - ts) / 1000);
+        if (diff < 60) return 'Hace unos segundos';
+        if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
+        if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} h`;
+        return `Hace ${Math.floor(diff / 86400)} d`;
+    }
+
+    function showToast(notif, duration) {
+        const container = document.getElementById('notif-toast-container');
+        if (!container) return;
+
+        while (container.children.length >= NOTIF_CONFIG.maxToasts) {
+            container.removeChild(container.firstChild);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `notif-toast ${notif.type}`;
+        const icon = NOTIF_ICONS[notif.type] || 'ℹ️';
+        toast.innerHTML = `
+            <div class="notif-toast-title">${icon} ${esc(notif.title)}</div>
+            <div class="notif-toast-msg">${notif.message}</div>
+        `;
+        toast.addEventListener('click', () => {
+            toast.remove();
+            openNotifPanel();
+        });
+        container.appendChild(toast);
+
+        const dur = duration || notif.duration || NOTIF_CONFIG.defaultDuration;
+        setTimeout(() => {
+            toast.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(40px)';
+            setTimeout(() => toast.remove(), 400);
+        }, dur);
+    }
+
+    /* 🔁 addNotifications CON DEDUPLICACIÓN */
+    function addNotifications(notifs) {
+        if (!notifs || notifs.length === 0) return;
+
+        const now = Date.now();
+        const enriched = notifs.map((n, i) => ({
+            id: `${NOTIF_CONFIG.dashboardId}-${now}-${i}`,
+            timestamp: now + i,
+            read: false,
+            type: n.type || 'info',
+            title: n.title || 'Notificación',
+            message: n.message || '',
+            duration: n.duration || NOTIF_CONFIG.defaultDuration
+        }));
+
+        enriched.sort((a, b) => NOTIF_PRIORITY[a.type] - NOTIF_PRIORITY[b.type]);
+
+        // Deduplicar: mismo type+title en últimos 5 min → no se repiten
+        const cincoMin = 5 * 60 * 1000;
+        const sinDuplicados = enriched.filter(nuevo => {
+            return !notifHistory.some(existente =>
+                existente.type === nuevo.type &&
+                existente.title === nuevo.title &&
+                (now - existente.timestamp) < cincoMin
+            );
+        });
+
+        if (sinDuplicados.length === 0) {
+            showToast({
+                type: 'info',
+                title: 'Sin cambios',
+                message: 'Los datos analizados son los mismos que la carga anterior.'
+            }, 3000);
+            return;
+        }
+
+        notifHistory = [...sinDuplicados, ...notifHistory].slice(0, NOTIF_CONFIG.maxHistory);
+        saveNotifHistory();
+
+        const toShow = sinDuplicados.slice(0, 2);
+        toShow.forEach((n, i) => setTimeout(() => showToast(n), i * 350));
+
+        updateBadge();
+        renderNotifPanel();
+    }
+
+    function markAllAsRead() {
+        notifHistory = notifHistory.map(n => ({ ...n, read: true }));
+        saveNotifHistory();
+        updateBadge();
+        renderNotifPanel();
+    }
+
+    function clearNotifHistory() {
+        if (!confirm('¿Eliminar todo el historial de notificaciones?')) return;
+        notifHistory = [];
+        saveNotifHistory();
+        updateBadge();
+        renderNotifPanel();
+    }
+
+    /* ============================================================
+       🧠 ANALIZADOR DE REGLAS → 8 TOASTS
+       ============================================================ */
+    function analyzeAndAlert(fileName) {
+        const notifs = [];
+        const total = filteredData.length;
+        if (total === 0) return;
+
+        let recolectados = 0, noshow = 0, visitados = 0;
+        const motivoMap = {};
+        const plazaMap = {};
+        const clienteNoShowMap = {};
+        const rutaRecoMap = {};
+        let fueraRango = 0, dentroRango = 0;
+
+        filteredData.forEach(r => {
+            const st = _norm(r[statusKey]);
+            const plaza = r[plazaKey] || 'S/P';
+            const cliente = r[clientKey] || 'S/C';
+            const ruta = r[routeKey] || 'S/R';
+
+            if (!plazaMap[plaza]) plazaMap[plaza] = { total: 0, noshow: 0 };
+            if (!rutaRecoMap[ruta]) rutaRecoMap[ruta] = { total: 0, recolectados: 0 };
+
+            plazaMap[plaza].total++;
+            rutaRecoMap[ruta].total++;
+
+            if (st.includes('recolectado')) {
+                recolectados++; visitados++;
+                rutaRecoMap[ruta].recolectados++;
+            }
+            else if (st.includes('no show') || st.includes('no exitosa')) {
+                visitados++; noshow++;
+                plazaMap[plaza].noshow++;
+                const mot = r[reasonKey] || 'Sin motivo';
+                motivoMap[mot] = (motivoMap[mot] || 0) + 1;
+                clienteNoShowMap[cliente] = (clienteNoShowMap[cliente] || 0) + 1;
+            }
+            else if (st.includes('visitado') || st.includes('pendiente')) visitados++;
+
+            const val = _norm(r[validationNoShowKey]);
+            if (val.includes('fuera')) fueraRango++;
+            else dentroRango++;
+        });
+
+        const pctNoShow = (noshow / total) * 100;
+        const effReco = (recolectados / total) * 100;
+        const effVisita = (visitados / total) * 100;
+
+        // 1. No Show Crítico (umbral > 8.5%)
+        if (pctNoShow > 8.5) {
+            const topClientes = Object.entries(clienteNoShowMap)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(([c, n], i) => `${['🥇','🥈','🥉'][i]} ${esc(c)} (${n})`)
+                .join('<br>');
+            notifs.push({
+                type: 'danger',
+                title: 'No Show Crítico',
+                message: `${pctNoShow.toFixed(1)}% de No Show (${noshow} de ${total} OR)<br>${topClientes || 'Sin clientes recurrentes'}`
+            });
+        }
+
+        // 2. Eficiencia de Recolección Baja (umbral < 91%)
+        if (effReco < 91) {
+            notifs.push({
+                type: 'danger',
+                title: 'Eficiencia de Recolección Baja',
+                message: `${effReco.toFixed(1)}% de recolección<br>${recolectados} recolectadas vs ${total} totales<br>Brecha: ${(91 - effReco).toFixed(1)} pts vs meta 91%`
+            });
+        }
+
+        // 3. Eficiencia de Visita Baja (< 90%)
+        if (effVisita < 90) {
+            notifs.push({
+                type: 'warning',
+                title: 'Eficiencia de Visita Baja',
+                message: `${effVisita.toFixed(1)}% de visita<br>${visitados} visitadas vs ${total - visitados} no visitadas`
+            });
+        }
+
+        // 4. Top 5 Motivos de No Recolección
+        const topMotivos = Object.entries(motivoMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        if (topMotivos.length > 0) {
+            const motivosTxt = topMotivos.map(([m, n], i) => `${['🥇','🥈','🥉','4️⃣','5️⃣'][i]} ${esc(m)} (${n})`).join('<br>');
+            notifs.push({
+                type: 'warning',
+                title: 'Top 5 Motivos de No Recolección',
+                message: motivosTxt
+            });
+        }
+
+        // 5. Top 3 Plazas con Peor No Show (> 15%)
+        const plazasConNS = Object.entries(plazaMap)
+            .map(([p, d]) => ({ plaza: p, pct: d.total > 0 ? (d.noshow / d.total) * 100 : 0, noshow: d.noshow, total: d.total }))
+            .filter(p => p.pct > 15 && p.noshow > 0)
+            .sort((a, b) => b.pct - a.pct)
+            .slice(0, 3);
+
+        if (plazasConNS.length > 0) {
+            const plazasTxt = plazasConNS.map((p, i) => `${['🥇','🥈','🥉'][i]} ${esc(p.plaza)}: ${p.pct.toFixed(1)}% (${p.noshow}/${p.total})`).join('<br>');
+            notifs.push({
+                type: 'warning',
+                title: 'Top 3 Plazas con Peor No Show',
+                message: plazasTxt
+            });
+        }
+
+        // 6. Validación No Show Fuera de Rango (> 10%)
+        const pctFuera = total > 0 ? (fueraRango / total) * 100 : 0;
+        if (pctFuera > 10) {
+            notifs.push({
+                type: 'info',
+                title: 'Validación No Show: Fuera de Rango',
+                message: `${pctFuera.toFixed(1)}% fuera de rango (${fueraRango})<br>${dentroRango} dentro de rango`
+            });
+        }
+
+        // 7. 🆕 Top 3 Rutas con Más Recolección
+        const topRutas = Object.entries(rutaRecoMap)
+            .map(([ruta, d]) => ({ ruta, recolectados: d.recolectados, total: d.total }))
+            .filter(r => r.recolectados > 0)
+            .sort((a, b) => b.recolectados - a.recolectados)
+            .slice(0, 3);
+
+        if (topRutas.length > 0) {
+            const rutasTxt = topRutas.map((r, i) =>
+                `${['🥇','🥈','🥉'][i]} ${esc(r.ruta)}: ${r.recolectados} recolectadas (${((r.recolectados / r.total) * 100).toFixed(1)}%)`
+            ).join('<br>');
+            notifs.push({
+                type: 'info',
+                title: 'Top 3 Rutas con Más Recolección',
+                message: rutasTxt
+            });
+        }
+
+        // 8. Análisis Completado
+        notifs.push({
+            type: 'success',
+            title: 'Análisis Completado',
+            message: `${total} OR analizadas<br>${allPlazasList.length} plazas · ${allRoutesList.length} rutas<br>${esc(fileName || 'archivo cargado')}`,
+            duration: 4000
+        });
+
+        addNotifications(notifs);
+    }
+
+    /* ============================================================
+       LOG
+       ============================================================ */
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            console.log('%c🎨 Efectos activos: ripple, dark-mode, gradiente header, cascada, contadores, barras, pulse, view-transitions, Chart.js, Leaflet, campana (8 toasts + dedup)',
+                'background:#DA291C;color:white;padding:6px 10px;border-radius:4px;font-weight:bold;font-size:12px;');
+        }, 500);
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentación Funcional - Sistema Operativo Estafeta</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --estafeta-red: #DA291C;
+            --estafeta-red-dark: #b00e14;
+            --estafeta-dark: #1E1E1E;
+            --estafeta-light: #F4F6F8;
+            --estafeta-white: #FFFFFF;
+            --estafeta-border: #E2E8F0;
+            --text-color: #333333;
+            --text-muted: #6B7280;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --shadow-red: 0 8px 24px rgba(218, 41, 28, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--estafeta-light);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 5.2: Gradiente animado + 7: Header responsive */
+        header {
+            background: linear-gradient(135deg, var(--estafeta-red), #9b0013, #DA291C, #9b0013);
+            background-size: 300% 300%;
+            animation: gradientShift 15s ease infinite;
+            color: white;
+            padding: clamp(20px, 4vw, 40px) clamp(15px, 3vw, 30px);
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-red);
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Contador de categorías en el header */
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 6px 16px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 15px;
+            animation: badgePulse 3s ease-in-out infinite;
+        }
+        @keyframes badgePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3); }
+            50% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
+        }
+
+        header h1 {
+            font-size: clamp(1.4rem, 4vw, 2.2rem);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        header p {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            opacity: 0.92;
+            font-weight: 400;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        /* 1.3: Cascada + 2.2: Glow + 2.3: Tilt 3D */
+        .card {
+            background: var(--estafeta-white);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            border-top: 5px solid var(--estafeta-red);
+            position: relative;
+            cursor: default;
+            animation: cardEnter 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+        }
+
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .card:nth-child(1) { animation-delay: 0.05s; }
+        .card:nth-child(2) { animation-delay: 0.10s; }
+        .card:nth-child(3) { animation-delay: 0.15s; }
+        .card:nth-child(4) { animation-delay: 0.20s; }
+        .card:nth-child(5) { animation-delay: 0.25s; }
+        .card:nth-child(6) { animation-delay: 0.30s; }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.15), var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-header i {
+            font-size: 1.6rem;
+            color: var(--estafeta-red);
+            margin-right: 15px;
+            background: #fff0f1;
+            padding: 12px;
+            border-radius: 10px;
+            transition: transform 0.3s ease, background 0.3s ease;
+            width: 52px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .card:hover .card-header i {
+            transform: scale(1.1) rotate(-5deg);
+            background: #ffe0e3;
+        }
+
+        .card-header h3 {
+            font-size: clamp(1.1rem, 2vw, 1.3rem);
+            color: var(--estafeta-dark);
+            line-height: 1.3;
+        }
+
+        .card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .card ul li {
+            position: relative;
+            padding-left: 22px;
+            margin-bottom: 12px;
+            font-size: 0.92rem;
+            color: #555;
+            opacity: 0;
+            animation: liFadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes liFadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .card:nth-child(1) ul li:nth-child(1) { animation-delay: 0.3s; }
+        .card:nth-child(1) ul li:nth-child(2) { animation-delay: 0.35s; }
+        .card:nth-child(1) ul li:nth-child(3) { animation-delay: 0.4s; }
+        .card:nth-child(2) ul li:nth-child(1) { animation-delay: 0.35s; }
+        .card:nth-child(2) ul li:nth-child(2) { animation-delay: 0.4s; }
+        .card:nth-child(2) ul li:nth-child(3) { animation-delay: 0.45s; }
+        .card:nth-child(3) ul li:nth-child(1) { animation-delay: 0.4s; }
+        .card:nth-child(3) ul li:nth-child(2) { animation-delay: 0.45s; }
+        .card:nth-child(3) ul li:nth-child(3) { animation-delay: 0.5s; }
+        .card:nth-child(4) ul li:nth-child(1) { animation-delay: 0.45s; }
+        .card:nth-child(4) ul li:nth-child(2) { animation-delay: 0.5s; }
+        .card:nth-child(4) ul li:nth-child(3) { animation-delay: 0.55s; }
+        .card:nth-child(5) ul li:nth-child(1) { animation-delay: 0.5s; }
+        .card:nth-child(5) ul li:nth-child(2) { animation-delay: 0.55s; }
+        .card:nth-child(5) ul li:nth-child(3) { animation-delay: 0.6s; }
+        .card:nth-child(6) ul li:nth-child(1) { animation-delay: 0.55s; }
+        .card:nth-child(6) ul li:nth-child(2) { animation-delay: 0.6s; }
+        .card:nth-child(6) ul li:nth-child(3) { animation-delay: 0.65s; }
+
+        .card ul li::before {
+            content: "▪";
+            position: absolute;
+            left: 0;
+            color: var(--estafeta-red);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .card ul li strong {
+            color: var(--estafeta-dark);
+            font-weight: 600;
+        }
+
+        /* 12: Footer con metadata */
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 24px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--estafeta-border);
+            line-height: 1.8;
+        }
+        footer .meta-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        footer .meta-info span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        footer .meta-info i {
+            color: var(--estafeta-red);
+            font-size: 0.8rem;
+        }
+
+        /* 2.1: Ripple en cards (hover effect) */
+        .ripple-host {
+            position: relative;
+            overflow: hidden;
+        }
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(218, 41, 28, 0.15);
+            transform: scale(0);
+            animation: rippleAnim 0.8s ease-out;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        /* 5.1: Modo oscuro */
+        body.dark-mode {
+            background-color: #0f172a !important;
+            color: #e2e8f0 !important;
+        }
+        body.dark-mode header {
+            background: linear-gradient(135deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d);
+            background-size: 300% 300%;
+        }
+        body.dark-mode .card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+        body.dark-mode .card-header h3 {
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .card ul li {
+            color: #94a3b8 !important;
+        }
+        body.dark-mode .card ul li strong {
+            color: #e2e8f0 !important;
+        }
+        body.dark-mode .card-header i {
+            background: rgba(127, 29, 29, 0.4) !important;
+            color: #fca5a5 !important;
+        }
+        body.dark-mode .card:hover .card-header i {
+            background: rgba(127, 29, 29, 0.6) !important;
+        }
+        body.dark-mode footer {
+            color: #94a3b8 !important;
+            border-color: #334155 !important;
+        }
+        body.dark-mode footer .meta-info i {
+            color: #f87171 !important;
+        }
+        body.dark-mode .header-badge {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Botón toggle tema */
+        #theme-toggle {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 40;
+            width: 48px;
+            height: 48px;
+            border-radius: 999px;
+            background: #1e293b;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        #theme-toggle:hover {
+            transform: scale(1.08) rotate(15deg);
+            background: #334155;
+        }
+        body.dark-mode #theme-toggle {
+            background: #fbbf24;
+            color: #1e293b;
+        }
+
+        /* 8: Focus accesible */
+        .card:focus-within {
+            outline: 2px solid var(--estafeta-red);
+            outline-offset: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1><i class="fa-solid fa-chart-line"></i> Resumen Funcional: Sistema Operativo</h1>
+            <p>Estructura y capacidades del sistema de procesamiento local de datos logísticos</p>
+            <div class="header-badge">
+                <i class="fa-solid fa-cubes"></i>
+                <span id="categories-count">6 módulos documentados</span>
+            </div>
+        </header>
+
+        <div class="grid" id="cardsGrid">
+            <div class="card" tabindex="0">
+                <div class="card-header">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <h3>Carga y Validación Local</h3>
+                </div>
+                <ul>
+                    <li>Carga directa de archivos de Excel (.xlsx o .xls) ejecutada de manera local en el navegador mediante SheetJS.</li>
+                    <li>Validación automática de la estructura y encabezados obligatorios requeridos (campos como celula, ut, % de bateria).</li>
+                    <li>Rechazo preventivo de archivos no compatibles mediante alertas interactivas.</li>
+                </ul>
+            </div>
+
+            <div class="card" tabindex="0">
+                <div class="card-header">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <h3>Panel de Indicadores (KPIs)</h3>
+                </div>
+                <ul>
+                    <li>Cálculo en tiempo real de rutas activas y carga global de paquetes asignados.</li>
+                    <li>Desglose porcentual y numérico de entregas exitosas, pendientes y devoluciones/excepciones.</li>
+                    <li>Métricas avanzadas de eficiencia operativa, porcentaje de avance general y productividad por ruta.</li>
+                </ul>
+            </div>
+
+            <div class="card" tabindex="0">
+                <div class="card-header">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <h3>Gráficos y Visualización</h3>
+                </div>
+                <ul>
+                    <li>Gráficos de barras dinámicos (Chart.js) que contrastan entregados, pendientes y devoluciones por ruta.</li>
+                    <li>Filtros múltiples avanzados y modo de visualización a pantalla completa para gráficos operativos.</li>
+                    <li>Clasificación gráfica de paquetería según la paleta de colores corporativos de Estafeta.</li>
+                </ul>
+            </div>
+
+            <div class="card" tabindex="0">
+                <div class="card-header">
+                    <i class="fa-solid fa-table-cells"></i>
+                    <h3>Pestañas de Datos Detallados</h3>
+                </div>
+                <ul>
+                    <li><strong>Resumen por Ruta:</strong> Tabla consolidada con barras de eficiencia y fila de Totales Generales.</li>
+                    <li><strong>Horarios y Tiempos:</strong> Control de salidas, primer/último movimiento y estado operativo.</li>
+                    <li><strong>Salida a Ruta y Recolecciones:</strong> Matrices de desglose por colores operativos y efectividad de recolección.</li>
+                </ul>
+            </div>
+
+            <div class="card" tabindex="0">
+                <div class="card-header">
+                    <i class="fa-solid fa-sliders"></i>
+                    <h3>Filtros y Utilidades</h3>
+                </div>
+                <ul>
+                    <li>Menús desplegables de selección múltiple interactivos para filtrado de rutas y tipos de operación.</li>
+                    <li>Búsqueda de texto en tiempo real integrada en las tablas de datos.</li>
+                    <li>Botón de limpieza global para restablecer filtros y vista de datos instantáneamente.</li>
+                </ul>
+            </div>
+
+            <div class="card" tabindex="0">
+                <div class="card-header">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <h3>Reportes y Estética</h3>
+                </div>
+                <ul>
+                    <li>Generación y descarga de reportes procesados en formato Excel desde la tabla dinámica.</li>
+                    <li>Diseño web adaptable optimizado con la identidad visual corporativa (rojo Estafeta y tipografía Roboto).</li>
+                    <li>Arquitectura limpia basada en una sola página (Single File HTML) de fácil despliegue.</li>
+                </ul>
+            </div>
+        </div>
+
+        <footer>
+            <div class="meta-info">
+                <span><i class="fa-solid fa-code-branch"></i> v2.0.0</span>
+                <span><i class="fa-solid fa-calendar"></i> <span id="lastUpdate"></span></span>
+                <span><i class="fa-solid fa-building"></i> Estafeta Mexicana S.A. de C.V.</span>
+            </div>
+            <p>Documentación técnica del sistema de procesamiento local de datos logísticos &copy; 2026</p>
+        </footer>
+    </div>
+
+    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+    </button>
+
+    <script>
+        /* ============================================================
+           SEGURIDAD: Autenticación sin bloqueos cosméticos
+           ============================================================ */
+        window.addEventListener('DOMContentLoaded', () => {
+            const encodedRole = localStorage.getItem('auth_role');
+            if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
+            let rol = '';
+            try {
+                const decoded = atob(encodedRole);
+                const parts = decoded.split('|');
+                if (parts.length >= 1) rol = parts[0];
+            } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
+            if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
+
+            // Solo para usuarios no-admin: inactividad 60min con prompt no bloqueante
+            if (rol !== 'admin') {
+                let inactivityTimer;
+                const maxInactivityMinutes = 60;
+
+                function resetInactivityTimer() {
+                    clearTimeout(inactivityTimer);
+                    inactivityTimer = setTimeout(() => {
+                        const confirmar = window.confirm("Su sesión ha estado inactiva por 60 minutos. ¿Desea mantener la sesión activa?");
+                        if (confirmar) {
+                            resetInactivityTimer();
+                        } else {
+                            localStorage.removeItem('auth_role');
+                            window.location.href = 'Panel de Control Operativo.html';
+                        }
+                    }, maxInactivityMinutes * 60 * 1000);
+                }
+
+                ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
+                    window.addEventListener(event, resetInactivityTimer);
+                });
+                resetInactivityTimer();
+                console.log("Modo Usuario: inactividad configurada a 60 min con prompt.");
+            } else {
+                console.warn("Modo Administrador: sin restricciones de inactividad en presentación.");
+            }
+        });
+
+        /* ============================================================
+           MODO OSCURO SINCRONIZADO
+           ============================================================ */
+        function aplicarTema(tema) {
+            const icon = document.getElementById('theme-toggle-icon');
+            if (tema === 'dark') {
+                document.body.classList.add('dark-mode');
+                if (icon) icon.className = 'fa-solid fa-sun';
+            } else {
+                document.body.classList.remove('dark-mode');
+                if (icon) icon.className = 'fa-solid fa-moon';
+            }
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ theme: tema }, '*');
+                }
+            } catch (e) {}
+        }
+
+        function initTema() {
+            const stored = localStorage.getItem('presentacion-theme');
+            if (stored === 'dark' || stored === 'light') {
+                aplicarTema(stored);
+            } else {
+                const parentTheme = localStorage.getItem('panel-theme');
+                if (parentTheme === 'dark' || parentTheme === 'light') {
+                    aplicarTema(parentTheme);
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    aplicarTema('dark');
+                }
+            }
+            const btn = document.getElementById('theme-toggle');
+            if (btn) {
+                btn.onclick = () => {
+                    const isDark = document.body.classList.contains('dark-mode');
+                    const next = isDark ? 'light' : 'dark';
+                    aplicarTema(next);
+                    localStorage.setItem('presentacion-theme', next);
+                    try {
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage({ theme: next }, '*');
+                        }
+                    } catch (e) {}
+                };
+            }
+            window.addEventListener('message', (e) => {
+                if (e.data && e.data.theme === 'dark') {
+                    aplicarTema('dark');
+                    localStorage.setItem('presentacion-theme', 'dark');
+                } else if (e.data && e.data.theme === 'light') {
+                    aplicarTema('light');
+                    localStorage.setItem('presentacion-theme', 'light');
+                }
+            });
+        }
+
+        /* ============================================================
+           EFECTOS VISUALES
+           ============================================================ */
+
+        // 2.1: Ripple en hover de cards
+        function initRipple() {
+            document.querySelectorAll('.card').forEach(card => {
+                card.classList.add('ripple-host');
+                card.addEventListener('mouseenter', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const ripple = document.createElement('span');
+                    ripple.className = 'ripple-effect';
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                    card.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 800);
+                });
+            });
+        }
+
+        // 2.3: Tilt 3D sutil en cards
+        function initTilt() {
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width - 0.5;
+                    const y = (e.clientY - rect.top) / rect.height - 0.5;
+                    card.style.transform = `perspective(1000px) rotateY(${x * 4}deg) rotateX(${-y * 4}deg) translateY(-5px) scale(1.01)`;
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = '';
+                });
+            });
+        }
+
+        // 11: Timestamp de última actualización
+        function initTimestamp() {
+            const el = document.getElementById('lastUpdate');
+            if (!el) return;
+            const now = new Date();
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            el.textContent = now.toLocaleDateString('es-MX', options);
+        }
+
+        // Contador de categorías dinámico
+        function initCategoryCount() {
+            const count = document.querySelectorAll('.card').length;
+            const el = document.getElementById('categories-count');
+            if (el) el.textContent = `${count} módulos documentados`;
+        }
+
+        /* ============================================================
+           INICIALIZACIÓN
+           ============================================================ */
+        document.addEventListener('DOMContentLoaded', () => {
+            initTema();
+            initRipple();
+            initTilt();
+            initTimestamp();
+            initCategoryCount();
+        });
+    </script>
+</body>
+</html>
