@@ -11,7 +11,7 @@
            ============================================================ */
         :root {
             --estafeta-red: #DA291C;
-            --sidebar-width-collapsed: 70px;
+            --sidebar-width-collapsed: 60px; /* Ancho cuando está oculto (solo el botón) */
             --sidebar-width-expanded: 260px;
             --header-height: 64px;
             --transition-speed: 0.3s;
@@ -54,7 +54,7 @@
             background-color: var(--bg-body);
             color: var(--text-primary);
             height: 100vh;
-            overflow: hidden; 
+            overflow: hidden; /* Evita scroll en el body, cada iframe lo maneja */
             transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
         }
 
@@ -87,6 +87,7 @@
             width: var(--sidebar-width-expanded);
         }
 
+        /* Header del sidebar (contiene el botón de menú) */
         .sidebar-header {
             height: var(--header-height);
             display: flex;
@@ -121,6 +122,15 @@
             overflow-x: hidden;
             padding: 15px 0;
             list-style: none;
+            opacity: 0; /* Oculto por defecto */
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .sidebar.expanded .sidebar-nav {
+            opacity: 1;
+            visibility: visible;
+            transition-delay: 0.1s;
         }
 
         .sidebar-nav::-webkit-scrollbar {
@@ -138,15 +148,8 @@
             letter-spacing: 1px;
             color: var(--text-secondary);
             font-weight: 700;
-            opacity: 0;
             white-space: nowrap;
-            transition: opacity var(--transition-speed) ease;
             margin-top: 10px;
-            pointer-events: none;
-        }
-        .sidebar.expanded .nav-section-title {
-            opacity: 1;
-            transition-delay: 0.15s;
         }
 
         .nav-item {
@@ -183,8 +186,8 @@
         }
 
         .nav-icon {
-            width: 70px;
-            min-width: 70px;
+            width: var(--sidebar-width-collapsed);
+            min-width: var(--sidebar-width-collapsed);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -194,20 +197,23 @@
 
         .nav-text {
             white-space: nowrap;
-            opacity: 0;
-            transition: opacity var(--transition-speed) ease;
             font-size: 0.9rem;
-        }
-
-        .sidebar.expanded .nav-text {
-            opacity: 1;
-            transition-delay: 0.1s;
+            padding-right: 15px;
         }
 
         .sidebar-footer {
             padding: 15px 0;
             border-top: 1px solid var(--border-color);
             flex-shrink: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .sidebar.expanded .sidebar-footer {
+            opacity: 1;
+            visibility: visible;
+            transition-delay: 0.1s;
         }
 
         /* ============================================================
@@ -229,7 +235,7 @@
             color: var(--text-inverse);
             display: flex;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: flex-end; /* Todo a la derecha */
             padding: 0 25px;
             flex-shrink: 0;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -299,11 +305,11 @@
             width: 100%;
             height: 100%;
             border: none;
-            display: none;
+            display: none; /* Ocultos por defecto */
         }
 
         .iframe-container iframe.active {
-            display: block;
+            display: block; /* Solo el activo se muestra */
         }
     </style>
 </head>
@@ -312,6 +318,7 @@
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
+            <!-- Contiene el botón de menú -->
             <div class="sidebar-header">
                 <button class="menu-toggle-btn" id="menuToggleBtn" aria-label="Alternar menú">
                     <i class="fa-solid fa-bars"></i>
@@ -346,7 +353,7 @@
                     <span class="nav-icon"><i class="fa-solid fa-boxes-packing"></i></span>
                     <span class="nav-text">Recolecciones</span>
                 </li>
-                <li class="nav-item" data-iframe="monitoreodeordenesderecolecciontax.html" data-title="Monitoreo de Recolección">
+                <li class="nav-item" data-iframe="monitoreodeordenesderecoleccióntax.html" data-title="Monitoreo de Recolección">
                     <span class="nav-icon"><i class="fa-solid fa-map-location-dot"></i></span>
                     <span class="nav-text">Monitoreo de Recolección</span>
                 </li>
@@ -373,8 +380,6 @@
                     <span class="nav-text">Presentación del Sistema</span>
                 </li>
             </ul>
-
-            <div class="sidebar-footer"></div>
         </aside>
 
         <!-- Contenido Principal -->
@@ -398,17 +403,6 @@
     </div>
 
     <script>
-        // ============================================================
-        // SOLUCIÓN AL ERROR 404: Simular sesión activa
-        // ============================================================
-        // Los dashboards originales buscan 'auth_role' en localStorage.
-        // Si no lo encuentran, te redirigen a un archivo que no existe en GitHub (404).
-        // Al inyectarlo aquí, los dashboards creerán que ya iniciaste sesión.
-        if (!localStorage.getItem('auth_role')) {
-            // Creamos un token falso codificado en Base64 (ej: "admin|123456789")
-            localStorage.setItem('auth_role', btoa('admin|' + Date.now()));
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             const sidebar = document.getElementById('sidebar');
             const sidebarNav = document.getElementById('sidebarNav');
@@ -443,53 +437,19 @@
                 currentIframeSrc = iframeSrc;
             }
 
-            // --- 2. LÓGICA DE INTERACCIÓN (EXPANDIR / COLAPSAR) ---
-            let closeTimeout;
-
-            function openSidebar() {
-                clearTimeout(closeTimeout);
-                sidebar.classList.add('expanded');
-            }
-
-            function closeSidebarWithDelay() {
-                closeTimeout = setTimeout(() => {
-                    if (!sidebar.matches(':hover')) {
-                        sidebar.classList.remove('expanded');
-                    }
-                }, 300);
-            }
-
-            sidebar.addEventListener('mouseenter', openSidebar);
-            sidebar.addEventListener('mouseleave', closeSidebarWithDelay);
-
-            menuToggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (sidebar.classList.contains('expanded')) {
-                    sidebar.classList.remove('expanded');
-                    clearTimeout(closeTimeout);
-                } else {
-                    openSidebar();
-                }
-            });
-
             navItems.forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.preventDefault();
 
-                    // 1. Si el menú está colapsado, un clic en un icono lo expande y NO navega aún.
-                    if (!sidebar.classList.contains('expanded')) {
-                        openSidebar();
-                        return; 
-                    }
-
-                    // 2. Si el menú ya está expandido, navega y luego lo cierra.
+                    // Actualizar clase activa en el menú
                     navItems.forEach(nav => nav.classList.remove('active'));
                     item.classList.add('active');
 
+                    // Cargar iframe
                     const iframeSrc = item.dataset.iframe;
                     loadIframe(iframeSrc);
 
-                    // Cerramos el menú automáticamente tras la selección
+                    // Ocultar el sidebar automáticamente al seleccionar
                     sidebar.classList.remove('expanded');
                 });
             });
@@ -500,6 +460,20 @@
                 const initialSrc = initialActive.dataset.iframe;
                 loadIframe(initialSrc);
             }
+
+            // --- 2. GESTIÓN DEL SIDEBAR (MOSTRAR/OCULTAR) ---
+            // Al hacer clic en el botón, alternamos el estado
+            menuToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Evita que se cierre si hacemos clic dentro
+                sidebar.classList.toggle('expanded');
+            });
+
+            // Opcional: Cerrar el menú si se hace clic fuera de él
+            document.addEventListener('click', (e) => {
+                if (sidebar.classList.contains('expanded') && !sidebar.contains(e.target)) {
+                    sidebar.classList.remove('expanded');
+                }
+            });
 
             // --- 3. MODO OSCURO PERSISTENTE ---
             const THEME_KEY = 'estafeta-index-theme';
@@ -512,6 +486,7 @@
                     document.body.classList.remove('dark-mode');
                     themeIcon.className = 'fa-solid fa-moon';
                 }
+                // Enviar tema a todos los iframes
                 propagateThemeToIframes(theme);
             }
 
@@ -522,10 +497,12 @@
                 applyTheme(newTheme);
             }
             
+            // Función para enviar el tema a los iframes cargados
             function propagateThemeToIframes(theme) {
                 const iframes = iframeContainer.querySelectorAll('iframe');
                 iframes.forEach(iframe => {
                     try {
+                        // Algunos dashboards esperan el tema por postMessage
                         iframe.contentWindow.postMessage({ theme: theme }, '*');
                     } catch (e) {
                         console.warn("No se pudo enviar mensaje al iframe:", e);
@@ -538,8 +515,10 @@
                                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             applyTheme(savedTheme);
 
+            // Event listener para el botón de tema
             themeToggleBtn.addEventListener('click', toggleTheme);
 
+            // Escuchar mensajes de los iframes para sincronizar el tema (opcional)
             window.addEventListener('message', (e) => {
                 if (e.data && e.data.theme) {
                     const newTheme = e.data.theme;
@@ -554,6 +533,7 @@
                 }
             });
 
+
             // --- 4. FECHA Y HORA EN TIEMPO REAL ---
             function updateDateTime() {
                 const now = new Date();
@@ -565,7 +545,7 @@
             }
 
             updateDateTime();
-            setInterval(updateDateTime, 1000);
+            setInterval(updateDateTime, 1000); // Actualizar cada segundo
         });
     </script>
 </body>
