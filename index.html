@@ -13,34 +13,40 @@
             --estafeta-red: #DA291C;
             --sidebar-width-collapsed: 60px; /* Ancho cuando está oculto (solo el botón) */
             --sidebar-width-expanded: 260px;
-            --header-height: 64px;
             --transition-speed: 0.3s;
             --ease-cubic: cubic-bezier(0.4, 0, 0.2, 1);
 
             /* Tema Claro (por defecto) */
             --bg-body: #f4f6f9;
             --bg-sidebar: #ffffff;
-            --bg-header: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
             --text-primary: #1e293b;
             --text-secondary: #64748b;
-            --text-inverse: #ffffff;
             --border-color: #e2e8f0;
             --hover-bg: #f1f5f9;
             --active-item-bg: #fee2e2;
             --active-item-text: #b91c1c;
+            
+            /* Estilos para el widget flotante inferior */
+            --widget-bg: rgba(255, 255, 255, 0.95);
+            --widget-text: #1e293b;
+            --widget-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
 
         /* Tema Oscuro */
         body.dark-mode {
             --bg-body: #0f172a;
             --bg-sidebar: #1e293b;
-            --bg-header: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
             --text-primary: #e2e8f0;
             --text-secondary: #94a3b8;
             --border-color: #334155;
             --hover-bg: #334155;
             --active-item-bg: #7f1d1d;
             --active-item-text: #fca5a5;
+
+            /* Estilos para el widget flotante en modo oscuro */
+            --widget-bg: rgba(30, 41, 59, 0.95);
+            --widget-text: #e2e8f0;
+            --widget-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         * {
@@ -54,7 +60,7 @@
             background-color: var(--bg-body);
             color: var(--text-primary);
             height: 100vh;
-            overflow: hidden; /* Evita scroll en el body, cada iframe lo maneja */
+            overflow: hidden;
             transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
         }
 
@@ -89,7 +95,7 @@
 
         /* Header del sidebar (contiene el botón de menú) */
         .sidebar-header {
-            height: var(--header-height);
+            height: 64px; /* Altura fija para el header */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -122,7 +128,7 @@
             overflow-x: hidden;
             padding: 15px 0;
             list-style: none;
-            opacity: 0; /* Oculto por defecto */
+            opacity: 0;
             visibility: hidden;
             transition: opacity 0.2s ease, visibility 0.2s ease;
         }
@@ -201,21 +207,6 @@
             padding-right: 15px;
         }
 
-        .sidebar-footer {
-            padding: 15px 0;
-            border-top: 1px solid var(--border-color);
-            flex-shrink: 0;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.2s ease, visibility 0.2s ease;
-        }
-
-        .sidebar.expanded .sidebar-footer {
-            opacity: 1;
-            visibility: visible;
-            transition-delay: 0.1s;
-        }
-
         /* ============================================================
            CONTENIDO PRINCIPAL
            ============================================================ */
@@ -224,71 +215,8 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            position: relative; /* Para posicionar el widget flotante */
             overflow: hidden;
-        }
-
-        .top-header {
-            height: var(--header-height);
-            background: var(--bg-header);
-            background-size: 300% 100%;
-            animation: gradientShift 15s ease infinite;
-            color: var(--text-inverse);
-            display: flex;
-            align-items: center;
-            justify-content: flex-end; /* Todo a la derecha */
-            padding: 0 25px;
-            flex-shrink: 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 90;
-        }
-
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .datetime-display {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            font-size: 0.85rem;
-            line-height: 1.3;
-            opacity: 0.9;
-        }
-
-        .datetime-display .time {
-            font-weight: 700;
-            font-size: 1rem;
-        }
-
-        .datetime-display .date {
-            font-size: 0.75rem;
-            text-transform: capitalize;
-        }
-
-        .theme-toggle-btn {
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            transition: background var(--transition-speed) ease;
-        }
-
-        .theme-toggle-btn:hover {
-            background: rgba(255,255,255,0.25);
         }
 
         .iframe-container {
@@ -305,11 +233,70 @@
             width: 100%;
             height: 100%;
             border: none;
-            display: none; /* Ocultos por defecto */
+            display: none;
         }
 
         .iframe-container iframe.active {
-            display: block; /* Solo el activo se muestra */
+            display: block;
+        }
+
+        /* ============================================================
+           WIDGET FLOTANTE INFERIOR (Fecha, Hora y Tema)
+           ============================================================ */
+        .floating-widget {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--widget-bg);
+            color: var(--widget-text);
+            padding: 10px 18px;
+            border-radius: 12px;
+            box-shadow: var(--widget-shadow);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+            border: 1px solid var(--border-color);
+        }
+
+        .datetime-display {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            font-size: 0.85rem;
+            line-height: 1.3;
+        }
+
+        .datetime-display .time {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .datetime-display .date {
+            font-size: 0.75rem;
+            text-transform: capitalize;
+            color: var(--text-secondary);
+        }
+
+        .theme-toggle-btn {
+            background: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: background var(--transition-speed) ease;
+        }
+
+        .theme-toggle-btn:hover {
+            background: var(--border-color);
         }
     </style>
 </head>
@@ -318,7 +305,6 @@
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
-            <!-- Contiene el botón de menú -->
             <div class="sidebar-header">
                 <button class="menu-toggle-btn" id="menuToggleBtn" aria-label="Alternar menú">
                     <i class="fa-solid fa-bars"></i>
@@ -384,21 +370,22 @@
 
         <!-- Contenido Principal -->
         <div class="main-content">
-            <header class="top-header">
-                <div class="header-right">
-                    <div class="datetime-display">
-                        <span id="timeDisplay" class="time">00:00:00</span>
-                        <span id="dateDisplay" class="date">...</span>
-                    </div>
-                    <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Alternar tema">
-                        <i class="fa-solid fa-moon" id="themeIcon"></i>
-                    </button>
-                </div>
-            </header>
-
+            
             <div class="iframe-container" id="iframeContainer">
                 <!-- Los iframes se generan dinámicamente con JS -->
             </div>
+
+            <!-- Widget Flotante Inferior (Reemplaza al banner superior) -->
+            <div class="floating-widget">
+                <div class="datetime-display">
+                    <span id="timeDisplay" class="time">00:00:00</span>
+                    <span id="dateDisplay" class="date">...</span>
+                </div>
+                <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Alternar tema">
+                    <i class="fa-solid fa-moon" id="themeIcon"></i>
+                </button>
+            </div>
+
         </div>
     </div>
 
@@ -462,13 +449,12 @@
             }
 
             // --- 2. GESTIÓN DEL SIDEBAR (MOSTRAR/OCULTAR) ---
-            // Al hacer clic en el botón, alternamos el estado
             menuToggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Evita que se cierre si hacemos clic dentro
+                e.stopPropagation();
                 sidebar.classList.toggle('expanded');
             });
 
-            // Opcional: Cerrar el menú si se hace clic fuera de él
+            // Cerrar el menú si se hace clic fuera de él
             document.addEventListener('click', (e) => {
                 if (sidebar.classList.contains('expanded') && !sidebar.contains(e.target)) {
                     sidebar.classList.remove('expanded');
@@ -502,7 +488,6 @@
                 const iframes = iframeContainer.querySelectorAll('iframe');
                 iframes.forEach(iframe => {
                     try {
-                        // Algunos dashboards esperan el tema por postMessage
                         iframe.contentWindow.postMessage({ theme: theme }, '*');
                     } catch (e) {
                         console.warn("No se pudo enviar mensaje al iframe:", e);
@@ -518,7 +503,7 @@
             // Event listener para el botón de tema
             themeToggleBtn.addEventListener('click', toggleTheme);
 
-            // Escuchar mensajes de los iframes para sincronizar el tema (opcional)
+            // Escuchar mensajes de los iframes para sincronizar el tema
             window.addEventListener('message', (e) => {
                 if (e.data && e.data.theme) {
                     const newTheme = e.data.theme;
@@ -545,7 +530,7 @@
             }
 
             updateDateTime();
-            setInterval(updateDateTime, 1000); // Actualizar cada segundo
+            setInterval(updateDateTime, 1000);
         });
     </script>
 </body>
