@@ -682,40 +682,6 @@
     
     <script>
     /* ============================================================
-       AUTENTICACIÓN
-       ============================================================ */
-    window.addEventListener('DOMContentLoaded', () => {
-        const encodedRole = localStorage.getItem('auth_role');
-        if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
-        let rol = '';
-        try {
-            const decoded = atob(encodedRole);
-            const parts = decoded.split('|');
-            if (parts.length >= 1) rol = parts[0];
-        } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
-        if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
-
-        let inactivityTimer;
-        const maxInactivityMinutes = 30;
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(() => {
-                alert("Su sesión ha expirado por inactividad.");
-                localStorage.removeItem('auth_role');
-                window.location.href = 'Panel de Control Operativo.html';
-            }, maxInactivityMinutes * 60 * 1000);
-        }
-        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => window.addEventListener(event, resetInactivityTimer));
-        resetInactivityTimer();
-        if (rol === 'admin') console.warn("Modo Administrador activo.");
-    });
-
-    function debounce(fn, ms = 250) {
-        let t;
-        return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-    }
-
-    /* ============================================================
        ESTADO GLOBAL
        ============================================================ */
     let rawData = [];
