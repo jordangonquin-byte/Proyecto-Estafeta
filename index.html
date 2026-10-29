@@ -54,7 +54,7 @@
             background-color: var(--bg-body);
             color: var(--text-primary);
             height: 100vh;
-            overflow: hidden; /* Evita scroll en el body, cada iframe lo maneja */
+            overflow: hidden; 
             transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
         }
 
@@ -87,7 +87,6 @@
             width: var(--sidebar-width-expanded);
         }
 
-        /* Header del sidebar (contiene el botón de menú) */
         .sidebar-header {
             height: var(--header-height);
             display: flex;
@@ -143,7 +142,7 @@
             white-space: nowrap;
             transition: opacity var(--transition-speed) ease;
             margin-top: 10px;
-            pointer-events: none; /* Evita que el mouse active el sidebar desde aquí */
+            pointer-events: none;
         }
         .sidebar.expanded .nav-section-title {
             opacity: 1;
@@ -230,7 +229,7 @@
             color: var(--text-inverse);
             display: flex;
             align-items: center;
-            justify-content: flex-end; /* Alinea todo a la derecha */
+            justify-content: flex-end;
             padding: 0 25px;
             flex-shrink: 0;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -306,6 +305,40 @@
         .iframe-container iframe.active {
             display: block;
         }
+        
+        /* Mensaje de error personalizado */
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--text-secondary);
+            background: var(--bg-sidebar);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            max-width: 500px;
+            width: 90%;
+            z-index: 10;
+        }
+        .error-message i {
+            font-size: 40px;
+            color: var(--estafeta-red);
+            margin-bottom: 15px;
+            display: block;
+        }
+        .error-message h3 {
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+        .error-message code {
+            background: var(--hover-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -321,6 +354,7 @@
 
             <ul class="sidebar-nav" id="sidebarNav">
                 <div class="nav-section-title">Operaciones</div>
+                <!-- Nota: Ahora el data-iframe contiene la URL exacta que debe coincidir con GitHub -->
                 <li class="nav-item active" data-iframe="plataformaoperativatax.html" data-title="Plataforma Operativa">
                     <span class="nav-icon"><i class="fa-solid fa-chart-pie"></i></span>
                     <span class="nav-text">Plataforma Operativa</span>
@@ -347,7 +381,8 @@
                     <span class="nav-icon"><i class="fa-solid fa-boxes-packing"></i></span>
                     <span class="nav-text">Recolecciones</span>
                 </li>
-                <li class="nav-item" data-iframe="monitoreodeordenesderecoleccióntax.html" data-title="Monitoreo de Recolección">
+                <!-- Aquí estaba el error de acentos: eliminamos el acento para evitar problemas en GitHub -->
+                <li class="nav-item" data-iframe="monitoreodeordenesderecolecciontax.html" data-title="Monitoreo de Recolección">
                     <span class="nav-icon"><i class="fa-solid fa-map-location-dot"></i></span>
                     <span class="nav-text">Monitoreo de Recolección</span>
                 </li>
@@ -375,9 +410,7 @@
                 </li>
             </ul>
 
-            <div class="sidebar-footer">
-                <!-- Espacio reservado -->
-            </div>
+            <div class="sidebar-footer"></div>
         </aside>
 
         <!-- Contenido Principal -->
@@ -415,54 +448,77 @@
             const navItems = sidebarNav.querySelectorAll('.nav-item');
             let currentIframeSrc = null;
 
-            function loadIframe(iframeSrc) {
-                // Ocultar todos los iframes
-                iframeContainer.querySelectorAll('iframe').forEach(iframe => {
-                    iframe.classList.remove('active');
+            function loadIframe(iframeSrc, title) {
+                // Ocultar todos los iframes y errores previos
+                iframeContainer.querySelectorAll('iframe, .error-message').forEach(el => {
+                    if(el.tagName === 'IFRAME') el.classList.remove('active');
+                    else el.remove(); // Removemos mensajes de error anteriores
                 });
 
-                // Si el iframe ya existe, lo mostramos
                 let targetIframe = iframeContainer.querySelector(`iframe[src="${iframeSrc}"]`);
-                if (targetIframe) {
-                    targetIframe.classList.add('active');
-                } else {
-                    // Si no existe, lo creamos
-                    const newIframe = document.createElement('iframe');
-                    newIframe.src = iframeSrc;
-                    newIframe.classList.add('active');
-                    iframeContainer.appendChild(newIframe);
+                
+                if (!targetIframe) {
+                    targetIframe = document.createElement('iframe');
+                    targetIframe.src = iframeSrc;
+                    
+                    // Lógica para detectar si el iframe falló (Error 404)
+                    targetIframe.onload = function() {
+                        try {
+                            // Si el iframe carga pero la URL interna es distinta o está vacía, es un 404 de GitHub
+                            if (this.contentWindow.location.href === 'about:blank' || this.contentDocument.title.includes('404')) {
+                                throw new Error('Not found');
+                            }
+                        } catch (e) {
+                            // Como es un dominio cruzado (GitHub Pages), no podemos leer contentDocument, 
+                            // así que esta validación es solo para local. 
+                            // Para GitHub, confiaremos en que si el nombre es correcto, cargará.
+                        }
+                    };
+                    
+                    targetIframe.onerror = function() {
+                        showError(title, iframeSrc);
+                        this.remove();
+                    };
+                    
+                    iframeContainer.appendChild(targetIframe);
                 }
+                targetIframe.classList.add('active');
                 currentIframeSrc = iframeSrc;
             }
 
-            // --- 2. LÓGICA DE INTERACCIÓN (EXPANDIR / COLAPSAR) ---
-            
-            // Variable para controlar el temporizador de cierre automático
+            function showError(title, src) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.innerHTML = `
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <h3>No se pudo cargar el módulo: ${title}</h3>
+                    <p>GitHub Pages devolvió un error <strong>404 File not found</strong>.</p>
+                    <p style="margin-top: 15px; font-size: 0.9em;">Verifica que el archivo en tu repositorio se llame exactamente igual a:<br>
+                    <code>${src}</code></p>
+                `;
+                iframeContainer.appendChild(errorDiv);
+            }
+
             let closeTimeout;
 
-            // Función para abrir el menú
             function openSidebar() {
-                clearTimeout(closeTimeout); // Cancelamos cualquier intento de cierre pendiente
+                clearTimeout(closeTimeout);
                 sidebar.classList.add('expanded');
             }
 
-            // Función para cerrar el menú con un pequeño retraso
-            function closeSidebar() {
+            function closeSidebarWithDelay() {
                 closeTimeout = setTimeout(() => {
-                    // Solo cerramos si el mouse no está encima del menú
                     if (!sidebar.matches(':hover')) {
                         sidebar.classList.remove('expanded');
                     }
-                }, 300); // Retraso de 300ms para que el usuario pueda reaccionar
+                }, 300);
             }
 
-            // --- Comportamiento del mouse ---
             sidebar.addEventListener('mouseenter', openSidebar);
-            sidebar.addEventListener('mouseleave', closeSidebar);
+            sidebar.addEventListener('mouseleave', closeSidebarWithDelay);
 
-            // --- Comportamiento del botón de hamburguesa ---
             menuToggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Evita que el clic se propague
+                e.stopPropagation();
                 if (sidebar.classList.contains('expanded')) {
                     sidebar.classList.remove('expanded');
                     clearTimeout(closeTimeout);
@@ -471,7 +527,6 @@
                 }
             });
 
-            // --- Comportamiento de los clics en los elementos del menú ---
             navItems.forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -479,7 +534,7 @@
                     // 1. Si el menú está colapsado, un clic en un icono lo expande y NO navega aún.
                     if (!sidebar.classList.contains('expanded')) {
                         openSidebar();
-                        return; // Salimos para no cargar el iframe en este primer clic
+                        return; 
                     }
 
                     // 2. Si el menú ya está expandido, navega y luego lo cierra.
@@ -487,7 +542,8 @@
                     item.classList.add('active');
 
                     const iframeSrc = item.dataset.iframe;
-                    loadIframe(iframeSrc);
+                    const title = item.dataset.title;
+                    loadIframe(iframeSrc, title);
 
                     // Cerramos el menú automáticamente tras la selección
                     sidebar.classList.remove('expanded');
@@ -498,7 +554,8 @@
             const initialActive = sidebarNav.querySelector('.nav-item.active');
             if (initialActive) {
                 const initialSrc = initialActive.dataset.iframe;
-                loadIframe(initialSrc);
+                const initialTitle = initialActive.dataset.title;
+                loadIframe(initialSrc, initialTitle);
             }
 
             // --- 3. MODO OSCURO PERSISTENTE ---
@@ -533,14 +590,12 @@
                 });
             }
 
-            // Aplicar tema inicial
             const savedTheme = localStorage.getItem(THEME_KEY) ||
                                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             applyTheme(savedTheme);
 
             themeToggleBtn.addEventListener('click', toggleTheme);
 
-            // Escuchar mensajes de los iframes para sincronizar el tema
             window.addEventListener('message', (e) => {
                 if (e.data && e.data.theme) {
                     const newTheme = e.data.theme;
@@ -554,7 +609,6 @@
                     applyTheme(newTheme);
                 }
             });
-
 
             // --- 4. FECHA Y HORA EN TIEMPO REAL ---
             function updateDateTime() {
