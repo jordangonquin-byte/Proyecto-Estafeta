@@ -13,7 +13,127 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    
     <style>
+        /* ============================================================
+           RESET GLOBAL Y VARIABLES DEL BANNER MAESTRO
+           ============================================================ */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        :root {
+            --estafeta-red: #DA291C;
+            --estafeta-dark: #1e293b;
+            --header-bg: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
+            --btn-upload-bg: rgba(0, 0, 0, 0.2);
+            --btn-upload-hover: rgba(0, 0, 0, 0.35);
+            --btn-upload-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
+            --subtext-color: #ffcdd2;
+            --badge-bg: #ffffff;
+            --badge-text: #DA291C;
+        }
+
+        body.dark-mode {
+            --header-bg: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
+            --btn-upload-bg: rgba(0, 0, 0, 0.4);
+            --btn-upload-hover: rgba(0, 0, 0, 0.6);
+            --btn-upload-border: rgba(255, 255, 255, 0.1);
+            --text-color: #f1f5f9;
+            --subtext-color: #fca5a5;
+            --badge-bg: #f8fafc;
+            --badge-text: #b91c1c;
+        }
+
+        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+        /* --- BANNER MAESTRO --- */
+        .master-header {
+            background: var(--header-bg);
+            background-size: 300% 100%;
+            animation: gradientShift 15s ease infinite;
+            color: var(--text-color);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            border: none !important;
+            margin: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+            gap: 15px;
+            transition: background 0.3s ease;
+            position: relative;
+            z-index: 50;
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 15px; }
+        .brand-logo {
+            background-color: var(--badge-bg); color: var(--badge-text);
+            font-weight: 900; font-size: 24px; width: 48px; height: 48px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease; flex-shrink: 0;
+        }
+        .brand-titles { display: flex; flex-direction: column; }
+        .brand-title { font-size: 1.25rem; font-weight: 700; margin: 0; line-height: 1.2; letter-spacing: 0.5px; }
+        .brand-subtitle { font-size: 0.75rem; color: var(--subtext-color); margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+
+        .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+        /* Botón de carga Excel estandarizado */
+        .upload-btn-wrapper {
+            position: relative; display: inline-flex; align-items: center;
+            background-color: var(--btn-upload-bg); border: 1px solid var(--btn-upload-border);
+            border-radius: 10px; padding: 8px 16px; cursor: pointer;
+            transition: all 0.2s ease; backdrop-filter: blur(4px);
+        }
+        .upload-btn-wrapper:hover { background-color: var(--btn-upload-hover); transform: translateY(-1px); }
+        .upload-btn-wrapper.dragover { background-color: rgba(74, 222, 128, 0.3) !important; border-color: #4ade80 !important; }
+        .upload-btn-wrapper input[type="file"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .upload-btn-icon { color: #4ade80; font-size: 1.2rem; margin-right: 10px; }
+        .upload-btn-content { display: flex; flex-direction: column; text-align: left; }
+        .upload-btn-title { font-size: 0.85rem; font-weight: 700; color: var(--text-color); }
+        .upload-btn-subtitle { font-size: 0.65rem; color: var(--subtext-color); }
+
+        /* Botón Tema */
+        #theme-toggle {
+            background: var(--btn-upload-bg); border: 1px solid var(--btn-upload-border);
+            color: var(--text-color); width: 42px; height: 42px; border-radius: 10px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; transition: all 0.2s ease; backdrop-filter: blur(4px); flex-shrink: 0;
+        }
+        #theme-toggle:hover { background: var(--btn-upload-hover); transform: translateY(-1px) rotate(15deg); }
+
+        /* Campana de Notificaciones */
+        #notif-bell {
+            position: relative; background: var(--btn-upload-bg); color: var(--text-color);
+            border: 1px solid var(--btn-upload-border); width: 42px; height: 42px;
+            border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center;
+            justify-content: center; font-size: 18px; transition: all 0.2s ease;
+            flex-shrink: 0; backdrop-filter: blur(4px);
+        }
+        #notif-bell:hover { background: var(--btn-upload-hover); transform: translateY(-1px); }
+        #notif-badge {
+            position: absolute; top: -6px; right: -6px; background: #dc2626; color: white;
+            font-size: 10px; font-weight: 800; min-width: 20px; height: 20px;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            padding: 0 5px; box-shadow: 0 2px 6px rgba(220,38,38,0.5); border: 2px solid #DA291C;
+        }
+        #notif-badge.hidden { display: none !important; }
+        @keyframes badgePulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        #notif-badge.pulse { animation: badgePulse 0.5s ease-out; }
+
+        /* ============================================================
+           ESTILOS BASE DEL DASHBOARD (TIEMPOS MUERTOS)
+           ============================================================ */
         .estafeta-red { background-color: #DA291C; }
         .estafeta-red-text { color: #DA291C; }
         .estafeta-border { border-color: #DA291C; }
@@ -28,22 +148,194 @@
         #map-card.fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; border-radius: 0 !important; padding: 16px !important; background-color: white !important; box-shadow: none !important; display: flex; flex-direction: column; }
         #map-card.fullscreen #map { flex-grow: 1 !important; height: auto !important; }
         #custom-filter-modal { z-index: 10000 !important; }
+
+        #file-status { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+        button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid #DA291C; outline-offset: 2px; border-radius: 4px; }
+
+        /* ============================================================ */
+        /* CAMPANA DE NOTIFICACIONES - ESTILOS                          */
+        /* ============================================================ */
+        #notif-toast-container {
+            position: fixed; top: 90px; right: 20px; z-index: 100000;
+            display: flex; flex-direction: column; gap: 10px;
+            max-width: 380px; width: calc(100vw - 40px); pointer-events: none;
+        }
+        .notif-toast {
+            background: white; border-radius: 12px; padding: 14px 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2), 0 4px 10px -4px rgba(0,0,0,0.1);
+            border-left: 4px solid #3b82f6; display: flex; gap: 12px; align-items: flex-start;
+            pointer-events: auto; animation: notifToastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative; overflow: hidden;
+        }
+        @keyframes notifToastIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+        .notif-toast.removing { animation: notifToastOut 0.3s ease forwards; }
+        @keyframes notifToastOut { to { opacity: 0; transform: translateX(100%); } }
+        .notif-toast.notif-danger { border-left-color: #dc2626; }
+        .notif-toast.notif-warning { border-left-color: #f59e0b; }
+        .notif-toast.notif-info { border-left-color: #3b82f6; }
+        .notif-toast.notif-success { border-left-color: #10b981; }
+        .notif-toast-icon { font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+        .notif-toast.notif-danger .notif-toast-icon { color: #dc2626; }
+        .notif-toast.notif-warning .notif-toast-icon { color: #f59e0b; }
+        .notif-toast.notif-info .notif-toast-icon { color: #3b82f6; }
+        .notif-toast.notif-success .notif-toast-icon { color: #10b981; }
+        .notif-toast-content { flex: 1; min-width: 0; }
+        .notif-toast-title { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 3px; line-height: 1.3; }
+        .notif-toast-msg { font-size: 12px; color: #6b7280; line-height: 1.4; word-break: break-word; }
+        .notif-toast-close { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 14px; padding: 0 2px; flex-shrink: 0; }
+        .notif-toast-close:hover { color: #4b5563; }
+        .notif-toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: currentColor; opacity: 0.4; animation: notifProgress linear forwards; }
+        @keyframes notifProgress { from { width: 100%; } to { width: 0%; } }
+
+        #notif-panel {
+            position: fixed; top: 80px; right: 20px; width: 400px; max-width: calc(100vw - 40px);
+            max-height: 70vh; background: white; border-radius: 16px;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3), 0 10px 20px -5px rgba(0,0,0,0.15);
+            z-index: 100001; display: none; flex-direction: column; overflow: hidden;
+            animation: notifPanelIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #notif-panel.show { display: flex; }
+        @keyframes notifPanelIn { from { opacity: 0; transform: translateY(-10px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .notif-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid #e5e7eb; font-weight: 700; font-size: 14px; color: #1f2937; }
+        .notif-panel-header button { background: none; border: none; cursor: pointer; color: #6b7280; font-size: 16px; padding: 4px; border-radius: 6px; }
+        .notif-panel-header button:hover { background: #f3f4f6; color: #1f2937; }
+        .notif-panel-body { flex: 1; overflow-y: auto; max-height: calc(70vh - 110px); }
+        .notif-empty { padding: 40px 20px; text-align: center; color: #9ca3af; font-size: 13px; }
+        .notif-empty i { font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5; }
+        .notif-item { padding: 12px 18px; border-bottom: 1px solid #f3f4f6; display: flex; gap: 12px; align-items: flex-start; border-left: 3px solid transparent; cursor: default; transition: background 0.15s; }
+        .notif-item:hover { background: #f9fafb; }
+        .notif-item.unread { background: #fef2f2; }
+        .notif-item.unread:hover { background: #fee2e2; }
+        .notif-item.notif-danger { border-left-color: #dc2626; }
+        .notif-item.notif-warning { border-left-color: #f59e0b; }
+        .notif-item.notif-info { border-left-color: #3b82f6; }
+        .notif-item.notif-success { border-left-color: #10b981; }
+        .notif-item-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+        .notif-item.notif-danger .notif-item-icon { color: #dc2626; }
+        .notif-item.notif-warning .notif-item-icon { color: #f59e0b; }
+        .notif-item.notif-info .notif-item-icon { color: #3b82f6; }
+        .notif-item.notif-success .notif-item-icon { color: #10b981; }
+        .notif-item-body { flex: 1; min-width: 0; }
+        .notif-item-title { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 3px; line-height: 1.3; }
+        .notif-item-msg { font-size: 12px; color: #6b7280; line-height: 1.4; word-break: break-word; }
+        .notif-item-time { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+        .notif-panel-footer { display: flex; gap: 8px; padding: 12px 18px; border-top: 1px solid #e5e7eb; background: #f9fafb; }
+        .notif-panel-footer button { flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid #e5e7eb; background: white; font-size: 12px; font-weight: 600; cursor: pointer; color: #4b5563; transition: all 0.15s; }
+        .notif-panel-footer button:hover { background: var(--estafeta-red, #DA291C); color: white; border-color: var(--estafeta-red, #DA291C); }
+        .notif-panel-footer button.danger-btn:hover { background: #dc2626; border-color: #dc2626; }
+
+        /* ===== MODO OSCURO ===== */
+        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0 !important; }
+        body.dark-mode main, body.dark-mode main > div > div, body.dark-mode .bg-white, body.dark-mode .bg-gray-50, body.dark-mode .bg-gray-100 { background-color: #1e293b !important; }
+        body.dark-mode .bg-gray-50\/60 { background-color: rgba(30, 41, 59, 0.6) !important; }
+        body.dark-mode .text-gray-800, body.dark-mode .text-gray-700, body.dark-mode .text-gray-900 { color: #e2e8f0 !important; }
+        body.dark-mode .text-gray-600, body.dark-mode .text-gray-500, body.dark-mode .text-gray-400 { color: #94a3b8 !important; }
+        body.dark-mode .border-gray-100, body.dark-mode .border-gray-200, body.dark-mode .border-gray-200\/60, body.dark-mode .border-gray-200\/90 { border-color: #334155 !important; }
+        body.dark-mode .shadow-sm, body.dark-mode .shadow-xl, body.dark-mode .shadow-2xl { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -2px rgba(0,0,0,0.4) !important; }
+        body.dark-mode .divide-gray-100 > * + * { border-color: #334155 !important; }
+        body.dark-mode input, body.dark-mode select { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        body.dark-mode .bg-green-50\/60 { background-color: rgba(20, 83, 45, 0.3) !important; }
+        body.dark-mode .bg-red-50\/60 { background-color: rgba(127, 29, 29, 0.3) !important; }
+        body.dark-mode .bg-blue-50\/60 { background-color: rgba(30, 58, 138, 0.3) !important; }
+        body.dark-mode .bg-yellow-50\/60 { background-color: rgba(120, 53, 15, 0.3) !important; }
+        body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; }
+        body.dark-mode #custom-filter-modal > div { background: #1e293b !important; }
+        body.dark-mode #card-modal > div { background: #1e293b !important; }
+        body.dark-mode #card-modal #modal-body .text-gray-800 { color: #e2e8f0 !important; }
+        body.dark-mode #custom-options-container { background-color: #0f172a !important; }
+        body.dark-mode #custom-options-container label:hover { background: #334155 !important; }
+        body.dark-mode #floating-plaza-filter { background: #1e293b !important; border-color: #334155 !important; }
+        body.dark-mode .estafeta-red { background-color: #b91c1c !important; }
+
+        body.dark-mode #notif-bell { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+        body.dark-mode #notif-badge { border-color: #991B1B; }
+        body.dark-mode .notif-toast { background: #1e293b; }
+        body.dark-mode .notif-toast-title { color: #f1f5f9; }
+        body.dark-mode .notif-toast-msg { color: #cbd5e1; }
+        body.dark-mode .notif-toast-close { color: #64748b; }
+        body.dark-mode .notif-toast-close:hover { color: #cbd5e1; }
+        body.dark-mode #notif-panel { background: #1e293b; }
+        body.dark-mode .notif-panel-header { color: #f1f5f9; border-bottom-color: #334155; }
+        body.dark-mode .notif-panel-header button:hover { background: #334155; color: #f1f5f9; }
+        body.dark-mode .notif-item { border-bottom-color: #334155; }
+        body.dark-mode .notif-item:hover { background: #334155; }
+        body.dark-mode .notif-item.unread { background: rgba(220, 38, 38, 0.15); }
+        body.dark-mode .notif-item.unread:hover { background: rgba(220, 38, 38, 0.25); }
+        body.dark-mode .notif-item-title { color: #f1f5f9; }
+        body.dark-mode .notif-item-msg { color: #cbd5e1; }
+        body.dark-mode .notif-item-time { color: #64748b; }
+        body.dark-mode .notif-panel-footer { background: #0f172a; border-top-color: #334155; }
+        body.dark-mode .notif-panel-footer button { background: #1e293b; color: #cbd5e1; border-color: #334155; }
+        body.dark-mode .notif-empty { color: #64748b; }
+
+        @media (max-width: 640px) {
+            #notif-toast-container { top: auto; bottom: 20px; right: 10px; left: 10px; width: auto; max-width: none; }
+            #notif-panel { top: auto; bottom: 10px; right: 10px; left: 10px; width: auto; max-width: none; max-height: 75vh; }
+        }
+
+        @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 1000px 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+
+        .ripple-host { position: relative; overflow: hidden; }
+        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.55); transform: scale(0); animation: rippleAnim 0.6s ease-out; pointer-events: none; }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+        #cards-container > div { transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease; }
+        #cards-container > div:hover { box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.18), 0 20px 40px -10px rgba(218, 41, 28, 0.28) !important; }
+
+        @keyframes cardEnter { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
+
+        @keyframes pulseCritical { 0%, 100% { background-color: rgba(220, 38, 38, 0.08); } 50% { background-color: rgba(220, 38, 38, 0.28); } }
+        .critical-pulse { animation: pulseCritical 2s ease-in-out infinite; font-weight: 800; color: #dc2626 !important; border-radius: 4px; padding: 2px 6px; display: inline-block; }
+
+        .kpi-bar-track { width: 100%; height: 6px; background: rgba(0, 0, 0, 0.06); border-radius: 999px; overflow: hidden; margin-top: 6px; }
+        .kpi-bar-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased min-h-screen flex flex-col relative pb-20">
-    <header class="estafeta-red text-white shadow-md z-20">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center space-x-3"><i class="fa-solid fa-truck-fast text-3xl"></i><h1 class="text-lg font-bold tracking-wide">Tiempos Muertos en Ruta</h1></div>
-            <div class="flex items-center space-x-3">
-                <div class="flex items-center space-x-3 bg-red-800 bg-opacity-60 px-4 py-2 rounded-xl border border-red-600 hover:bg-opacity-80 transition-all cursor-pointer shadow-inner" id="banner-drop-zone" onclick="document.getElementById('file-input').click()">
-                    <input type="file" id="file-input" class="hidden" accept=".csv, .xlsx, .xls">
-                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-white"></i>
-                    <div class="text-left"><p id="file-status" class="text-sm font-semibold">Cargar Archivo Excel</p><p class="text-xs text-red-200">Arrastra o haz clic aquí</p></div>
-                </div>
-                <div id="header-actions-container" class="flex items-center space-x-3"></div>
+
+    <!-- ============================================================
+         BANNER MAESTRO CON BOTÓN DE TEMA Y CAMPANA INTEGRADOS
+         ============================================================ -->
+    <header class="master-header">
+        
+        <!-- Logo y Títulos -->
+        <div class="header-brand">
+            <div class="brand-logo">E</div>
+            <div class="brand-titles">
+                <h1 class="brand-title">Tiempos Muertos en Ruta</h1>
+                <p id="file-status" class="brand-subtitle">Torre de Control & Operación Logística</p>
             </div>
         </div>
+
+        <!-- Acciones a la derecha -->
+        <div class="header-actions" id="header-actions-container">
+            
+            <!-- Botón de Carga Excel -->
+            <div class="upload-btn-wrapper" id="banner-drop-zone" onclick="document.getElementById('file-input').click()">
+                <input type="file" id="file-input" accept=".csv, .xlsx, .xls">
+                <i class="fa-solid fa-file-excel upload-btn-icon"></i>
+                <div class="upload-btn-content">
+                    <span class="upload-btn-title">Cargar Archivo</span>
+                    <span class="upload-btn-subtitle">Arrastra o clic aquí</span>
+                </div>
+            </div>
+
+            <!-- Campana de Notificaciones (se inyecta por JS) -->
+            <div id="notif-bell-slot"></div>
+
+            <!-- Botón de Modo Oscuro/Claro -->
+            <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+                <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+            </button>
+
+        </div>
     </header>
+
+    <!-- ============================================================
+         CONTENIDO PRINCIPAL DEL DASHBOARD
+         ============================================================ -->
     <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
         <div id="dashboard-content" class="hidden space-y-6 w-full">
             <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
@@ -307,232 +599,6 @@
             <button class="danger-btn" onclick="clearNotifHistory()"><i class="fa-solid fa-trash"></i> Limpiar</button>
         </div>
     </div>
-
-    <style>
-        /* ============================================================ */
-        /* CAMPANA DE NOTIFICACIONES - ESTILOS                          */
-        /* ============================================================ */
-        #notif-bell {
-            position: relative;
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: #FFFFFF;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            transition: background 0.2s, transform 0.2s;
-        }
-        #notif-bell:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
-
-        #notif-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            min-width: 20px;
-            height: 20px;
-            padding: 0 5px;
-            background: #dc2626;
-            color: white;
-            border: 2px solid #DA291C;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-        }
-        #notif-badge.hidden { display: none; }
-        @keyframes badgePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
-        #notif-badge.pulse { animation: badgePulse 0.6s ease-in-out 2; }
-
-        #notif-toast-container {
-            position: fixed;
-            top: 90px;
-            right: 20px;
-            z-index: 100000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 380px;
-            width: calc(100vw - 40px);
-            pointer-events: none;
-        }
-
-        .notif-toast {
-            background: white;
-            border-radius: 12px;
-            padding: 14px 16px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2), 0 4px 10px -4px rgba(0,0,0,0.1);
-            border-left: 4px solid #3b82f6;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            pointer-events: auto;
-            animation: notifToastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        @keyframes notifToastIn {
-            from { opacity: 0; transform: translateX(100%); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        .notif-toast.removing { animation: notifToastOut 0.3s ease forwards; }
-        @keyframes notifToastOut { to { opacity: 0; transform: translateX(100%); } }
-        .notif-toast.notif-danger { border-left-color: #dc2626; }
-        .notif-toast.notif-warning { border-left-color: #f59e0b; }
-        .notif-toast.notif-info { border-left-color: #3b82f6; }
-        .notif-toast.notif-success { border-left-color: #10b981; }
-
-        .notif-toast-icon { font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
-        .notif-toast.notif-danger .notif-toast-icon { color: #dc2626; }
-        .notif-toast.notif-warning .notif-toast-icon { color: #f59e0b; }
-        .notif-toast.notif-info .notif-toast-icon { color: #3b82f6; }
-        .notif-toast.notif-success .notif-toast-icon { color: #10b981; }
-
-        .notif-toast-content { flex: 1; min-width: 0; }
-        .notif-toast-title { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 3px; line-height: 1.3; }
-        .notif-toast-msg { font-size: 12px; color: #6b7280; line-height: 1.4; word-break: break-word; }
-        .notif-toast-close { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 14px; padding: 0 2px; flex-shrink: 0; }
-        .notif-toast-close:hover { color: #4b5563; }
-
-        .notif-toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: currentColor;
-            opacity: 0.4;
-            animation: notifProgress linear forwards;
-        }
-        @keyframes notifProgress { from { width: 100%; } to { width: 0%; } }
-
-        #notif-panel {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            width: 400px;
-            max-width: calc(100vw - 40px);
-            max-height: 70vh;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3), 0 10px 20px -5px rgba(0,0,0,0.15);
-            z-index: 100001;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            animation: notifPanelIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        #notif-panel.show { display: flex; }
-        @keyframes notifPanelIn {
-            from { opacity: 0; transform: translateY(-10px) scale(0.97); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .notif-panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 18px;
-            border-bottom: 1px solid #e5e7eb;
-            font-weight: 700;
-            font-size: 14px;
-            color: #1f2937;
-        }
-        .notif-panel-header button { background: none; border: none; cursor: pointer; color: #6b7280; font-size: 16px; padding: 4px; border-radius: 6px; }
-        .notif-panel-header button:hover { background: #f3f4f6; color: #1f2937; }
-
-        .notif-panel-body { flex: 1; overflow-y: auto; max-height: calc(70vh - 110px); }
-
-        .notif-empty { padding: 40px 20px; text-align: center; color: #9ca3af; font-size: 13px; }
-        .notif-empty i { font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5; }
-
-        .notif-item {
-            padding: 12px 18px;
-            border-bottom: 1px solid #f3f4f6;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            border-left: 3px solid transparent;
-            cursor: default;
-            transition: background 0.15s;
-        }
-        .notif-item:hover { background: #f9fafb; }
-        .notif-item.unread { background: #fef2f2; }
-        .notif-item.unread:hover { background: #fee2e2; }
-        .notif-item.notif-danger { border-left-color: #dc2626; }
-        .notif-item.notif-warning { border-left-color: #f59e0b; }
-        .notif-item.notif-info { border-left-color: #3b82f6; }
-        .notif-item.notif-success { border-left-color: #10b981; }
-
-        .notif-item-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
-        .notif-item.notif-danger .notif-item-icon { color: #dc2626; }
-        .notif-item.notif-warning .notif-item-icon { color: #f59e0b; }
-        .notif-item.notif-info .notif-item-icon { color: #3b82f6; }
-        .notif-item.notif-success .notif-item-icon { color: #10b981; }
-
-        .notif-item-body { flex: 1; min-width: 0; }
-        .notif-item-title { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 3px; line-height: 1.3; }
-        .notif-item-msg { font-size: 12px; color: #6b7280; line-height: 1.4; word-break: break-word; }
-        .notif-item-time { font-size: 11px; color: #9ca3af; margin-top: 4px; }
-
-        .notif-panel-footer {
-            display: flex;
-            gap: 8px;
-            padding: 12px 18px;
-            border-top: 1px solid #e5e7eb;
-            background: #f9fafb;
-        }
-        .notif-panel-footer button {
-            flex: 1;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-            background: white;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #4b5563;
-            transition: all 0.15s;
-        }
-        .notif-panel-footer button:hover { background: var(--estafeta-red, #DA291C); color: white; border-color: var(--estafeta-red, #DA291C); }
-        .notif-panel-footer button.danger-btn:hover { background: #dc2626; border-color: #dc2626; }
-
-        /* ===== MODO OSCURO ===== */
-        body.dark-mode #notif-bell { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
-        body.dark-mode #notif-badge { border-color: #991B1B; }
-        body.dark-mode .notif-toast { background: #1e293b; }
-        body.dark-mode .notif-toast-title { color: #f1f5f9; }
-        body.dark-mode .notif-toast-msg { color: #cbd5e1; }
-        body.dark-mode .notif-toast-close { color: #64748b; }
-        body.dark-mode .notif-toast-close:hover { color: #cbd5e1; }
-        body.dark-mode #notif-panel { background: #1e293b; }
-        body.dark-mode .notif-panel-header { color: #f1f5f9; border-bottom-color: #334155; }
-        body.dark-mode .notif-panel-header button:hover { background: #334155; color: #f1f5f9; }
-        body.dark-mode .notif-item { border-bottom-color: #334155; }
-        body.dark-mode .notif-item:hover { background: #334155; }
-        body.dark-mode .notif-item.unread { background: rgba(220, 38, 38, 0.15); }
-        body.dark-mode .notif-item.unread:hover { background: rgba(220, 38, 38, 0.25); }
-        body.dark-mode .notif-item-title { color: #f1f5f9; }
-        body.dark-mode .notif-item-msg { color: #cbd5e1; }
-        body.dark-mode .notif-item-time { color: #64748b; }
-        body.dark-mode .notif-panel-footer { background: #0f172a; border-top-color: #334155; }
-        body.dark-mode .notif-panel-footer button { background: #1e293b; color: #cbd5e1; border-color: #334155; }
-        body.dark-mode .notif-empty { color: #64748b; }
-
-        @media (max-width: 640px) {
-            #notif-toast-container { top: auto; bottom: 20px; right: 10px; left: 10px; width: auto; max-width: none; }
-            #notif-panel { top: auto; bottom: 10px; right: 10px; left: 10px; width: auto; max-width: none; max-height: 75vh; }
-        }
-    </style>
 
     <script>
         function iniciarSesionExitosa(rolSeleccionado) {
@@ -1921,14 +1987,14 @@
             successToastDuration: 4000,
             maxVisibleToasts: 3,
             rules: {
-                deadTimeCriticoMax: 60 * 60 * 1000,      // 60 min
-                deadTimeAltoAvg: 30 * 60 * 1000,          // 30 min
-                deadTimeAltoMax: 60 * 60 * 1000,          // para separar de criticas
-                excepcionadosDanger: 20,                  // %
-                excepcionadosWarning: 10,                 // %
-                fueraHorarioPct: 10,                      // %
-                sinActividadMinutos: 45,                  // 45 min sin eventos (ruta colgada)
-                topRutasCount: 3                          // top 3 para ruta con más tiempo muerto
+                deadTimeCriticoMax: 60 * 60 * 1000,
+                deadTimeAltoAvg: 30 * 60 * 1000,
+                deadTimeAltoMax: 60 * 60 * 1000,
+                excepcionadosDanger: 20,
+                excepcionadosWarning: 10,
+                fueraHorarioPct: 10,
+                sinActividadMinutos: 45,
+                topRutasCount: 3
             }
         };
 
@@ -1959,7 +2025,7 @@
         }
 
         function injectBell() {
-            const container = document.getElementById('header-actions-container');
+            const container = document.getElementById('notif-bell-slot');
             if (!container) return;
             if (document.getElementById('notif-bell')) return;
             const btn = document.createElement('button');
@@ -2135,7 +2201,6 @@
 
         /* ============================================================
            ANALIZADOR DE REGLAS DE NEGOCIO
-           Combina las 6 reglas heredadas + 5 nuevas
            ============================================================ */
         function analyzeAndNotify() {
             if (!rawData || rawData.length === 0) return;
@@ -2143,8 +2208,6 @@
             const notifs = [];
             const R = NOTIF_CONFIG.rules;
             const fmt = n => Number(n).toLocaleString('es-MX');
-
-            /* ===== REGLAS HEREDADAS ===== */
 
             /* 1. Rutas con tiempo muerto extremo (> 60 min máx) */
             if (cachedDeadTimesList && cachedDeadTimesList.length > 0) {
@@ -2227,9 +2290,7 @@
                 }
             }
 
-            /* ===== REGLAS NUEVAS ===== */
-
-            /* 6. Ruta con mayor tiempo muerto total (reemplaza al % de concentración) */
+            /* 6. Ruta con mayor tiempo muerto total */
             if (cachedDeadTimesList && cachedDeadTimesList.length > 0) {
                 const top = [...cachedDeadTimesList].sort((a, b) => b.total - a.total).slice(0, R.topRutasCount);
                 if (top.length > 0) {
@@ -2245,7 +2306,7 @@
                 }
             }
 
-            /* 7. Rutas sin actividad reciente (>= 45 min sin evento respecto al máximo global) */
+            /* 7. Rutas sin actividad reciente */
             if (eventTimeKeyName && cachedCronoList) {
                 const now = Date.now();
                 let maxTimeGlobal = 0;
@@ -2287,7 +2348,7 @@
                 }
             }
 
-            /* 8. Distribución de estatus (informativo) */
+            /* 8. Distribución de estatus */
             const confirmados = rawData.filter(r => {
                 const st = String(r[statusKeyName] || '').toUpperCase();
                 return st.includes('CONFIRMAD');
@@ -2340,7 +2401,7 @@
                 }
             }
 
-            /* 10. Carga exitosa (siempre al final) */
+            /* 10. Carga exitosa */
             notifs.push({
                 type: 'success',
                 title: `✅ ${fmt(rawData.length)} registros cargados`,
@@ -2356,168 +2417,16 @@
            ============================================================ */
         document.addEventListener('DOMContentLoaded', () => {
             injectBell();
+            initTema();
         });
 
         window.addEventListener('load', () => {
             injectBell();
         });
-    </script>
 
-    <style>
-        #file-status { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
-        button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
-            outline: 2px solid #DA291C; outline-offset: 2px; border-radius: 4px;
-        }
-    </style>
-
-    <!-- ===== BOTONES CSV/PDF ELIMINADOS: se quitó el script de exportación CSV y el de copiar guía ===== -->
-
-    <style>
-@keyframes shimmer {
-    0% { background-position: -1000px 0; }
-    100% { background-position: 1000px 0; }
-}
-.skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 1000px 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 8px;
-}
-</style>
-
-    <style>
-        .ripple-host { position: relative; overflow: hidden; }
-        .ripple-effect {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.55);
-            transform: scale(0);
-            animation: rippleAnim 0.6s ease-out;
-            pointer-events: none;
-        }
-        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
-
-        #cards-container > div {
-            transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
-        }
-        #cards-container > div:hover {
-            box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.18), 0 20px 40px -10px rgba(218, 41, 28, 0.28) !important;
-        }
-
-        @keyframes cardEnter {
-            from { opacity: 0; transform: translateY(20px) scale(0.96); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .card-enter {
-            animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards;
-        }
-
-        @keyframes pulseCritical {
-            0%, 100% { background-color: rgba(220, 38, 38, 0.08); }
-            50%      { background-color: rgba(220, 38, 38, 0.28); }
-        }
-        .critical-pulse {
-            animation: pulseCritical 2s ease-in-out infinite;
-            font-weight: 800;
-            color: #dc2626 !important;
-            border-radius: 4px;
-            padding: 2px 6px;
-            display: inline-block;
-        }
-
-        .kpi-bar-track {
-            width: 100%;
-            height: 6px;
-            background: rgba(0, 0, 0, 0.06);
-            border-radius: 999px;
-            overflow: hidden;
-            margin-top: 6px;
-        }
-        .kpi-bar-fill {
-            height: 100%;
-            width: 0%;
-            border-radius: 999px;
-            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50%      { background-position: 100% 50%; }
-        }
-        header.estafeta-red {
-            background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C) !important;
-            background-size: 300% 100% !important;
-            animation: gradientShift 15s ease infinite;
-        }
-
-        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0 !important; }
-        body.dark-mode header.estafeta-red { background: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B) !important; background-size: 300% 100% !important; }
-        body.dark-mode main,
-        body.dark-mode main > div > div,
-        body.dark-mode .bg-white,
-        body.dark-mode .bg-gray-50,
-        body.dark-mode .bg-gray-100 { background-color: #1e293b !important; }
-        body.dark-mode .bg-gray-50\/60 { background-color: rgba(30, 41, 59, 0.6) !important; }
-        body.dark-mode .text-gray-800,
-        body.dark-mode .text-gray-700,
-        body.dark-mode .text-gray-900 { color: #e2e8f0 !important; }
-        body.dark-mode .text-gray-600,
-        body.dark-mode .text-gray-500,
-        body.dark-mode .text-gray-400 { color: #94a3b8 !important; }
-        body.dark-mode .border-gray-100,
-        body.dark-mode .border-gray-200,
-        body.dark-mode .border-gray-200\/60,
-        body.dark-mode .border-gray-200\/90 { border-color: #334155 !important; }
-        body.dark-mode .shadow-sm,
-        body.dark-mode .shadow-xl,
-        body.dark-mode .shadow-2xl { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -2px rgba(0,0,0,0.4) !important; }
-        body.dark-mode .divide-gray-100 > * + * { border-color: #334155 !important; }
-        body.dark-mode input,
-        body.dark-mode select { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
-        body.dark-mode .bg-green-50\/60 { background-color: rgba(20, 83, 45, 0.3) !important; }
-        body.dark-mode .bg-red-50\/60 { background-color: rgba(127, 29, 29, 0.3) !important; }
-        body.dark-mode .bg-blue-50\/60 { background-color: rgba(30, 58, 138, 0.3) !important; }
-        body.dark-mode .bg-yellow-50\/60 { background-color: rgba(120, 53, 15, 0.3) !important; }
-        body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; }
-        body.dark-mode #custom-filter-modal > div { background: #1e293b !important; }
-        body.dark-mode #card-modal > div { background: #1e293b !important; }
-        body.dark-mode #card-modal #modal-body .text-gray-800 { color: #e2e8f0 !important; }
-        body.dark-mode #custom-options-container { background-color: #0f172a !important; }
-        body.dark-mode #custom-options-container label:hover { background: #334155 !important; }
-        body.dark-mode #floating-plaza-filter { background: #1e293b !important; border-color: #334155 !important; }
-        body.dark-mode .estafeta-red { background-color: #b91c1c !important; }
-
-        #theme-toggle {
-            position: fixed;
-            bottom: 88px;
-            right: 24px;
-            z-index: 40;
-            width: 48px;
-            height: 48px;
-            border-radius: 999px;
-            background: #1e293b;
-            color: white;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        #theme-toggle:hover { transform: scale(1.08); background: #334155; }
-        body.dark-mode #theme-toggle { background: #fbbf24; color: #1e293b; }
-    </style>
-
-    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
-        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
-    </button>
-
-    <script>
-    (function () {
-        'use strict';
-
+        /* ============================================================
+           TEMA (MODO OSCURO / CLARO)
+           ============================================================ */
         function aplicarTema(tema) {
             const body = document.body;
             const icon = document.getElementById('theme-toggle-icon');
@@ -2555,6 +2464,9 @@
             }
         }
 
+        /* ============================================================
+           EFECTOS VISUALES EXTRA
+           ============================================================ */
         function animateNumber(el, to, duration = 800) {
             if (!el) return;
             const from = 0;
@@ -2760,7 +2672,6 @@
                     .observe(obsTbody, { childList: true });
             }
         });
-    })();
     </script>
 </body>
 </html>

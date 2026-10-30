@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banner Maestro - Estafeta</title>
+    <!-- FontAwesome para los íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ============================================================
+           ESTILOS DEL BANNER MAESTRO (Copia esto a tus otros archivos)
+           ============================================================ */
+        :root {
+            --estafeta-red: #DA291C;
+            --estafeta-dark: #1e293b;
+            --estafeta-white: #ffffff;
+            
+            /* Variables para Modo Claro */
+            --header-bg: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
+            --btn-upload-bg: rgba(0, 0, 0, 0.2);
+            --btn-upload-hover: rgba(0, 0, 0, 0.35);
+            --btn-upload-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
+            --subtext-color: #ffcdd2;
+            --badge-bg: #ffffff;
+            --badge-text: #DA291C;
+        }
+
+        /* Variables para Modo Oscuro */
+        body.dark-mode {
+            --header-bg: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
+            --btn-upload-bg: rgba(0, 0, 0, 0.4);
+            --btn-upload-hover: rgba(0, 0, 0, 0.6);
+            --btn-upload-border: rgba(255, 255, 255, 0.1);
+            --text-color: #f1f5f9;
+            --subtext-color: #fca5a5;
+            --badge-bg: #f8fafc;
+            --badge-text: #b91c1c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            min-height: 100vh;
+            transition: background-color 0.3s ease;
+        }
+        
+        body.dark-mode {
+            background-color: #0f172a;
+        }
+
+        /* --- ANIMACIÓN DEL GRADIENTE --- */
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* --- CONTENEDOR DEL BANNER --- */
+        .master-header {
+            background: var(--header-bg);
+            background-size: 300% 100%;
+            animation: gradientShift 15s ease infinite;
+            color: var(--text-color);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-bottom: 3px solid #991B1B; /* Línea inferior de acento */
+            flex-wrap: wrap;
+            gap: 15px;
+            transition: background 0.3s ease;
+        }
+
+        /* --- LOGO Y TEXTOS --- */
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-logo {
+            background-color: var(--badge-bg);
+            color: var(--badge-text);
+            font-weight: 900;
+            font-size: 24px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .brand-titles {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--subtext-color);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        /* --- ACCIONES (BOTONES Y CONTENEDORES) --- */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* --- BOTÓN DE CARGA EXCEL ESTANDARIZADO --- */
+        .upload-btn-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--btn-upload-bg);
+            border: 1px solid var(--btn-upload-border);
+            border-radius: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .upload-btn-wrapper:hover {
+            background-color: var(--btn-upload-hover);
+            transform: translateY(-1px);
+        }
+
+        .upload-btn-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-btn-icon {
+            color: #4ade80; /* Verde Excel */
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+
+        .upload-btn-content {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .upload-btn-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .upload-btn-subtitle {
+            font-size: 0.65rem;
+            color: var(--subtext-color);
+        }
+
+        /* --- ESPACIO PARA LA CAMPANA --- */
+        .notification-slot {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Aquí se inyectará la campana de tus otros HTML */
+        }
+
+        /* --- BOTÓN DE MODO OSCURO (PARA PROBAR EL DISEÑO) --- */
+        #demo-theme-toggle {
+            background: var(--btn-upload-bg);
+            border: 1px solid var(--btn-upload-border);
+            color: var(--text-color);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+        }
+        #demo-theme-toggle:hover {
+            background: var(--btn-upload-hover);
+        }
+
+        /* --- CONTENIDO DE PRUEBA (Para ver el fondo) --- */
+        .demo-content {
+            padding: 40px;
+            text-align: center;
+            color: #64748b;
+        }
+        body.dark-mode .demo-content {
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+         INICIO DEL BANNER MAESTRO (Copia desde aquí)
+         ============================================================ -->
+    <header class="master-header">
+        
+        <!-- Logo y Títulos -->
+        <div class="header-brand">
+            <div class="brand-logo">E</div>
+            <div class="brand-titles">
+                <h1 class="brand-title">Título del Dashboard</h1>
+                <p class="brand-subtitle">Subtítulo o Descripción del Módulo</p>
+            </div>
+        </div>
+
+        <!-- Acciones a la derecha -->
+        <div class="header-actions">
+            
+            <!-- Botón de Carga Excel -->
+            <div class="upload-btn-wrapper">
+                <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv">
+                <i class="fa-solid fa-file-excel upload-btn-icon"></i>
+                <div class="upload-btn-content">
+                    <span class="upload-btn-text">Cargar Excel</span>
+                    <span class="upload-btn-sub">Arrastra o clic aquí</span>
+                </div>
+            </div>
+
+            <!-- Contenedor para la Campana de Notificaciones -->
+            <div class="notification-slot" id="notif-bell-container">
+                <!-- Aquí va tu botón de campana -->
+                <!-- Ejemplo de cómo se vería: -->
+                <!-- <button id="notif-bell">...</button> -->
+            </div>
+
+            <!-- Botón de Tema (Solo para demostración en este archivo) -->
+            <button id="demo-theme-toggle" title="Cambiar tema">
+                <i class="fa-solid fa-moon" id="demo-theme-icon"></i>
+            </button>
+
+        </div>
+    </header>
+    <!-- FIN DEL BANNER MAESTRO -->
+
+    <!-- Contenido de fondo para probar el modo oscuro -->
+    <main class="demo-content">
+        <h2>Área de Trabajo del Dashboard</h2>
+        <p>Este es el espacio donde va el resto de tu aplicación.</p>
+        <p>El banner superior ahora tiene un diseño unificado con el logo "E", el botón de carga de Excel estandarizado y está listo para recibir la campana de notificaciones.</p>
+    </main>
+
+    <script>
+        /* ============================================================
+           LÓGICA DE MODO OSCURO (Solo para probar el Banner)
+           ============================================================ */
+        const themeToggle = document.getElementById('demo-theme-toggle');
+        const themeIcon = document.getElementById('demo-theme-icon');
+
+        // Verificar si ya había un tema guardado
+        const savedTheme = localStorage.getItem('estafeta-banner-theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeIcon.className = 'fa-solid fa-sun';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.body.classList.contains('dark-mode');
+            if (isDark) {
+                document.body.classList.remove('dark-mode');
+                themeIcon.className = 'fa-solid fa-moon';
+                localStorage.setItem('estafeta-banner-theme', 'light');
+            } else {
+                document.body.classList.add('dark-mode');
+                themeIcon.className = 'fa-solid fa-sun';
+                localStorage.setItem('estafeta-banner-theme', 'dark');
+            }
+        });
+    </script>
+</body>
+</html>

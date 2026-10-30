@@ -10,6 +10,17 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* ============================================================
+           RESET GLOBAL Y VARIABLES DEL BANNER
+           ============================================================ */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
         :root {
             --estafeta-red: #DA291C;
             --estafeta-red-hover: #b00e14;
@@ -22,90 +33,126 @@
             --status-yellow: #F59E0B;
             --status-orange: #F97316;
             --status-red: #EF4444;
+
+            /* Variables del Banner */
+            --header-bg: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
+            --btn-upload-bg: rgba(0, 0, 0, 0.2);
+            --btn-upload-hover: rgba(0, 0, 0, 0.35);
+            --btn-upload-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
+            --subtext-color: #ffcdd2;
+            --badge-bg: #ffffff;
+            --badge-text: #DA291C;
+        }
+
+        body.dark-mode {
+            --header-bg: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
+            --btn-upload-bg: rgba(0, 0, 0, 0.4);
+            --btn-upload-hover: rgba(0, 0, 0, 0.6);
+            --btn-upload-border: rgba(255, 255, 255, 0.1);
+            --text-color: #f1f5f9;
+            --subtext-color: #fca5a5;
+            --badge-bg: #f8fafc;
+            --badge-text: #b91c1c;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto', sans-serif; }
         body { background-color: var(--estafeta-light); color: #333; min-height: 100vh; display: flex; flex-direction: column; position: relative; transition: background-color 0.3s; }
 
-        header {
-            background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
+        /* --- BANNER MAESTRO --- */
+        .master-header {
+            background: var(--header-bg);
             background-size: 300% 100%;
             animation: gradientShift 15s ease infinite;
-            color: var(--estafeta-white);
-            padding: 15px 30px;
+            color: var(--text-color);
+            padding: 12px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            border: none !important;
+            margin: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box;
             flex-wrap: wrap;
             gap: 15px;
+            transition: background 0.3s ease;
+            position: relative;
+            z-index: 50;
         }
-        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
-        .logo-container { display: flex; align-items: center; gap: 12px; }
-        .logo-title { font-size: 24px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-        .logo-subtitle { font-size: 14px; opacity: 0.9; border-left: 2px solid rgba(255,255,255,0.4); padding-left: 12px; }
+        .header-brand { display: flex; align-items: center; gap: 15px; }
+        .brand-logo {
+            background-color: var(--badge-bg); color: var(--badge-text);
+            font-weight: 900; font-size: 24px; width: 48px; height: 48px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease; flex-shrink: 0;
+        }
+        .brand-titles { display: flex; flex-direction: column; }
+        .brand-title { font-size: 1.25rem; font-weight: 700; margin: 0; line-height: 1.2; letter-spacing: 0.5px; }
+        .brand-subtitle { font-size: 0.75rem; color: var(--subtext-color); margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
 
+        .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+        /* Botón de carga Excel estandarizado */
+        .upload-btn-wrapper {
+            position: relative; display: inline-flex; align-items: center;
+            background-color: var(--btn-upload-bg); border: 1px solid var(--btn-upload-border);
+            border-radius: 10px; padding: 8px 16px; cursor: pointer;
+            transition: all 0.2s ease; backdrop-filter: blur(4px);
+        }
+        .upload-btn-wrapper:hover { background-color: var(--btn-upload-hover); transform: translateY(-1px); }
+        .upload-btn-wrapper input[type="file"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .upload-btn-icon { color: #4ade80; font-size: 1.2rem; margin-right: 10px; }
+        .upload-btn-content { display: flex; flex-direction: column; text-align: left; }
+        .upload-btn-title { font-size: 0.85rem; font-weight: 700; color: var(--text-color); }
+        .upload-btn-subtitle { font-size: 0.65rem; color: var(--subtext-color); }
+
+        /* Botón Tema */
+        #theme-toggle {
+            background: var(--btn-upload-bg); border: 1px solid var(--btn-upload-border);
+            color: var(--text-color); width: 42px; height: 42px; border-radius: 10px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; transition: all 0.2s ease; backdrop-filter: blur(4px); flex-shrink: 0;
+        }
+        #theme-toggle:hover { background: var(--btn-upload-hover); transform: translateY(-1px) rotate(15deg); }
+
+        /* Campana de Notificaciones */
+        #notif-bell {
+            position: relative; background: var(--btn-upload-bg); color: var(--text-color);
+            border: 1px solid var(--btn-upload-border); width: 42px; height: 42px;
+            border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center;
+            justify-content: center; font-size: 18px; transition: all 0.2s ease;
+            flex-shrink: 0; backdrop-filter: blur(4px);
+        }
+        #notif-bell:hover { background: var(--btn-upload-hover); transform: translateY(-1px); }
+        #notif-badge {
+            position: absolute; top: -6px; right: -6px; background: #dc2626; color: white;
+            font-size: 10px; font-weight: 800; min-width: 20px; height: 20px;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            padding: 0 5px; box-shadow: 0 2px 6px rgba(220,38,38,0.5); border: 2px solid #DA291C;
+        }
+        #notif-badge.hidden { display: none !important; }
+        @keyframes badgePulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        #notif-badge.pulse { animation: badgePulse 0.5s ease-out; }
+
+        /* --- ESTILOS BASE DEL DASHBOARD --- */
         .container { max-width: 1750px; margin: 25px auto; padding: 0 25px; width: 100%; flex: 1; }
 
-        .upload-btn { background-color: #FFFFFF; color: var(--estafeta-red); padding: 8px 16px; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; transition: background-color 0.2s ease; display: inline-flex; align-items: center; gap: 8px; position: relative; overflow: hidden; max-width: 300px; }
-        .upload-btn:hover { background-color: #F8FAFC; }
-        #file-input { display: none; }
-        #dashboard-content { display: none; }
-
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 25px; }
+        .kpi-card { background: var(--estafeta-white); padding: 18px; border-radius: 10px; border-top: 4px solid var(--estafeta-red); box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: default; }
+        .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.15), 0 12px 24px -8px rgba(218, 41, 28, 0.25); }
+        
+        @keyframes cardEnter { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
 
-        .kpi-card {
-            background: var(--estafeta-white);
-            padding: 18px;
-            border-radius: 10px;
-            border-top: 4px solid var(--estafeta-red);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: default;
-        }
-        .kpi-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.15), 0 12px 24px -8px rgba(218, 41, 28, 0.25);
-        }
-        @keyframes cardEnter {
-            from { opacity: 0; transform: translateY(20px) scale(0.96); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .card-enter {
-            animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards;
-        }
-
-        @keyframes pulseCritical {
-            0%, 100% { background-color: rgba(220, 38, 38, 0.08); }
-            50%      { background-color: rgba(220, 38, 38, 0.28); }
-        }
-        .critical-pulse {
-            animation: pulseCritical 2s ease-in-out infinite;
-            font-weight: 800;
-            color: #dc2626 !important;
-            border-radius: 4px;
-            padding: 2px 6px;
-            display: inline-block;
-        }
-        .warning-pulse {
-            animation: pulseCritical 2.5s ease-in-out infinite;
-            font-weight: 800;
-            color: #f59e0b !important;
-            border-radius: 4px;
-            padding: 2px 6px;
-            display: inline-block;
-        }
+        @keyframes pulseCritical { 0%, 100% { background-color: rgba(220, 38, 38, 0.08); } 50% { background-color: rgba(220, 38, 38, 0.28); } }
+        .critical-pulse { animation: pulseCritical 2s ease-in-out infinite; font-weight: 800; color: #dc2626 !important; border-radius: 4px; padding: 2px 6px; display: inline-block; }
+        .warning-pulse { animation: pulseCritical 2.5s ease-in-out infinite; font-weight: 800; color: #f59e0b !important; border-radius: 4px; padding: 2px 6px; display: inline-block; }
 
         .ripple-host { position: relative; overflow: hidden; }
-        .ripple-effect {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.55);
-            transform: scale(0);
-            animation: rippleAnim 0.6s ease-out;
-            pointer-events: none;
-        }
+        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.55); transform: scale(0); animation: rippleAnim 0.6s ease-out; pointer-events: none; }
         @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
 
         .kpi-header-row { display: flex; justify-content: space-between; align-items: center; }
@@ -117,27 +164,8 @@
         .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(550px, 1fr)); gap: 20px; margin-bottom: 25px; }
         .chart-card { background: var(--estafeta-white); border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid var(--border-color); position: relative; transition: all 0.3s ease; }
 
-        .chart-card.fullscreen, .table-card.fullscreen {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            z-index: 99999 !important;
-            border-radius: 0 !important;
-            overflow-y: auto !important;
-            padding: 30px !important;
-        }
-
-        .fullscreen .pagination-container {
-            position: sticky;
-            bottom: 0;
-            background: white;
-            z-index: 10;
-            padding: 10px 20px;
-            margin: 0 -20px -20px -20px;
-            border-top: 1px solid var(--border-color);
-        }
+        .chart-card.fullscreen, .table-card.fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 99999 !important; border-radius: 0 !important; overflow-y: auto !important; padding: 30px !important; }
+        .fullscreen .pagination-container { position: sticky; bottom: 0; background: white; z-index: 10; padding: 10px 20px; margin: 0 -20px -20px -20px; border-top: 1px solid var(--border-color); }
 
         .fullscreen-btn { background: none; border: 1px solid var(--border-color); background-color: #F8FAFC; color: var(--estafeta-dark); padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: background 0.2s, color 0.2s, border 0.2s; display: inline-flex; align-items: center; gap: 5px; position: relative; overflow: hidden; }
         .fullscreen-btn:hover { background-color: var(--estafeta-red); color: white; border-color: var(--estafeta-red); }
@@ -149,28 +177,8 @@
         .custom-multiselect { position: relative; display: inline-block; }
         .multiselect-header { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: white; font-size: 13px; color: var(--estafeta-dark); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; min-width: 180px; }
 
-        .multiselect-dropdown {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.95);
-            width: 380px;
-            max-width: 90vw;
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-            z-index: 999999;
-            display: none;
-            padding: 20px;
-            opacity: 0;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .multiselect-dropdown.show {
-            display: block;
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
+        .multiselect-dropdown { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95); width: 380px; max-width: 90vw; background: white; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); z-index: 999999; display: none; padding: 20px; opacity: 0; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        .multiselect-dropdown.show { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
         .modal-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.4); z-index: 999988; display: none; backdrop-filter: blur(2px); }
         .modal-backdrop.show { display: block; }
@@ -227,76 +235,25 @@
         .table-custom-ref td:first-child, .table-custom-ref th:first-child, .table-custom-ref tfoot th:first-child { text-align: left; }
         footer { text-align: center; padding: 15px; font-size: 12px; color: var(--estafeta-gray); background: white; border-top: 1px solid var(--border-color); margin-top: auto; display: none; }
 
-        .floating-clear-btn {
-            position: fixed !important;
-            bottom: 25px !important;
-            right: 85px !important;
-            left: auto !important;
-            top: auto !important;
-            background-color: var(--estafeta-dark);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 30px;
-            border: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            z-index: 9999;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-            overflow: hidden;
-            white-space: nowrap;
-            width: 210px;
-            min-width: 210px;
-            max-width: 210px;
-            box-sizing: border-box;
-            transform: none !important;
-            will-change: auto;
-        }
-        .floating-clear-btn:hover {
-            background-color: #333333;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-        }
+        .floating-clear-btn { position: fixed !important; bottom: 25px !important; right: 85px !important; left: auto !important; top: auto !important; background-color: var(--estafeta-dark); color: white; padding: 12px 20px; border-radius: 30px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; z-index: 9999; transition: background-color 0.3s ease, box-shadow 0.3s ease; overflow: hidden; white-space: nowrap; width: 210px; min-width: 210px; max-width: 210px; box-sizing: border-box; transform: none !important; will-change: auto; }
+        .floating-clear-btn:hover { background-color: #333333; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
         .floating-clear-btn.hidden { display: none !important; }
 
         .floating-plaza-container { position: fixed; bottom: 25px; left: 25px; background-color: var(--estafeta-white); color: var(--estafeta-dark); padding: 10px 18px; border-radius: 30px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; z-index: 9999; transition: box-shadow 0.3s ease; }
         .floating-plaza-container:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
         .floating-plaza-container.hidden { display: none !important; }
 
-        #theme-toggle { position: fixed; bottom: 25px; right: 25px; z-index: 10000; width: 48px; height: 48px; border-radius: 999px; background: #1e293b; color: white; border: none; cursor: pointer; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        #theme-toggle:hover { transform: scale(1.08) rotate(15deg); background: #334155; }
-        body.dark-mode #theme-toggle { background: #fbbf24; color: #1e293b; }
-
         body.dark-mode { background-color: #0f172a !important; color: #e2e8f0 !important; }
-        body.dark-mode header { background: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B) !important; background-size: 300% 100% !important; }
-        body.dark-mode .kpi-card,
-        body.dark-mode .chart-card,
-        body.dark-mode .table-card,
-        body.dark-mode .tab-nav,
-        body.dark-mode footer { background-color: #1e293b !important; border-color: #334155 !important; color: #e2e8f0 !important; }
-        body.dark-mode .kpi-value,
-        body.dark-mode .chart-title,
-        body.dark-mode .logo-title { color: #f1f5f9 !important; }
-        body.dark-mode .kpi-title,
-        body.dark-mode .kpi-subtext,
-        body.dark-mode .table-filter-group label,
-        body.dark-mode footer { color: #94a3b8 !important; }
+        body.dark-mode .kpi-card, body.dark-mode .chart-card, body.dark-mode .table-card, body.dark-mode .tab-nav, body.dark-mode footer { background-color: #1e293b !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+        body.dark-mode .kpi-value, body.dark-mode .chart-title, body.dark-mode .logo-title { color: #f1f5f9 !important; }
+        body.dark-mode .kpi-title, body.dark-mode .kpi-subtext, body.dark-mode .table-filter-group label, body.dark-mode footer { color: #94a3b8 !important; }
         body.dark-mode table thead tr { background-color: #0f172a !important; color: #94a3b8 !important; }
         body.dark-mode th { background-color: #0f172a !important; color: #94a3b8 !important; }
         body.dark-mode th:hover { background-color: #334155 !important; }
         body.dark-mode td { color: #e2e8f0; }
         body.dark-mode tr:hover { background-color: #334155 !important; }
-        body.dark-mode .table-filter-container,
-        body.dark-mode .pivot-controls,
-        body.dark-mode .fullscreen-btn { background-color: #0f172a !important; border-color: #334155 !important; color: #e2e8f0 !important; }
-        body.dark-mode .table-filter-input,
-        body.dark-mode .table-filter-select,
-        body.dark-mode .pivot-select,
-        body.dark-mode .chart-filter-select { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        body.dark-mode .table-filter-container, body.dark-mode .pivot-controls, body.dark-mode .fullscreen-btn { background-color: #0f172a !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+        body.dark-mode .table-filter-input, body.dark-mode .table-filter-select, body.dark-mode .pivot-select, body.dark-mode .chart-filter-select { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
         body.dark-mode .multiselect-header { background: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
         body.dark-mode .multiselect-dropdown { background: #1e293b !important; border-color: #334155 !important; }
         body.dark-mode .multiselect-search-box { background: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
@@ -311,210 +268,39 @@
         body.dark-mode .table-custom-ref thead th { background-color: #0f172a !important; }
         body.dark-mode footer { display: block !important; }
 
-        /* ============================================ */
-        /* CAMPANA DE NOTIFICACIONES - ESTILOS          */
-        /* ============================================ */
-        #notif-bell {
-            position: relative;
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: #FFFFFF;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            transition: background 0.2s, transform 0.2s;
-        }
-        #notif-bell:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
-
-        #notif-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            min-width: 20px;
-            height: 20px;
-            padding: 0 5px;
-            background: #dc2626;
-            color: white;
-            border: 2px solid #DA291C;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-        }
-        #notif-badge.hidden { display: none; }
-        @keyframes badgePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
-        #notif-badge.pulse { animation: badgePulse 0.6s ease-in-out 2; }
-
-        #notif-toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 100000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 380px;
-            width: calc(100vw - 40px);
-            pointer-events: none;
-        }
-
-        .notif-toast {
-            background: white;
-            border-radius: 10px;
-            padding: 14px 16px;
-            box-shadow: 0 8px 25px -5px rgba(0,0,0,0.2), 0 4px 10px -4px rgba(0,0,0,0.1);
-            border-left: 4px solid #3b82f6;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            pointer-events: auto;
-            animation: notifToastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        @keyframes notifToastIn {
-            from { opacity: 0; transform: translateX(100%); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        .notif-toast.removing {
-            animation: notifToastOut 0.3s ease forwards;
-        }
-        @keyframes notifToastOut {
-            to { opacity: 0; transform: translateX(100%); }
-        }
+        /* --- NOTIFICACIONES (TOASTS Y PANEL) --- */
+        #notif-toast-container { position: fixed; top: 90px; right: 20px; z-index: 9998; display: flex; flex-direction: column; gap: 10px; max-width: 380px; width: calc(100vw - 40px); pointer-events: none; }
+        .notif-toast { background: white; border-radius: 10px; padding: 14px 16px; box-shadow: 0 8px 25px -5px rgba(0,0,0,0.2), 0 4px 10px -4px rgba(0,0,0,0.1); border-left: 4px solid #3b82f6; display: flex; gap: 12px; align-items: flex-start; pointer-events: auto; animation: notifToastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden; }
+        @keyframes notifToastIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+        .notif-toast.removing { animation: notifToastOut 0.3s ease forwards; }
+        @keyframes notifToastOut { to { opacity: 0; transform: translateX(100%); } }
         .notif-toast.notif-danger { border-left-color: #dc2626; }
         .notif-toast.notif-warning { border-left-color: #f59e0b; }
         .notif-toast.notif-info { border-left-color: #3b82f6; }
         .notif-toast.notif-success { border-left-color: #10b981; }
-
-        .notif-toast-icon {
-            font-size: 20px;
-            line-height: 1;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
+        .notif-toast-icon { font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
         .notif-toast.notif-danger .notif-toast-icon { color: #dc2626; }
         .notif-toast.notif-warning .notif-toast-icon { color: #f59e0b; }
         .notif-toast.notif-info .notif-toast-icon { color: #3b82f6; }
         .notif-toast.notif-success .notif-toast-icon { color: #10b981; }
-
         .notif-toast-content { flex: 1; min-width: 0; }
-        .notif-toast-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 3px;
-            line-height: 1.3;
-        }
-        .notif-toast-msg {
-            font-size: 12px;
-            color: #475569;
-            line-height: 1.4;
-            word-break: break-word;
-        }
-        .notif-toast-close {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            cursor: pointer;
-            font-size: 14px;
-            padding: 0 2px;
-            flex-shrink: 0;
-        }
+        .notif-toast-title { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 3px; line-height: 1.3; }
+        .notif-toast-msg { font-size: 12px; color: #475569; line-height: 1.4; word-break: break-word; }
+        .notif-toast-close { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 14px; padding: 0 2px; flex-shrink: 0; }
         .notif-toast-close:hover { color: #475569; }
+        .notif-toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: currentColor; opacity: 0.4; animation: notifProgress linear forwards; }
+        @keyframes notifProgress { from { width: 100%; } to { width: 0%; } }
 
-        .notif-toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: currentColor;
-            opacity: 0.4;
-            animation: notifProgress linear forwards;
-        }
-        @keyframes notifProgress {
-            from { width: 100%; }
-            to { width: 0%; }
-        }
-
-        #notif-panel {
-            position: fixed;
-            top: 70px;
-            right: 20px;
-            width: 400px;
-            max-width: calc(100vw - 40px);
-            max-height: 70vh;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3), 0 10px 20px -5px rgba(0,0,0,0.15);
-            z-index: 100001;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            animation: notifPanelIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        #notif-panel { position: fixed; top: 70px; right: 20px; width: 400px; max-width: calc(100vw - 40px); max-height: 70vh; background: white; border-radius: 16px; box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3), 0 10px 20px -5px rgba(0,0,0,0.15); z-index: 100001; display: none; flex-direction: column; overflow: hidden; animation: notifPanelIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
         #notif-panel.show { display: flex; }
-        @keyframes notifPanelIn {
-            from { opacity: 0; transform: translateY(-10px) scale(0.97); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .notif-panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 18px;
-            border-bottom: 1px solid #e2e8f0;
-            font-weight: 700;
-            font-size: 14px;
-            color: #1e293b;
-        }
-        .notif-panel-header button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #64748b;
-            font-size: 16px;
-            padding: 4px;
-            border-radius: 6px;
-        }
+        @keyframes notifPanelIn { from { opacity: 0; transform: translateY(-10px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .notif-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-size: 14px; color: #1e293b; }
+        .notif-panel-header button { background: none; border: none; cursor: pointer; color: #64748b; font-size: 16px; padding: 4px; border-radius: 6px; }
         .notif-panel-header button:hover { background: #f1f5f9; color: #1e293b; }
-
-        .notif-panel-body {
-            flex: 1;
-            overflow-y: auto;
-            max-height: calc(70vh - 110px);
-        }
-
-        .notif-empty {
-            padding: 40px 20px;
-            text-align: center;
-            color: #94a3b8;
-            font-size: 13px;
-        }
+        .notif-panel-body { flex: 1; overflow-y: auto; max-height: calc(70vh - 110px); }
+        .notif-empty { padding: 40px 20px; text-align: center; color: #94a3b8; font-size: 13px; }
         .notif-empty i { font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5; }
-
-        .notif-item {
-            padding: 12px 18px;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            border-left: 3px solid transparent;
-            cursor: default;
-            transition: background 0.15s;
-        }
+        .notif-item { padding: 12px 18px; border-bottom: 1px solid #f1f5f9; display: flex; gap: 12px; align-items: flex-start; border-left: 3px solid transparent; cursor: default; transition: background 0.15s; }
         .notif-item:hover { background: #f8fafc; }
         .notif-item.unread { background: #fef2f2; }
         .notif-item.unread:hover { background: #fee2e2; }
@@ -522,57 +308,20 @@
         .notif-item.notif-warning { border-left-color: #f59e0b; }
         .notif-item.notif-info { border-left-color: #3b82f6; }
         .notif-item.notif-success { border-left-color: #10b981; }
-
         .notif-item-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
         .notif-item.notif-danger .notif-item-icon { color: #dc2626; }
         .notif-item.notif-warning .notif-item-icon { color: #f59e0b; }
         .notif-item.notif-info .notif-item-icon { color: #3b82f6; }
         .notif-item.notif-success .notif-item-icon { color: #10b981; }
-
         .notif-item-body { flex: 1; min-width: 0; }
-        .notif-item-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 3px;
-            line-height: 1.3;
-        }
-        .notif-item-msg {
-            font-size: 12px;
-            color: #475569;
-            line-height: 1.4;
-            word-break: break-word;
-        }
-        .notif-item-time {
-            font-size: 11px;
-            color: #94a3b8;
-            margin-top: 4px;
-        }
-
-        .notif-panel-footer {
-            display: flex;
-            gap: 8px;
-            padding: 12px 18px;
-            border-top: 1px solid #e2e8f0;
-            background: #f8fafc;
-        }
-        .notif-panel-footer button {
-            flex: 1;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            background: white;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #475569;
-            transition: all 0.15s;
-        }
+        .notif-item-title { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 3px; line-height: 1.3; }
+        .notif-item-msg { font-size: 12px; color: #475569; line-height: 1.4; word-break: break-word; }
+        .notif-item-time { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+        .notif-panel-footer { display: flex; gap: 8px; padding: 12px 18px; border-top: 1px solid #e2e8f0; background: #f8fafc; }
+        .notif-panel-footer button { flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: white; font-size: 12px; font-weight: 600; cursor: pointer; color: #475569; transition: all 0.15s; }
         .notif-panel-footer button:hover { background: var(--estafeta-red); color: white; border-color: var(--estafeta-red); }
         .notif-panel-footer button.danger-btn:hover { background: #dc2626; border-color: #dc2626; }
 
-        body.dark-mode #notif-bell { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
-        body.dark-mode #notif-badge { border-color: #991B1B; }
         body.dark-mode .notif-toast { background: #1e293b; }
         body.dark-mode .notif-toast-title { color: #f1f5f9; }
         body.dark-mode .notif-toast-msg { color: #cbd5e1; }
@@ -591,23 +340,8 @@
         body.dark-mode .notif-empty { color: #64748b; }
 
         @media (max-width: 640px) {
-            #notif-toast-container {
-                top: auto;
-                bottom: 20px;
-                right: 10px;
-                left: 10px;
-                width: auto;
-                max-width: none;
-            }
-            #notif-panel {
-                top: auto;
-                bottom: 10px;
-                right: 10px;
-                left: 10px;
-                width: auto;
-                max-width: none;
-                max-height: 75vh;
-            }
+            #notif-toast-container { top: auto; bottom: 20px; right: 10px; left: 10px; width: auto; max-width: none; }
+            #notif-panel { top: auto; bottom: 10px; right: 10px; left: 10px; width: auto; max-width: none; max-height: 75vh; }
         }
     </style>
 </head>
@@ -615,158 +349,140 @@
 
     <div class="modal-backdrop" id="modal-backdrop" onclick="closeAllModals()"></div>
 
+    <!-- MODALES DE MULTISELECT (Mismo comportamiento que el original) -->
     <div class="multiselect-dropdown" id="plaza-multiselect-dropdown-box">
-        <div class="modal-title-bar">
-            <span>Filtrar Plaza Operativa</span>
-            <i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i>
-        </div>
+        <div class="modal-title-bar"><span>Filtrar Plaza Operativa</span><i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i></div>
         <input type="text" class="multiselect-search-box" id="search-plaza" placeholder="Buscar plaza..." oninput="filterMultiselectOptions('plaza-multiselect-options-container', 'search-plaza')">
-        <div class="multiselect-actions">
-            <span onclick="selectAllPlazas(true)">Seleccionar todas</span>
-            <span onclick="selectAllPlazas(false)">Ninguna</span>
-        </div>
+        <div class="multiselect-actions"><span onclick="selectAllPlazas(true)">Seleccionar todas</span><span onclick="selectAllPlazas(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="plaza-multiselect-options-container"></div>
         <button class="modal-apply-btn" onclick="closeAllModals()">Aplicar Filtro</button>
     </div>
 
     <div class="multiselect-dropdown" id="multiselect-dropdown-box">
-        <div class="modal-title-bar">
-            <span>Filtrar Rutas</span>
-            <i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i>
-        </div>
+        <div class="modal-title-bar"><span>Filtrar Rutas</span><i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i></div>
         <input type="text" class="multiselect-search-box" id="search-chart-ruta" placeholder="Buscar ruta..." oninput="filterMultiselectOptions('multiselect-options-container', 'search-chart-ruta')">
-        <div class="multiselect-actions">
-            <span onclick="selectAllRoutes(true)">Seleccionar todas</span>
-            <span onclick="selectAllRoutes(false)">Ninguna</span>
-        </div>
+        <div class="multiselect-actions"><span onclick="selectAllRoutes(true)">Seleccionar todas</span><span onclick="selectAllRoutes(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="multiselect-options-container"></div>
         <button class="modal-apply-btn" onclick="closeAllModals()">Aplicar Filtro</button>
     </div>
 
     <div class="multiselect-dropdown" id="colores-multiselect-dropdown-box">
-        <div class="modal-title-bar">
-            <span>Filtrar Rutas (Colores)</span>
-            <i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i>
-        </div>
+        <div class="modal-title-bar"><span>Filtrar Rutas (Colores)</span><i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i></div>
         <input type="text" class="multiselect-search-box" id="search-colores-ruta" placeholder="Buscar ruta..." oninput="filterMultiselectOptions('colores-multiselect-options-container', 'search-colores-ruta')">
-        <div class="multiselect-actions">
-            <span onclick="selectAllColoresRoutes(true)">Seleccionar todas</span>
-            <span onclick="selectAllColoresRoutes(false)">Ninguna</span>
-        </div>
+        <div class="multiselect-actions"><span onclick="selectAllColoresRoutes(true)">Seleccionar todas</span><span onclick="selectAllColoresRoutes(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="colores-multiselect-options-container"></div>
         <button class="modal-apply-btn" onclick="closeAllModals()">Aplicar Filtro</button>
     </div>
 
     <div class="multiselect-dropdown" id="table-resumen-multiselect-dropdown-box">
-        <div class="modal-title-bar">
-            <span>Filtrar Rutas (Resumen)</span>
-            <i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i>
-        </div>
+        <div class="modal-title-bar"><span>Filtrar Rutas (Resumen)</span><i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i></div>
         <input type="text" class="multiselect-search-box" id="search-table-resumen-ruta" placeholder="Buscar ruta..." oninput="filterMultiselectOptions('table-resumen-multiselect-options-container', 'search-table-resumen-ruta')">
-        <div class="multiselect-actions">
-            <span onclick="selectAllTableResumenRoutes(true)">Seleccionar todas</span>
-            <span onclick="selectAllTableResumenRoutes(false)">Ninguna</span>
-        </div>
+        <div class="multiselect-actions"><span onclick="selectAllTableResumenRoutes(true)">Seleccionar todas</span><span onclick="selectAllTableResumenRoutes(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="table-resumen-multiselect-options-container"></div>
         <button class="modal-apply-btn" onclick="closeAllModals()">Aplicar Filtro</button>
     </div>
 
     <div class="multiselect-dropdown" id="table-horarios-multiselect-dropdown-box">
-        <div class="modal-title-bar">
-            <span>Filtrar Rutas (Horarios)</span>
-            <i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i>
-        </div>
+        <div class="modal-title-bar"><span>Filtrar Rutas (Horarios)</span><i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i></div>
         <input type="text" class="multiselect-search-box" id="search-table-horarios-ruta" placeholder="Buscar ruta..." oninput="filterMultiselectOptions('table-horarios-multiselect-options-container', 'search-table-horarios-ruta')">
-        <div class="multiselect-actions">
-            <span onclick="selectAllTableHorariosRoutes(true)">Seleccionar todas</span>
-            <span onclick="selectAllTableHorariosRoutes(false)">Ninguna</span>
-        </div>
+        <div class="multiselect-actions"><span onclick="selectAllTableHorariosRoutes(true)">Seleccionar todas</span><span onclick="selectAllTableHorariosRoutes(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="table-horarios-multiselect-options-container"></div>
         <button class="modal-apply-btn" onclick="closeAllModals()">Aplicar Filtro</button>
     </div>
 
     <div class="multiselect-dropdown" id="table-colores-multiselect-dropdown-box">
-        <div class="modal-title-bar">
-            <span>Filtrar Rutas (Salida a Ruta)</span>
-            <i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i>
-        </div>
+        <div class="modal-title-bar"><span>Filtrar Rutas (Salida a Ruta)</span><i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i></div>
         <input type="text" class="multiselect-search-box" id="search-table-colores-ruta" placeholder="Buscar ruta..." oninput="filterMultiselectOptions('table-colores-multiselect-options-container', 'search-table-colores-ruta')">
-        <div class="multiselect-actions">
-            <span onclick="selectAllTableColoresRoutes(true)">Seleccionar todas</span>
-            <span onclick="selectAllTableColoresRoutes(false)">Ninguna</span>
-        </div>
+        <div class="multiselect-actions"><span onclick="selectAllTableColoresRoutes(true)">Seleccionar todas</span><span onclick="selectAllTableColoresRoutes(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="table-colores-multiselect-options-container"></div>
         <button class="modal-apply-btn" onclick="closeAllModals()">Aplicar Filtro</button>
     </div>
 
     <div class="multiselect-dropdown" id="pivot-multiselect-dropdown-box">
-        <div class="modal-title-bar">
-            <span>Filtrar Rutas (Tabla Dinámica)</span>
-            <i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i>
-        </div>
+        <div class="modal-title-bar"><span>Filtrar Rutas (Tabla Dinámica)</span><i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i></div>
         <input type="text" class="multiselect-search-box" id="search-pivot-ruta" placeholder="Buscar ruta..." oninput="filterMultiselectOptions('pivot-multiselect-options-container', 'search-pivot-ruta')">
-        <div class="multiselect-actions">
-            <span onclick="selectAllPivotRoutes(true)">Seleccionar todas</span>
-            <span onclick="selectAllPivotRoutes(false)">Ninguna</span>
-        </div>
+        <div class="multiselect-actions"><span onclick="selectAllPivotRoutes(true)">Seleccionar todas</span><span onclick="selectAllPivotRoutes(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="pivot-multiselect-options-container"></div>
         <button class="modal-apply-btn" onclick="closeAllModals()">Aplicar Filtro</button>
     </div>
 
-    <header>
-        <div class="logo-container">
-            <div class="logo-title">ESTAFETA</div>
-            <div class="logo-subtitle">Resumen Operativo</div>
+    <!-- ============================================================
+         BANNER MAESTRO INTEGRADO
+         ============================================================ -->
+    <header class="master-header">
+        <div class="header-brand">
+            <div class="brand-logo">E</div>
+            <div class="brand-titles">
+                <h1 class="brand-title">Resumen Operativo</h1>
+                <p class="brand-subtitle">Estafeta - Control y Gestión</p>
+            </div>
         </div>
-        <div id="header-actions-container" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-            <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-                <i class="fa-solid fa-file-excel" style="color: #4ade80;"></i> Cargar Excel
+        <div class="header-actions" id="header-actions-container">
+            
+            <!-- Botón de Carga Excel -->
+            <div class="upload-btn-wrapper" id="drop-zone">
+                <input type="file" id="file-input" accept=".xlsx, .xls" onchange="handleFileSelect(event)">
+                <i class="fa-solid fa-file-excel upload-btn-icon"></i>
+                <div class="upload-btn-content">
+                    <span class="upload-btn-title">Cargar Excel</span>
+                    <span class="upload-btn-subtitle">Arrastra o clic aquí</span>
+                </div>
+            </div>
+
+            <!-- Campana de Notificaciones (se inyecta por JS) -->
+            <div id="notif-bell-slot"></div>
+
+            <!-- Botón de Modo Oscuro/Claro (EN EL BANNER) -->
+            <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+                <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
             </button>
-            <input type="file" id="file-input" accept=".xlsx, .xls" onchange="handleFileSelect(event)">
         </div>
     </header>
 
+    <!-- ============================================================
+         CONTENIDO PRINCIPAL (Inicialmente Oculto)
+         ============================================================ -->
     <div class="container">
-        <div id="dashboard-content">
+        <div id="dashboard-content" style="display: none;">
             <div class="kpi-grid">
                 <div class="kpi-card" style="border-top-color: var(--estafeta-red);">
                     <div class="kpi-header-row"><div class="kpi-title">Total Rutas</div><i class="fa-solid fa-route kpi-icon" style="color: var(--estafeta-red);"></i></div>
-                    <div class="kpi-value" id="kpi-total-rutas">0</div>
+                    <div class="kpi-value" id="kpi-total-rutas">-</div>
                     <div class="kpi-subtext">Rutas en Operación</div>
                 </div>
                 <div class="kpi-card" style="border-top-color: #3B82F6;">
                     <div class="kpi-header-row"><div class="kpi-title">Total en Ruta</div><i class="fa-solid fa-box-open kpi-icon" style="color: #3B82F6;"></i></div>
-                    <div class="kpi-value" id="kpi-total-paquetes">0</div>
+                    <div class="kpi-value" id="kpi-total-paquetes">-</div>
                     <div class="kpi-subtext">Cargados a Ruta</div>
                 </div>
                 <div class="kpi-card" style="border-top-color: var(--status-green);">
                     <div class="kpi-header-row"><div class="kpi-title">Entregados</div><i class="fa-solid fa-circle-check kpi-icon" style="color: var(--status-green);"></i></div>
-                    <div class="kpi-value" id="kpi-entregados">0</div>
-                    <div class="kpi-subtext" id="kpi-entregados-sub">0.00% del total</div>
+                    <div class="kpi-value" id="kpi-entregados">-</div>
+                    <div class="kpi-subtext" id="kpi-entregados-sub">- del total</div>
                 </div>
                 <div class="kpi-card" style="border-top-color: var(--status-yellow);">
                     <div class="kpi-header-row"><div class="kpi-title">Pendientes</div><i class="fa-solid fa-clock kpi-icon" style="color: var(--status-yellow);"></i></div>
-                    <div class="kpi-value" id="kpi-pendientes">0</div>
-                    <div class="kpi-subtext" id="kpi-pendientes-pct">0.00% del total</div>
+                    <div class="kpi-value" id="kpi-pendientes">-</div>
+                    <div class="kpi-subtext" id="kpi-pendientes-pct">- del total</div>
                 </div>
                 <div class="kpi-card" style="border-top-color: var(--status-red);">
                     <div class="kpi-header-row"><div class="kpi-title">Devolución</div><i class="fa-solid fa-rotate-left kpi-icon" style="color: var(--status-red);"></i></div>
-                    <div class="kpi-value" id="kpi-excepcionados">0</div>
+                    <div class="kpi-value" id="kpi-excepcionados">-</div>
                     <div class="kpi-subtext">Excepcionados</div>
                 </div>
                 <div class="kpi-card" style="border-top-color: var(--status-green);">
                     <div class="kpi-header-row"><div class="kpi-title">Eficiencia</div><i class="fa-solid fa-chart-line kpi-icon" style="color: var(--status-green);"></i></div>
-                    <div class="kpi-value" id="kpi-eficiencia">0.00%</div>
+                    <div class="kpi-value" id="kpi-eficiencia">- %</div>
                     <div class="kpi-subtext">Promedio general</div>
                 </div>
                 <div class="kpi-card" style="border-top-color: #06B6D4;">
                     <div class="kpi-header-row"><div class="kpi-title">Avance</div><i class="fa-solid fa-gauge-high kpi-icon" style="color: #06B6D4;"></i></div>
-                    <div class="kpi-value" id="kpi-avance-gestion">0.00%</div>
+                    <div class="kpi-value" id="kpi-avance-gestion">- %</div>
                     <div class="kpi-subtext">Promedio del avance</div>
                 </div>
                 <div class="kpi-card" style="border-top-color: #8B5CF6;">
                     <div class="kpi-header-row"><div class="kpi-title">Productividad</div><i class="fa-solid fa-people-carry-box kpi-icon" style="color: #8B5CF6;"></i></div>
-                    <div class="kpi-value" id="kpi-productividad">0</div>
+                    <div class="kpi-value" id="kpi-productividad">-</div>
                     <div class="kpi-subtext">Paquetes / Ruta</div>
                 </div>
             </div>
@@ -866,7 +582,9 @@
                                     <th>Barra de Eficiencia</th>
                                 </tr>
                             </thead>
-                            <tbody></tbody>
+                            <tbody>
+                                <tr><td colspan="10" style="text-align: center; color: var(--estafeta-gray); padding: 20px;">Sin datos cargados.</td></tr>
+                            </tbody>
                             <tfoot></tfoot>
                         </table>
                         <div class="pagination-container" id="pagination-controls" style="display: none;">
@@ -916,7 +634,9 @@
                                     <th onclick="sortHorariosTable(5)">Estado <i class="fa-solid fa-sort sort-icon" id="sort-horarios-icon-5"></i></th>
                                 </tr>
                             </thead>
-                            <tbody></tbody>
+                            <tbody>
+                                <tr><td colspan="6" style="text-align: center; color: var(--estafeta-gray); padding: 20px;">Sin datos cargados.</td></tr>
+                            </tbody>
                         </table>
                         <div class="pagination-container" id="pagination-horarios-controls" style="display: none;">
                             <span id="pagination-horarios-info">Mostrando 1-10 de 0 registros</span>
@@ -967,7 +687,9 @@
                                         <th style="background-color: #6B7280; color: #FFF;">Gris</th>
                                     </tr>
                                 </thead>
-                                <tbody></tbody>
+                                <tbody>
+                                    <tr><td colspan="8" style="text-align: center; color: var(--estafeta-gray); padding: 20px;">Sin datos cargados.</td></tr>
+                                </tbody>
                                 <tfoot></tfoot>
                             </table>
                         </div>
@@ -1014,7 +736,9 @@
                                     <th onclick="sortPivotTable(8)">% Avance <i class="fa-solid fa-sort sort-icon" id="sort-pivot-icon-8"></i></th>
                                 </tr>
                             </thead>
-                            <tbody></tbody>
+                            <tbody>
+                                <tr><td colspan="9" style="text-align: center; color: var(--estafeta-gray); padding: 20px;">Sin datos cargados.</td></tr>
+                            </tbody>
                         </table>
                         <div class="pagination-container" id="pagination-pivot-controls" style="display: none;">
                             <span id="pagination-pivot-info">Mostrando 1-10 de 0 registros</span>
@@ -1044,10 +768,7 @@
         <i class="fa-solid fa-rotate-left"></i> <span id="floating-clear-text">Limpiar Filtros (00)</span>
     </button>
 
-    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
-        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
-    </button>
-
+    <!-- Contenedores de notificaciones -->
     <div id="notif-toast-container"></div>
     <div id="notif-panel" role="dialog" aria-label="Panel de notificaciones">
         <div class="notif-panel-header">
@@ -1482,7 +1203,7 @@
                 updateColoresChartFilter();
                 runVisualEffects();
 
-                // 🆕 Análisis y generación de notificaciones
+                // Análisis y generación de notificaciones
                 analyzeAndAlert(gTotalRutas, gTotalPaquetes, gEntregados, gPendientes, gExcepcionados,
                                 parseFloat(promedioEficienciaRutas), parseFloat(promedioAvanceRutas), parseInt(gProductividad.replace(/,/g, '')));
             } finally {
@@ -2377,11 +2098,11 @@
             successToastDuration: 4000,
             maxVisibleToasts: 3,
             rules: {
-                eficienciaCritica: 95,       // < 95% → danger
-                eficienciaRutaMinima: 90,    // rutas por debajo de esto en el top 3
-                devolucionGlobalMax: 2,      // > 2% → danger
-                avanceBajo: 80,              // < 80% → warning
-                avanceRutaCritico: 50,       // rutas por debajo → warning
+                eficienciaCritica: 95,
+                eficienciaRutaMinima: 90,
+                devolucionGlobalMax: 2,
+                avanceBajo: 80,
+                avanceRutaCritico: 50,
                 topPendientes: 3
             }
         };
@@ -2574,7 +2295,6 @@
             renderPanel();
         }
 
-        // Cierre al hacer clic fuera y con ESC
         document.addEventListener('click', (e) => {
             const panel = document.getElementById('notif-panel');
             const bell = document.getElementById('notif-bell');
@@ -2600,7 +2320,6 @@
             const R = NOTIF_CONFIG.rules;
             const fmt = (n) => Number(n).toLocaleString('es-MX');
 
-            // 1) Eficiencia crítica global
             if (eficienciaGlobal < R.eficienciaCritica) {
                 notifs.push({
                     type: 'danger',
@@ -2609,7 +2328,6 @@
                 });
             }
 
-            // 2) Top 3 rutas con menor eficiencia
             const rutasConEf = globalRutasArray
                 .filter(r => r.total > 0)
                 .map(r => {
@@ -2632,7 +2350,6 @@
                 });
             }
 
-            // 3) Devolución global elevada
             const pctDevGlobal = totalPaquetes > 0 ? (excepcionados / totalPaquetes) * 100 : 0;
             if (pctDevGlobal > R.devolucionGlobalMax) {
                 notifs.push({
@@ -2642,7 +2359,6 @@
                 });
             }
 
-            // 4) Avance bajo de gestión
             if (avanceGlobal < R.avanceBajo) {
                 notifs.push({
                     type: 'warning',
@@ -2651,7 +2367,6 @@
                 });
             }
 
-            // 5) Rutas con avance crítico (< 50%)
             const rutasAvanceCritico = globalRutasArray
                 .filter(r => r.total > 0)
                 .map(r => ({ ruta: r.ruta, avance: ((r.entregados + r.excepcionados) / r.total) * 100 }))
@@ -2666,7 +2381,6 @@
                 });
             }
 
-            // 6) Top 3 rutas con más pendientes
             const topPend = [...globalRutasArray]
                 .filter(r => r.pendientes > 0)
                 .sort((a, b) => b.pendientes - a.pendientes)
@@ -2680,7 +2394,6 @@
                 });
             }
 
-            // 7) Productividad informativa
             if (totalRutas > 0) {
                 notifs.push({
                     type: 'info',
@@ -2689,7 +2402,6 @@
                 });
             }
 
-            // 8) Carga exitosa (siempre, al final)
             notifs.push({
                 type: 'success',
                 title: '✅ Dashboard Actualizado',

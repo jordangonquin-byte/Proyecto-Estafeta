@@ -16,6 +16,169 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        /* ============================================================
+           VARIABLES DEL BANNER MAESTRO
+           ============================================================ */
+        :root {
+            --estafeta-red: #DA291C;
+            --estafeta-dark: #1e293b;
+            --estafeta-white: #ffffff;
+            --header-bg: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
+            --btn-upload-bg: rgba(0, 0, 0, 0.2);
+            --btn-upload-hover: rgba(0, 0, 0, 0.35);
+            --btn-upload-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
+            --subtext-color: #ffcdd2;
+            --badge-bg: #ffffff;
+            --badge-text: #DA291C;
+        }
+
+        body.dark-mode {
+            --header-bg: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
+            --btn-upload-bg: rgba(0, 0, 0, 0.4);
+            --btn-upload-hover: rgba(0, 0, 0, 0.6);
+            --btn-upload-border: rgba(255, 255, 255, 0.1);
+            --text-color: #f1f5f9;
+            --subtext-color: #fca5a5;
+            --badge-bg: #f8fafc;
+            --badge-text: #b91c1c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { margin: 0 !important; padding: 0 !important; width: 100%; }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50%      { background-position: 100% 50%; }
+        }
+
+        /* ============================================================
+           CONTENEDOR DEL BANNER MAESTRO
+           ============================================================ */
+        .master-header {
+            background: var(--header-bg);
+            background-size: 300% 100%;
+            animation: gradientShift 15s ease infinite;
+            color: var(--text-color);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: none !important;
+            width: 100%;
+            flex-wrap: wrap;
+            gap: 15px;
+            transition: background 0.3s ease;
+            position: relative;
+            z-index: 50;
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 15px; }
+        .brand-logo {
+            background-color: var(--badge-bg);
+            color: var(--badge-text);
+            font-weight: 900;
+            font-size: 24px;
+            width: 48px; height: 48px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        .brand-titles { display: flex; flex-direction: column; }
+        .brand-title {
+            font-size: 1.25rem; font-weight: 700; margin: 0;
+            line-height: 1.2; letter-spacing: 0.5px;
+        }
+        .brand-subtitle {
+            font-size: 0.75rem; color: var(--subtext-color); margin: 0;
+            text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;
+        }
+        .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+        /* --- BOTÓN DE CARGA EXCEL --- */
+        .upload-btn-wrapper {
+            position: relative;
+            display: inline-flex; align-items: center;
+            background-color: var(--btn-upload-bg);
+            border: 1px solid var(--btn-upload-border);
+            border-radius: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+        .upload-btn-wrapper:hover {
+            background-color: var(--btn-upload-hover);
+            transform: translateY(-1px);
+        }
+        .upload-btn-wrapper input[type="file"] {
+            position: absolute; left: 0; top: 0;
+            width: 100%; height: 100%; opacity: 0; cursor: pointer;
+        }
+        .upload-btn-icon { color: #4ade80; font-size: 1.2rem; margin-right: 10px; }
+        .upload-btn-content { display: flex; flex-direction: column; text-align: left; }
+        .upload-btn-title { font-size: 0.85rem; font-weight: 700; color: var(--text-color); }
+        .upload-btn-subtitle { font-size: 0.65rem; color: var(--subtext-color); }
+
+        /* --- BOTÓN DE MODO OSCURO --- */
+        #theme-toggle {
+            background: var(--btn-upload-bg);
+            border: 1px solid var(--btn-upload-border);
+            color: var(--text-color);
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+            flex-shrink: 0;
+        }
+        #theme-toggle:hover {
+            background: var(--btn-upload-hover);
+            transform: translateY(-1px) rotate(15deg);
+        }
+
+        /* --- CAMPANA (estilos maestros) --- */
+        #notif-bell {
+            position: relative;
+            background: var(--btn-upload-bg);
+            color: var(--text-color);
+            border: 1px solid var(--btn-upload-border);
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            backdrop-filter: blur(4px);
+        }
+        #notif-bell:hover { background: var(--btn-upload-hover); transform: translateY(-1px); }
+        #notif-badge {
+            position: absolute; top: -4px; right: -4px;
+            min-width: 20px; height: 20px; padding: 0 5px;
+            border-radius: 999px;
+            background: #dc2626; color: white;
+            font-size: 11px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #DA291C;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        #notif-badge.hidden { display: none; }
+        @keyframes badgePulse {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.35); }
+            100% { transform: scale(1); }
+        }
+        #notif-badge.pulse { animation: badgePulse 0.6s ease; }
+
+        /* ============================================================
+           ESTILOS DEL DASHBOARD
+           ============================================================ */
         .estafeta-red { background-color: #DA291C; }
         .estafeta-red-text { color: #DA291C; }
         .estafeta-border { border-color: #DA291C; }
@@ -28,16 +191,6 @@
             box-shadow: none !important; display: flex; flex-direction: column;
         }
         #map-card.fullscreen #map { flex-grow: 1 !important; height: auto !important; }
-
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50%      { background-position: 100% 50%; }
-        }
-        header.estafeta-red {
-            background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C) !important;
-            background-size: 300% 100% !important;
-            animation: gradientShift 15s ease infinite;
-        }
 
         .ripple-host { position: relative; overflow: hidden; }
         .ripple-effect {
@@ -83,38 +236,8 @@
             transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ============ BOTÓN FLOTANTE DE TEMA ============ */
-        #theme-toggle {
-            position: fixed;
-            bottom: 88px;
-            right: 24px;
-            z-index: 40;
-            width: 48px;
-            height: 48px;
-            border-radius: 999px;
-            background: #1e293b;
-            color: white;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        #theme-toggle:hover {
-            transform: scale(1.08) rotate(15deg);
-            background: #334155;
-        }
-        body.dark-mode #theme-toggle {
-            background: #fbbf24;
-            color: #1e293b;
-        }
-
-        /* ============ MODO OSCURO ============ */
+        /* ============ MODO OSCURO GENERAL ============ */
         body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
-        body.dark-mode header.estafeta-red { background: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B) !important; background-size: 300% 100% !important; }
         body.dark-mode main,
         body.dark-mode main > div > div,
         body.dark-mode .bg-white,
@@ -146,60 +269,17 @@
         body.dark-mode .shadow-xl,
         body.dark-mode .shadow-2xl { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -2px rgba(0,0,0,0.4) !important; }
 
-        /* ============ CAMPANA DE NOTIFICACIONES ============ */
-        #notif-bell {
-            position: relative;
-            width: 42px; height: 42px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.18);
-            border: 1px solid rgba(255, 255, 255, 0.35);
-            color: white;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-        #notif-bell:hover {
-            background: rgba(255, 255, 255, 0.32);
-            transform: translateY(-1px);
-        }
-        #notif-badge {
-            position: absolute;
-            top: -4px; right: -4px;
-            min-width: 20px; height: 20px;
-            padding: 0 5px;
-            border-radius: 999px;
-            background: #dc2626;
-            color: white;
-            font-size: 11px;
-            font-weight: 800;
-            display: flex; align-items: center; justify-content: center;
-            border: 2px solid white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        }
-        #notif-badge.hidden { display: none; }
-        @keyframes badgePulse {
-            0%   { transform: scale(1); }
-            40%  { transform: scale(1.35); }
-            100% { transform: scale(1); }
-        }
-        #notif-badge.pulse { animation: badgePulse 0.6s ease; }
-
+        /* ============ TOASTS & PANEL ============ */
         #notif-toast-container {
-            position: fixed;
-            top: 80px; right: 20px;
+            position: fixed; top: 80px; right: 20px;
             z-index: 9998;
-            display: flex; flex-direction: column;
-            gap: 10px;
-            max-width: 380px;
-            width: calc(100vw - 40px);
+            display: flex; flex-direction: column; gap: 10px;
+            max-width: 380px; width: calc(100vw - 40px);
             pointer-events: none;
         }
         @media (max-width: 640px) {
             #notif-toast-container {
-                top: auto; bottom: 90px;
-                right: 12px; left: 12px;
+                top: auto; bottom: 90px; right: 12px; left: 12px;
                 max-width: none; width: auto;
             }
         }
@@ -211,8 +291,7 @@
             border-left: 4px solid #DA291C;
             padding: 12px 14px;
             animation: notifToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-            display: flex; gap: 10px;
-            align-items: flex-start;
+            display: flex; gap: 10px; align-items: flex-start;
             position: relative;
         }
         .notif-toast.notif-danger  { border-left-color: #dc2626; }
@@ -223,17 +302,11 @@
             from { opacity: 0; transform: translateX(60px) scale(0.95); }
             to   { opacity: 1; transform: translateX(0) scale(1); }
         }
-        .notif-toast.removing {
-            animation: notifToastOut 0.35s ease forwards;
-        }
-        @keyframes notifToastOut {
-            to { opacity: 0; transform: translateX(60px) scale(0.9); }
-        }
+        .notif-toast.removing { animation: notifToastOut 0.35s ease forwards; }
+        @keyframes notifToastOut { to { opacity: 0; transform: translateX(60px) scale(0.9); } }
         .notif-toast-icon {
-            flex-shrink: 0;
-            width: 32px; height: 32px;
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; width: 32px; height: 32px;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
             color: white; font-size: 14px;
         }
         .notif-toast.notif-danger  .notif-toast-icon { background: #dc2626; }
@@ -241,37 +314,18 @@
         .notif-toast.notif-info    .notif-toast-icon { background: #3b82f6; }
         .notif-toast.notif-success .notif-toast-icon { background: #10b981; }
         .notif-toast-content { flex-grow: 1; min-width: 0; }
-        .notif-toast-title {
-            font-weight: 700; font-size: 13px;
-            color: #1f2937; margin-bottom: 2px;
-            line-height: 1.3;
-        }
-        .notif-toast-msg {
-            font-size: 12px; color: #6b7280;
-            line-height: 1.4;
-            word-wrap: break-word;
-        }
-        .notif-toast-close {
-            background: transparent; border: none;
-            color: #9ca3af; cursor: pointer;
-            font-size: 14px; padding: 0 2px;
-            flex-shrink: 0;
-        }
+        .notif-toast-title { font-weight: 700; font-size: 13px; color: #1f2937; margin-bottom: 2px; line-height: 1.3; }
+        .notif-toast-msg { font-size: 12px; color: #6b7280; line-height: 1.4; word-wrap: break-word; }
+        .notif-toast-close { background: transparent; border: none; color: #9ca3af; cursor: pointer; font-size: 14px; padding: 0 2px; flex-shrink: 0; }
         .notif-toast-close:hover { color: #dc2626; }
 
         #notif-panel {
-            position: fixed;
-            top: 80px; right: 20px;
-            width: 400px;
-            max-width: calc(100vw - 40px);
+            position: fixed; top: 80px; right: 20px;
+            width: 400px; max-width: calc(100vw - 40px);
             max-height: 70vh;
-            background: #ffffff;
-            border-radius: 16px;
+            background: #ffffff; border-radius: 16px;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35);
-            z-index: 9999;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
+            z-index: 9999; display: none; flex-direction: column; overflow: hidden;
             animation: notifPanelIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         #notif-panel.open { display: flex; }
@@ -280,42 +334,24 @@
             to   { opacity: 1; transform: translateY(0) scale(1); }
         }
         .notif-panel-header {
-            background: #1e293b;
-            color: white;
+            background: #1e293b; color: white;
             padding: 14px 18px;
             display: flex; align-items: center; justify-content: space-between;
             flex-shrink: 0;
         }
-        .notif-panel-header h3 {
-            font-weight: 700; font-size: 14px;
-            display: flex; align-items: center; gap: 8px;
-        }
+        .notif-panel-header h3 { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; }
         .notif-panel-close {
             background: transparent; border: none;
-            color: #cbd5e1; font-size: 20px;
-            cursor: pointer; line-height: 1;
-            padding: 0 4px;
+            color: #cbd5e1; font-size: 20px; cursor: pointer; line-height: 1; padding: 0 4px;
         }
         .notif-panel-close:hover { color: white; }
-        .notif-panel-body {
-            flex-grow: 1;
-            overflow-y: auto;
-            background: #f8fafc;
-        }
-        .notif-empty {
-            padding: 40px 20px;
-            text-align: center;
-            color: #94a3b8;
-            font-size: 13px;
-        }
+        .notif-panel-body { flex-grow: 1; overflow-y: auto; background: #f8fafc; }
+        .notif-empty { padding: 40px 20px; text-align: center; color: #94a3b8; font-size: 13px; }
         .notif-empty i { font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.5; }
         .notif-item {
-            padding: 12px 16px;
-            border-left: 3px solid transparent;
+            padding: 12px 16px; border-left: 3px solid transparent;
             border-bottom: 1px solid #e2e8f0;
-            display: flex; gap: 10px;
-            align-items: flex-start;
-            cursor: default;
+            display: flex; gap: 10px; align-items: flex-start;
         }
         .notif-item.unread { background: #fef2f2; }
         .notif-item.notif-danger  { border-left-color: #dc2626; }
@@ -323,10 +359,8 @@
         .notif-item.notif-info    { border-left-color: #3b82f6; }
         .notif-item.notif-success { border-left-color: #10b981; }
         .notif-item-icon {
-            flex-shrink: 0;
-            width: 28px; height: 28px;
-            border-radius: 7px;
-            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; width: 28px; height: 28px;
+            border-radius: 7px; display: flex; align-items: center; justify-content: center;
             color: white; font-size: 12px;
         }
         .notif-item.notif-danger  .notif-item-icon { background: #dc2626; }
@@ -334,50 +368,23 @@
         .notif-item.notif-info    .notif-item-icon { background: #3b82f6; }
         .notif-item.notif-success .notif-item-icon { background: #10b981; }
         .notif-item-content { flex-grow: 1; min-width: 0; }
-        .notif-item-title {
-            font-weight: 700; font-size: 12.5px;
-            color: #1f2937; margin-bottom: 2px;
-        }
-        .notif-item-msg {
-            font-size: 11.5px; color: #4b5563;
-            line-height: 1.45;
-            margin-bottom: 4px;
-            word-wrap: break-word;
-        }
-        .notif-item-time {
-            font-size: 10.5px; color: #9ca3af;
-            font-weight: 600;
-        }
+        .notif-item-title { font-weight: 700; font-size: 12.5px; color: #1f2937; margin-bottom: 2px; }
+        .notif-item-msg { font-size: 11.5px; color: #4b5563; line-height: 1.45; margin-bottom: 4px; word-wrap: break-word; }
+        .notif-item-time { font-size: 10.5px; color: #9ca3af; font-weight: 600; }
         .notif-panel-footer {
-            padding: 10px 14px;
-            background: #f1f5f9;
+            padding: 10px 14px; background: #f1f5f9;
             border-top: 1px solid #e2e8f0;
-            display: flex; gap: 8px;
-            flex-shrink: 0;
+            display: flex; gap: 8px; flex-shrink: 0;
         }
         .notif-panel-footer button {
-            flex: 1;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
+            flex: 1; padding: 8px 12px; border-radius: 8px;
+            font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
             border: 1px solid transparent;
         }
-        .notif-btn-read {
-            background: #DA291C;
-            color: white;
-        }
+        .notif-btn-read { background: #DA291C; color: white; }
         .notif-btn-read:hover { background: #b81810; }
-        .notif-btn-clear {
-            background: white;
-            color: #dc2626;
-            border-color: #fecaca;
-        }
+        .notif-btn-clear { background: white; color: #dc2626; border-color: #fecaca; }
         .notif-btn-clear:hover { background: #fef2f2; }
-
-        /* Campana en modo oscuro */
         body.dark-mode #notif-panel { background: #1e293b; }
         body.dark-mode .notif-panel-header { background: #0f172a; }
         body.dark-mode .notif-panel-body { background: #0f172a; }
@@ -397,30 +404,44 @@
 </head>
 <body class="bg-gray-100 font-sans antialiased min-h-screen flex flex-col relative">
 
-    <header class="estafeta-red text-white shadow-md z-20">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-truck-fast text-3xl"></i>
-                <div>
-                    <h1 class="text-2xl font-bold tracking-wide">ESTAFETA</h1>
-                    <p class="text-xs uppercase tracking-wider opacity-90">Monitoreo de Entregas a Domicilio</p>
+    <!-- ============================================================
+         BANNER MAESTRO INTEGRADO
+         ============================================================ -->
+    <header class="master-header">
+        
+        <!-- Logo y Títulos -->
+        <div class="header-brand">
+            <div class="brand-logo">E</div>
+            <div class="brand-titles">
+                <h1 class="brand-title">Entregas a Domicilio</h1>
+                <p class="brand-subtitle">Torre de Control & Operación Logística</p>
+            </div>
+        </div>
+
+        <!-- Acciones a la derecha -->
+        <div class="header-actions" id="header-actions-container">
+            
+            <!-- Botón de Carga Excel / CSV -->
+            <div class="upload-btn-wrapper" id="banner-drop-zone" onclick="document.getElementById('file-input').click()">
+                <input type="file" id="file-input" accept=".csv, .xlsx, .xls">
+                <i class="fa-solid fa-file-excel upload-btn-icon"></i>
+                <div class="upload-btn-content">
+                    <span class="upload-btn-title" id="file-status">Cargar Excel / CSV</span>
+                    <span class="upload-btn-subtitle">Arrastra o clic aquí</span>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <div class="flex items-center space-x-3 bg-red-800 bg-opacity-60 px-4 py-2 rounded-xl border border-red-600 hover:bg-opacity-80 transition-all cursor-pointer shadow-inner" id="banner-drop-zone" onclick="document.getElementById('file-input').click()">
-                    <input type="file" id="file-input" class="hidden" accept=".csv, .xlsx, .xls">
-                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-white"></i>
-                    <div class="text-left">
-                        <p id="file-status" class="text-sm font-semibold">Cargar Excel / CSV</p>
-                        <p class="text-xs text-red-200">Arrastra o haz clic aquí</p>
-                    </div>
-                </div>
-                <!-- CAMPANA DE NOTIFICACIONES (se inyecta aquí) -->
-                <div id="header-actions-container"></div>
-            </div>
+
+            <!-- Botón de Modo Oscuro/Claro -->
+            <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+                <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+            </button>
+
         </div>
     </header>
 
+    <!-- ============================================================
+         CONTENIDO DEL DASHBOARD
+         ============================================================ -->
     <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
         <div id="dashboard-content" class="hidden space-y-6">
 
@@ -606,91 +627,80 @@
         <span>Restablecer Filtros</span>
     </button>
 
-    <!-- Botón flotante para alternar modo oscuro -->
-    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
-        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
-    </button>
-
-    <!-- CAMPANA: contenedor de toasts -->
+    <!-- CAMPANA: contenedor de toasts (la campana se inyecta por JS) -->
     <div id="notif-toast-container"></div>
 
     <!-- MODALES -->
-<div id="route-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[90vh]">
-        <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-filter estafeta-red-text"></i>
-                <h3 class="font-bold text-lg">Filtrar Ruta</h3>
-            </div>
-            <button id="close-route-modal" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
-        </div>
-        <div class="p-6 space-y-4 flex-grow overflow-y-auto">
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </span>
-                <input type="text" id="route-search-input" placeholder="Buscar ruta..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
-            </div>
-            <div class="flex justify-between items-center text-sm font-semibold px-1">
-                <span class="text-gray-600">Seleccionar rutas:</span>
-                <div class="space-x-3">
-                    <button type="button" id="select-all-routes" class="estafeta-red-text hover:underline">Todas</button>
-                    <span class="text-gray-300">|</span>
-                    <button type="button" id="deselect-all-routes" class="estafeta-red-text hover:underline">Ninguna</button>
+    <div id="route-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-filter estafeta-red-text"></i>
+                    <h3 class="font-bold text-lg">Filtrar Ruta</h3>
                 </div>
+                <button id="close-route-modal" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
             </div>
-            <div id="route-checkboxes-container" class="border border-gray-200 rounded-xl p-3 space-y-2 max-h-60 overflow-y-auto bg-gray-50"></div>
-        </div>
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-            <button id="cancel-route-modal" class="px-5 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium text-sm transition-all">Cancelar</button>
-            <button id="apply-route-filter" class="px-5 py-2 rounded-xl estafeta-red hover:opacity-90 text-white font-medium text-sm shadow-md transition-all">Aplicar Filtro</button>
+            <div class="p-6 space-y-4 flex-grow overflow-y-auto">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="route-search-input" placeholder="Buscar ruta..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
+                </div>
+                <div class="flex justify-between items-center text-sm font-semibold px-1">
+                    <span class="text-gray-600">Seleccionar rutas:</span>
+                    <div class="space-x-3">
+                        <button type="button" id="select-all-routes" class="estafeta-red-text hover:underline">Todas</button>
+                        <span class="text-gray-300">|</span>
+                        <button type="button" id="deselect-all-routes" class="estafeta-red-text hover:underline">Ninguna</button>
+                    </div>
+                </div>
+                <div id="route-checkboxes-container" class="border border-gray-200 rounded-xl p-3 space-y-2 max-h-60 overflow-y-auto bg-gray-50"></div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                <button id="cancel-route-modal" class="px-5 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium text-sm transition-all">Cancelar</button>
+                <button id="apply-route-filter" class="px-5 py-2 rounded-xl estafeta-red hover:opacity-90 text-white font-medium text-sm shadow-md transition-all">Aplicar Filtro</button>
+            </div>
         </div>
     </div>
-</div>
 
-<div id="cp-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[90vh]">
-        <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-map-pin estafeta-red-text"></i>
-                <h3 class="font-bold text-lg">Filtrar C.P.</h3>
-            </div>
-            <button id="close-cp-modal" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
-        </div>
-        <div class="p-6 space-y-4 flex-grow overflow-y-auto">
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </span>
-                <input type="text" id="cp-search-input" placeholder="Buscar código postal..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
-            </div>
-            <div class="flex justify-between items-center text-sm font-semibold px-1">
-                <span class="text-gray-600">Seleccionar C.P.:</span>
-                <div class="space-x-3">
-                    <button type="button" id="select-all-cps" class="estafeta-red-text hover:underline">Todas</button>
-                    <span class="text-gray-300">|</span>
-                    <button type="button" id="deselect-all-cps" class="estafeta-red-text hover:underline">Ninguna</button>
+    <div id="cp-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-map-pin estafeta-red-text"></i>
+                    <h3 class="font-bold text-lg">Filtrar C.P.</h3>
                 </div>
+                <button id="close-cp-modal" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
             </div>
-            <div id="cp-checkboxes-container" class="border border-gray-200 rounded-xl p-3 space-y-2 max-h-60 overflow-y-auto bg-gray-50"></div>
-        </div>
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-            <button id="cancel-cp-modal" class="px-5 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium text-sm transition-all">Cancelar</button>
-            <button id="apply-cp-filter" class="px-5 py-2 rounded-xl estafeta-red hover:opacity-90 text-white font-medium text-sm shadow-md transition-all">Aplicar Filtro</button>
+            <div class="p-6 space-y-4 flex-grow overflow-y-auto">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="cp-search-input" placeholder="Buscar código postal..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
+                </div>
+                <div class="flex justify-between items-center text-sm font-semibold px-1">
+                    <span class="text-gray-600">Seleccionar C.P.:</span>
+                    <div class="space-x-3">
+                        <button type="button" id="select-all-cps" class="estafeta-red-text hover:underline">Todas</button>
+                        <span class="text-gray-300">|</span>
+                        <button type="button" id="deselect-all-cps" class="estafeta-red-text hover:underline">Ninguna</button>
+                    </div>
+                </div>
+                <div id="cp-checkboxes-container" class="border border-gray-200 rounded-xl p-3 space-y-2 max-h-60 overflow-y-auto bg-gray-50"></div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                <button id="cancel-cp-modal" class="px-5 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium text-sm transition-all">Cancelar</button>
+                <button id="apply-cp-filter" class="px-5 py-2 rounded-xl estafeta-red hover:opacity-90 text-white font-medium text-sm shadow-md transition-all">Aplicar Filtro</button>
+            </div>
         </div>
     </div>
-</div>
 
 <script>
     /* ============================================================
        AUTENTICACIÓN
        ============================================================ */
-    function iniciarSesionExitosa(rolSeleccionado) {
-        const tokenSeguro = btoa(rolSeleccionado + "|" + Date.now());
-        localStorage.setItem('auth_role', tokenSeguro);
-        window.location.href = 'Panel de Control Operativo.html';
-    }
-
     window.addEventListener('DOMContentLoaded', () => {
         const encodedRole = localStorage.getItem('auth_role');
         if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
@@ -763,7 +773,6 @@
     let calCurrentYear = 2026;
     let calCurrentMonth = 9;
 
-    const bannerDropZone = document.getElementById('banner-drop-zone');
     const fileInput = document.getElementById('file-input');
 
     window.addEventListener('dragover', (e) => e.preventDefault());
@@ -843,7 +852,6 @@
         dateKey = findColumn(sample, ['delivery date time', 'delivery date', 'fecha', 'date', 'timestamp', 'hora']) || '';
         routeKey = findColumn(sample, ['route code', 'route', 'ruta']) || '';
 
-        /* 🔧 FIX CP: priorizar la columna exacta "Postal Code" */
         if (keys.includes('Postal Code')) {
             cpKey = 'Postal Code';
         } else {
@@ -866,9 +874,7 @@
         }
 
         document.getElementById('file-input').value = '';
-
         extractFilters();
-
         filteredData = [...rawData];
         currentTimelinePage = 0;
         currentTablePage = 0;
@@ -885,7 +891,6 @@
         initMap();
         updateDashboard();
 
-        /* 🔔 CAMPANA: disparar análisis UNA sola vez al cargar el archivo */
         if (typeof window.__notifAnalyze === 'function') {
             setTimeout(() => window.__notifAnalyze(), 900);
         }
@@ -1604,9 +1609,8 @@
         }
 
         /* ============================================================
-           5.1 MODO OSCURO (con toggle manual)
+           5.1 MODO OSCURO (con toggle manual en el banner)
            ============================================================ */
-
         function aplicarTema(tema) {
             const icon = document.getElementById('theme-toggle-icon');
             if (tema === 'dark') {
@@ -1737,7 +1741,13 @@
             e.stopPropagation();
             togglePanel();
         });
-        container.appendChild(btn);
+        // Insertar antes del botón de tema
+        const themeBtn = document.getElementById('theme-toggle');
+        if (themeBtn && themeBtn.parentNode === container) {
+            container.insertBefore(btn, themeBtn);
+        } else {
+            container.appendChild(btn);
+        }
 
         // Panel
         const panel = document.createElement('div');
@@ -1761,7 +1771,6 @@
         document.getElementById('notif-btn-read').addEventListener('click', markAllAsRead);
         document.getElementById('notif-btn-clear').addEventListener('click', clearHistory);
 
-        // Cerrar al clic fuera
         document.addEventListener('click', (e) => {
             const p = document.getElementById('notif-panel');
             const b = document.getElementById('notif-bell');
@@ -1769,7 +1778,6 @@
             if (p.contains(e.target) || (b && b.contains(e.target))) return;
             closePanel();
         });
-        // ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closePanel();
         });
@@ -1915,7 +1923,6 @@
 
     /* ============================================================
        Detección robusta de la columna de Código Postal
-       Prioriza "Postal Code" exacto
        ============================================================ */
     function detectCpColumn() {
         if (typeof filteredData === 'undefined' || !filteredData.length) return '';
@@ -1923,13 +1930,9 @@
         const keys = Object.keys(sample);
         if (!keys.length) return '';
 
-        // 0) Prioridad absoluta: columna literal "Postal Code"
         if (keys.includes('Postal Code')) return 'Postal Code';
-
-        // 1) Si cpKey ya está definida, úsala
         if (typeof cpKey !== 'undefined' && cpKey && keys.includes(cpKey)) return cpKey;
 
-        // 2) Búsqueda por alias
         const norm = s => String(s ?? '')
             .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
             .toLowerCase().trim();
@@ -2084,7 +2087,7 @@
             }
         }
 
-        /* 6b. Top 3 C.P. con más entregas (SIEMPRE se muestra) */
+        /* 6b. Top 3 C.P. con más entregas */
         if (_cpKey) {
             const map = {};
             let contadorValidos = 0;
@@ -2096,7 +2099,6 @@
                 contadorValidos++;
             });
             const top3 = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 3);
-            console.log('🔔 [Campana] Top 3 CP:', { columna: _cpKey, valoresValidos: contadorValidos, top3 });
 
             if (top3.length > 0) {
                 const medals = ['🥇', '🥈', '🥉'];
@@ -2110,8 +2112,6 @@
                     message: lines.join('<br>')
                 });
             }
-        } else {
-            console.warn('🔔 [Campana] No se detectó columna de C.P., se omite el toast Top 3 CP.');
         }
 
         /* 7. Fuera de horario */
@@ -2170,7 +2170,6 @@
             duration: 4000
         });
 
-        console.log('🔔 [Campana] Notificaciones generadas:', notifs.length, notifs);
         addNotifications(notifs);
     }
 

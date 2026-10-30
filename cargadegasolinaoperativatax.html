@@ -14,88 +14,235 @@
         }
     </script>
     <style>
-        .top-bar { display: flex; justify-content: flex-end; align-items: center; background: #DA291C; padding: 10px 20px; }
-        .multiselect-dropdown { position: relative; width: 100%; max-width: 220px; }
-        .multiselect-header { background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.375rem 0.75rem; font-size: 0.875rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
-        .multiselect-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); max-height: 220px; overflow-y: auto; z-index: 50; display: none; padding: 0.5rem; }
-        .multiselect-list.show { display: block; }
+        /* ============================================================
+           RESET GLOBAL PARA ELIMINAR BARRAS Y MÁRGENES
+           ============================================================ */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-        header.top-bar { background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C) !important; background-size: 300% 100% !important; animation: gradientShift 15s ease infinite; }
+        /* ============================================================
+           VARIABLES DEL BANNER MAESTRO
+           ============================================================ */
+        :root {
+            --estafeta-red: #DA291C;
+            --estafeta-dark: #1e293b;
+            --estafeta-white: #ffffff;
+            --header-bg: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
+            --btn-upload-bg: rgba(0, 0, 0, 0.2);
+            --btn-upload-hover: rgba(0, 0, 0, 0.35);
+            --btn-upload-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
+            --subtext-color: #ffcdd2;
+            --badge-bg: #ffffff;
+            --badge-text: #DA291C;
+        }
 
-        .ripple-host { position: relative; overflow: hidden; }
-        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.55); transform: scale(0); animation: rippleAnim 0.6s ease-out; pointer-events: none; }
-        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+        body.dark-mode {
+            --header-bg: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
+            --btn-upload-bg: rgba(0, 0, 0, 0.4);
+            --btn-upload-hover: rgba(0, 0, 0, 0.6);
+            --btn-upload-border: rgba(255, 255, 255, 0.1);
+            --text-color: #f1f5f9;
+            --subtext-color: #fca5a5;
+            --badge-bg: #f8fafc;
+            --badge-text: #b91c1c;
+        }
 
-        @keyframes cardEnter { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
+        /* --- ANIMACIÓN DEL GRADIENTE --- */
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
 
-        @keyframes pulseCritical { 0%, 100% { background-color: rgba(220, 38, 38, 0.08); } 50% { background-color: rgba(220, 38, 38, 0.28); } }
-        .critical-pulse { animation: pulseCritical 2s ease-in-out infinite; font-weight: 800; color: #dc2626 !important; border-radius: 4px; padding: 2px 6px; display: inline-block; }
+        /* --- CONTENEDOR DEL BANNER MAESTRO --- */
+        .master-header {
+            background: var(--header-bg);
+            background-size: 300% 100%;
+            animation: gradientShift 15s ease infinite;
+            color: var(--text-color);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            border: none !important;
+            margin: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+            gap: 15px;
+            transition: background 0.3s ease;
+            position: relative;
+            z-index: 50;
+        }
 
-        .kpi-bar-track { width: 100%; height: 5px; background: rgba(0, 0, 0, 0.06); border-radius: 999px; overflow: hidden; margin-top: 8px; }
-        .kpi-bar-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-        #dashboard-container .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4 > div:hover { box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.15), 0 20px 40px -10px rgba(218, 41, 28, 0.25); }
-
-        /* Botón tema oscuro */
-        #theme-toggle {
-            position: fixed;
-            bottom: 25px;
-            right: 200px;
-            z-index: 9999;
+        .brand-logo {
+            background-color: var(--badge-bg);
+            color: var(--badge-text);
+            font-weight: 900;
+            font-size: 24px;
             width: 48px;
             height: 48px;
-            border-radius: 999px;
-            background: #1e293b;
-            color: white;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
         }
-        #theme-toggle:hover { transform: scale(1.08) rotate(15deg); background: #334155 !important; }
-        body.dark-mode #theme-toggle { background: #fbbf24 !important; color: #1e293b !important; }
 
-        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
-        body.dark-mode header.top-bar { background: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B) !important; background-size: 300% 100% !important; }
-        body.dark-mode main, body.dark-mode .bg-white, body.dark-mode .bg-slate-50, body.dark-mode .bg-slate-100 { background-color: #1e293b !important; }
-        body.dark-mode .text-slate-800, body.dark-mode .text-slate-700, body.dark-mode .text-slate-600, body.dark-mode .text-slate-900 { color: #e2e8f0 !important; }
-        body.dark-mode .text-slate-500, body.dark-mode .text-slate-400 { color: #94a3b8 !important; }
-        body.dark-mode .border-slate-100, body.dark-mode .border-slate-200, body.dark-mode .border-slate-300 { border-color: #334155 !important; }
-        body.dark-mode .divide-slate-200 > * + * { border-color: #334155 !important; }
-        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
-        body.dark-mode .bg-blue-50 { background-color: rgba(30, 58, 138, 0.35) !important; }
-        body.dark-mode .bg-emerald-50 { background-color: rgba(20, 83, 45, 0.35) !important; }
-        body.dark-mode .bg-amber-50 { background-color: rgba(120, 53, 15, 0.35) !important; }
-        body.dark-mode .bg-purple-50 { background-color: rgba(88, 28, 135, 0.35) !important; }
-        body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; }
-        body.dark-mode .bg-emerald-100 { background-color: rgba(20, 83, 45, 0.5) !important; }
-        body.dark-mode .bg-red-100 { background-color: rgba(127, 29, 29, 0.5) !important; }
-        body.dark-mode table thead.bg-slate-50 { background-color: #0f172a !important; }
-        body.dark-mode table tbody tr:hover { background-color: rgba(51, 65, 85, 0.5) !important; }
-        body.dark-mode .multiselect-list { background: #1e293b !important; border-color: #334155 !important; }
-        body.dark-mode .multiselect-header { background-color: #0f172a !important; border-color: #334155 !important; color: #e2e8f0 !important; }
-        body.dark-mode .bg-red-700 { background-color: #991B1B !important; }
-        body.dark-mode .bg-red-900 { background-color: #7f1d1d !important; }
-        body.dark-mode .shadow-sm, body.dark-mode .shadow-md { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important; }
-        body.dark-mode #floatingClearFiltersBtn { background-color: #334155 !important; }
+        .brand-titles {
+            display: flex;
+            flex-direction: column;
+        }
 
-        /* ============================================================
-           SISTEMA DE NOTIFICACIONES - ESTILOS
-           ============================================================ */
-        #notif-bell {
+        .brand-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--subtext-color);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* --- BOTÓN DE CARGA EXCEL ESTANDARIZADO --- */
+        .upload-btn-wrapper {
             position: relative;
-            background: rgba(255,255,255,0.12);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.25);
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--btn-upload-bg);
+            border: 1px solid var(--btn-upload-border);
+            border-radius: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .upload-btn-wrapper:hover {
+            background-color: var(--btn-upload-hover);
+            transform: translateY(-1px);
+        }
+
+        .upload-btn-wrapper.dragover {
+            background-color: rgba(74, 222, 128, 0.3) !important;
+            border-color: #4ade80 !important;
+        }
+
+        .upload-btn-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-btn-icon {
+            color: #4ade80;
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+
+        .upload-btn-content {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .upload-btn-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .upload-btn-subtitle {
+            font-size: 0.65rem;
+            color: var(--subtext-color);
+        }
+
+        /* --- BOTÓN LIMPIAR --- */
+        .clear-btn {
+            background: var(--btn-upload-bg);
+            border: 1px solid var(--btn-upload-border);
+            color: var(--text-color);
+            padding: 10px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .clear-btn:hover {
+            background: var(--btn-upload-hover);
+            transform: translateY(-1px);
+        }
+
+        /* --- BOTÓN DE MODO OSCURO/CLARO EN EL BANNER --- */
+        #theme-toggle {
+            background: var(--btn-upload-bg);
+            border: 1px solid var(--btn-upload-border);
+            color: var(--text-color);
             width: 42px;
             height: 42px;
-            border-radius: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+            flex-shrink: 0;
+        }
+
+        #theme-toggle:hover {
+            background: var(--btn-upload-hover);
+            transform: translateY(-1px) rotate(15deg);
+        }
+
+        /* --- CAMPANA DE NOTIFICACIONES --- */
+        #notif-bell {
+            position: relative;
+            background: var(--btn-upload-bg);
+            color: var(--text-color);
+            border: 1px solid var(--btn-upload-border);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
@@ -103,8 +250,9 @@
             font-size: 18px;
             transition: all 0.2s ease;
             flex-shrink: 0;
+            backdrop-filter: blur(4px);
         }
-        #notif-bell:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
+        #notif-bell:hover { background: var(--btn-upload-hover); transform: translateY(-1px); }
         #notif-badge {
             position: absolute;
             top: -6px;
@@ -127,6 +275,52 @@
         @keyframes badgePulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
         #notif-badge.badge-new { animation: badgePulse 0.5s ease-out; }
 
+        /* --- ESTILOS EXISTENTES DEL DASHBOARD --- */
+        .multiselect-dropdown { position: relative; width: 100%; max-width: 220px; }
+        .multiselect-header { background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.375rem 0.75rem; font-size: 0.875rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .multiselect-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); max-height: 220px; overflow-y: auto; z-index: 50; display: none; padding: 0.5rem; }
+        .multiselect-list.show { display: block; }
+
+        .ripple-host { position: relative; overflow: hidden; }
+        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.55); transform: scale(0); animation: rippleAnim 0.6s ease-out; pointer-events: none; }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+        @keyframes cardEnter { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
+
+        @keyframes pulseCritical { 0%, 100% { background-color: rgba(220, 38, 38, 0.08); } 50% { background-color: rgba(220, 38, 38, 0.28); } }
+        .critical-pulse { animation: pulseCritical 2s ease-in-out infinite; font-weight: 800; color: #dc2626 !important; border-radius: 4px; padding: 2px 6px; display: inline-block; }
+
+        .kpi-bar-track { width: 100%; height: 5px; background: rgba(0, 0, 0, 0.06); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+        .kpi-bar-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        #dashboard-container .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4 > div:hover { box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.15), 0 20px 40px -10px rgba(218, 41, 28, 0.25); }
+
+        /* --- MODO OSCURO GENERAL --- */
+        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
+        body.dark-mode main, body.dark-mode .bg-white, body.dark-mode .bg-slate-50, body.dark-mode .bg-slate-100 { background-color: #1e293b !important; }
+        body.dark-mode .text-slate-800, body.dark-mode .text-slate-700, body.dark-mode .text-slate-600, body.dark-mode .text-slate-900 { color: #e2e8f0 !important; }
+        body.dark-mode .text-slate-500, body.dark-mode .text-slate-400 { color: #94a3b8 !important; }
+        body.dark-mode .border-slate-100, body.dark-mode .border-slate-200, body.dark-mode .border-slate-300 { border-color: #334155 !important; }
+        body.dark-mode .divide-slate-200 > * + * { border-color: #334155 !important; }
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        body.dark-mode .bg-blue-50 { background-color: rgba(30, 58, 138, 0.35) !important; }
+        body.dark-mode .bg-emerald-50 { background-color: rgba(20, 83, 45, 0.35) !important; }
+        body.dark-mode .bg-amber-50 { background-color: rgba(120, 53, 15, 0.35) !important; }
+        body.dark-mode .bg-purple-50 { background-color: rgba(88, 28, 135, 0.35) !important; }
+        body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; }
+        body.dark-mode .bg-emerald-100 { background-color: rgba(20, 83, 45, 0.5) !important; }
+        body.dark-mode .bg-red-100 { background-color: rgba(127, 29, 29, 0.5) !important; }
+        body.dark-mode table thead.bg-slate-50 { background-color: #0f172a !important; }
+        body.dark-mode table tbody tr:hover { background-color: rgba(51, 65, 85, 0.5) !important; }
+        body.dark-mode .multiselect-list { background: #1e293b !important; border-color: #334155 !important; }
+        body.dark-mode .multiselect-header { background-color: #0f172a !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+        body.dark-mode .shadow-sm, body.dark-mode .shadow-md { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important; }
+        body.dark-mode #floatingClearFiltersBtn { background-color: #334155 !important; }
+
+        /* ============================================================
+           SISTEMA DE NOTIFICACIONES - ESTILOS
+           ============================================================ */
         #notif-toast-container {
             position: fixed; top: 80px; right: 16px; z-index: 99999;
             display: flex; flex-direction: column; gap: 10px;
@@ -212,28 +406,49 @@
         body.dark-mode .notif-empty { color: #64748b; }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans antialiased">
+<body class="bg-slate-100 text-slate-800 font-sans antialiased m-0 p-0">
 
-    <header class="top-bar text-white shadow-md border-b-4 border-slate-900">
-        <div class="max-w-7xl mx-auto w-full px-4 py-2 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center space-x-3">
-                <div class="bg-white text-[#DA291C] p-3 rounded-lg font-black text-xl tracking-wider shadow">ESTAFETA</div>
-                <div>
-                    <h1 class="text-xl font-bold">Desempeño TR2</h1>
-                    <p class="text-xs text-slate-100">Torre de Control & Operación Logística</p>
+    <!-- ============================================================
+         BANNER MAESTRO INTEGRADO
+         ============================================================ -->
+    <header class="master-header">
+        
+        <!-- Logo y Títulos -->
+        <div class="header-brand">
+            <div class="brand-logo">E</div>
+            <div class="brand-titles">
+                <h1 class="brand-title">Desempeño TR2</h1>
+                <p class="brand-subtitle">Torre de Control & Operación Logística</p>
+            </div>
+        </div>
+
+        <!-- Acciones a la derecha -->
+        <div class="header-actions" id="header-actions-container">
+            
+            <!-- Botón de Carga Excel -->
+            <div class="upload-btn-wrapper" id="drop-zone">
+                <input type="file" id="excel-file" accept=".xlsx, .xls, .xlsb, .xlsm, .csv">
+                <i class="fa-solid fa-file-excel upload-btn-icon"></i>
+                <div class="upload-btn-content">
+                    <span class="upload-btn-title" id="file-name">Cargar Excel</span>
+                    <span class="upload-btn-subtitle">Arrastra o clic aquí</span>
                 </div>
             </div>
-            <div id="header-actions-container" class="flex items-center gap-3">
-                <div id="drop-zone" class="bg-red-700 hover:bg-red-800 text-sm px-4 py-2 rounded-lg border border-red-600 flex items-center space-x-2 cursor-pointer transition">
-                    <i class="fa-solid fa-cloud-arrow-up text-white"></i>
-                    <span id="file-name" class="truncate max-w-[200px]">Cargar / Arrastrar Excel</span>
-                    <input type="file" id="excel-file" class="hidden" accept=".xlsx, .xls, .xlsb, .xlsm, .csv">
-                </div>
-                <button id="header-reset-btn" class="bg-red-900 hover:bg-red-950 text-slate-200 text-sm font-semibold px-4 py-2 rounded-lg border border-red-800 transition flex items-center space-x-1.5">
-                    <i class="fa-solid fa-trash-can text-white"></i>
-                    <span>Limpiar</span>
-                </button>
-            </div>
+
+            <!-- Botón Limpiar -->
+            <button id="header-reset-btn" class="clear-btn" title="Limpiar datos">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Limpiar</span>
+            </button>
+
+            <!-- Campana de Notificaciones (se inyecta por JS) -->
+            <div id="notif-bell-slot"></div>
+
+            <!-- Botón de Modo Oscuro/Claro -->
+            <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+                <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+            </button>
+
         </div>
     </header>
 
@@ -415,10 +630,6 @@
         </div>
     </div>
 
-    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
-        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
-    </button>
-
     <button id="floatingClearFiltersBtn" onclick="resetAllFilters()" style="position: fixed; bottom: 25px; right: 25px; background-color: #1e293b; color: #ffffff; border: none; padding: 12px 22px; border-radius: 30px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); z-index: 9999; transition: background-color 0.2s ease, transform 0.2s ease;" onmouseover="this.style.backgroundColor='#0f172a'" onmouseout="this.style.backgroundColor='#1e293b'">
         <i class="fa-solid fa-rotate-left"></i>
         <span id="floatingClearFiltersText">Limpiar Filtros (0)</span>
@@ -450,15 +661,8 @@
             </button>
         </div>
     </div>
-    
-    
-    
-    
-    
-    
-    
-    
-   <script>
+
+    <script>
 /* ============================================================
    AUTENTICACIÓN
    ============================================================ */
@@ -500,7 +704,6 @@ function debounce(fn, ms = 250) {
 
 /* ============================================================
    PARSE NÚMEROS ROBUSTO
-   Acepta: 1234.5, "1,234.5", "$500", "1234 km", null, undefined
    ============================================================ */
 function parseNumero(val) {
     if (val === null || val === undefined || val === '') return 0;
@@ -542,11 +745,11 @@ const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('excel-file');
 
 dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-white', 'bg-red-800'); });
-dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-white', 'bg-red-800'); });
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
 dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
-    dropZone.classList.remove('border-white', 'bg-red-800');
+    dropZone.classList.remove('dragover');
     if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
 });
 fileInput.addEventListener('change', (e) => {
@@ -614,7 +817,7 @@ document.getElementById('header-reset-btn').addEventListener('click', () => {
     allAvailableRutas = [];
     fileInput.value = '';
     currentPage = 1;
-    document.getElementById('file-name').textContent = 'Cargar / Arrastrar Excel';
+    document.getElementById('file-name').textContent = 'Cargar Excel';
     document.getElementById('dashboard-container').classList.add('hidden');
     document.getElementById('welcome-state').classList.add('hidden');
     document.getElementById('filter-regional').innerHTML = '<option value="">Todas las Regionales</option>';
@@ -670,7 +873,6 @@ function handleFile(file) {
                 return;
             }
 
-            /* Mapeo de TODAS las columnas por nombre */
             rutasKey      = findColumn(headers, 'ruta') || headers[2] || '';
             plazaKey      = findColumn(headers, 'plaza') || headers[5] || 'Plaza';
             colWKey       = findColumn(headers, 'litros') || findColumn(headers, 'consumo') || headers[22] || 'Litros consumidos';
@@ -693,22 +895,7 @@ function handleFile(file) {
                 if (thZ) thZ.textContent = colZKey;
             }
 
-            console.log('🗺️ Columnas mapeadas:', {
-                rutas: rutasKey, plaza: plazaKey, litros: colWKey,
-                rendObj: colYKey, rendReal: colZKey,
-                recorrido: recorridoKey, perdida: perdidaKey
-            });
-
             rawData = XLSX.utils.sheet_to_json(worksheet, { defval: '', raw: false });
-
-            if (rawData.length > 0) {
-                const sample = rawData[0];
-                console.log('🔍 Muestra de valores:');
-                console.log('  Recorrido:', sample[recorridoKey], '→ parseNumero:', parseNumero(sample[recorridoKey]));
-                console.log('  Pérdida:', sample[perdidaKey], '→ parseNumero:', parseNumero(sample[perdidaKey]));
-                console.log('  Rend. Obj:', sample[colYKey], '→ parseNumero:', parseNumero(sample[colYKey]));
-                console.log('  Rend. Real:', sample[colZKey], '→ parseNumero:', parseNumero(sample[colZKey]));
-            }
         } else {
             rawData = [];
         }
@@ -868,11 +1055,6 @@ function applyFilters() {
     else doFilter();
 }
 
-/* ============================================================
-   FILTROS CASCADEADOS
-   - Si TODAS las rutas están seleccionadas → Plaza muestra TODAS
-   - Si NO todas las rutas → Plaza muestra solo las plazas de esas rutas
-   ============================================================ */
 function updateCascadingOptions(reg, plaza, vehiculo, cump) {
     const todasLasRutasSeleccionadas =
         (allAvailableRutas.length === 0) ||
@@ -888,8 +1070,6 @@ function updateCascadingOptions(reg, plaza, vehiculo, cump) {
             if (excludeField !== 'reg' && reg && r !== reg) return false;
             if (excludeField !== 'plaza' && plaza && p !== plaza) return false;
 
-            /* 🆕 Si estamos recalculando PLAZA y TODAS las rutas están marcadas,
-               NO filtrar por rutas → mostrar todas las plazas disponibles */
             if (excludeField === 'plaza' && todasLasRutasSeleccionadas) {
                 // sin filtro de rutas para el dropdown de plaza
             } else {
@@ -905,23 +1085,18 @@ function updateCascadingOptions(reg, plaza, vehiculo, cump) {
     const getUniqueFromSub = (subData, selectorFn) =>
         [...new Set(subData.map(selectorFn).filter(Boolean))].sort();
 
-    /* Región */
     const subReg = filterByOthers('reg');
     populateSelect('filter-regional', getUniqueFromSub(subReg, r => r['Regional']), reg);
 
-    /* Plaza */
     const subPlaza = filterByOthers('plaza');
     populateSelect('filter-plaza', getUniqueFromSub(subPlaza, r => r[plazaKey]), plaza);
 
-    /* Rutas */
     const subRutasData = filterByOthers('rutas');
     populateRutasCheckboxes(subRutasData);
 
-    /* Vehículo */
     const subVeh = filterByOthers('vehiculo');
     populateSelect('filter-vehiculo', getUniqueFromSub(subVeh, r => r['Tipo de Vehiculo'] || r['Vehiculo']), vehiculo);
 
-    /* Cumplimiento */
     const subCump = filterByOthers('cump');
     populateSelect('filter-cumplimiento', getUniqueFromSub(subCump, r => r['Cumplimiento']), cump);
 }
@@ -1232,7 +1407,7 @@ function applyTiltToKPI() {
 }
 
 /* ============================================================
-   MODO OSCURO
+   MODO OSCURO - BOTÓN EN EL BANNER
    ============================================================ */
 function aplicarTema(tema) {
     const icon = document.getElementById('theme-toggle-icon');
@@ -1262,11 +1437,6 @@ function initTemaConBoton() {
             const next = isDark ? 'light' : 'dark';
             aplicarTema(next);
             localStorage.setItem('panel-theme', next);
-            try {
-                if (window.parent && window.parent !== window) {
-                    window.parent.postMessage({ theme: next, from: 'carga-gasolina' }, '*');
-                }
-            } catch (e) {}
         });
     }
 
@@ -1306,20 +1476,10 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('%c🎨 Efectos TR2: ripple, dark-mode, gradiente, cascada, glow, tilt, contadores, barras',
         'background:#DA291C;color:white;padding:6px 10px;border-radius:4px;font-weight:bold;font-size:12px;');
 });
-</script>
-
-
-
-
-
-
+    </script>
 
     <!-- ============================================================
          SISTEMA DE NOTIFICACIONES CON CAMPANA
-         100% independiente (sin index, sin postMessage)
-         Toasts: pérdida económica, cumplimiento, top rutas con peor
-         rendimiento, top plazas con pérdida, top vehículos, brecha
-         y carga exitosa
          ============================================================ -->
     <script>
     (function initGasolinaNotifications() {
@@ -1357,14 +1517,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function injectBell() {
-            const headerActions = document.getElementById('header-actions-container');
-            if (!headerActions || document.getElementById('notif-bell')) return;
+            const slot = document.getElementById('notif-bell-slot');
+            if (!slot || document.getElementById('notif-bell')) return;
             const bell = document.createElement('button');
             bell.id = 'notif-bell';
             bell.title = 'Notificaciones';
             bell.setAttribute('aria-label', 'Notificaciones');
             bell.innerHTML = `<i class="fa-solid fa-bell"></i><span id="notif-badge" class="hidden">0</span>`;
-            headerActions.appendChild(bell);
+            slot.appendChild(bell);
             bell.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const panel = document.getElementById('notif-panel');
@@ -1482,7 +1642,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const notifs = [];
             const fmtMoney = v => '$' + v.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-            /* Referencias seguras a las claves mapeadas en Bloque 2 */
             const recKey = (typeof recorridoKey !== 'undefined' && recorridoKey) ? recorridoKey : 'Recorrido';
             const perdKey = (typeof perdidaKey !== 'undefined' && perdidaKey) ? perdidaKey : 'Perdida economica';
             const rutasK = (typeof rutasKey !== 'undefined' && rutasKey) ? rutasKey : '';
@@ -1491,9 +1650,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const zKey = (typeof colZKey !== 'undefined' && colZKey) ? colZKey : 'Rendimiento Real';
             const pNum = (typeof parseNumero === 'function') ? parseNumero : (v => { const n = Number(v); return isNaN(n) ? 0 : n; });
 
-            /* ═══════════════════════════════════════════════════════
-               TOAST 1: PÉRDIDA ECONÓMICA TOTAL
-               ═══════════════════════════════════════════════════════ */
+            /* TOAST 1: PÉRDIDA ECONÓMICA TOTAL */
             let totalPerdida = 0;
             data.forEach(r => { totalPerdida += pNum(r[perdKey]); });
             if (totalPerdida > 0) {
@@ -1509,9 +1666,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            /* ═══════════════════════════════════════════════════════
-               TOAST 2: % CUMPLIMIENTO
-               ═══════════════════════════════════════════════════════ */
+            /* TOAST 2: % CUMPLIMIENTO */
             const cumplMap = { 'Cumple': 0, 'No Cumple': 0, 'Mala Captura': 0, 'Otro': 0 };
             data.forEach(r => {
                 const c = String(r['Cumplimiento'] || '').trim().toUpperCase();
@@ -1539,9 +1694,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 message: msgCump
             });
 
-            /* ═══════════════════════════════════════════════════════
-               TOAST 3: TOP 3 RUTAS CON PEOR RENDIMIENTO
-               ═══════════════════════════════════════════════════════ */
+            /* TOAST 3: TOP 3 RUTAS CON PEOR RENDIMIENTO */
             if (rutasK && yKey && zKey) {
                 const rutasMap = {};
                 data.forEach(r => {
@@ -1579,9 +1732,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            /* ═══════════════════════════════════════════════════════
-               TOAST 4: TOP 3 PLAZAS CON MÁS PÉRDIDA ECONÓMICA
-               ═══════════════════════════════════════════════════════ */
+            /* TOAST 4: TOP 3 PLAZAS CON MÁS PÉRDIDA ECONÓMICA */
             if (plazaK && totalPerdida > 0) {
                 const plazasMap = {};
                 data.forEach(r => {
@@ -1611,9 +1762,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            /* ═══════════════════════════════════════════════════════
-               TOAST 5: TOP 3 VEHÍCULOS CON PEOR RENDIMIENTO
-               ═══════════════════════════════════════════════════════ */
+            /* TOAST 5: TOP 3 VEHÍCULOS CON PEOR RENDIMIENTO */
             if (yKey && zKey) {
                 const vehiculosMap = {};
                 data.forEach(r => {
@@ -1652,9 +1801,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            /* ═══════════════════════════════════════════════════════
-               TOAST 6: BRECHA RENDIMIENTO REAL vs OBJETIVO
-               ═══════════════════════════════════════════════════════ */
+            /* TOAST 6: BRECHA RENDIMIENTO REAL vs OBJETIVO */
             if (yKey && zKey) {
                 let sumReal = 0, cntReal = 0, sumObj = 0, cntObj = 0;
                 data.forEach(r => {
@@ -1689,9 +1836,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            /* ═══════════════════════════════════════════════════════
-               TOAST 7: CARGA EXITOSA
-               ═══════════════════════════════════════════════════════ */
+            /* TOAST 7: CARGA EXITOSA */
             notifs.push({
                 type: 'success',
                 title: `✅ ${total.toLocaleString()} registros procesados`,

@@ -9,17 +9,115 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --estafeta-red: #DA291C;
+            --estafeta-dark: #1e293b;
+            --estafeta-white: #ffffff;
+            --header-bg: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
+            --btn-upload-bg: rgba(0, 0, 0, 0.2);
+            --btn-upload-hover: rgba(0, 0, 0, 0.35);
+            --btn-upload-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
+            --subtext-color: #ffcdd2;
+            --badge-bg: #ffffff;
+            --badge-text: #DA291C;
+        }
+        body.dark-mode {
+            --header-bg: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
+            --btn-upload-bg: rgba(0, 0, 0, 0.4);
+            --btn-upload-hover: rgba(0, 0, 0, 0.6);
+            --btn-upload-border: rgba(255, 255, 255, 0.1);
+            --text-color: #f1f5f9;
+            --subtext-color: #fca5a5;
+            --badge-bg: #f8fafc;
+            --badge-text: #b91c1c;
+        }
         body { background-color: #F4F6F9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s ease; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #D32F2F; }
-        .top-bar { display: flex; justify-content: flex-end; align-items: center; background: #DA291C; padding: 10px 20px; }
         .fullscreen-active { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; margin: 0 !important; border-radius: 0 !important; display: flex !important; flex-direction: column !important; background-color: #ffffff !important; overflow-y: auto !important; padding: 24px !important; box-shadow: none !important; }
 
-        /* 5.2 Gradiente animado */
-        @keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-        header.top-bar { background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C) !important; background-size: 300% 100% !important; animation: gradientShift 15s ease infinite; }
+        /* --- ANIMACIÓN DEL GRADIENTE --- */
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* --- BANNER MAESTRO --- */
+        .master-header {
+            background: var(--header-bg);
+            background-size: 300% 100%;
+            animation: gradientShift 15s ease infinite;
+            color: var(--text-color);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-bottom: 3px solid #991B1B;
+            flex-wrap: wrap;
+            gap: 15px;
+            transition: background 0.3s ease;
+        }
+        .header-brand { display: flex; align-items: center; gap: 15px; }
+        .brand-logo {
+            background-color: var(--badge-bg);
+            color: var(--badge-text);
+            font-weight: 900;
+            font-size: 24px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .brand-titles { display: flex; flex-direction: column; }
+        .brand-title { font-size: 1.25rem; font-weight: 700; margin: 0; line-height: 1.2; letter-spacing: 0.5px; }
+        .brand-subtitle { font-size: 0.75rem; color: var(--subtext-color); margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+        .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+        /* --- BOTÓN DE CARGA EXCEL --- */
+        .upload-btn-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--btn-upload-bg);
+            border: 1px solid var(--btn-upload-border);
+            border-radius: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+        .upload-btn-wrapper:hover { background-color: var(--btn-upload-hover); transform: translateY(-1px); }
+        .upload-btn-wrapper input[type="file"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .upload-btn-icon { color: #4ade80; font-size: 1.2rem; margin-right: 10px; }
+        .upload-btn-content { display: flex; flex-direction: column; text-align: left; }
+        .upload-btn-title { font-size: 0.85rem; font-weight: 700; color: var(--text-color); }
+        .upload-btn-subtitle { font-size: 0.65rem; color: var(--subtext-color); }
+
+        /* --- SLOTS Y BOTONES HEADER --- */
+        .notification-slot { display: flex; align-items: center; justify-content: center; }
+        #theme-toggle {
+            background: var(--btn-upload-bg);
+            border: 1px solid var(--btn-upload-border);
+            color: var(--text-color);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+        }
+        #theme-toggle:hover { background: var(--btn-upload-hover); transform: translateY(-1px); }
 
         /* 2.1 Ripple */
         .ripple-host { position: relative; overflow: hidden; }
@@ -40,7 +138,6 @@
 
         /* 5.1 Modo oscuro */
         body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
-        body.dark-mode header.top-bar { background: linear-gradient(90deg,#991B1B,#7f1d1d,#b91c1c,#7f1d1d,#991B1B) !important; background-size: 300% 100% !important; }
         body.dark-mode main, body.dark-mode section.bg-white, body.dark-mode .bg-white { background-color: #1e293b !important; }
         body.dark-mode .bg-gray-50, body.dark-mode .bg-gray-100 { background-color: #0f172a !important; }
         body.dark-mode .bg-gray-200 { background-color: #334155 !important; }
@@ -58,37 +155,26 @@
         body.dark-mode .fullscreen-active { background-color: #0f172a !important; }
         body.dark-mode #column-filter-modal > div { background: #1e293b !important; }
 
-        /* Botón flotante modo oscuro */
-        #theme-toggle { position: fixed; bottom: 88px; right: 24px; z-index: 40; width: 48px; height: 48px; border-radius: 999px; background: #1e293b; color: white; border: none; cursor: pointer; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        #theme-toggle:hover { transform: scale(1.08) rotate(15deg); background: #334155; }
-        body.dark-mode #theme-toggle { background: #fbbf24; color: #1e293b; }
-
         /* ============================================================
-           SISTEMA DE NOTIFICACIONES - ESTILOS
+           SISTEMA DE NOTIFICACIONES
            ============================================================ */
-
-        /* Botón campana en el header */
         #notif-bell {
             position: relative;
-            background: rgba(255,255,255,0.12);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.25);
+            background: var(--btn-upload-bg);
+            color: var(--text-color);
+            border: 1px solid var(--btn-upload-border);
             width: 42px;
             height: 42px;
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
             transition: all 0.2s ease;
-            margin-left: 8px;
             flex-shrink: 0;
         }
-        #notif-bell:hover {
-            background: rgba(255,255,255,0.25);
-            transform: translateY(-1px);
-        }
+        #notif-bell:hover { background: var(--btn-upload-hover); transform: translateY(-1px); }
         #notif-badge {
             position: absolute;
             top: -6px;
@@ -108,14 +194,9 @@
             border: 2px solid #DA291C;
         }
         #notif-badge.hidden { display: none !important; }
-        @keyframes badgePulse {
-            0%   { transform: scale(1); }
-            50%  { transform: scale(1.3); }
-            100% { transform: scale(1); }
-        }
+        @keyframes badgePulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
         #notif-badge.badge-new { animation: badgePulse 0.5s ease-out; }
 
-        /* Contenedor de toasts temporales */
         #notif-toast-container {
             position: fixed;
             top: 80px;
@@ -128,9 +209,7 @@
             width: calc(100% - 32px);
             pointer-events: none;
         }
-        @media (max-width: 640px) {
-            #notif-toast-container { top: auto; bottom: 100px; right: 16px; left: 16px; max-width: none; }
-        }
+        @media (max-width: 640px) { #notif-toast-container { top: auto; bottom: 100px; right: 16px; left: 16px; max-width: none; } }
 
         .notif-toast {
             pointer-events: auto;
@@ -159,23 +238,12 @@
         .notif-toast-message { font-size: 12px; color: #6b7280; line-height: 1.5; }
         .notif-toast-message b { color: #DA291C; font-weight: 700; }
         .notif-toast-close {
-            flex-shrink: 0;
-            color: #9ca3af;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            font-size: 15px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            transition: all 0.15s;
+            flex-shrink: 0; color: #9ca3af; background: transparent; border: none; cursor: pointer;
+            font-size: 15px; padding: 2px 6px; border-radius: 4px; transition: all 0.15s;
         }
         .notif-toast-close:hover { background: #f3f4f6; color: #4b5563; }
-        @keyframes notifToastIn {
-            from { opacity: 0; transform: translateX(40px) scale(0.95); }
-            to   { opacity: 1; transform: translateX(0) scale(1); }
-        }
+        @keyframes notifToastIn { from { opacity: 0; transform: translateX(40px) scale(0.95); } to { opacity: 1; transform: translateX(0) scale(1); } }
 
-        /* Modo oscuro: toasts oscuros */
         body.dark-mode .notif-toast { background: #1e293b; color: #f1f5f9; border-color: #334155; border-left-width: 4px; }
         body.dark-mode .notif-toast.notif-danger  { border-left-color: #dc2626; }
         body.dark-mode .notif-toast.notif-warning { border-left-color: #f59e0b; }
@@ -186,7 +254,6 @@
         body.dark-mode .notif-toast-message b { color: #fbbf24; }
         body.dark-mode .notif-toast-close:hover { background: #334155; color: #f1f5f9; }
 
-        /* Panel desplegable */
         #notif-panel {
             position: fixed;
             top: 70px;
@@ -205,53 +272,16 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         #notif-panel.show { display: flex; }
-        @keyframes notifPanelIn {
-            from { opacity: 0; transform: translateY(-10px) scale(0.98); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .notif-panel-header {
-            padding: 16px 20px;
-            background: linear-gradient(90deg, #DA291C, #b81810);
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
+        @keyframes notifPanelIn { from { opacity: 0; transform: translateY(-10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .notif-panel-header { padding: 16px 20px; background: linear-gradient(90deg, #DA291C, #b81810); color: white; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .notif-panel-title { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-        .notif-panel-close {
-            background: rgba(255,255,255,0.15);
-            border: none;
-            color: white;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
+        .notif-panel-close { background: rgba(255,255,255,0.15); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
         .notif-panel-close:hover { background: rgba(255,255,255,0.3); }
-        .notif-panel-body {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 8px;
-        }
+        .notif-panel-body { flex-grow: 1; overflow-y: auto; padding: 8px; }
         .notif-panel-body::-webkit-scrollbar { width: 6px; }
         .notif-panel-body::-webkit-scrollbar-track { background: #f1f1f1; }
         .notif-panel-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        .notif-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 12px 14px;
-            border-radius: 10px;
-            margin-bottom: 6px;
-            transition: background 0.15s;
-            position: relative;
-            border-left: 3px solid transparent;
-        }
+        .notif-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 10px; margin-bottom: 6px; transition: background 0.15s; position: relative; border-left: 3px solid transparent; }
         .notif-item:hover { background: #f8fafc; }
         .notif-item.unread { background: #fef2f2; }
         .notif-item.unread:hover { background: #fee2e2; }
@@ -267,28 +297,8 @@
         .notif-item-time { font-size: 10px; color: #9ca3af; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600; }
         .notif-empty { padding: 40px 20px; text-align: center; color: #9ca3af; font-size: 13px; }
         .notif-empty i { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
-        .notif-panel-footer {
-            padding: 12px 16px;
-            border-top: 1px solid #e5e7eb;
-            background: #f8fafc;
-            display: flex;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        .notif-panel-footer button {
-            flex: 1;
-            padding: 8px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.15s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
+        .notif-panel-footer { padding: 12px 16px; border-top: 1px solid #e5e7eb; background: #f8fafc; display: flex; gap: 8px; flex-shrink: 0; }
+        .notif-panel-footer button { flex: 1; padding: 8px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .notif-btn-read { background: #DA291C; color: white; }
         .notif-btn-read:hover { background: #b81810; }
         .notif-btn-clear { background: #e5e7eb; color: #374151; }
@@ -306,41 +316,51 @@
         body.dark-mode .notif-btn-clear { background: #334155; color: #cbd5e1; }
         body.dark-mode .notif-btn-clear:hover { background: #475569; }
         body.dark-mode .notif-empty { color: #64748b; }
-        body.dark-mode #notif-bell { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); }
-        body.dark-mode #notif-bell:hover { background: rgba(255,255,255,0.25); }
     </style>
 </head>
 <body class="min-h-screen text-gray-800 flex flex-col relative">
 
-    <header class="top-bar text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto w-full px-4 py-3 flex flex-col md:flex-row justify-between items-center">
-            <div class="flex items-center space-x-3 mb-3 md:mb-0">
-                <div class="bg-white text-[#DA291C] font-black text-2xl px-3 py-1 rounded-lg shadow uppercase tracking-wider">ESTAFETA</div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-tight">Afectación Mensual</h1>
-                    <p class="text-xs text-red-100">Control de Incumplimientos, Garantías y Retrasos</p>
+    <!-- ============================================================
+         BANNER MAESTRO UNIFICADO
+         ============================================================ -->
+    <header class="master-header sticky top-0 z-50">
+        <!-- Logo y Títulos -->
+        <div class="header-brand">
+            <div class="brand-logo">E</div>
+            <div class="brand-titles">
+                <h1 class="brand-title">Afectación Mensual</h1>
+                <p class="brand-subtitle">Control de Incumplimientos, Garantías y Retrasos</p>
+            </div>
+        </div>
+
+        <!-- Acciones a la derecha -->
+        <div class="header-actions" id="header-actions-container">
+            <!-- Botón de Carga Excel -->
+            <div class="upload-btn-wrapper">
+                <input type="file" id="excel-file-input" accept="*">
+                <i class="fa-solid fa-file-excel upload-btn-icon"></i>
+                <div class="upload-btn-content">
+                    <span class="upload-btn-title">Cargar Excel/CSV</span>
+                    <span class="upload-btn-subtitle">Arrastra o clic aquí</span>
                 </div>
             </div>
-            <div id="header-actions-container" class="flex items-center space-x-3">
-                <div id="upload-section-header" class="flex items-center space-x-2 bg-white/10 px-3 py-1.5 rounded-xl border border-white/20">
-                    <span class="text-xs text-red-100 hidden sm:inline">Cargar Excel/CSV:</span>
-                    <div class="relative inline-block">
-                        <input type="file" id="excel-file-input" accept="*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                        <button class="bg-white text-[#DA291C] hover:bg-red-50 font-semibold text-xs px-3 py-2 rounded-lg shadow transition duration-200 flex items-center space-x-1.5 cursor-pointer">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>
-                            <span>Seleccionar o Arrastrar Archivo</span>
-                        </button>
-                    </div>
-                </div>
-                <div id="file-info" class="hidden flex items-center bg-black/20 px-4 py-2 rounded-lg text-sm">
-                    <i class="fa-solid fa-file-excel text-green-400 mr-2 text-lg"></i>
-                    <span id="file-name" class="font-medium mr-3 truncate max-w-xs">archivo.xlsx</span>
-                    <button onclick="resetData()" class="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded transition cursor-pointer">
-                        <i class="fa-solid fa-rotate-right mr-1"></i> Cambiar Archivo
-                    </button>
-                </div>
-                <!-- La campana se inyecta aquí por JS -->
+
+            <!-- Información del archivo cargado -->
+            <div id="file-info" class="hidden items-center bg-black/20 px-4 py-2 rounded-lg text-sm" style="display:none;">
+                <i class="fa-solid fa-file-excel text-green-400 mr-2 text-lg"></i>
+                <span id="file-name" class="font-medium mr-3 truncate max-w-xs">archivo.xlsx</span>
+                <button onclick="resetData()" class="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded transition cursor-pointer">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Cambiar
+                </button>
             </div>
+
+            <!-- Contenedor para la Campana -->
+            <div class="notification-slot" id="notif-bell-container"></div>
+
+            <!-- Botón de Tema -->
+            <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+                <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+            </button>
         </div>
     </header>
 
@@ -652,8 +672,6 @@
         <i class="fa-solid fa-rotate-left"></i><span>Limpiar Filtros</span>
     </button>
 
-    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema"><i class="fa-solid fa-moon" id="theme-toggle-icon"></i></button>
-
     <!-- Contenedores del sistema de notificaciones -->
     <div id="notif-toast-container"></div>
     <div id="notif-panel">
@@ -676,10 +694,7 @@
             </button>
         </div>
     </div>
-    
-    
-    
-    
+
     <script>
     /* ============================================================
        AUTENTICACIÓN
@@ -811,8 +826,7 @@
         columnActiveFilters = { colA: null, plaza: null };
         document.getElementById('welcome-card').classList.remove('hidden');
         document.getElementById('dashboard-content').classList.add('hidden');
-        document.getElementById('file-info').classList.add('hidden');
-        document.getElementById('upload-section-header').classList.remove('hidden');
+        document.getElementById('file-info').style.display = 'none';
         fileInput.value = '';
         if (chartDaysInstance) { chartDaysInstance.destroy(); chartDaysInstance = null; }
         if (chartPlazasInstance) { chartPlazasInstance.destroy(); chartPlazasInstance = null; }
@@ -821,9 +835,8 @@
 
     function initDashboard() {
         document.getElementById('welcome-card').classList.add('hidden');
-        document.getElementById('upload-section-header').classList.add('hidden');
         document.getElementById('dashboard-content').classList.remove('hidden');
-        document.getElementById('file-info').classList.remove('hidden');
+        document.getElementById('file-info').style.display = 'flex';
         populateFilters();
         applyFilters();
     }
@@ -1426,6 +1439,9 @@
         });
     }
 
+    /* ============================================================
+       TEMA CLARO/OSCURO — Toggle en el header
+       ============================================================ */
     function aplicarTema(tema) {
         if (tema === 'dark') document.body.classList.add('dark-mode');
         else document.body.classList.remove('dark-mode');
@@ -1474,18 +1490,10 @@
             });
             obs.observe(main, { attributes: true, attributeFilter: ['class'] });
         }
-        console.log('%c🎨 Efectos activados: ripple, dark-mode, gradiente, cascada, glow, tilt, contadores, barras, view-transitions',
+        console.log('%c🎨 Banner maestro integrado: logo E, campana, tema en header, carga Excel',
             'background:#DA291C;color:white;padding:6px 10px;border-radius:4px;font-weight:bold;font-size:12px;');
     });
-</script>
-
-
-
-
-
-
-
-
+    </script>
 
     <!-- ============================================================
          SISTEMA DE NOTIFICACIONES CON CAMPANA
@@ -1546,11 +1554,11 @@
         }
 
         /* ============================================================
-           INYECTAR CAMPANA EN EL HEADER
+           INYECTAR CAMPANA EN EL SLOT DEL HEADER
            ============================================================ */
         function injectBell() {
-            const headerActions = document.getElementById('header-actions-container');
-            if (!headerActions) return;
+            const slot = document.getElementById('notif-bell-container');
+            if (!slot) return;
             if (document.getElementById('notif-bell')) return;
 
             const bell = document.createElement('button');
@@ -1561,7 +1569,7 @@
                 <i class="fa-solid fa-bell"></i>
                 <span id="notif-badge" class="hidden">0</span>
             `;
-            headerActions.appendChild(bell);
+            slot.appendChild(bell);
 
             bell.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1734,9 +1742,6 @@
             const total = rawData.length;
             if (total === 0) return;
 
-            /* ═══════════════════════════════════════════════════════
-               TOAST 1: PORCENTAJE POR DETALLE DE AFECTACIÓN (TOP 3)
-               ═══════════════════════════════════════════════════════ */
             if (colAKeyCached) {
                 const motivosMap = {};
                 rawData.forEach(r => {
@@ -1764,9 +1769,6 @@
                 }
             }
 
-            /* ═══════════════════════════════════════════════════════
-               TOAST 2: DÍA MÁS CRÍTICO DE AFECTACIÓN
-               ═══════════════════════════════════════════════════════ */
             if (fechaKeyCached) {
                 const diasMap = {};
                 rawData.forEach(r => {
@@ -1802,9 +1804,6 @@
                 }
             }
 
-            /* ═══════════════════════════════════════════════════════
-               TOAST 3: TOP 3 PLAZAS DESTINO MÁS AFECTADAS
-               ═══════════════════════════════════════════════════════ */
             if (plazaKeyCached) {
                 const plazasMap = {};
                 rawData.forEach(r => {
@@ -1833,9 +1832,6 @@
                 }
             }
 
-            /* ═══════════════════════════════════════════════════════
-               TOAST 4: TOP 3 PLAZAS ORIGEN EN LA AFECTACIÓN
-               ═══════════════════════════════════════════════════════ */
             if (colCKeyCached) {
                 const origenesMap = {};
                 rawData.forEach(r => {
@@ -1866,9 +1862,6 @@
                 }
             }
 
-            /* ═══════════════════════════════════════════════════════
-               TOAST 5: CARGA EXITOSA
-               ═══════════════════════════════════════════════════════ */
             notifs.push({
                 type: 'success',
                 title: `✅ ${total.toLocaleString()} registros cargados`,

@@ -9,60 +9,143 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
     <style>
+        /* ============================================================
+           RESET GLOBAL Y VARIABLES DEL BANNER
+           ============================================================ */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        :root {
+            --estafeta-red: #DA291C;
+            --estafeta-dark: #1e293b;
+            --header-bg: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
+            --btn-upload-bg: rgba(0, 0, 0, 0.2);
+            --btn-upload-hover: rgba(0, 0, 0, 0.35);
+            --btn-upload-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
+            --subtext-color: #ffcdd2;
+            --badge-bg: #ffffff;
+            --badge-text: #DA291C;
+        }
+
+        body.dark-mode {
+            --header-bg: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
+            --btn-upload-bg: rgba(0, 0, 0, 0.4);
+            --btn-upload-hover: rgba(0, 0, 0, 0.6);
+            --btn-upload-border: rgba(255, 255, 255, 0.1);
+            --text-color: #f1f5f9;
+            --subtext-color: #fca5a5;
+            --badge-bg: #f8fafc;
+            --badge-text: #b91c1c;
+        }
+
+        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+        /* --- BANNER MAESTRO --- */
+        .master-header {
+            background: var(--header-bg);
+            background-size: 300% 100%;
+            animation: gradientShift 15s ease infinite;
+            color: var(--text-color);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            border: none !important;
+            margin: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+            gap: 15px;
+            transition: background 0.3s ease;
+            position: relative;
+            z-index: 50;
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 15px; }
+        .brand-logo {
+            background-color: var(--badge-bg); color: var(--badge-text);
+            font-weight: 900; font-size: 24px; width: 48px; height: 48px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease; flex-shrink: 0;
+        }
+        .brand-titles { display: flex; flex-direction: column; }
+        .brand-title { font-size: 1.25rem; font-weight: 700; margin: 0; line-height: 1.2; letter-spacing: 0.5px; }
+        .brand-subtitle { font-size: 0.75rem; color: var(--subtext-color); margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+
+        .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+        /* Botón de carga Excel estandarizado */
+        .upload-btn-wrapper {
+            position: relative; display: inline-flex; align-items: center;
+            background-color: var(--btn-upload-bg); border: 1px solid var(--btn-upload-border);
+            border-radius: 10px; padding: 8px 16px; cursor: pointer;
+            transition: all 0.2s ease; backdrop-filter: blur(4px);
+        }
+        .upload-btn-wrapper:hover { background-color: var(--btn-upload-hover); transform: translateY(-1px); }
+        .upload-btn-wrapper.dragover { background-color: rgba(74, 222, 128, 0.3) !important; border-color: #4ade80 !important; }
+        .upload-btn-wrapper input[type="file"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .upload-btn-icon { color: #4ade80; font-size: 1.2rem; margin-right: 10px; }
+        .upload-btn-content { display: flex; flex-direction: column; text-align: left; }
+        .upload-btn-title { font-size: 0.85rem; font-weight: 700; color: var(--text-color); }
+        .upload-btn-subtitle { font-size: 0.65rem; color: var(--subtext-color); }
+
+        /* Botón Tema */
+        #theme-toggle {
+            background: var(--btn-upload-bg); border: 1px solid var(--btn-upload-border);
+            color: var(--text-color); width: 42px; height: 42px; border-radius: 10px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; transition: all 0.2s ease; backdrop-filter: blur(4px); flex-shrink: 0;
+        }
+        #theme-toggle:hover { background: var(--btn-upload-hover); transform: translateY(-1px) rotate(15deg); }
+
+        /* Campana de Notificaciones */
+        #notif-bell {
+            position: relative; background: var(--btn-upload-bg); color: var(--text-color);
+            border: 1px solid var(--btn-upload-border); width: 42px; height: 42px;
+            border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center;
+            justify-content: center; font-size: 18px; transition: all 0.2s ease;
+            flex-shrink: 0; backdrop-filter: blur(4px);
+        }
+        #notif-bell:hover { background: var(--btn-upload-hover); transform: translateY(-1px); }
+        #notif-badge {
+            position: absolute; top: -6px; right: -6px; background: #dc2626; color: white;
+            font-size: 10px; font-weight: 800; min-width: 20px; height: 20px;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            padding: 0 5px; box-shadow: 0 2px 6px rgba(220,38,38,0.5); border: 2px solid #DA291C;
+        }
+        #notif-badge.hidden { display: none !important; }
+        @keyframes badgePulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        #notif-badge.pulse { animation: badgePulse 0.5s ease-out; }
+
+        /* --- ESTILOS BASE DEL DASHBOARD (RECOLECCIONES) --- */
         .bg-estafeta-red { background-color: #DA291C; }
         .text-estafeta-red { color: #DA291C; }
         .border-estafeta-red { border-color: #DA291C; }
-
-        header.top-bar {
-            background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C) !important;
-            background-size: 300% 100% !important;
-            animation: gradientShift 15s ease infinite;
-        }
-        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-
         .kpi-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .kpi-card:hover {
-            box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.15), 0 12px 24px -8px rgba(218, 41, 28, 0.25) !important;
-        }
-
-        @keyframes cardEnter {
-            from { opacity: 0; transform: translateY(20px) scale(0.96); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        .kpi-card:hover { box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.15), 0 12px 24px -8px rgba(218, 41, 28, 0.25) !important; }
+        
+        @keyframes cardEnter { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
-
+        
         .ripple-host { position: relative; overflow: hidden; }
-        .ripple-effect {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.55);
-            transform: scale(0);
-            animation: rippleAnim 0.6s ease-out;
-            pointer-events: none;
-        }
+        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.55); transform: scale(0); animation: rippleAnim 0.6s ease-out; pointer-events: none; }
         @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+        
+        @keyframes pulseCritical { 0%, 100% { background-color: rgba(220, 38, 38, 0.08); } 50% { background-color: rgba(220, 38, 38, 0.28); } }
+        .critical-pulse { animation: pulseCritical 2s ease-in-out infinite; font-weight: 800; color: #dc2626 !important; border-radius: 4px; padding: 2px 6px; display: inline-block; }
 
-        @keyframes pulseCritical {
-            0%, 100% { background-color: rgba(220, 38, 38, 0.08); }
-            50%      { background-color: rgba(220, 38, 38, 0.28); }
-        }
-        .critical-pulse {
-            animation: pulseCritical 2s ease-in-out infinite;
-            font-weight: 800;
-            color: #dc2626 !important;
-            border-radius: 4px;
-            padding: 2px 6px;
-            display: inline-block;
-        }
-
-        @keyframes rowFadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        #tableBody tr {
-            animation: rowFadeIn 0.35s ease-out backwards;
-        }
+        @keyframes rowFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        #tableBody tr { animation: rowFadeIn 0.35s ease-out backwards; }
         #tableBody tr:nth-child(1) { animation-delay: 0ms; }
         #tableBody tr:nth-child(2) { animation-delay: 25ms; }
         #tableBody tr:nth-child(3) { animation-delay: 50ms; }
@@ -74,106 +157,36 @@
         #tableBody tr:nth-child(9) { animation-delay: 200ms; }
         #tableBody tr:nth-child(10) { animation-delay: 225ms; }
 
-        @keyframes filterHighlight {
-            0%   { box-shadow: 0 0 0 0 rgba(218, 41, 28, 0.55); }
-            100% { box-shadow: 0 0 0 12px rgba(218, 41, 28, 0); }
-        }
-        .filter-highlight {
-            animation: filterHighlight 0.8s ease-out;
-        }
+        @keyframes filterHighlight { 0% { box-shadow: 0 0 0 0 rgba(218, 41, 28, 0.55); } 100% { box-shadow: 0 0 0 12px rgba(218, 41, 28, 0); } }
+        .filter-highlight { animation: filterHighlight 0.8s ease-out; }
 
-        @keyframes shimmer {
-            0%   { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
-        }
-        .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 1000px 100%;
-            animation: shimmer 1.5s infinite linear;
-            border-radius: 12px;
-        }
-        body.dark-mode .skeleton {
-            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-            background-size: 1000px 100%;
-        }
-
-        #floatingActionsContainer {
-            position: fixed !important;
-            bottom: 24px !important;
-            right: 24px !important;
-            left: auto !important;
-            top: auto !important;
-            z-index: 40;
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-        }
-        #floatingFilterBtnContainer { position: static !important; display: flex !important; }
-        #floatingFilterBtnContainer.hidden { display: none !important; }
+        @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 1000px 100%; animation: shimmer 1.5s infinite linear; border-radius: 12px; }
+        body.dark-mode .skeleton { background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); background-size: 1000px 100%; }
 
         #floatingFilterBtnContainer > button {
-            width: 200px !important;
-            min-width: 200px !important;
-            max-width: 200px !important;
-            box-sizing: border-box;
-            justify-content: center !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease !important;
+            width: 200px !important; min-width: 200px !important; max-width: 200px !important;
+            box-sizing: border-box; justify-content: center !important; white-space: nowrap !important;
+            overflow: hidden !important; transition: background-color 0.3s ease, box-shadow 0.3s ease !important;
             transform: none !important;
         }
         #floatingFilterBtnContainer > button:hover { transform: none !important; }
 
-        #theme-toggle {
-            position: static !important;
-            width: 48px;
-            height: 48px;
-            border-radius: 999px;
-            background: #1e293b;
-            color: white;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
-        #theme-toggle:hover { transform: scale(1.08) rotate(15deg); background: #334155; }
-        body.dark-mode #theme-toggle { background: #fbbf24; color: #1e293b; }
+        #fileNameBadge { max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
 
-        #fileNameBadge {
-            max-width: 250px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            display: inline-block;
-            vertical-align: middle;
-        }
-
+        /* --- MODO OSCURO GENERAL --- */
         body.dark-mode { background-color: #0f172a !important; color: #e2e8f0 !important; }
-        body.dark-mode header.top-bar { background: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B) !important; background-size: 300% 100% !important; }
         body.dark-mode .bg-white { background-color: #1e293b !important; }
         body.dark-mode .bg-gray-50 { background-color: #0f172a !important; }
         body.dark-mode .bg-gray-100 { background-color: #0f172a !important; }
         body.dark-mode .bg-gray-200 { background-color: #334155 !important; }
-        body.dark-mode .text-gray-800,
-        body.dark-mode .text-gray-700 { color: #e2e8f0 !important; }
-        body.dark-mode .text-gray-600,
-        body.dark-mode .text-gray-500,
-        body.dark-mode .text-gray-400 { color: #94a3b8 !important; }
-        body.dark-mode .border-gray-100,
-        body.dark-mode .border-gray-200,
-        body.dark-mode .border-gray-300 { border-color: #334155 !important; }
+        body.dark-mode .text-gray-800, body.dark-mode .text-gray-700 { color: #e2e8f0 !important; }
+        body.dark-mode .text-gray-600, body.dark-mode .text-gray-500, body.dark-mode .text-gray-400 { color: #94a3b8 !important; }
+        body.dark-mode .border-gray-100, body.dark-mode .border-gray-200, body.dark-mode .border-gray-300 { border-color: #334155 !important; }
         body.dark-mode table thead { background-color: #0f172a !important; color: #94a3b8 !important; }
         body.dark-mode table tbody tr:hover { background-color: #334155 !important; }
-        body.dark-mode input,
-        body.dark-mode select { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
-        body.dark-mode .shadow-sm,
-        body.dark-mode .shadow-md,
-        body.dark-mode .shadow-lg { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important; }
+        body.dark-mode input, body.dark-mode select { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        body.dark-mode .shadow-sm, body.dark-mode .shadow-md, body.dark-mode .shadow-lg { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important; }
         body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; }
         body.dark-mode .bg-yellow-50 { background-color: rgba(120, 53, 15, 0.4) !important; }
         body.dark-mode .bg-blue-50 { background-color: rgba(30, 58, 138, 0.4) !important; }
@@ -184,293 +197,77 @@
         body.dark-mode .hover\:bg-gray-100:hover { background-color: #334155 !important; }
         body.dark-mode .hover\:bg-gray-50:hover { background-color: #334155 !important; }
 
-        /* ============================================================ */
-        /* ============ CAMPANA DE NOTIFICACIONES - CSS =============== */
-        /* ============================================================ */
-        #notif-bell {
-            position: relative;
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.95);
-            color: #DA291C;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: all 0.25s ease;
-            flex-shrink: 0;
-        }
-        #notif-bell:hover {
-            background: #ffffff;
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        body.dark-mode #notif-bell {
-            background: #1e293b;
-            color: #fbbf24;
-            border-color: #334155;
-        }
-        body.dark-mode #notif-bell:hover { background: #334155; }
-
-        #notif-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            min-width: 20px;
-            height: 20px;
-            padding: 0 5px;
-            background: #dc2626;
-            color: #fff;
-            border-radius: 999px;
-            font-size: 10px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #fff;
-            line-height: 1;
-        }
-        body.dark-mode #notif-badge { border-color: #1e293b; }
-        #notif-badge.hidden { display: none; }
-        @keyframes badgePulse {
-            0%   { transform: scale(1);   box-shadow: 0 0 0 0 rgba(220,38,38,0.7); }
-            70%  { transform: scale(1.18); box-shadow: 0 0 0 8px rgba(220,38,38,0); }
-            100% { transform: scale(1);   box-shadow: 0 0 0 0 rgba(220,38,38,0); }
-        }
-        #notif-badge.pulse { animation: badgePulse 0.7s ease-out; }
-
-        #notif-toast-container {
-            position: fixed;
-            top: 90px;
-            right: 20px;
-            z-index: 9998;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 380px;
-            pointer-events: none;
-        }
-        .notif-toast {
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2), 0 4px 12px -2px rgba(0,0,0,0.1);
-            padding: 14px 16px 14px 18px;
-            border-left: 4px solid #DA291C;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            pointer-events: auto;
-            animation: notifToastIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        @keyframes notifToastIn {
-            from { opacity: 0; transform: translateX(110%); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
+        /* --- NOTIFICACIONES (TOASTS Y PANEL) --- */
+        #notif-toast-container { position: fixed; top: 90px; right: 20px; z-index: 9998; display: flex; flex-direction: column; gap: 10px; max-width: 380px; pointer-events: none; }
+        .notif-toast { background: #ffffff; border-radius: 12px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2), 0 4px 12px -2px rgba(0,0,0,0.1); padding: 14px 16px 14px 18px; border-left: 4px solid #DA291C; display: flex; gap: 12px; align-items: flex-start; pointer-events: auto; animation: notifToastIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+        @keyframes notifToastIn { from { opacity: 0; transform: translateX(110%); } to { opacity: 1; transform: translateX(0); } }
         .notif-toast.out { animation: notifToastOut 0.35s ease-in forwards; }
-        @keyframes notifToastOut {
-            to { opacity: 0; transform: translateX(110%); }
-        }
-        .notif-toast.danger   { border-left-color: #dc2626; }
-        .notif-toast.warning  { border-left-color: #f59e0b; }
-        .notif-toast.info     { border-left-color: #3b82f6; }
-        .notif-toast.success  { border-left-color: #10b981; }
-
-        .notif-toast-icon {
-            font-size: 20px;
-            line-height: 1;
-            flex-shrink: 0;
-            margin-top: 1px;
-        }
-        .notif-toast.danger  .notif-toast-icon  { color: #dc2626; }
-        .notif-toast.warning .notif-toast-icon  { color: #f59e0b; }
-        .notif-toast.info    .notif-toast-icon  { color: #3b82f6; }
-        .notif-toast.success .notif-toast-icon  { color: #10b981; }
-
+        @keyframes notifToastOut { to { opacity: 0; transform: translateX(110%); } }
+        .notif-toast.danger { border-left-color: #dc2626; }
+        .notif-toast.warning { border-left-color: #f59e0b; }
+        .notif-toast.info { border-left-color: #3b82f6; }
+        .notif-toast.success { border-left-color: #10b981; }
+        .notif-toast-icon { font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+        .notif-toast.danger .notif-toast-icon { color: #dc2626; }
+        .notif-toast.warning .notif-toast-icon { color: #f59e0b; }
+        .notif-toast.info .notif-toast-icon { color: #3b82f6; }
+        .notif-toast.success .notif-toast-icon { color: #10b981; }
         .notif-toast-body { flex: 1; min-width: 0; }
-        .notif-toast-title {
-            font-weight: 700;
-            font-size: 13px;
-            color: #111827;
-            margin-bottom: 3px;
-        }
-        .notif-toast-msg {
-            font-size: 12px;
-            color: #4b5563;
-            line-height: 1.4;
-            word-wrap: break-word;
-        }
-        .notif-toast-close {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #9ca3af;
-            font-size: 14px;
-            padding: 0;
-            margin-left: 4px;
-            flex-shrink: 0;
-        }
+        .notif-toast-title { font-weight: 700; font-size: 13px; color: #111827; margin-bottom: 3px; }
+        .notif-toast-msg { font-size: 12px; color: #4b5563; line-height: 1.4; word-wrap: break-word; }
+        .notif-toast-close { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 14px; padding: 0; margin-left: 4px; flex-shrink: 0; }
         .notif-toast-close:hover { color: #4b5563; }
-
         body.dark-mode .notif-toast { background: #1e293b; }
         body.dark-mode .notif-toast-title { color: #f1f5f9; }
         body.dark-mode .notif-toast-msg { color: #cbd5e1; }
         body.dark-mode .notif-toast-close { color: #64748b; }
         body.dark-mode .notif-toast-close:hover { color: #cbd5e1; }
 
-        #notif-panel {
-            position: fixed;
-            top: 90px;
-            right: 20px;
-            width: 400px;
-            max-width: calc(100vw - 40px);
-            max-height: 70vh;
-            background: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3), 0 8px 20px -5px rgba(0,0,0,0.15);
-            z-index: 9999;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            animation: notifPanelIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        #notif-panel { position: fixed; top: 90px; right: 20px; width: 400px; max-width: calc(100vw - 40px); max-height: 70vh; background: #ffffff; border-radius: 16px; box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3), 0 8px 20px -5px rgba(0,0,0,0.15); z-index: 9999; display: none; flex-direction: column; overflow: hidden; animation: notifPanelIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         #notif-panel.open { display: flex; }
-        @keyframes notifPanelIn {
-            from { opacity: 0; transform: translateY(-10px) scale(0.97); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @keyframes notifPanelIn { from { opacity: 0; transform: translateY(-10px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
         body.dark-mode #notif-panel { background: #1e293b; }
-
-        .notif-panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 18px;
-            border-bottom: 1px solid #e5e7eb;
-            background: #f9fafb;
-        }
-        .notif-panel-header span {
-            font-weight: 700;
-            font-size: 14px;
-            color: #111827;
-        }
-        .notif-panel-header button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #6b7280;
-            font-size: 16px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
+        .notif-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid #e5e7eb; background: #f9fafb; }
+        .notif-panel-header span { font-weight: 700; font-size: 14px; color: #111827; }
+        .notif-panel-header button { background: none; border: none; cursor: pointer; color: #6b7280; font-size: 16px; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; }
         .notif-panel-header button:hover { background: #e5e7eb; color: #111827; }
         body.dark-mode .notif-panel-header { background: #0f172a; border-bottom-color: #334155; }
         body.dark-mode .notif-panel-header span { color: #f1f5f9; }
         body.dark-mode .notif-panel-header button:hover { background: #334155; color: #f1f5f9; }
-
-        .notif-panel-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px 0;
-            max-height: calc(70vh - 120px);
-        }
+        .notif-panel-body { flex: 1; overflow-y: auto; padding: 8px 0; max-height: calc(70vh - 120px); }
         .notif-panel-body::-webkit-scrollbar { width: 6px; }
         .notif-panel-body::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
         body.dark-mode .notif-panel-body::-webkit-scrollbar-thumb { background: #475569; }
-
-        .notif-empty {
-            text-align: center;
-            color: #9ca3af;
-            padding: 40px 20px;
-            font-size: 13px;
-        }
+        .notif-empty { text-align: center; color: #9ca3af; padding: 40px 20px; font-size: 13px; }
         body.dark-mode .notif-empty { color: #64748b; }
-
-        .notif-item {
-            display: flex;
-            gap: 10px;
-            padding: 12px 18px;
-            border-left: 3px solid transparent;
-            transition: background 0.2s;
-            cursor: default;
-        }
+        .notif-item { display: flex; gap: 10px; padding: 12px 18px; border-left: 3px solid transparent; transition: background 0.2s; cursor: default; }
         .notif-item:hover { background: #f9fafb; }
         .notif-item.unread { background: #fef2f2; }
         .notif-item.unread:hover { background: #fee2e2; }
         body.dark-mode .notif-item:hover { background: #0f172a; }
         body.dark-mode .notif-item.unread { background: rgba(127, 29, 29, 0.25); }
         body.dark-mode .notif-item.unread:hover { background: rgba(127, 29, 29, 0.4); }
-
-        .notif-item.danger  { border-left-color: #dc2626; }
+        .notif-item.danger { border-left-color: #dc2626; }
         .notif-item.warning { border-left-color: #f59e0b; }
-        .notif-item.info    { border-left-color: #3b82f6; }
+        .notif-item.info { border-left-color: #3b82f6; }
         .notif-item.success { border-left-color: #10b981; }
-
-        .notif-item-icon {
-            font-size: 16px;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-        .notif-item.danger  .notif-item-icon  { color: #dc2626; }
-        .notif-item.warning .notif-item-icon  { color: #f59e0b; }
-        .notif-item.info    .notif-item-icon  { color: #3b82f6; }
-        .notif-item.success .notif-item-icon  { color: #10b981; }
-
+        .notif-item-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+        .notif-item.danger .notif-item-icon { color: #dc2626; }
+        .notif-item.warning .notif-item-icon { color: #f59e0b; }
+        .notif-item.info .notif-item-icon { color: #3b82f6; }
+        .notif-item.success .notif-item-icon { color: #10b981; }
         .notif-item-body { flex: 1; min-width: 0; }
-        .notif-item-title {
-            font-weight: 700;
-            font-size: 12.5px;
-            color: #111827;
-            margin-bottom: 2px;
-        }
-        .notif-item-msg {
-            font-size: 11.5px;
-            color: #4b5563;
-            line-height: 1.4;
-            word-wrap: break-word;
-        }
-        .notif-item-time {
-            font-size: 10.5px;
-            color: #9ca3af;
-            margin-top: 4px;
-            font-weight: 500;
-        }
+        .notif-item-title { font-weight: 700; font-size: 12.5px; color: #111827; margin-bottom: 2px; }
+        .notif-item-msg { font-size: 11.5px; color: #4b5563; line-height: 1.4; word-wrap: break-word; }
+        .notif-item-time { font-size: 10.5px; color: #9ca3af; margin-top: 4px; font-weight: 500; }
         body.dark-mode .notif-item-title { color: #f1f5f9; }
         body.dark-mode .notif-item-msg { color: #cbd5e1; }
         body.dark-mode .notif-item-time { color: #64748b; }
-
-        .notif-panel-footer {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            padding: 12px 18px;
-            border-top: 1px solid #e5e7eb;
-            background: #f9fafb;
-        }
-        .notif-panel-footer button {
-            flex: 1;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid transparent;
-        }
-        .notif-panel-footer .btn-mark-read {
-            background: #DA291C;
-            color: #fff;
-        }
+        .notif-panel-footer { display: flex; justify-content: space-between; gap: 10px; padding: 12px 18px; border-top: 1px solid #e5e7eb; background: #f9fafb; }
+        .notif-panel-footer button { flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+        .notif-panel-footer .btn-mark-read { background: #DA291C; color: #fff; }
         .notif-panel-footer .btn-mark-read:hover { background: #b81810; }
-        .notif-panel-footer .btn-clear {
-            background: #e5e7eb;
-            color: #374151;
-        }
+        .notif-panel-footer .btn-clear { background: #e5e7eb; color: #374151; }
         .notif-panel-footer .btn-clear:hover { background: #d1d5db; }
         body.dark-mode .notif-panel-footer { background: #0f172a; border-top-color: #334155; }
         body.dark-mode .notif-panel-footer .btn-clear { background: #334155; color: #e2e8f0; }
@@ -480,41 +277,56 @@
             #notif-toast-container { top: auto; bottom: 90px; left: 12px; right: 12px; max-width: none; }
             #notif-panel { top: auto; bottom: 90px; right: 12px; left: 12px; width: auto; max-height: 60vh; }
             .notif-toast { animation: notifToastInMobile 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-            @keyframes notifToastInMobile {
-                from { opacity: 0; transform: translateY(110%); }
-                to   { opacity: 1; transform: translateY(0); }
-            }
+            @keyframes notifToastInMobile { from { opacity: 0; transform: translateY(110%); } to { opacity: 1; transform: translateY(0); } }
         }
     </style>
 </head>
 <body class="bg-gray-100 font-sans min-h-screen flex flex-col relative">
 
-    <header class="top-bar flex justify-between items-center text-white shadow-md py-4 px-6 flex-wrap gap-4">
-        <div class="flex items-center space-x-3">
-            <div class="bg-white text-estafeta-red font-black text-xl px-3 py-1 rounded shadow">ESTAFETA</div>
-            <div>
-                <h1 class="text-xl font-bold tracking-wide">Orden de recolección</h1>
-                <p id="fileNameBadge" class="text-xs text-red-100 hidden"></p>
+    <!-- ============================================================
+         BANNER MAESTRO CON BOTÓN DE TEMA Y CAMPANA INTEGRADOS
+         ============================================================ -->
+    <header class="master-header">
+        
+        <!-- Logo y Títulos -->
+        <div class="header-brand">
+            <div class="brand-logo">E</div>
+            <div class="brand-titles">
+                <h1 class="brand-title">Orden de recolección</h1>
+                <p id="fileNameBadge" class="brand-subtitle">Seguimiento OR Recolección por Ruta</p>
             </div>
         </div>
-        <div id="dropZone" class="flex items-center space-x-3 bg-red-800 bg-opacity-40 p-2 rounded-lg border-2 border-dashed border-red-300 transition hover:bg-opacity-60 ml-auto">
-            <div class="text-xs text-red-100 hidden sm:block text-right">
-                <span class="font-semibold block">Arrastra tu Excel aquí</span>
-                <span>o usa el botón</span>
+
+        <!-- Acciones a la derecha -->
+        <div class="header-actions">
+            
+            <!-- Botón de Carga Excel -->
+            <div class="upload-btn-wrapper" id="dropZone">
+                <input type="file" id="excelFile" accept=".xlsx, .xls">
+                <i class="fa-solid fa-file-excel upload-btn-icon"></i>
+                <div class="upload-btn-content">
+                    <span class="upload-btn-title">Cargar Excel</span>
+                    <span class="upload-btn-subtitle">Arrastra o clic aquí</span>
+                </div>
             </div>
-            <label class="cursor-pointer bg-white text-red-700 px-4 py-2 rounded shadow font-semibold text-sm hover:bg-gray-100 flex items-center space-x-2 transition">
-                <i class="fas fa-file-excel text-green-600"></i>
-                <span>Cargar Excel</span>
-                <input type="file" id="excelFile" accept=".xlsx, .xls" class="hidden">
-            </label>
-            <!-- 🔔 Campana de notificaciones (inyectada a la derecha de Cargar Excel) -->
+
+            <!-- Campana de Notificaciones -->
             <button id="notif-bell" aria-label="Notificaciones" title="Notificaciones">
                 <i class="fa-solid fa-bell"></i>
                 <span id="notif-badge" class="hidden">0</span>
             </button>
+
+            <!-- Botón de Modo Oscuro/Claro (EN EL BANNER) -->
+            <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+                <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+            </button>
+
         </div>
     </header>
 
+    <!-- ============================================================
+         CONTENIDO PRINCIPAL DEL DASHBOARD
+         ============================================================ -->
     <main class="flex-grow p-4 md:p-6 max-w-7xl mx-auto w-full space-y-6">
 
         <div id="skeletonLoader" class="hidden space-y-6">
@@ -594,9 +406,6 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <button onclick="resetFilters()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-300 transition">
-                        <i class="fas fa-rotate-left mr-1"></i> Restablecer Filtros
-                    </button>
                     <span id="recordCount" class="text-xs bg-red-100 text-estafeta-red px-3 py-1.5 rounded-lg font-bold">0 registros</span>
                 </div>
             </div>
@@ -820,16 +629,14 @@
         </div>
     </div>
 
-    <div id="floatingActionsContainer">
+    <!-- Botón flotante para limpiar filtros (se mantiene por usabilidad en tablas) -->
+    <div id="floatingActionsContainer" style="position: fixed !important; bottom: 24px !important; right: 24px !important; z-index: 40; display: flex !important; align-items: center !important;">
         <div id="floatingFilterBtnContainer" class="hidden">
             <button onclick="resetFilters()" class="bg-gray-900 hover:bg-gray-800 text-white px-5 py-3 rounded-full shadow-2xl font-medium text-sm flex items-center space-x-2 border border-gray-700 transition">
                 <i class="fas fa-rotate-left"></i>
                 <span id="floatingBtnText">Limpiar Filtros (0)</span>
             </button>
         </div>
-        <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
-            <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
-        </button>
     </div>
 
     <!-- Contenedores de notificaciones -->
@@ -1024,7 +831,7 @@
                     });
 
                     const badge = document.getElementById('fileNameBadge');
-                    badge.textContent = file.name;
+                    badge.textContent = "Seguimiento OR Recolección por Ruta";
                     badge.classList.remove('hidden');
 
                     document.getElementById('skeletonLoader').classList.add('hidden');
@@ -1683,6 +1490,7 @@
             setTimeout(applyCardStagger, 80);
         }
 
+        // --- TEMA (AHORA EN EL BANNER) ---
         function aplicarTema(tema) {
             const icon = document.getElementById('theme-toggle-icon');
             if (tema === 'dark') { document.body.classList.add('dark-mode'); if (icon) icon.className = 'fa-solid fa-sun'; }
@@ -1734,13 +1542,13 @@
             ['dragenter', 'dragover'].forEach(eventName => {
                 dropZone.addEventListener(eventName, (e) => {
                     e.preventDefault();
-                    dropZone.classList.add('bg-red-700', 'border-white');
+                    dropZone.classList.add('dragover');
                 }, false);
             });
             ['dragleave', 'drop'].forEach(eventName => {
                 dropZone.addEventListener(eventName, (e) => {
                     e.preventDefault();
-                    dropZone.classList.remove('bg-red-700', 'border-white');
+                    dropZone.classList.remove('dragover');
                 }, false);
             });
             dropZone.addEventListener('drop', (e) => {

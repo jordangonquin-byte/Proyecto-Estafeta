@@ -13,6 +13,28 @@
             --estafeta-gray: #F4F6F8;
             --table-header-39: #333333;
             --table-header-55: #1976D2;
+
+            /* Variables del Banner Maestro - Modo Claro */
+            --header-bg: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
+            --btn-upload-bg: rgba(0, 0, 0, 0.2);
+            --btn-upload-hover: rgba(0, 0, 0, 0.35);
+            --btn-upload-border: rgba(255, 255, 255, 0.2);
+            --banner-text-color: #ffffff;
+            --banner-subtext-color: #ffcdd2;
+            --badge-bg: #ffffff;
+            --badge-text: #DA291C;
+        }
+
+        /* Variables del Banner Maestro - Modo Oscuro */
+        body.dark-mode {
+            --header-bg: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
+            --btn-upload-bg: rgba(0, 0, 0, 0.4);
+            --btn-upload-hover: rgba(0, 0, 0, 0.6);
+            --btn-upload-border: rgba(255, 255, 255, 0.1);
+            --banner-text-color: #f1f5f9;
+            --banner-subtext-color: #fca5a5;
+            --badge-bg: #f8fafc;
+            --badge-text: #b91c1c;
         }
 
         body {
@@ -29,48 +51,158 @@
             0%, 100% { background-position: 0% 50%; }
             50%      { background-position: 100% 50%; }
         }
-        .top-banner {
+
+        /* ============================================================
+           BANNER MAESTRO (integrado)
+           ============================================================ */
+        .master-header {
+            background: var(--header-bg);
+            background-size: 300% 100%;
+            animation: gradientShift 15s ease infinite;
+            color: var(--banner-text-color);
+            padding: 12px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
-            background-size: 300% 100%;
-            animation: gradientShift 15s ease infinite;
-            color: white;
-            padding: 12px 24px;
-            border-bottom: 4px solid #b71c1c;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-bottom: 3px solid #991B1B;
+            flex-wrap: wrap;
+            gap: 15px;
+            transition: background 0.3s ease;
         }
 
-        .banner-title { font-size: 1.15rem; font-weight: bold; margin: 0; letter-spacing: 0.5px; }
-        .banner-controls { display: flex; align-items: center; gap: 15px; }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-        .file-upload-btn {
-            background-color: #212121;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: bold;
-            transition: background-color 0.2s ease;
+        .brand-logo {
+            background-color: var(--badge-bg);
+            color: var(--badge-text);
+            font-weight: 900;
+            font-size: 24px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .brand-titles {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+            letter-spacing: 0.5px;
+            color: var(--banner-text-color);
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--banner-subtext-color);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Botón de Carga Excel estandarizado */
+        .upload-btn-wrapper {
+            position: relative;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            border: none;
+            background-color: var(--btn-upload-bg);
+            border: 1px solid var(--btn-upload-border);
+            border-radius: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
         }
-        .file-upload-btn:hover { background-color: #333333; }
 
-        #excelFile { display: none; }
+        .upload-btn-wrapper:hover {
+            background-color: var(--btn-upload-hover);
+            transform: translateY(-1px);
+        }
 
-        .file-name-display {
+        .upload-btn-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-btn-icon {
+            color: #4ade80;
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+
+        .upload-btn-content {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .upload-btn-title {
             font-size: 0.85rem;
-            color: #ffcdd2;
-            max-width: 200px;
+            font-weight: 700;
+            color: var(--banner-text-color);
+        }
+
+        .upload-btn-subtitle {
+            font-size: 0.65rem;
+            color: var(--banner-subtext-color);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            max-width: 180px;
         }
+
+        /* Toggle de tema dentro del banner */
+        #banner-theme-toggle {
+            background: var(--btn-upload-bg);
+            border: 1px solid var(--btn-upload-border);
+            color: var(--banner-text-color);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        #banner-theme-toggle:hover {
+            background: var(--btn-upload-hover);
+            transform: translateY(-1px);
+        }
+
+        /* ============================================================
+           RESTO DE ESTILOS (sin cambios funcionales)
+           ============================================================ */
 
         .dashboard-container {
             padding: 24px;
@@ -466,35 +598,6 @@
         }
         .floating-action-btn:hover { background-color: #b71c1c; transform: translateY(-2px); }
 
-        /* Botón flotante de tema */
-        #theme-toggle {
-            position: fixed;
-            bottom: 90px;
-            right: 25px;
-            z-index: 9998;
-            width: 48px;
-            height: 48px;
-            border-radius: 999px;
-            background: #1e293b;
-            color: white;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        #theme-toggle:hover {
-            transform: scale(1.08) rotate(15deg);
-            background: #334155;
-        }
-        body.dark-mode #theme-toggle {
-            background: #fbbf24;
-            color: #1e293b;
-        }
-
         .modal-overlay {
             display: none;
             position: fixed;
@@ -659,7 +762,6 @@
 
         /* ============ MODO OSCURO ============ */
         body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
-        body.dark-mode .top-banner { background: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B) !important; background-size: 300% 100% !important; }
         body.dark-mode .schema-card,
         body.dark-mode .dynamic-section,
         body.dark-mode .kpi-card { background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important; }
@@ -706,9 +808,6 @@
         body.dark-mode .modal-btn-cancel { background: #334155 !important; color: #cbd5e1 !important; }
         body.dark-mode .modal-btn-cancel:hover { background: #475569 !important; }
         body.dark-mode .section-header-flex h2 { color: #f1f5f9 !important; }
-        body.dark-mode .file-name-display { color: #fca5a5 !important; }
-        body.dark-mode .file-upload-btn { background: #334155 !important; color: #f1f5f9 !important; }
-        body.dark-mode .file-upload-btn:hover { background: #475569 !important; }
         body.dark-mode .schema-title.title-39 { background: #0f172a !important; }
         body.dark-mode .schema-title.title-55 { background: #1e40af !important; }
         body.dark-mode .floating-action-btn { background: #b91c1c !important; }
@@ -717,16 +816,44 @@
             outline: 2px solid var(--estafeta-red);
             outline-offset: 2px;
         }
+
+        @media (max-width: 720px) {
+            .master-header { padding: 10px 14px; }
+            .brand-title { font-size: 1rem; }
+            .brand-subtitle { font-size: 0.65rem; }
+            .upload-btn-subtitle { max-width: 120px; }
+        }
     </style>
 </head>
 <body>
 
-    <header class="top-banner">
-        <h1 class="banner-title">Calculadora Operativa</h1>
-        <div class="banner-controls">
-            <span id="fileName" class="file-name-display">Ningún archivo seleccionado</span>
-            <label for="excelFile" class="file-upload-btn">📂 Cargar Excel</label>
-            <input type="file" id="excelFile" accept=".xlsx, .xls">
+    <!-- ============================================================
+         BANNER MAESTRO (reemplaza al top-banner anterior)
+         ============================================================ -->
+    <header class="master-header">
+        <div class="header-brand">
+            <div class="brand-logo">E</div>
+            <div class="brand-titles">
+                <h1 class="brand-title">Calculadora Operativa</h1>
+                <p class="brand-subtitle">Bonos por Operador · Esquemas 39 y 55-61</p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <!-- Botón de Carga Excel -->
+            <label class="upload-btn-wrapper" for="excelFile" title="Cargar archivo Excel">
+                <input type="file" id="excelFile" accept=".xlsx, .xls">
+                <i class="fa-solid fa-file-excel upload-btn-icon"></i>
+                <div class="upload-btn-content">
+                    <span class="upload-btn-title">Cargar Excel</span>
+                    <span class="upload-btn-subtitle" id="fileName">Arrastra o clic aquí</span>
+                </div>
+            </label>
+
+            <!-- Toggle de Tema dentro del banner -->
+            <button id="banner-theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+                <i class="fa-solid fa-moon" id="banner-theme-icon"></i>
+            </button>
         </div>
     </header>
 
@@ -864,10 +991,6 @@
         ✕ Quitar Filtro Operador
     </button>
 
-    <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
-        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
-    </button>
-
     <div id="areaFilterModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
@@ -973,7 +1096,7 @@
                         if (!validarArchivo(headers)) {
                             alert('El archivo cargado no contiene la estructura o encabezados requeridos ("Dueño Ruta", "Clasificación Rutas TR2", "Pickup Size").');
                             document.getElementById('excelFile').value = '';
-                            fileNameDisplay.textContent = 'Ningún archivo seleccionado';
+                            fileNameDisplay.textContent = 'Arrastra o clic aquí';
                             document.getElementById('dynamicTableContainer2').innerHTML = '<p style="color: red; text-align: center;">El archivo no cuenta con los encabezados válidos.</p>';
                             document.getElementById('concentradoTableContainer').innerHTML = '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">Cargue un archivo Excel válido.</p>';
                             document.getElementById('filtersBar2').style.display = 'none';
@@ -1002,7 +1125,7 @@
                 };
                 reader.readAsArrayBuffer(file);
             } else {
-                fileNameDisplay.textContent = 'Ningún archivo seleccionado';
+                fileNameDisplay.textContent = 'Arrastra o clic aquí';
                 document.getElementById('filtersBar2').style.display = 'none';
                 document.getElementById('kpiContainer2').style.display = 'none';
                 document.getElementById('floatingFilterBtn').style.display = 'none';
@@ -1691,7 +1814,7 @@
         }
 
         function aplicarTema(tema) {
-            const icon = document.getElementById('theme-toggle-icon');
+            const icon = document.getElementById('banner-theme-icon');
             if (tema === 'dark') {
                 document.body.classList.add('dark-mode');
                 if (icon) icon.className = 'fa-solid fa-sun';
@@ -1702,7 +1825,7 @@
         }
 
         function initThemeToggle() {
-            const btn = document.getElementById('theme-toggle');
+            const btn = document.getElementById('banner-theme-toggle');
             if (!btn) return;
             btn.addEventListener('click', () => {
                 const isDark = document.body.classList.contains('dark-mode');
@@ -1731,7 +1854,7 @@
             initRipple();
             setTimeout(applyTiltToCards, 500);
             initThemeToggle();
-            console.log('%c🎨 Calculadora: ripple, dark-mode, gradiente, cascada, tilt, contadores, barras, pulse, KPI colores dinámicos',
+            console.log('%c🎨 Calculadora: banner maestro integrado, ripple, dark-mode, gradiente, cascada, tilt, contadores, barras, pulse, KPI colores dinámicos',
                 'background:#DA291C;color:white;padding:6px 10px;border-radius:4px;font-weight:bold;font-size:12px;');
         });
     </script>
