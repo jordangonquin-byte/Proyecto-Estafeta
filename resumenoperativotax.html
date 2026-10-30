@@ -257,8 +257,6 @@
         body.dark-mode th:hover { background-color: #334155 !important; }
         body.dark-mode td { color: #e2e8f0; }
         body.dark-mode tr:hover { background-color: #334155 !important; }
-        /* Corrección para filas de totales y contenedores en modo oscuro */
-        body.dark-mode tfoot tr, body.dark-mode tr[style*="background-color: #F8FAFC"] { background-color: #1e293b !important; color: #f1f5f9 !important; }
         body.dark-mode .table-filter-container, body.dark-mode .pivot-controls, body.dark-mode .fullscreen-btn { background-color: #0f172a !important; border-color: #334155 !important; color: #e2e8f0 !important; }
         body.dark-mode .table-filter-input, body.dark-mode .table-filter-select, body.dark-mode .pivot-select, body.dark-mode .chart-filter-select { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
         body.dark-mode .multiselect-header { background: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
@@ -796,6 +794,7 @@
     <script>
         let _isRebuilding = false;
 
+        // Autenticación eliminada - solo se inicializa el ripple
         window.addEventListener('DOMContentLoaded', () => {
             initRipple();
         });
@@ -1183,6 +1182,7 @@
                 updateColoresChartFilter();
                 runVisualEffects();
 
+                // Análisis y generación de notificaciones
                 analyzeAndAlert(gTotalRutas, gTotalPaquetes, gEntregados, gPendientes, gExcepcionados,
                                 parseFloat(promedioEficienciaRutas), parseFloat(promedioAvanceRutas), parseInt(gProductividad.replace(/,/g, '')));
             } finally {
@@ -1800,7 +1800,7 @@
             const tEficiencia = tTotal > 0 ? (100 - parseFloat(tPctDev)).toFixed(2) : "0.00";
             const tAvance = tTotal > 0 ? (((tEntregados + tExcepcionados) / tTotal) * 100).toFixed(2) : "0.00";
             const trFoot = document.createElement('tr');
-            trFoot.style.fontWeight = 'bold';
+            trFoot.style.backgroundColor = '#F8FAFC'; trFoot.style.fontWeight = 'bold';
             trFoot.innerHTML = `
                 <td>TOTALES</td><td>-</td>
                 <td>${tTotal.toLocaleString()}</td>
@@ -1901,7 +1901,7 @@
                 msKeys.forEach(k => { totals[k] += (r.msValues[k] || 0); });
             });
             const trFoot = document.createElement('tr');
-            trFoot.style.fontWeight = 'bold';
+            trFoot.style.backgroundColor = '#F8FAFC'; trFoot.style.fontWeight = 'bold';
             let footHtml = `<td>TOTALES</td>`;
             msKeys.forEach(k => { footHtml += `<td>${totals[k] > 0 ? totals[k].toLocaleString() : '-'}</td>`; });
             trFoot.innerHTML = footHtml;
@@ -1990,6 +1990,8 @@
                 }
             });
 
+            console.log('🔍 Filtros activos:', activeCount, details);
+
             const btn = document.getElementById('floating-clear-btn');
             const txt = document.getElementById('floating-clear-text');
 
@@ -2061,6 +2063,10 @@
             initTema();
             injectBell();
         });
+
+        /* ============================================================ */
+        /* CAMPANA DE NOTIFICACIONES - LÓGICA                           */
+        /* ============================================================ */
 
         const NOTIF_CONFIG = {
             dashboardId: 'resumen-operativo',
@@ -2280,6 +2286,10 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeNotifPanel();
         });
+
+        /* ============================================================ */
+        /* ANALIZADOR DE REGLAS DE NEGOCIO                              */
+        /* ============================================================ */
 
         function analyzeAndAlert(totalRutas, totalPaquetes, entregados, pendientes, excepcionados,
                                 eficienciaGlobal, avanceGlobal, productividad) {

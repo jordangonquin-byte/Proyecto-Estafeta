@@ -601,6 +601,10 @@
     </div>
 
     <script>
+        /* ============================================================
+           AUTENTICACIÓN ELIMINADA
+           ============================================================ */
+
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
             '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
         }[c]));
@@ -610,10 +614,14 @@
             return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
         }
 
+        /* 🔧 CRITERIO: "programada" = guía de exactamente 10 dígitos numéricos */
         function isProgramada(guideVal) {
             return /^\d{10}$/.test(String(guideVal ?? '').trim());
         }
 
+        /* ============================================================
+           ESTADO GLOBAL
+           ============================================================ */
         let rawData = [];
         let filteredData = [];
         let plazaKeyName = '';
@@ -750,4 +758,1890 @@
             }
         }
 
-        function initDashboard(data, fileName
+        function initDashboard(data, fileName) {
+            rawData = data.filter(row => Object.keys(row).length > 0);
+
+            if (rawData.length === 0) {
+                alert('El archivo no contiene filas de datos (sólo encabezados).');
+                document.getElementById('file-status').innerText = 'Archivo vacío';
+                document.getElementById('file-input').value = '';
+                return;
+            }
+
+            const allKeys = Object.keys(rawData[0]);
+            allKeysFull = allKeys;
+
+            guideKeyName     = _findKey(allKeys, 'guia') || _findKey(allKeys, 'or') || allKeys[0];
+            statusKeyName    = _findKey(allKeys, 'estatus') || _findKey(allKeys, 'status') || 'Estatus';
+            progKeyName      = _findKey(allKeys, 'programad') || _findKey(allKeys, 'recoleccion') || '';
+            plazaKeyName     = _findKey(allKeys, 'plaza') || _findKey(allKeys, 'distrito') || allKeys[0];
+            routeKeyName     = _findKey(allKeys, 'ruta') || allKeys[0];
+            garantiaKeyName  = _findKey(allKeys, 'garantia') || allKeys[0];
+            eventTimeKeyName = _findKey(allKeys, 'hora', 'evento') || _findKey(allKeys, 'hora') || '';
+            coordKeyName     = _findKey(allKeys, 'coordenada') || '';
+            dateKeyName      = _findKey(allKeys, 'fecha') || _findKey(allKeys, 'hora') || '';
+
+            if (eventTimeKeyName) {
+                rawData.forEach(r => {
+                    const v = r[eventTimeKeyName];
+                    if (v instanceof Date) return;
+                    if (typeof v === 'number' && v > 20000 && v < 80000) {
+                        r[eventTimeKeyName] = new Date(Math.round((v - 25569) * 86400 * 1000));
+                    } else if (typeof v === 'string' && /^\d+(\.\d+)?$/.test(v.trim())) {
+                        const n = parseFloat(v);
+                        if (n > 20000 && n < 80000) {
+                            r[eventTimeKeyName] = new Date(Math.round((n - 25569) * 86400 * 1000));
+                        }
+                    }
+                });
+            }
+
+            console.log('🗺️ Columnas mapeadas:', {
+                guia: guideKeyName, estatus: statusKeyName, ruta: routeKeyName,
+                garantia: garantiaKeyName, hora: eventTimeKeyName, coord: coordKeyName,
+                plaza: plazaKeyName, programada: progKeyName
+            });
+
+            initSelections();
+
+            document.getElementById('file-status').innerText = fileName;
+            document.getElementById('dashboard-content').classList.remove('hidden');
+            document.getElementById('floating-plaza-filter').classList.remove('hidden');
+
+            renderPlazaFilterList();
+            updateDashboard();
+            document.getElementById('file-input').value = '';
+        }
+
+        function initSelections() {
+            activeRouteSelections.clear();
+            activeGarantiaSelections.clear();
+            activeCronoRouteSelections.clear();
+            activeCronoGarantiaSelections.clear();
+            activeTimelineRouteSelections.clear();
+            activeTimelineGarantiaSelections.clear();
+            activeMapRouteSelections.clear();
+            activeMapGarantiaSelections.clear();
+
+            let activeRows = rawData.filter(row => activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true);
+            activeRows.forEach(row => {
+                let r = String(row[routeKeyName] !== undefined ? row[routeKeyName] : 'N/D');
+                let g = String(row[garantiaKeyName] !== undefined ? row[garantiaKeyName] : 'N/D');
+                activeRouteSelections.add(r);
+                activeGarantiaSelections.add(g);
+                activeCronoRouteSelections.add(r);
+                activeCronoGarantiaSelections.add(g);
+                activeTimelineRouteSelections.add(r);
+                activeTimelineGarantiaSelections.add(g);
+                activeMapRouteSelections.add(r);
+                activeMapGarantiaSelections.add(g);
+            });
+        }
+
+        function toggleCardsSection() {
+            isCardsCollapsed = !isCardsCollapsed;
+            document.getElementById('cards-section-body').style.display = isCardsCollapsed ? 'none' : 'block';
+            document.getElementById('cards-collapse-icon').style.transform = isCardsCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+        function toggleStatusTableSection() {
+            isStatusTableCollapsed = !isStatusTableCollapsed;
+            document.getElementById('status-table-section-body').style.display = isStatusTableCollapsed ? 'none' : 'block';
+            document.getElementById('status-table-collapse-icon').style.transform = isStatusTableCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+        function toggleDeadTimesSection() {
+            isDeadTimesCollapsed = !isDeadTimesCollapsed;
+            document.getElementById('dead-times-section-body').style.display = isDeadTimesCollapsed ? 'none' : 'block';
+            document.getElementById('dead-times-collapse-icon').style.transform = isDeadTimesCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+        function toggleCronoSection() {
+            isCronoCollapsed = !isCronoCollapsed;
+            document.getElementById('crono-section-body').style.display = isCronoCollapsed ? 'none' : 'block';
+            document.getElementById('crono-collapse-icon').style.transform = isCronoCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+            if (!isCronoCollapsed && cronoMapInstance) cronoMapInstance.invalidateSize();
+        }
+        function toggleTimelineSection() {
+            isTimelineCollapsed = !isTimelineCollapsed;
+            document.getElementById('timeline-section-body').style.display = isTimelineCollapsed ? 'none' : 'block';
+            document.getElementById('timeline-collapse-icon').style.transform = isTimelineCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+            if (!isTimelineCollapsed && timelineMapInstance) timelineMapInstance.invalidateSize();
+        }
+        function toggleGpsMapSection() {
+            isGpsMapCollapsed = !isGpsMapCollapsed;
+            document.getElementById('gps-map-section-body').style.display = isGpsMapCollapsed ? 'none' : 'block';
+            document.getElementById('gps-map-collapse-icon').style.transform = isGpsMapCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+            if (!isGpsMapCollapsed) {
+                prepareGpsMapEvents();
+                if (gpsMapInstance) gpsMapInstance.invalidateSize();
+            }
+        }
+        function toggleTimelineFullscreen(event) {
+            event.stopPropagation();
+            const card = document.getElementById('timeline-section-card');
+            const icon = document.getElementById('timeline-fullscreen-icon');
+            const btn = document.getElementById('timeline-fullscreen-btn');
+            card.classList.toggle('fullscreen-section');
+            if (card.classList.contains('fullscreen-section')) {
+                icon.className = "fa-solid fa-compress text-xs";
+                btn.title = "Restaurar tamaño";
+                if (isTimelineCollapsed) toggleTimelineSection();
+            } else {
+                icon.className = "fa-solid fa-expand text-xs";
+                btn.title = "Pantalla completa";
+            }
+            if (timelineMapInstance) setTimeout(() => timelineMapInstance.invalidateSize(), 200);
+        }
+        function toggleGpsMapFullscreen(event) {
+            event.stopPropagation();
+            const card = document.getElementById('gps-map-section-card');
+            const icon = document.getElementById('gps-map-fullscreen-icon');
+            const btn = document.getElementById('gps-map-fullscreen-btn');
+            card.classList.toggle('fullscreen-section');
+            if (card.classList.contains('fullscreen-section')) {
+                icon.className = "fa-solid fa-compress text-xs";
+                btn.title = "Restaurar tamaño";
+                if (isGpsMapCollapsed) toggleGpsMapSection();
+            } else {
+                icon.className = "fa-solid fa-expand text-xs";
+                btn.title = "Pantalla completa";
+            }
+            if (gpsMapInstance) setTimeout(() => gpsMapInstance.invalidateSize(), 200);
+        }
+
+        function getActiveSetFor(type) {
+            if (type === 'ruta') return activeRouteSelections;
+            if (type === 'garantia') return activeGarantiaSelections;
+            if (type === 'crono-ruta') return activeCronoRouteSelections;
+            if (type === 'crono-garantia') return activeCronoGarantiaSelections;
+            if (type === 'timeline-ruta') return activeTimelineRouteSelections;
+            if (type === 'timeline-garantia') return activeTimelineGarantiaSelections;
+            if (type === 'map-ruta') return activeMapRouteSelections;
+            if (type === 'map-garantia') return activeMapGarantiaSelections;
+            return null;
+        }
+
+        function openCustomFilterModal(type) {
+            currentModalType = type;
+            const modal = document.getElementById('custom-filter-modal');
+            const title = document.getElementById('custom-modal-title');
+            const subtitle = document.getElementById('custom-modal-subtitle');
+
+            const titles = {
+                'ruta': ['Filtrar Ruta (Tarjetas de Registro)', 'Seleccionar rutas:'],
+                'garantia': ['Filtrar Garantía (Tarjetas de Registro)', 'Seleccionar garantías:'],
+                'crono-ruta': ['Filtrar Ruta (Detalle Cronológico)', 'Seleccionar rutas:'],
+                'crono-garantia': ['Filtrar Garantía (Detalle Cronológico)', 'Seleccionar garantías:'],
+                'timeline-ruta': ['Filtrar Ruta (Línea de Tiempo)', 'Seleccionar rutas:'],
+                'timeline-garantia': ['Filtrar Garantía (Línea de Tiempo)', 'Seleccionar garantías:'],
+                'map-ruta': ['Filtrar Ruta (Mapa GPS)', 'Seleccionar rutas:'],
+                'map-garantia': ['Filtrar Garantía (Mapa GPS)', 'Seleccionar garantías:']
+            };
+            if (titles[type]) { title.innerText = titles[type][0]; subtitle.innerText = titles[type][1]; }
+
+            const activeSet = getActiveSetFor(type);
+            filterBackup = activeSet ? new Set(activeSet) : null;
+
+            document.getElementById('custom-modal-search').value = '';
+            renderCustomOptionsList();
+            modal.classList.remove('hidden');
+        }
+
+        function closeCustomFilterModal(cancelled = true) {
+            if (cancelled && filterBackup && currentModalType) {
+                const activeSet = getActiveSetFor(currentModalType);
+                if (activeSet) {
+                    activeSet.clear();
+                    filterBackup.forEach(v => activeSet.add(v));
+                }
+            }
+            filterBackup = null;
+            document.getElementById('custom-filter-modal').classList.add('hidden');
+            currentModalType = null;
+        }
+
+        function renderCustomOptionsList() {
+            const container = document.getElementById('custom-options-container');
+            container.innerHTML = '';
+            let key = (currentModalType.includes('ruta')) ? routeKeyName : garantiaKeyName;
+            let activeSet = getActiveSetFor(currentModalType);
+            let activeRows = rawData.filter(row => activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true);
+
+            const valuesMap = {};
+            activeRows.forEach(row => {
+                let val = String(row[key] !== undefined && row[key] !== null ? row[key] : 'N/D');
+                valuesMap[val] = (valuesMap[val] || 0) + 1;
+            });
+
+            const sortedValues = Object.keys(valuesMap).sort();
+            const searchVal = document.getElementById('custom-modal-search').value.toLowerCase();
+
+            sortedValues.forEach(val => {
+                if (searchVal && !val.toLowerCase().includes(searchVal)) return;
+                let isChecked = activeSet.has(val);
+                let div = document.createElement('label');
+                div.className = 'flex items-center space-x-2.5 p-1.5 hover:bg-white rounded-lg cursor-pointer transition-all select-none';
+                div.innerHTML = `
+                    <input type="checkbox" value="${esc(val)}" ${isChecked ? 'checked' : ''} onchange="toggleCustomOption('${esc(val).replace(/'/g, "\\'")}', this.checked)" class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
+                    <span class="text-gray-800 font-medium truncate flex-grow" title="${esc(val)}">${esc(val)}</span>
+                    <span class="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">${valuesMap[val]}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function filterCustomModalList() { renderCustomOptionsList(); }
+
+        function toggleCustomOption(val, isChecked) {
+            const activeSet = getActiveSetFor(currentModalType);
+            if (!activeSet) return;
+            if (isChecked) activeSet.add(val);
+            else activeSet.delete(val);
+        }
+
+        function setAllCustomOptions(selectBoolean) {
+            let key = (currentModalType.includes('ruta')) ? routeKeyName : garantiaKeyName;
+            const activeSet = getActiveSetFor(currentModalType);
+            if (!activeSet) return;
+            activeSet.clear();
+            let activeRows = rawData.filter(row => activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true);
+            if (selectBoolean) {
+                activeRows.forEach(row => {
+                    let val = String(row[key] !== undefined && row[key] !== null ? row[key] : 'N/D');
+                    activeSet.add(val);
+                });
+            }
+            renderCustomOptionsList();
+        }
+
+        function applyCustomFilterModal() {
+            closeCustomFilterModal(false);
+            currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
+            updateDashboard();
+        }
+
+        function changePage(direction) {
+            let totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+            currentPage += direction;
+            if (currentPage > totalPages) currentPage = 1;
+            else if (currentPage < 1) currentPage = totalPages;
+            renderCards(filteredData);
+        }
+        function changeDeadTimesPage(direction) {
+            let totalPages = Math.ceil(cachedDeadTimesList.length / deadTimesPerPage) || 1;
+            deadTimesCurrentPage += direction;
+            if (deadTimesCurrentPage > totalPages) deadTimesCurrentPage = 1;
+            else if (deadTimesCurrentPage < 1) deadTimesCurrentPage = totalPages;
+            renderDeadTimesTablePage();
+        }
+        function changeCronoPage(direction) {
+            let totalPages = Math.ceil(cachedCronoList.length / cronoPerPage) || 1;
+            cronoCurrentPage += direction;
+            if (cronoCurrentPage > totalPages) cronoCurrentPage = 1;
+            else if (cronoCurrentPage < 1) cronoCurrentPage = totalPages;
+            renderCronoTablePage();
+        }
+        function changeTimelinePage(direction) {
+            let totalPages = Math.ceil(cachedTimelineList.length / timelinePerPage) || 1;
+            timelineCurrentPage += direction;
+            if (timelineCurrentPage > totalPages) timelineCurrentPage = 1;
+            else if (timelineCurrentPage < 1) timelineCurrentPage = totalPages;
+            renderTimelineTablePage();
+        }
+
+        function togglePlazaCollapse() {
+            isPlazaCollapsed = !isPlazaCollapsed;
+            document.getElementById('plaza-content-body').style.display = isPlazaCollapsed ? 'none' : 'block';
+            document.getElementById('collapse-icon').style.transform = isPlazaCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+
+        function toggleProgramadaVisibility() {
+            showProgData = !showProgData;
+            document.getElementById('prog-toggle-text').innerText = showProgData ? "Ocultar Programadas" : "Mostrar Programadas";
+            document.getElementById('prog-toggle-icon').className = showProgData ? "fa-solid fa-calendar-check text-[11px]" : "fa-solid fa-calendar-xmark text-[11px]";
+            currentPage = 1; updateDashboard();
+        }
+        function toggleCronoProgramadaVisibility() {
+            showCronoProgData = !showCronoProgData;
+            document.getElementById('crono-prog-toggle-text').innerText = showCronoProgData ? "Ocultar Programadas" : "Mostrar Programadas";
+            document.getElementById('crono-prog-toggle-icon').className = showCronoProgData ? "fa-solid fa-calendar-check text-[11px]" : "fa-solid fa-calendar-xmark text-[11px]";
+            deadTimesCurrentPage = 1; cronoCurrentPage = 1; updateDashboard();
+        }
+        function toggleTimelineProgramadaVisibility() {
+            showTimelineProgData = !showTimelineProgData;
+            document.getElementById('timeline-prog-toggle-text').innerText = showTimelineProgData ? "Ocultar Programadas" : "Mostrar Programadas";
+            document.getElementById('timeline-prog-toggle-icon').className = showTimelineProgData ? "fa-solid fa-calendar-check text-[11px]" : "fa-solid fa-calendar-xmark text-[11px]";
+            timelineCurrentPage = 1; prepareTimelineEvents();
+        }
+        function toggleMapProgramadaVisibility() {
+            showMapProgData = !showMapProgData;
+            document.getElementById('map-prog-toggle-text').innerText = showMapProgData ? "Ocultar Programadas" : "Mostrar Programadas";
+            document.getElementById('map-prog-toggle-icon').className = showMapProgData ? "fa-solid fa-calendar-check text-[11px]" : "fa-solid fa-calendar-xmark text-[11px]";
+            prepareGpsMapEvents();
+        }
+
+        function setStatusFilter(status) {
+            activeStatusFilter = status;
+            ['all', 'confirmado', 'excepcionado', 'pendiente'].forEach(s => {
+                const btn = document.getElementById(`btn-status-${s}`);
+                if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
+            });
+            const activeBtn = document.getElementById(status === 'ALL' ? 'btn-status-all' : `btn-status-${status.toLowerCase()}`);
+            if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
+            currentPage = 1; updateDashboard();
+        }
+        function setCronoStatusFilter(status) {
+            activeCronoStatusFilter = status;
+            ['all', 'confirmado', 'excepcionado', 'pendiente'].forEach(s => {
+                const btn = document.getElementById(`btn-crono-status-${s}`);
+                if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
+            });
+            const activeBtn = document.getElementById(status === 'ALL' ? 'btn-crono-status-all' : `btn-crono-status-${status.toLowerCase()}`);
+            if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
+            deadTimesCurrentPage = 1; cronoCurrentPage = 1; updateDashboard();
+        }
+        function setTimelineStatusFilter(status) {
+            activeTimelineStatusFilter = status;
+            ['all', 'confirmado', 'excepcionado', 'pendiente'].forEach(s => {
+                const btn = document.getElementById(`btn-timeline-status-${s}`);
+                if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
+            });
+            const activeBtn = document.getElementById(status === 'ALL' ? 'btn-timeline-status-all' : `btn-timeline-status-${status.toLowerCase()}`);
+            if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
+            timelineCurrentPage = 1; prepareTimelineEvents();
+        }
+        function setMapStatusFilter(status) {
+            activeMapStatusFilter = status;
+            ['all', 'confirmado', 'excepcionado', 'pendiente'].forEach(s => {
+                const btn = document.getElementById(`btn-map-status-${s}`);
+                if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
+            });
+            const activeBtn = document.getElementById(status === 'ALL' ? 'btn-map-status-all' : `btn-map-status-${status.toLowerCase()}`);
+            if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
+            prepareGpsMapEvents();
+        }
+
+        function getStatusBadge(statusVal) {
+            const val = String(statusVal || '').trim().toUpperCase();
+            if (val.includes('CONFIRMADA') || val.includes('CONFIRMADO')) {
+                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-green-100 text-green-800 shadow-sm">Confirmados</span>';
+            } else if (val.includes('PENDIENTE')) {
+                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-yellow-100 text-yellow-800 shadow-sm">Pendientes</span>';
+            } else if (val.includes('EXCEPCIONADO') || val.includes('EXCEPCIONADA')) {
+                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-red-100 text-red-800 shadow-sm">Excepcionados</span>';
+            } else if (val.includes('RECOLECTADO') || val.includes('RECOLECCION')) {
+                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gray-200 text-gray-800 shadow-sm">Recolección</span>';
+            }
+            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gray-100 text-gray-700 shadow-sm">${esc(statusVal || 'N/D')}</span>`;
+        }
+
+        function renderCards(dataToRender) {
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
+            document.getElementById('table-row-count').innerText = dataToRender.length.toLocaleString();
+
+            let totalPages = Math.ceil(dataToRender.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+            document.getElementById('current-page-num').innerText = currentPage;
+            document.getElementById('total-pages-num').innerText = totalPages;
+
+            if (dataToRender.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-400 italic text-xs">No se encontraron registros coincidentes.</div>`;
+                document.getElementById('pagination-container').style.display = 'none';
+                return;
+            }
+            document.getElementById('pagination-container').style.display = 'flex';
+
+            let sortedData = [...dataToRender];
+            if (dateKeyName) sortedData.sort((a, b) => new Date(a[dateKeyName] || 0) - new Date(b[dateKeyName] || 0));
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const pageRows = sortedData.slice(startIndex, startIndex + itemsPerPage);
+            let fragment = document.createDocumentFragment();
+
+            pageRows.forEach((row, idx) => {
+                let absoluteIndex = startIndex + idx + 1;
+                let card = document.createElement('div');
+                card.className = 'bg-white border border-gray-200/90 rounded-xl p-3.5 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-red-400 transition-all duration-300 flex flex-col justify-between space-y-2.5 relative overflow-hidden border-l-4 estafeta-border cursor-pointer';
+                card.onclick = () => openCardModal(row);
+
+                let guideVal = row[guideKeyName] !== undefined && row[guideKeyName] !== null ? row[guideKeyName] : '—';
+                let statusBadgeHtml = getStatusBadge(row[statusKeyName]);
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                        <span class="bg-gray-900 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm">#${absoluteIndex}</span>
+                        <div>${statusBadgeHtml}</div>
+                    </div>
+                    <div class="py-1">
+                        <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wider flex justify-between items-center"><span>Guía / OR</span><span class="text-[10px] estafeta-red-text font-semibold opacity-80"><i class="fa-solid fa-arrow-pointer mr-1"></i>Clic para ver detalle</span></div>
+                        <div class="font-bold text-gray-900 text-sm truncate mt-0.5" title="${esc(guideVal)}"><i class="fa-solid fa-barcode estafeta-red-text mr-1.5"></i>${esc(guideVal)}</div>
+                    </div>
+                `;
+                fragment.appendChild(card);
+            });
+            container.appendChild(fragment);
+        }
+
+        function formatDuration(ms) {
+            if (isNaN(ms) || ms < 0) return '00:00:00';
+            let seconds = Math.floor(ms / 1000);
+            let hours = Math.floor(seconds / 3600);
+            seconds %= 3600;
+            let minutes = Math.floor(seconds / 60);
+            seconds %= 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function formatDateString(dateObj) {
+            if (!dateObj || isNaN(dateObj)) return '—';
+            let yyyy = dateObj.getFullYear();
+            let mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+            let dd = String(dateObj.getDate()).padStart(2, '0');
+            let hh = String(dateObj.getHours()).padStart(2, '0');
+            let min = String(dateObj.getMinutes()).padStart(2, '0');
+            let ss = String(dateObj.getSeconds()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+        }
+
+        function parseCoordinates(coordStr) {
+            if (!coordStr) return null;
+            let str = String(coordStr).trim();
+            let parts = str.split(/[\s,]+/);
+            if (parts.length >= 2) {
+                let lat = parseFloat(parts[0]);
+                let lng = parseFloat(parts[1]);
+                if (!isNaN(lat) && !isNaN(lng)) return [lat, lng];
+            }
+            return null;
+        }
+
+        function prepareDeadTimes() {
+            let cronoFilteredRows = rawData.filter(row => {
+                let matchPlaza = activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true;
+                let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
+                let matchStatus = true;
+                if (activeCronoStatusFilter === 'CONFIRMADO') matchStatus = rowStatus.includes('CONFIRMADA') || rowStatus.includes('CONFIRMADO');
+                else if (activeCronoStatusFilter === 'EXCEPCIONADO') matchStatus = rowStatus.includes('EXCEPCIONADO') || rowStatus.includes('EXCEPCIONADA');
+                else if (activeCronoStatusFilter === 'PENDIENTE') matchStatus = rowStatus.includes('PENDIENTE');
+
+                let matchProg = true;
+                if (!showCronoProgData) {
+                    const guideVal = String(row[guideKeyName] || '').trim();
+                    if (isProgramada(guideVal)) matchProg = false;
+                }
+
+                let rVal = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                let matchRoute = activeCronoRouteSelections.has(rVal);
+                let gVal = String(row[garantiaKeyName] !== undefined && row[garantiaKeyName] !== null ? row[garantiaKeyName] : 'N/D');
+                let matchGarantia = activeCronoGarantiaSelections.has(gVal);
+                return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia;
+            });
+
+            let plazaFilteredRowsForAvance = rawData.filter(row => activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true);
+            updateStatusBoard(plazaFilteredRowsForAvance);
+
+            const routeMap = {};
+            cronoFilteredRows.forEach(row => {
+                let ruta = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                if (!routeMap[ruta]) routeMap[ruta] = [];
+                let timeVal = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
+                let guideVal = row[guideKeyName] !== undefined && row[guideKeyName] !== null ? row[guideKeyName] : '—';
+                if (timeVal && !isNaN(timeVal)) {
+                    routeMap[ruta].push({ time: timeVal.getTime(), dateObj: timeVal, guide: guideVal, originalRow: row });
+                }
+            });
+
+            cachedDeadTimesList = [];
+            rawCachedCronoList = [];
+
+            for (let ruta in routeMap) {
+                let events = routeMap[ruta].sort((a, b) => a.time - b.time);
+                let totalEvents = events.length;
+                let diffs = [];
+
+                for (let i = 1; i < totalEvents; i++) {
+                    let prev = events[i - 1];
+                    let curr = events[i];
+                    let diff = curr.time - prev.time;
+                    if (diff >= 0) {
+                        diffs.push(diff);
+                        rawCachedCronoList.push({
+                            ruta: ruta,
+                            prevTime: formatDateString(prev.dateObj),
+                            prevGuide: String(prev.guide),
+                            prevRow: prev.originalRow,
+                            currGuide: String(curr.guide),
+                            currTime: formatDateString(curr.dateObj),
+                            currRow: curr.originalRow,
+                            diff: diff
+                        });
+                    }
+                }
+
+                let totalDiff = diffs.reduce((acc, curr) => acc + curr, 0);
+                let avgDiff = diffs.length > 0 ? totalDiff / diffs.length : 0;
+                let maxDiff = diffs.length > 0 ? Math.max(...diffs) : 0;
+
+                cachedDeadTimesList.push({ ruta, count: totalEvents, avg: avgDiff, max: maxDiff, total: totalDiff });
+            }
+            cachedDeadTimesList.sort((a, b) => b.max - a.max);
+            renderDeadTimesTablePage();
+            applyCronoDetailFilter();
+        }
+
+        function getTargetSequences() {
+            const seqInput = document.getElementById('sequence-search-input') ? document.getElementById('sequence-search-input').value.trim() : '';
+            if (seqInput === '') return null;
+            const numbers = [];
+            for (let p of seqInput.split(',')) {
+                let num = parseInt(p.trim(), 10);
+                if (!isNaN(num)) numbers.push(num);
+            }
+            return numbers.length > 0 ? numbers : null;
+        }
+
+        function prepareTimelineEvents() {
+            let timelineSearch = document.getElementById('timeline-advanced-search') ? document.getElementById('timeline-advanced-search').value.toLowerCase().trim() : '';
+            let targetSeqs = getTargetSequences();
+
+            let allMappedRows = [];
+            rawData.forEach(row => {
+                let matchPlaza = activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true;
+                let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
+                let matchStatus = true;
+                if (activeTimelineStatusFilter === 'CONFIRMADO') matchStatus = rowStatus.includes('CONFIRMADA') || rowStatus.includes('CONFIRMADO');
+                else if (activeTimelineStatusFilter === 'EXCEPCIONADO') matchStatus = rowStatus.includes('EXCEPCIONADO') || rowStatus.includes('EXCEPCIONADA');
+                else if (activeTimelineStatusFilter === 'PENDIENTE') matchStatus = rowStatus.includes('PENDIENTE');
+
+                let matchProg = true;
+                if (!showTimelineProgData) {
+                    const guideVal = String(row[guideKeyName] || '').trim();
+                    if (isProgramada(guideVal)) matchProg = false;
+                }
+
+                let rVal = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                let matchRoute = activeTimelineRouteSelections.has(rVal);
+                let gVal = String(row[garantiaKeyName] !== undefined && row[garantiaKeyName] !== null ? row[garantiaKeyName] : 'N/D');
+                let matchGarantia = activeTimelineGarantiaSelections.has(gVal);
+                let matchSearch = timelineSearch === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(timelineSearch));
+
+                if (matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchSearch) {
+                    let timeVal = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
+                    let timeStamp = timeVal && !isNaN(timeVal) ? timeVal.getTime() : 0;
+                    let ruta = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                    let guide = String(row[guideKeyName] !== undefined && row[guideKeyName] !== null ? row[guideKeyName] : '—');
+                    let status = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]) : 'N/D';
+                    allMappedRows.push({ timestamp: timeStamp, ruta, guide, status, rowObj: row });
+                }
+            });
+
+            allMappedRows.sort((a, b) => a.timestamp - b.timestamp);
+            cachedTimelineList = [];
+            allMappedRows.forEach((item, index) => {
+                item.sequenceNumber = index + 1;
+                let matchSeq = targetSeqs === null || targetSeqs.includes(item.sequenceNumber);
+                if (matchSeq) cachedTimelineList.push(item);
+            });
+
+            renderTimelineTablePage();
+            renderTimelineMap();
+        }
+
+        function prepareGpsMapEvents() {
+            let mapSearch = document.getElementById('map-advanced-search') ? document.getElementById('map-advanced-search').value.toLowerCase().trim() : '';
+            cachedGpsMapList = [];
+            rawData.forEach(row => {
+                let matchPlaza = activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true;
+                let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
+                let matchStatus = true;
+                if (activeMapStatusFilter === 'CONFIRMADO') matchStatus = rowStatus.includes('CONFIRMADA') || rowStatus.includes('CONFIRMADO');
+                else if (activeMapStatusFilter === 'EXCEPCIONADO') matchStatus = rowStatus.includes('EXCEPCIONADO') || rowStatus.includes('EXCEPCIONADA');
+                else if (activeMapStatusFilter === 'PENDIENTE') matchStatus = rowStatus.includes('PENDIENTE');
+
+                let matchProg = true;
+                if (!showMapProgData) {
+                    const guideVal = String(row[guideKeyName] || '').trim();
+                    if (isProgramada(guideVal)) matchProg = false;
+                }
+
+                let rVal = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                let matchRoute = activeMapRouteSelections.has(rVal);
+                let gVal = String(row[garantiaKeyName] !== undefined && row[garantiaKeyName] !== null ? row[garantiaKeyName] : 'N/D');
+                let matchGarantia = activeMapGarantiaSelections.has(gVal);
+                let matchSearch = mapSearch === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(mapSearch));
+
+                if (matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchSearch) {
+                    let coords = coordKeyName ? parseCoordinates(row[coordKeyName]) : null;
+                    if (coords) {
+                        cachedGpsMapList.push({
+                            coords, rowObj: row,
+                            guide: row[guideKeyName] || '—',
+                            ruta: rVal,
+                            status: row[statusKeyName] || 'N/D'
+                        });
+                    }
+                }
+            });
+            document.getElementById('gps-map-row-count').innerText = cachedGpsMapList.length.toLocaleString();
+            renderGpsMap();
+        }
+
+        function renderGpsMap() {
+            if (window._gpsTimer) clearTimeout(window._gpsTimer);
+            window._gpsTimer = setTimeout(() => {
+                if (!gpsMapInstance) {
+                    gpsMapInstance = L.map('gps-map').setView([19.4326, -99.1332], 6);
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(gpsMapInstance);
+                }
+                if (gpsClusterGroup) gpsMapInstance.removeLayer(gpsClusterGroup);
+                gpsClusterGroup = L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false, zoomToBoundsOnClick: true });
+                let latLngs = [];
+                cachedGpsMapList.forEach(item => {
+                    let marker = L.circleMarker(item.coords, { radius: 8, color: '#991B1B', fillColor: '#DA291C', fillOpacity: 1 });
+                    let timeStr = eventTimeKeyName && item.rowObj[eventTimeKeyName] ? item.rowObj[eventTimeKeyName] : '—';
+                    marker.bindPopup(`<b>Guía:</b> ${esc(item.guide)}<br><b>Ruta:</b> ${esc(item.ruta)}<br><b>Hora:</b> ${esc(timeStr)}`);
+                    marker.on('click', () => openCardModal(item.rowObj));
+                    gpsClusterGroup.addLayer(marker);
+                    latLngs.push(item.coords);
+                });
+                gpsMapInstance.addLayer(gpsClusterGroup);
+                if (latLngs.length > 0) gpsMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15 });
+                gpsMapInstance.invalidateSize();
+            }, 100);
+        }
+
+        function renderTimelineMap() {
+            if (window._timelineTimer) clearTimeout(window._timelineTimer);
+            window._timelineTimer = setTimeout(() => {
+                if (!timelineMapInstance) {
+                    timelineMapInstance = L.map('map').setView([19.4326, -99.1332], 6);
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(timelineMapInstance);
+                    routeLinesLayer = L.layerGroup().addTo(timelineMapInstance);
+                }
+                if (timelineClusterGroup) timelineMapInstance.removeLayer(timelineClusterGroup);
+                timelineClusterGroup = L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false, zoomToBoundsOnClick: true });
+                if (routeLinesLayer) routeLinesLayer.clearLayers();
+
+                let latLngs = [];
+                let validPointsForLines = [];
+                const targetSeqs = getTargetSequences();
+
+                cachedTimelineList.forEach(item => {
+                    let coords = coordKeyName && item.rowObj ? parseCoordinates(item.rowObj[coordKeyName]) : null;
+                    if (coords) {
+                        let timeOnly = '—';
+                        if (eventTimeKeyName && item.rowObj[eventTimeKeyName]) {
+                            let d = new Date(item.rowObj[eventTimeKeyName]);
+                            if (!isNaN(d)) timeOnly = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} hrs`;
+                            else { let parts = String(item.rowObj[eventTimeKeyName]).split(' '); timeOnly = parts.length > 1 ? parts[1] : String(item.rowObj[eventTimeKeyName]); }
+                        }
+                        const pointColor = targetSeqs !== null ? '#DA291C' : '#10B981';
+                        const numberedIcon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div style="background-color:${pointColor};color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">${item.sequenceNumber}</div>`,
+                            iconSize: [28, 28], iconAnchor: [14, 14]
+                        });
+                        let marker = L.marker(coords, { icon: numberedIcon });
+                        marker.bindPopup(`<b>Secuencia #${item.sequenceNumber}</b><br>Hora: <b>${esc(timeOnly)}</b><br><b>Guía:</b> ${esc(item.guide)}`);
+                        timelineClusterGroup.addLayer(marker);
+                        latLngs.push(coords);
+                        let rowDate = eventTimeKeyName ? new Date(item.rowObj[eventTimeKeyName]) : null;
+                        validPointsForLines.push({ latLng: L.latLng(coords[0], coords[1]), seqNum: item.sequenceNumber, date: rowDate });
+                    }
+                });
+                timelineMapInstance.addLayer(timelineClusterGroup);
+
+                for (let i = 0; i < validPointsForLines.length - 1; i++) {
+                    let p1 = validPointsForLines[i];
+                    let p2 = validPointsForLines[i + 1];
+                    let distMeters = p1.latLng.distanceTo(p2.latLng);
+                    let distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(1) + ' metros';
+                    let timeText = '';
+                    if (p1.date && p2.date && !isNaN(p1.date) && !isNaN(p2.date)) {
+                        let diffMs = p2.date - p1.date;
+                        if (diffMs >= 0) {
+                            let totalMins = Math.floor(diffMs / 60000);
+                            let hrs = Math.floor(totalMins / 60);
+                            let mins = totalMins % 60;
+                            timeText = hrs > 0 ? `<br>Tiempo transcurrido: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo transcurrido: <b>${totalMins} min</b>`;
+                        }
+                    }
+                    let segmentLine = L.polyline([p1.latLng, p2.latLng], { color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5' });
+                    segmentLine.bindTooltip(`Seq #${p1.seqNum} &rarr; #${p2.seqNum}<br>Distancia: <b>${distText}</b>${timeText}`, { sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200' });
+                    routeLinesLayer.addLayer(segmentLine);
+                }
+
+                if (showRouteLines && routeLinesLayer) { if (!timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.addLayer(routeLinesLayer); }
+                else { if (routeLinesLayer && timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.removeLayer(routeLinesLayer); }
+                timelineMapInstance.invalidateSize();
+            }, 100);
+        }
+
+        const toggleLinesBtn = document.getElementById('toggle-lines-btn');
+        if (toggleLinesBtn) {
+            toggleLinesBtn.addEventListener('click', () => {
+                showRouteLines = !showRouteLines;
+                const linesIcon = document.getElementById('lines-icon');
+                const linesText = document.getElementById('lines-text');
+                if (linesIcon) linesIcon.className = showRouteLines ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
+                if (linesText) linesText.innerText = showRouteLines ? "Ocultar Líneas" : "Mostrar Líneas";
+                if (routeLinesLayer && timelineMapInstance) {
+                    if (showRouteLines) { if (!timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.addLayer(routeLinesLayer); }
+                    else { if (timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.removeLayer(routeLinesLayer); }
+                }
+            });
+        }
+
+        const toggleFullscreenBtn = document.getElementById('toggle-fullscreen-btn');
+        const mapCard = document.getElementById('map-card');
+        if (toggleFullscreenBtn && mapCard) {
+            toggleFullscreenBtn.addEventListener('click', () => {
+                mapCard.classList.toggle('fullscreen');
+                const isFullscreen = mapCard.classList.contains('fullscreen');
+                const fullscreenIcon = document.getElementById('fullscreen-icon');
+                const fullscreenText = document.getElementById('fullscreen-text');
+                if (fullscreenIcon) fullscreenIcon.className = isFullscreen ? "fa-solid fa-compress" : "fa-solid fa-expand";
+                if (fullscreenText) fullscreenText.innerText = isFullscreen ? "Restaurar" : "Pantalla Completa";
+                setTimeout(() => { if (timelineMapInstance) timelineMapInstance.invalidateSize(); }, 100);
+            });
+        }
+
+        function initOrUpdateCronoMap(item) {
+            let prevCoords = coordKeyName && item.prevRow ? parseCoordinates(item.prevRow[coordKeyName]) : null;
+            let currCoords = coordKeyName && item.currRow ? parseCoordinates(item.currRow[coordKeyName]) : null;
+
+            if (!cronoMapInstance) {
+                cronoMapInstance = L.map('crono-map').setView([19.4326, -99.1332], 6);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(cronoMapInstance);
+            }
+            if (cronoClusterGroup) cronoMapInstance.removeLayer(cronoClusterGroup);
+            if (cronoPolyline) { cronoMapInstance.removeLayer(cronoPolyline); cronoPolyline = null; }
+
+            cronoClusterGroup = L.markerClusterGroup();
+            let latLngs = [];
+
+            if (prevCoords) {
+                let markerPrev = L.circleMarker(prevCoords, { radius: 8, color: '#4B5563', fillColor: '#6B7280', fillOpacity: 0.9 });
+                markerPrev.bindPopup(`<b>Guía Anterior:</b> ${esc(item.prevGuide)}<br><b>Hora:</b> ${esc(item.prevTime)}`);
+                cronoClusterGroup.addLayer(markerPrev);
+                latLngs.push(prevCoords);
+            }
+            if (currCoords) {
+                let markerCurr = L.circleMarker(currCoords, { radius: 9, color: '#991B1B', fillColor: '#DA291C', fillOpacity: 1 });
+                markerCurr.bindPopup(`<b>Guía Actual:</b> ${esc(item.currGuide)}<br><b>Hora:</b> ${esc(item.currTime)}`);
+                cronoClusterGroup.addLayer(markerCurr);
+                latLngs.push(currCoords);
+            }
+            cronoMapInstance.addLayer(cronoClusterGroup);
+
+            if (prevCoords && currCoords) {
+                cronoPolyline = L.polyline([prevCoords, currCoords], { color: '#DA291C', weight: 3, dashArray: '5, 5' }).addTo(cronoMapInstance);
+            }
+            if (latLngs.length > 0) cronoMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15 });
+            cronoMapInstance.invalidateSize();
+        }
+
+        if (document.getElementById('timeline-advanced-search')) {
+            document.getElementById('timeline-advanced-search').addEventListener('input', debounce(() => {
+                timelineCurrentPage = 1; prepareTimelineEvents(); toggleFloatingResetButton();
+            }));
+        }
+        if (document.getElementById('sequence-search-input')) {
+            document.getElementById('sequence-search-input').addEventListener('input', debounce(() => {
+                timelineCurrentPage = 1; prepareTimelineEvents(); toggleFloatingResetButton();
+            }));
+        }
+        if (document.getElementById('map-advanced-search')) {
+            document.getElementById('map-advanced-search').addEventListener('input', debounce(() => {
+                prepareGpsMapEvents(); toggleFloatingResetButton();
+            }));
+        }
+        if (document.getElementById('table-advanced-search')) {
+            document.getElementById('table-advanced-search').addEventListener('input', debounce(() => {
+                currentPage = 1; applyFilters(); toggleFloatingResetButton();
+            }));
+        }
+        if (document.getElementById('crono-advanced-search')) {
+            document.getElementById('crono-advanced-search').addEventListener('input', debounce(() => {
+                deadTimesCurrentPage = 1; cronoCurrentPage = 1; applyCronoDetailFilter(); toggleFloatingResetButton();
+            }));
+        }
+
+        function renderTimelineTablePage() {
+            const container = document.getElementById('timeline-grid-container');
+            if (!container) return;
+            container.innerHTML = '';
+            document.getElementById('timeline-row-count').innerText = cachedTimelineList.length.toLocaleString();
+
+            let totalPages = Math.ceil(cachedTimelineList.length / timelinePerPage) || 1;
+            if (timelineCurrentPage > totalPages) timelineCurrentPage = totalPages;
+            if (timelineCurrentPage < 1) timelineCurrentPage = 1;
+            document.getElementById('timeline-current-page-num').innerText = timelineCurrentPage;
+            document.getElementById('timeline-total-pages-num').innerText = totalPages;
+
+            if (cachedTimelineList.length === 0) {
+                container.innerHTML = `<div class="py-8 text-center text-gray-400 italic text-xs w-full">No hay eventos registrados en la línea de tiempo con los filtros seleccionados.</div>`;
+                document.getElementById('timeline-pagination-container').style.display = 'none';
+                return;
+            }
+            document.getElementById('timeline-pagination-container').style.display = 'flex';
+
+            const startIndex = (timelineCurrentPage - 1) * timelinePerPage;
+            const pageRows = cachedTimelineList.slice(startIndex, startIndex + timelinePerPage);
+            let fragment = document.createDocumentFragment();
+
+            pageRows.forEach((item) => {
+                let statusBadge = getStatusBadge(item.status);
+                let card = document.createElement('div');
+                card.className = 'bg-white border border-gray-200/90 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-red-400 transition-all flex flex-col justify-between space-y-2 border-l-4 estafeta-border cursor-pointer min-w-[280px] max-w-[280px] flex-shrink-0';
+                card.onclick = () => openCardModal(item.rowObj);
+                let timeStr = item.rowObj[eventTimeKeyName] ? String(item.rowObj[eventTimeKeyName]) : '—';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                        <span class="bg-gray-900 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm">#${item.sequenceNumber}</span>
+                        <div>${statusBadge}</div>
+                    </div>
+                    <div class="space-y-1.5 text-xs py-1">
+                        <div class="estafeta-red-text font-semibold flex items-center"><i class="fa-solid fa-clock mr-1.5"></i><span class="truncate" title="${esc(timeStr)}">${esc(timeStr)}</span></div>
+                        <div class="truncate"><span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Guía:</span><span class="font-bold text-gray-900 ml-1 truncate" title="${esc(item.guide)}"><i class="fa-solid fa-barcode estafeta-red-text mr-1"></i>${esc(item.guide)}</span></div>
+                        <div class="truncate"><span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Ruta:</span><span class="font-medium text-gray-700 ml-1 truncate" title="${esc(item.ruta)}"><i class="fa-solid fa-route text-gray-400 mr-1"></i>${esc(item.ruta)}</span></div>
+                    </div>
+                    <div class="pt-1.5 border-t border-gray-100 flex justify-end"><span class="text-[10px] estafeta-red-text font-semibold hover:underline"><i class="fa-solid fa-arrow-pointer mr-1"></i>Ver Detalle</span></div>
+                `;
+                fragment.appendChild(card);
+            });
+            container.appendChild(fragment);
+        }
+
+        function updateStatusBoard(rows) {
+            let total = rows.length;
+            document.getElementById('status-board-total').innerText = total.toLocaleString();
+
+            let confirmadosCount = 0, excepcionadosCount = 0, orCount = 0, pendientesCount = 0, otrosCount = 0;
+
+            rows.forEach(r => {
+                const st = String(r[statusKeyName] || '').trim().toUpperCase();
+                const guideVal = String(r[guideKeyName] || '').trim().toUpperCase();
+                const isOR = guideVal.startsWith('OR');
+                if (isOR) orCount++;
+                if (!isOR) {
+                    if (st.includes('CONFIRMAD')) confirmadosCount++;
+                    else if (st.includes('EXCEPCION')) excepcionadosCount++;
+                    else if (st.includes('PENDIENT')) pendientesCount++;
+                    else otrosCount++;
+                }
+            });
+
+            const pct = c => total > 0 ? ((c / total) * 100).toFixed(1) : 0;
+
+            document.getElementById('badge-total-confirmados').innerText = confirmadosCount.toLocaleString();
+            document.getElementById('percent-confirmados').innerText = pct(confirmadosCount) + '%';
+            document.getElementById('badge-total-excepcionados').innerText = excepcionadosCount.toLocaleString();
+            document.getElementById('percent-excepcionados').innerText = pct(excepcionadosCount) + '%';
+            document.getElementById('badge-total-or').innerText = orCount.toLocaleString();
+            document.getElementById('percent-or').innerText = pct(orCount) + '%';
+            document.getElementById('badge-total-pendientes').innerText = pendientesCount.toLocaleString();
+            document.getElementById('percent-pendientes').innerText = pct(pendientesCount) + '%';
+
+            const tbody = document.getElementById('status-board-tbody');
+            tbody.innerHTML = `
+                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-green-800"><i class="fa-solid fa-circle-check text-green-600 mr-1.5"></i> Confirmados</td><td class="p-3 text-center font-semibold text-gray-800">${confirmadosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(confirmadosCount)}%</td></tr>
+                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-red-800"><i class="fa-solid fa-circle-exclamation estafeta-red-text mr-1.5"></i> Excepcionados</td><td class="p-3 text-center font-semibold text-gray-800">${excepcionadosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(excepcionadosCount)}%</td></tr>
+                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-blue-800"><i class="fa-solid fa-barcode text-blue-600 mr-1.5"></i> Órdenes de Recolección (OR)</td><td class="p-3 text-center font-semibold text-gray-800">${orCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(orCount)}%</td></tr>
+                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-yellow-800"><i class="fa-solid fa-clock-rotate-left text-yellow-600 mr-1.5"></i> Pendientes</td><td class="p-3 text-center font-semibold text-gray-800">${pendientesCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(pendientesCount)}%</td></tr>
+                ${otrosCount > 0 ? `<tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-gray-700"><i class="fa-solid fa-circle-question text-gray-400 mr-1.5"></i> Otros</td><td class="p-3 text-center font-semibold text-gray-800">${otrosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(otrosCount)}%</td></tr>` : ''}
+            `;
+        }
+
+        function applyCronoDetailFilter() {
+            const searchVal = document.getElementById('crono-advanced-search').value.toLowerCase().trim();
+            if (searchVal === '') {
+                cachedCronoList = [...rawCachedCronoList];
+            } else {
+                cachedCronoList = rawCachedCronoList.filter(item => {
+                    let matchCurr = item.currGuide.toLowerCase().includes(searchVal);
+                    let matchPrev = item.prevGuide.toLowerCase().includes(searchVal);
+                    let matchRuta = item.ruta.toLowerCase().includes(searchVal);
+                    let matchCurrRow = item.currRow && Object.values(item.currRow).some(v => v !== null && String(v).toLowerCase().includes(searchVal));
+                    let matchPrevRow = item.prevRow && Object.values(item.prevRow).some(v => v !== null && String(v).toLowerCase().includes(searchVal));
+                    return matchCurr || matchPrev || matchRuta || matchCurrRow || matchPrevRow;
+                });
+            }
+            const sortOrder = document.getElementById('crono-sort-select').value;
+            cachedCronoList.sort((a, b) => sortOrder === 'asc' ? a.diff - b.diff : b.diff - a.diff);
+            cronoCurrentPage = 1;
+            renderCronoTablePage();
+            renderCronoSearchKPIs(searchVal);
+        }
+
+        function renderCronoSearchKPIs(searchVal) {
+            const containerKPIs = document.getElementById('crono-search-kpis-container');
+            const gridKPIs = document.getElementById('crono-kpis-grid');
+            const mapWrapper = document.getElementById('crono-map-wrapper');
+            gridKPIs.innerHTML = '';
+
+            if (searchVal === '' || cachedCronoList.length === 0) {
+                containerKPIs.classList.add('hidden');
+                mapWrapper.classList.add('hidden');
+                if (cronoMapInstance) { cronoMapInstance.remove(); cronoMapInstance = null; cronoPolyline = null; }
+                return;
+            }
+            let matchItem = cachedCronoList.find(item =>
+                item.currGuide.toLowerCase().includes(searchVal) ||
+                item.prevGuide.toLowerCase().includes(searchVal) ||
+                (item.currRow && Object.values(item.currRow).some(v => v !== null && String(v).toLowerCase().includes(searchVal)))
+            ) || cachedCronoList[0];
+
+            containerKPIs.classList.remove('hidden');
+            mapWrapper.classList.remove('hidden');
+
+            gridKPIs.appendChild(createMiniKPI("Guía Anterior (Previa)", matchItem.prevGuide, matchItem.prevRow, "fa-history"));
+            gridKPIs.appendChild(createMiniKPI("Guía Actual (Buscada)", matchItem.currGuide, matchItem.currRow, "fa-barcode"));
+            setTimeout(() => { initOrUpdateCronoMap(matchItem); }, 100);
+        }
+
+        function createMiniKPI(titleLabel, guideVal, rowObj, iconClass) {
+            let card = document.createElement('div');
+            card.className = 'bg-white border border-gray-200/90 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-red-400 transition-all flex flex-col justify-between space-y-2 border-l-4 estafeta-border cursor-pointer';
+            if (rowObj) card.onclick = () => openCardModal(rowObj);
+            let statusBadgeHtml = getStatusBadge(rowObj ? rowObj[statusKeyName] : 'N/D');
+            card.innerHTML = `
+                <div class="flex justify-between items-center pb-1.5 border-b border-gray-100">
+                    <span class="bg-gray-900 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">${esc(titleLabel)}</span>
+                    <div>${statusBadgeHtml}</div>
+                </div>
+                <div class="flex items-center justify-between py-0.5">
+                    <div class="truncate pr-2">
+                        <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Guía / OR</div>
+                        <div class="font-bold text-gray-900 text-xs truncate mt-0.5" title="${esc(guideVal)}"><i class="fa-solid ${iconClass} estafeta-red-text mr-1"></i>${esc(guideVal)}</div>
+                    </div>
+                    <div class="text-right flex-shrink-0 pl-2"><span class="text-[10px] estafeta-red-text font-semibold hover:underline"><i class="fa-solid fa-arrow-pointer mr-1"></i>Detalle</span></div>
+                </div>
+            `;
+            return card;
+        }
+
+        function onCronoSortChange() {
+            const sortOrder = document.getElementById('crono-sort-select').value;
+            cachedCronoList.sort((a, b) => sortOrder === 'asc' ? a.diff - b.diff : b.diff - a.diff);
+            cronoCurrentPage = 1;
+            renderCronoTablePage();
+        }
+
+        function renderDeadTimesTablePage() {
+            const tbody = document.getElementById('dead-times-tbody');
+            tbody.innerHTML = '';
+            let totalPages = Math.ceil(cachedDeadTimesList.length / deadTimesPerPage) || 1;
+            if (deadTimesCurrentPage > totalPages) deadTimesCurrentPage = totalPages;
+            if (deadTimesCurrentPage < 1) deadTimesCurrentPage = 1;
+            document.getElementById('dt-current-page-num').innerText = deadTimesCurrentPage;
+            document.getElementById('dt-total-pages-num').innerText = totalPages;
+
+            if (cachedDeadTimesList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-gray-400 italic">No hay datos suficientes para calcular tiempos muertos.</td></tr>`;
+                document.getElementById('dead-times-pagination-container').style.display = 'none';
+                return;
+            }
+            document.getElementById('dead-times-pagination-container').style.display = 'flex';
+
+            const startIndex = (deadTimesCurrentPage - 1) * deadTimesPerPage;
+            const pageRows = cachedDeadTimesList.slice(startIndex, startIndex + deadTimesPerPage);
+            let fragment = document.createDocumentFragment();
+            pageRows.forEach((item, idx) => {
+                let absoluteIndex = startIndex + idx + 1;
+                let tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition-all';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-500">#${absoluteIndex}</td>
+                    <td class="p-3 font-bold text-gray-800"><i class="fa-solid fa-route estafeta-red-text mr-1.5"></i>${esc(item.ruta)}</td>
+                    <td class="p-3 text-center font-medium">${item.count}</td>
+                    <td class="p-3 text-center font-medium text-gray-600">${formatDuration(item.avg)}</td>
+                    <td class="p-3 text-center font-semibold text-gray-700">${formatDuration(item.max)}</td>
+                    <td class="p-3 text-center font-bold text-red-600">${formatDuration(item.total)}</td>
+                `;
+                fragment.appendChild(tr);
+            });
+            tbody.appendChild(fragment);
+        }
+
+        function renderCronoTablePage() {
+            const tbody = document.getElementById('crono-dead-times-tbody');
+            tbody.innerHTML = '';
+            document.getElementById('crono-row-count').innerText = cachedCronoList.length.toLocaleString();
+
+            let totalPages = Math.ceil(cachedCronoList.length / cronoPerPage) || 1;
+            if (cronoCurrentPage > totalPages) cronoCurrentPage = totalPages;
+            if (cronoCurrentPage < 1) cronoCurrentPage = 1;
+            document.getElementById('crono-current-page-num').innerText = cronoCurrentPage;
+            document.getElementById('crono-total-pages-num').innerText = totalPages;
+
+            if (cachedCronoList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-gray-400 italic">No hay registros cronológicos con los filtros seleccionados.</td></tr>`;
+                document.getElementById('crono-pagination-container').style.display = 'none';
+                return;
+            }
+            document.getElementById('crono-pagination-container').style.display = 'flex';
+
+            const startIndex = (cronoCurrentPage - 1) * cronoPerPage;
+            const pageRows = cachedCronoList.slice(startIndex, startIndex + cronoPerPage);
+            let fragment = document.createDocumentFragment();
+            pageRows.forEach((item, idx) => {
+                let absoluteIndex = startIndex + idx + 1;
+                let tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition-all';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-500">#${absoluteIndex}</td>
+                    <td class="p-3 font-bold text-gray-800"><i class="fa-solid fa-route estafeta-red-text mr-1.5"></i>${esc(item.ruta)}</td>
+                    <td class="p-3 text-center font-mono text-gray-600">${esc(item.prevTime)}</td>
+                    <td class="p-3 font-medium text-gray-700">${esc(item.currGuide)}</td>
+                    <td class="p-3 text-center font-mono text-gray-600">${esc(item.currTime)}</td>
+                    <td class="p-3 text-center font-bold text-red-600">${formatDuration(item.diff)}</td>
+                `;
+                fragment.appendChild(tr);
+            });
+            tbody.appendChild(fragment);
+        }
+
+        function openCardModal(row) {
+            const modal = document.getElementById('card-modal');
+            const modalBody = document.getElementById('modal-body');
+            const modalTitle = document.getElementById('modal-title');
+            modalTitle.innerText = `Guía/OR: ${row[guideKeyName] || 'Sin Guía'}`;
+
+            let html = '<div class="space-y-1.5 divide-y divide-gray-100">';
+            allKeysFull.forEach(k => {
+                const upperK = k.trim().toUpperCase().replace(':', '');
+                if (!hiddenColumns.includes(upperK)) {
+                    let val = row[k] !== undefined && row[k] !== null ? row[k] : '—';
+                    html += `<div class="flex justify-between items-center pt-1.5"><span class="font-semibold text-gray-500 pr-2">${esc(k)}:</span><span class="text-gray-800 font-medium text-right" title="${esc(val)}">${esc(val)}</span></div>`;
+                }
+            });
+            html += '</div>';
+            modalBody.innerHTML = html;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('card-modal').classList.add('hidden'); }
+
+        function renderPlazaFilterList() {
+            const container = document.getElementById('plaza-list-container');
+            container.innerHTML = '';
+            const plazasMap = {};
+            rawData.forEach(row => {
+                let p = row[plazaKeyName] || 'N/D';
+                plazasMap[p] = (plazasMap[p] || 0) + 1;
+            });
+            const sortedPlazas = Object.keys(plazasMap).sort();
+            document.getElementById('plaza-count-badge').innerText = sortedPlazas.length;
+
+            let allDiv = document.createElement('div');
+            allDiv.className = `px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-medium flex justify-between items-center transition-all ${activePlazaFilter === null ? 'bg-red-50 estafeta-red-text font-bold' : 'hover:bg-gray-50 text-gray-600'}`;
+            allDiv.innerHTML = `<span class="truncate pr-1">Todas las Plazas</span><span class="text-[9px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded-full flex-shrink-0">${rawData.length}</span>`;
+            allDiv.onclick = (e) => {
+                e.stopPropagation();
+                activePlazaFilter = null;
+                initSelections();
+                currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
+                updateDashboard();
+            };
+            container.appendChild(allDiv);
+
+            sortedPlazas.forEach(plaza => {
+                let count = plazasMap[plaza];
+                let isSelected = activePlazaFilter === plaza;
+                let div = document.createElement('div');
+                div.className = `px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-medium flex justify-between items-center transition-all ${isSelected ? 'bg-red-50 estafeta-red-text font-bold border-l-2 estafeta-border' : 'hover:bg-gray-50 text-gray-700'}`;
+                div.innerHTML = `<span class="truncate pr-1" title="${esc(plaza)}">${esc(plaza)}</span><span class="text-[9px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded-full flex-shrink-0">${count}</span>`;
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    activePlazaFilter = activePlazaFilter === plaza ? null : plaza;
+                    initSelections();
+                    currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
+                    updateDashboard();
+                };
+                container.appendChild(div);
+            });
+        }
+
+        function updateDashboard() {
+            applyFilters();
+            renderPlazaFilterList();
+            prepareTimelineEvents();
+            prepareGpsMapEvents();
+            toggleFloatingResetButton();
+        }
+
+        function applyFilters() {
+            let tableVal = document.getElementById('table-advanced-search').value.toLowerCase();
+            filteredData = rawData.filter(row => {
+                let matchPlaza = activePlazaFilter ? row[plazaKeyName] === activePlazaFilter : true;
+                let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
+                let matchStatus = true;
+                if (activeStatusFilter === 'CONFIRMADO') matchStatus = rowStatus.includes('CONFIRMADA') || rowStatus.includes('CONFIRMADO');
+                else if (activeStatusFilter === 'EXCEPCIONADO') matchStatus = rowStatus.includes('EXCEPCIONADO') || rowStatus.includes('EXCEPCIONADA');
+                else if (activeStatusFilter === 'PENDIENTE') matchStatus = rowStatus.includes('PENDIENTE');
+
+                let matchProg = true;
+                if (!showProgData) {
+                    const guideVal = String(row[guideKeyName] || '').trim();
+                    if (isProgramada(guideVal)) matchProg = false;
+                }
+
+                let rVal = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                let matchRoute = activeRouteSelections.has(rVal);
+                let gVal = String(row[garantiaKeyName] !== undefined && row[garantiaKeyName] !== null ? row[garantiaKeyName] : 'N/D');
+                let matchGarantia = activeGarantiaSelections.has(gVal);
+                let matchTable = tableVal === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(tableVal));
+                return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchTable;
+            });
+            renderCards(filteredData);
+            prepareDeadTimes();
+            // 🔔 Analizar y notificar
+            if (!window._notifAnalyzed || window._notifAnalyzed !== rawData.length) {
+                window._notifAnalyzed = rawData.length;
+                setTimeout(analyzeAndNotify, 700);
+            }
+        }
+
+        function toggleFloatingResetButton() {
+            const resetBtn = document.getElementById('floating-reset-btn');
+            const tableVal = document.getElementById('table-advanced-search').value;
+            const cronoTableVal = document.getElementById('crono-advanced-search').value;
+            const timelineVal = document.getElementById('timeline-advanced-search').value;
+            const seqVal = document.getElementById('sequence-search-input') ? document.getElementById('sequence-search-input').value : '';
+            const mapVal = document.getElementById('map-advanced-search') ? document.getElementById('map-advanced-search').value : '';
+
+            const hasFilters = activePlazaFilter !== null ||
+                activeStatusFilter !== 'ALL' || activeCronoStatusFilter !== 'ALL' || activeTimelineStatusFilter !== 'ALL' || activeMapStatusFilter !== 'ALL' ||
+                tableVal.trim() !== '' || cronoTableVal.trim() !== '' || timelineVal.trim() !== '' || seqVal.trim() !== '' || mapVal.trim() !== '' ||
+                !showProgData || !showCronoProgData || !showTimelineProgData || !showMapProgData ||
+                activeRouteSelections.size < rawData.length || activeGarantiaSelections.size < rawData.length ||
+                activeCronoRouteSelections.size < rawData.length || activeCronoGarantiaSelections.size < rawData.length ||
+                activeTimelineRouteSelections.size < rawData.length || activeTimelineGarantiaSelections.size < rawData.length ||
+                activeMapRouteSelections.size < rawData.length || activeMapGarantiaSelections.size < rawData.length;
+
+            if (hasFilters) { resetBtn.classList.remove('hidden'); resetBtn.classList.add('flex'); }
+            else { resetBtn.classList.add('hidden'); resetBtn.classList.remove('flex'); }
+        }
+
+        function resetFilters() {
+            activePlazaFilter = null;
+            setStatusFilter('ALL');
+            setCronoStatusFilter('ALL');
+            setTimelineStatusFilter('ALL');
+            setMapStatusFilter('ALL');
+            if (!showProgData) toggleProgramadaVisibility();
+            if (!showCronoProgData) toggleCronoProgramadaVisibility();
+            if (!showTimelineProgData) toggleTimelineProgramadaVisibility();
+            if (!showMapProgData) toggleMapProgramadaVisibility();
+            initSelections();
+            document.getElementById('table-advanced-search').value = '';
+            document.getElementById('crono-advanced-search').value = '';
+            document.getElementById('timeline-advanced-search').value = '';
+            if (document.getElementById('sequence-search-input')) document.getElementById('sequence-search-input').value = '';
+            if (document.getElementById('map-advanced-search')) document.getElementById('map-advanced-search').value = '';
+            currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
+            updateDashboard();
+        }
+
+        /* ============================================================
+           CAMPANA DE NOTIFICACIONES - LÓGICA
+           ============================================================ */
+        const NOTIF_CONFIG = {
+            dashboardId: 'tiempos-muertos',
+            storageKey: 'notif_history_tiempos-muertos',
+            maxHistory: 50,
+            maxToasts: 2,
+            toastDuration: 6000,
+            successToastDuration: 4000,
+            maxVisibleToasts: 3,
+            rules: {
+                deadTimeCriticoMax: 60 * 60 * 1000,
+                deadTimeAltoAvg: 30 * 60 * 1000,
+                deadTimeAltoMax: 60 * 60 * 1000,
+                excepcionadosDanger: 20,
+                excepcionadosWarning: 10,
+                fueraHorarioPct: 10,
+                sinActividadMinutos: 45,
+                topRutasCount: 3
+            }
+        };
+
+        const NOTIF_ICONS = {
+            danger: 'fa-solid fa-triangle-exclamation',
+            warning: 'fa-solid fa-circle-exclamation',
+            info: 'fa-solid fa-circle-info',
+            success: 'fa-solid fa-circle-check'
+        };
+
+        let notifHistory = [];
+
+        function loadNotifHistory() {
+            try {
+                const raw = localStorage.getItem(NOTIF_CONFIG.storageKey);
+                notifHistory = raw ? JSON.parse(raw) : [];
+                if (!Array.isArray(notifHistory)) notifHistory = [];
+            } catch (e) { notifHistory = []; }
+        }
+
+        function saveNotifHistory() {
+            try {
+                if (notifHistory.length > NOTIF_CONFIG.maxHistory) {
+                    notifHistory = notifHistory.slice(-NOTIF_CONFIG.maxHistory);
+                }
+                localStorage.setItem(NOTIF_CONFIG.storageKey, JSON.stringify(notifHistory));
+            } catch (e) { console.warn('No se pudo guardar historial:', e); }
+        }
+
+        function injectBell() {
+            const container = document.getElementById('notif-bell-slot');
+            if (!container) return;
+            if (document.getElementById('notif-bell')) return;
+            const btn = document.createElement('button');
+            btn.id = 'notif-bell';
+            btn.setAttribute('aria-label', 'Ver notificaciones');
+            btn.innerHTML = `<i class="fa-solid fa-bell"></i><span id="notif-badge" class="hidden">0</span>`;
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleNotifPanel();
+            });
+            container.appendChild(btn);
+            loadNotifHistory();
+            updateBadge();
+            renderPanel();
+        }
+
+        function updateBadge() {
+            const badge = document.getElementById('notif-badge');
+            if (!badge) return;
+            const unread = notifHistory.filter(n => !n.read).length;
+            if (unread > 0) {
+                badge.textContent = unread > 99 ? '99+' : unread;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function pulseBadge() {
+            const badge = document.getElementById('notif-badge');
+            if (!badge) return;
+            badge.classList.remove('pulse');
+            void badge.offsetWidth;
+            badge.classList.add('pulse');
+        }
+
+        function showToast(notif, duration) {
+            const container = document.getElementById('notif-toast-container');
+            if (!container) return;
+
+            while (container.children.length >= NOTIF_CONFIG.maxVisibleToasts) {
+                container.removeChild(container.firstChild);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `notif-toast notif-${notif.type}`;
+            const dur = duration || (notif.type === 'success' ? NOTIF_CONFIG.successToastDuration : NOTIF_CONFIG.toastDuration);
+            toast.innerHTML = `
+                <div class="notif-toast-icon"><i class="${NOTIF_ICONS[notif.type] || NOTIF_ICONS.info}"></i></div>
+                <div class="notif-toast-content">
+                    <div class="notif-toast-title">${notif.title}</div>
+                    <div class="notif-toast-msg">${notif.message}</div>
+                </div>
+                <button class="notif-toast-close" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+                <div class="notif-toast-progress" style="animation-duration:${dur}ms;"></div>
+            `;
+            const closeBtn = toast.querySelector('.notif-toast-close');
+            const removeToast = () => {
+                if (toast.parentNode) {
+                    toast.classList.add('removing');
+                    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+                }
+            };
+            closeBtn.addEventListener('click', removeToast);
+            container.appendChild(toast);
+            setTimeout(removeToast, dur);
+        }
+
+        function timeAgo(ts) {
+            const diff = Math.floor((Date.now() - ts) / 1000);
+            if (diff < 60) return 'Hace unos segundos';
+            if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
+            if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} h`;
+            return `Hace ${Math.floor(diff / 86400)} d`;
+        }
+
+        function renderPanel() {
+            const body = document.getElementById('notif-panel-body');
+            const title = document.getElementById('notif-panel-title');
+            if (!body) return;
+            const total = notifHistory.length;
+            const unread = notifHistory.filter(n => !n.read).length;
+            if (title) title.textContent = unread > 0 ? `Notificaciones (${unread} sin leer)` : `Notificaciones (${total})`;
+
+            if (total === 0) {
+                body.innerHTML = `<div class="notif-empty"><i class="fa-regular fa-bell-slash"></i>No hay notificaciones por ahora</div>`;
+                return;
+            }
+
+            const sorted = [...notifHistory].sort((a, b) => b.timestamp - a.timestamp);
+            body.innerHTML = sorted.map(n => `
+                <div class="notif-item notif-${n.type} ${n.read ? '' : 'unread'}">
+                    <div class="notif-item-icon"><i class="${NOTIF_ICONS[n.type] || NOTIF_ICONS.info}"></i></div>
+                    <div class="notif-item-body">
+                        <div class="notif-item-title">${n.title}</div>
+                        <div class="notif-item-msg">${n.message}</div>
+                        <div class="notif-item-time">${timeAgo(n.timestamp)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addNotifications(notifs) {
+            if (!Array.isArray(notifs) || notifs.length === 0) return;
+            const order = { danger: 0, warning: 1, info: 2, success: 3 };
+            const enriched = notifs.map((n, i) => ({
+                id: `${NOTIF_CONFIG.dashboardId}-${Date.now()}-${i}`,
+                timestamp: Date.now(),
+                read: false,
+                type: n.type || 'info',
+                title: n.title || '',
+                message: n.message || '',
+                duration: n.duration || null
+            }));
+            enriched.sort((a, b) => order[a.type] - order[b.type]);
+            notifHistory.push(...enriched);
+            saveNotifHistory();
+            enriched.slice(0, NOTIF_CONFIG.maxToasts).forEach((n, i) => {
+                setTimeout(() => showToast(n, n.duration), i * 300);
+            });
+            updateBadge();
+            pulseBadge();
+            renderPanel();
+        }
+
+        function toggleNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            if (!panel) return;
+            if (panel.classList.contains('show')) closeNotifPanel();
+            else openNotifPanel();
+        }
+
+        function openNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            if (!panel) return;
+            panel.classList.add('show');
+            renderPanel();
+        }
+
+        function closeNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            if (!panel) return;
+            panel.classList.remove('show');
+        }
+
+        function markAllAsRead() {
+            notifHistory.forEach(n => n.read = true);
+            saveNotifHistory();
+            updateBadge();
+            renderPanel();
+        }
+
+        function clearNotifHistory() {
+            if (!confirm('¿Eliminar todo el historial de notificaciones?')) return;
+            notifHistory = [];
+            saveNotifHistory();
+            updateBadge();
+            renderPanel();
+        }
+
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('notif-panel');
+            const bell = document.getElementById('notif-bell');
+            if (!panel || !panel.classList.contains('show')) return;
+            if (panel.contains(e.target)) return;
+            if (bell && bell.contains(e.target)) return;
+            closeNotifPanel();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeNotifPanel();
+        });
+
+        /* ============================================================
+           ANALIZADOR DE REGLAS DE NEGOCIO
+           ============================================================ */
+        function analyzeAndNotify() {
+            if (!rawData || rawData.length === 0) return;
+
+            const notifs = [];
+            const R = NOTIF_CONFIG.rules;
+            const fmt = n => Number(n).toLocaleString('es-MX');
+
+            /* 1. Rutas con tiempo muerto extremo (> 60 min máx) */
+            if (cachedDeadTimesList && cachedDeadTimesList.length > 0) {
+                const criticas = cachedDeadTimesList.filter(r => r.max >= R.deadTimeCriticoMax);
+                if (criticas.length > 0) {
+                    const nombres = criticas.slice(0, 3).map(r => r.ruta).join(', ');
+                    const extra = criticas.length > 3 ? ` y ${criticas.length - 3} más` : '';
+                    notifs.push({
+                        type: 'danger',
+                        title: `🚨 ${criticas.length} ruta(s) con tiempo muerto extremo`,
+                        message: `<b>${nombres}${extra}</b> superan los 60 min. Revisa Detalle Cronológico.`
+                    });
+                }
+
+                /* 2. Rutas con tiempo muerto alto (avg ≥ 30 min) */
+                const alertas = cachedDeadTimesList.filter(r => r.avg >= R.deadTimeAltoAvg && r.max < R.deadTimeAltoMax);
+                if (alertas.length > 0) {
+                    const nombres = alertas.slice(0, 3).map(r => r.ruta).join(', ');
+                    const extra = alertas.length > 3 ? ` y ${alertas.length - 3} más` : '';
+                    notifs.push({
+                        type: 'warning',
+                        title: `⚠️ ${alertas.length} ruta(s) con tiempo muerto alto`,
+                        message: `<b>${nombres}${extra}</b> promedian más de 30 min.`
+                    });
+                }
+            }
+
+            /* 3. Excepcionados */
+            const excepcionados = rawData.filter(r => {
+                const st = String(r[statusKeyName] || '').toUpperCase();
+                return st.includes('EXCEPCION');
+            }).length;
+            const pctExcep = (excepcionados / rawData.length) * 100;
+            if (pctExcep > R.excepcionadosDanger) {
+                notifs.push({
+                    type: 'danger',
+                    title: `📉 ${pctExcep.toFixed(1)}% excepcionados`,
+                    message: `${fmt(excepcionados)} de ${fmt(rawData.length)} registros. Umbral: <${R.excepcionadosDanger}%.`
+                });
+            } else if (pctExcep > R.excepcionadosWarning) {
+                notifs.push({
+                    type: 'warning',
+                    title: `⚠️ ${pctExcep.toFixed(1)}% excepcionados`,
+                    message: `${fmt(excepcionados)} registros con excepción.`
+                });
+            }
+
+            /* 4. OR pendientes */
+            const orPendientes = rawData.filter(r => {
+                const guide = String(r[guideKeyName] || '').toUpperCase().trim();
+                const st = String(r[statusKeyName] || '').toUpperCase();
+                return guide.startsWith('OR') && st.includes('PENDIENTE');
+            }).length;
+            if (orPendientes > 0) {
+                notifs.push({
+                    type: 'info',
+                    title: `📦 ${orPendientes} OR pendientes`,
+                    message: `Órdenes de Recolección sin recolectar todavía.`
+                });
+            }
+
+            /* 5. Eventos fuera de horario */
+            if (eventTimeKeyName) {
+                let fueraHorario = 0;
+                rawData.forEach(r => {
+                    const t = r[eventTimeKeyName];
+                    if (!t) return;
+                    const d = t instanceof Date ? t : new Date(t);
+                    if (isNaN(d)) return;
+                    const h = d.getHours();
+                    if (h < 6 || h > 22) fueraHorario++;
+                });
+                const pct = (fueraHorario / rawData.length) * 100;
+                if (pct > R.fueraHorarioPct) {
+                    notifs.push({
+                        type: 'warning',
+                        title: `🕐 ${fueraHorario} eventos fuera de horario`,
+                        message: `(${pct.toFixed(1)}%) entre 22:00 y 06:00 hrs.`
+                    });
+                }
+            }
+
+            /* 6. Ruta con mayor tiempo muerto total */
+            if (cachedDeadTimesList && cachedDeadTimesList.length > 0) {
+                const top = [...cachedDeadTimesList].sort((a, b) => b.total - a.total).slice(0, R.topRutasCount);
+                if (top.length > 0) {
+                    const lineas = top.map((r, i) => {
+                        const medals = ['🥇', '🥈', '🥉'];
+                        return `${medals[i]} <b>${r.ruta}</b>: ${formatDuration(r.total)}`;
+                    }).join('<br>');
+                    notifs.push({
+                        type: 'danger',
+                        title: `⏱️ Top ${R.topRutasCount} Rutas con Más Tiempo Muerto Total`,
+                        message: lineas
+                    });
+                }
+            }
+
+            /* 7. Rutas sin actividad reciente */
+            if (eventTimeKeyName && cachedCronoList) {
+                const now = Date.now();
+                let maxTimeGlobal = 0;
+                rawData.forEach(r => {
+                    const t = r[eventTimeKeyName];
+                    if (!t) return;
+                    const d = t instanceof Date ? t : new Date(t);
+                    if (!isNaN(d)) maxTimeGlobal = Math.max(maxTimeGlobal, d.getTime());
+                });
+                if (maxTimeGlobal > 0) {
+                    const umbralMs = R.sinActividadMinutos * 60 * 1000;
+                    const rutasColgadas = [];
+                    const ultimoPorRuta = {};
+                    rawData.forEach(r => {
+                        const ruta = String(r[routeKeyName] || 'N/D');
+                        const t = r[eventTimeKeyName];
+                        if (!t) return;
+                        const d = t instanceof Date ? t : new Date(t);
+                        if (isNaN(d)) return;
+                        const ts = d.getTime();
+                        if (!ultimoPorRuta[ruta] || ts > ultimoPorRuta[ruta]) ultimoPorRuta[ruta] = ts;
+                    });
+                    Object.entries(ultimoPorRuta).forEach(([ruta, ts]) => {
+                        const diff = maxTimeGlobal - ts;
+                        if (diff >= umbralMs) {
+                            rutasColgadas.push({ ruta, diff });
+                        }
+                    });
+                    if (rutasColgadas.length > 0) {
+                        rutasColgadas.sort((a, b) => b.diff - a.diff);
+                        const muestra = rutasColgadas.slice(0, 3).map(r => `<b>${r.ruta}</b> (${Math.floor(r.diff / 60000)} min)`).join(', ');
+                        const extra = rutasColgadas.length > 3 ? ` y ${rutasColgadas.length - 3} más` : '';
+                        notifs.push({
+                            type: 'warning',
+                            title: `⏸️ ${rutasColgadas.length} ruta(s) sin actividad ≥ ${R.sinActividadMinutos} min`,
+                            message: `${muestra}${extra}.`
+                        });
+                    }
+                }
+            }
+
+            /* 8. Distribución de estatus */
+            const confirmados = rawData.filter(r => {
+                const st = String(r[statusKeyName] || '').toUpperCase();
+                return st.includes('CONFIRMAD');
+            }).length;
+            const pendientes = rawData.filter(r => {
+                const st = String(r[statusKeyName] || '').toUpperCase();
+                return st.includes('PENDIENT') && !String(r[guideKeyName] || '').toUpperCase().startsWith('OR');
+            }).length;
+            const pctConf = (confirmados / rawData.length) * 100;
+            const pctPend = (pendientes / rawData.length) * 100;
+            notifs.push({
+                type: 'info',
+                title: `📊 Distribución de Estatus`,
+                message: `✅ ${fmt(confirmados)} (${pctConf.toFixed(1)}%) · 🚨 ${fmt(excepcionados)} (${pctExcep.toFixed(1)}%) · 📦 ${fmt(orPendientes)} OR · ⏳ ${fmt(pendientes)} (${pctPend.toFixed(1)}%)`
+            });
+
+            /* 9. Top 2 plazas con mayor tiempo muerto promedio */
+            if (eventTimeKeyName && plazaKeyName) {
+                const plazasMap = {};
+                rawData.forEach(r => {
+                    const plaza = String(r[plazaKeyName] || 'N/D');
+                    const ruta = String(r[routeKeyName] || 'N/D');
+                    const t = r[eventTimeKeyName];
+                    if (!t) return;
+                    const d = t instanceof Date ? t : new Date(t);
+                    if (isNaN(d)) return;
+                    if (!plazasMap[plaza]) plazasMap[plaza] = {};
+                    if (!plazasMap[plaza][ruta] || d.getTime() > plazasMap[plaza][ruta]) {
+                        plazasMap[plaza][ruta] = d.getTime();
+                    }
+                });
+                const plazaDeadTimes = {};
+                Object.entries(plazasMap).forEach(([plaza, rutasMap]) => {
+                    const tiempos = Object.values(rutasMap).sort((a, b) => a - b);
+                    if (tiempos.length < 2) return;
+                    let totalDiff = 0;
+                    for (let i = 1; i < tiempos.length; i++) totalDiff += tiempos[i] - tiempos[i - 1];
+                    plazaDeadTimes[plaza] = totalDiff / (tiempos.length - 1);
+                });
+                const topPlazas = Object.entries(plazaDeadTimes)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 2);
+                if (topPlazas.length > 0) {
+                    const lineas = topPlazas.map(([p, ms]) => `<b>${esc(p)}</b>: ${formatDuration(ms)}`).join(' · ');
+                    notifs.push({
+                        type: 'warning',
+                        title: `🗺️ Plazas con Mayor Tiempo Muerto Promedio`,
+                        message: lineas
+                    });
+                }
+            }
+
+            /* 10. Carga exitosa */
+            notifs.push({
+                type: 'success',
+                title: `✅ ${fmt(rawData.length)} registros cargados`,
+                message: `${cachedDeadTimesList.length} rutas analizadas · ${cachedTimelineList.length} eventos en timeline.`,
+                duration: NOTIF_CONFIG.successToastDuration
+            });
+
+            addNotifications(notifs);
+        }
+
+        /* ============================================================
+           INICIALIZACIÓN
+           ============================================================ */
+        document.addEventListener('DOMContentLoaded', () => {
+            injectBell();
+            initTema();
+        });
+
+        window.addEventListener('load', () => {
+            injectBell();
+        });
+
+        /* ============================================================
+           TEMA (MODO OSCURO / CLARO)
+           ============================================================ */
+        function aplicarTema(tema) {
+            const body = document.body;
+            const icon = document.getElementById('theme-toggle-icon');
+            if (tema === 'dark') {
+                body.classList.add('dark-mode');
+                if (icon) icon.className = 'fa-solid fa-sun';
+            } else {
+                body.classList.remove('dark-mode');
+                if (icon) icon.className = 'fa-solid fa-moon';
+            }
+        }
+
+        function initTema() {
+            const stored = localStorage.getItem('dashboard-theme');
+            if (stored === 'dark' || stored === 'light') {
+                aplicarTema(stored);
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                aplicarTema('dark');
+            }
+
+            const btn = document.getElementById('theme-toggle');
+            if (btn) {
+                btn.onclick = () => {
+                    const isDark = document.body.classList.contains('dark-mode');
+                    const next = isDark ? 'light' : 'dark';
+                    aplicarTema(next);
+                    localStorage.setItem('dashboard-theme', next);
+                };
+            }
+
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem('dashboard-theme')) aplicarTema(e.matches ? 'dark' : 'light');
+                });
+            }
+        }
+
+        /* ============================================================
+           EFECTOS VISUALES EXTRA
+           ============================================================ */
+        function animateNumber(el, to, duration = 800) {
+            if (!el) return;
+            const from = 0;
+            const start = performance.now();
+            const step = (now) => {
+                const p = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.floor(from + (to - from) * eased).toLocaleString();
+                if (p < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        }
+
+        function patchKPICounters() {
+            const map = {
+                'badge-total-confirmados': 'badge-total-confirmados',
+                'badge-total-excepcionados': 'badge-total-excepcionados',
+                'badge-total-or': 'badge-total-or',
+                'badge-total-pendientes': 'badge-total-pendientes',
+                'status-board-total': 'status-board-total'
+            };
+
+            Object.keys(map).forEach(id => {
+                const el = document.getElementById(id);
+                if (!el || el.dataset.animated === 'patched') return;
+                el.dataset.animated = 'patched';
+
+                const targetText = el.textContent.replace(/,/g, '');
+                const target = parseInt(targetText, 10);
+                if (isNaN(target) || target === 0) return;
+                animateNumber(el, target, 900);
+            });
+        }
+
+        function applyCardStagger() {
+            const container = document.getElementById('cards-container');
+            if (!container) return;
+            Array.from(container.children).forEach((card, i) => {
+                if (card.classList.contains('card-enter')) return;
+                card.classList.add('card-enter');
+                card.style.animationDelay = (i * 45) + 'ms';
+            });
+        }
+
+        function initRipple() {
+            document.body.addEventListener('click', (e) => {
+                const btn = e.target.closest('button');
+                if (!btn || btn.disabled) return;
+                if (btn.classList.contains('toast-close')) return;
+                if (!btn.classList.contains('ripple-host')) btn.classList.add('ripple-host');
+
+                const rect = btn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple-effect';
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 650);
+            }, true);
+        }
+
+        function applyTiltToCards() {
+            document.querySelectorAll('#cards-container > div').forEach(card => {
+                if (card.dataset.tilt === 'on') return;
+                card.dataset.tilt = 'on';
+
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width - 0.5;
+                    const y = (e.clientY - rect.top) / rect.height - 0.5;
+                    card.style.transform = `perspective(1000px) rotateY(${x * 5}deg) rotateX(${-y * 5}deg) translateY(-4px) scale(1.02)`;
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = '';
+                });
+            });
+        }
+
+        function injectKPIBars() {
+            const kpiMap = [
+                { card: 'badge-total-confirmados', pctId: 'percent-confirmados', color: '#10b981' },
+                { card: 'badge-total-excepcionados', pctId: 'percent-excepcionados', color: '#dc2626' },
+                { card: 'badge-total-or', pctId: 'percent-or', color: '#3b82f6' },
+                { card: 'badge-total-pendientes', pctId: 'percent-pendientes', color: '#f59e0b' }
+            ];
+
+            kpiMap.forEach(({ card, pctId, color }) => {
+                const cardEl = document.getElementById(card);
+                const pctEl = document.getElementById(pctId);
+                if (!cardEl || !pctEl) return;
+
+                const cardContainer = cardEl.closest('.bg-green-50\\/60, .bg-red-50\\/60, .bg-blue-50\\/60, .bg-yellow-50\\/60');
+                if (!cardContainer) return;
+
+                if (cardContainer.querySelector('.kpi-bar-track')) return;
+
+                const pct = parseFloat(pctEl.textContent) || 0;
+
+                const track = document.createElement('div');
+                track.className = 'kpi-bar-track';
+                const fill = document.createElement('div');
+                fill.className = 'kpi-bar-fill';
+                fill.style.background = color;
+                track.appendChild(fill);
+                cardContainer.appendChild(track);
+
+                setTimeout(() => { fill.style.width = pct + '%'; }, 150);
+            });
+        }
+
+        function applyCriticalPulse() {
+            const tbody = document.getElementById('dead-times-tbody');
+            if (!tbody) return;
+
+            tbody.querySelectorAll('tr').forEach(tr => {
+                const cells = tr.querySelectorAll('td');
+                if (cells.length < 6) return;
+                const maxCell = cells[4];
+                const totalCell = cells[5];
+
+                const maxTime = maxCell.textContent.trim();
+                const [hh, mm] = maxTime.split(':').map(Number);
+                const totalMin = (hh || 0) * 60 + (mm || 0);
+
+                if (totalMin >= 60 && !maxCell.querySelector('.critical-pulse')) {
+                    const span = document.createElement('span');
+                    span.className = 'critical-pulse';
+                    span.textContent = maxTime;
+                    maxCell.textContent = '';
+                    maxCell.appendChild(span);
+                }
+                if (totalCell) {
+                    const [th, tm] = totalCell.textContent.trim().split(':').map(Number);
+                    if ((th || 0) * 60 + (tm || 0) >= 60 && !totalCell.querySelector('.critical-pulse')) {
+                        const span2 = document.createElement('span');
+                        span2.className = 'critical-pulse';
+                        span2.textContent = totalCell.textContent.trim();
+                        totalCell.textContent = '';
+                        totalCell.appendChild(span2);
+                    }
+                }
+            });
+        }
+
+        function patchViewTransitions() {
+            if (!document.startViewTransition) return;
+            if (window._viewTransitionsPatched) return;
+            window._viewTransitionsPatched = true;
+
+            const origApplyFilters = window.applyFilters;
+            if (typeof origApplyFilters === 'function') {
+                window.applyFilters = function () {
+                    if (document.startViewTransition) {
+                        document.startViewTransition(() => origApplyFilters());
+                    } else {
+                        origApplyFilters();
+                    }
+                };
+            }
+            if (typeof setStatusFilter === 'function') {
+                const origSetStatus = window.setStatusFilter;
+                window.setStatusFilter = function (s) {
+                    if (document.startViewTransition) document.startViewTransition(() => origSetStatus(s));
+                    else origSetStatus(s);
+                };
+            }
+        }
+
+        function runAllEffects() {
+            patchKPICounters();
+            setTimeout(applyCardStagger, 80);
+            setTimeout(applyTiltToCards, 150);
+            setTimeout(injectKPIBars, 200);
+            setTimeout(applyCriticalPulse, 350);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTema();
+            initRipple();
+            patchViewTransitions();
+
+            const dash = document.getElementById('dashboard-content');
+            if (!dash) return;
+
+            let lastCount = -1;
+            const obs = new MutationObserver(() => {
+                if (!dash.classList.contains('hidden')) {
+                    if (typeof rawData !== 'undefined' && rawData.length > 0 && rawData.length !== lastCount) {
+                        lastCount = rawData.length;
+                        setTimeout(runAllEffects, 300);
+                    }
+                    setTimeout(applyCardStagger, 100);
+                }
+            });
+            obs.observe(dash, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
+
+            const obsTbody = document.getElementById('dead-times-tbody');
+            if (obsTbody) {
+                new MutationObserver(() => setTimeout(applyCriticalPulse, 150))
+                    .observe(obsTbody, { childList: true });
+            }
+        });
+    </script>
+</body>
+</html>
