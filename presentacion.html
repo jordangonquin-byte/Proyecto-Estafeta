@@ -442,46 +442,8 @@
 
     <script>
         /* ============================================================
-           SEGURIDAD: Autenticación sin bloqueos cosméticos
+           AUTENTICACIÓN ELIMINADA
            ============================================================ */
-        window.addEventListener('DOMContentLoaded', () => {
-            const encodedRole = localStorage.getItem('auth_role');
-            if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
-            let rol = '';
-            try {
-                const decoded = atob(encodedRole);
-                const parts = decoded.split('|');
-                if (parts.length >= 1) rol = parts[0];
-            } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
-            if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
-
-            // Solo para usuarios no-admin: inactividad 60min con prompt no bloqueante
-            if (rol !== 'admin') {
-                let inactivityTimer;
-                const maxInactivityMinutes = 60;
-
-                function resetInactivityTimer() {
-                    clearTimeout(inactivityTimer);
-                    inactivityTimer = setTimeout(() => {
-                        const confirmar = window.confirm("Su sesión ha estado inactiva por 60 minutos. ¿Desea mantener la sesión activa?");
-                        if (confirmar) {
-                            resetInactivityTimer();
-                        } else {
-                            localStorage.removeItem('auth_role');
-                            window.location.href = 'Panel de Control Operativo.html';
-                        }
-                    }, maxInactivityMinutes * 60 * 1000);
-                }
-
-                ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
-                    window.addEventListener(event, resetInactivityTimer);
-                });
-                resetInactivityTimer();
-                console.log("Modo Usuario: inactividad configurada a 60 min con prompt.");
-            } else {
-                console.warn("Modo Administrador: sin restricciones de inactividad en presentación.");
-            }
-        });
 
         /* ============================================================
            MODO OSCURO SINCRONIZADO

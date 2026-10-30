@@ -39,13 +39,11 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #D32F2F; }
         .fullscreen-active { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; margin: 0 !important; border-radius: 0 !important; display: flex !important; flex-direction: column !important; background-color: #ffffff !important; overflow-y: auto !important; padding: 24px !important; box-shadow: none !important; }
 
-        /* --- ANIMACIÓN DEL GRADIENTE --- */
         @keyframes gradientShift {
             0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
         }
 
-        /* --- BANNER MAESTRO --- */
         .master-header {
             background: var(--header-bg);
             background-size: 300% 100%;
@@ -81,7 +79,6 @@
         .brand-subtitle { font-size: 0.75rem; color: var(--subtext-color); margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
         .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
-        /* --- BOTÓN DE CARGA EXCEL --- */
         .upload-btn-wrapper {
             position: relative;
             display: inline-flex;
@@ -101,7 +98,6 @@
         .upload-btn-title { font-size: 0.85rem; font-weight: 700; color: var(--text-color); }
         .upload-btn-subtitle { font-size: 0.65rem; color: var(--subtext-color); }
 
-        /* --- SLOTS Y BOTONES HEADER --- */
         .notification-slot { display: flex; align-items: center; justify-content: center; }
         #theme-toggle {
             background: var(--btn-upload-bg);
@@ -119,24 +115,19 @@
         }
         #theme-toggle:hover { background: var(--btn-upload-hover); transform: translateY(-1px); }
 
-        /* 2.1 Ripple */
         .ripple-host { position: relative; overflow: hidden; }
         .ripple-effect { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.55); transform: scale(0); animation: rippleAnim 0.6s ease-out; pointer-events: none; }
         @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
 
-        /* 1.3 Cascada */
         @keyframes cardEnter { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4,0,0.2,1) backwards; }
 
-        /* 3.2 Pulse */
         @keyframes pulseCritical { 0%,100% { background-color: rgba(220,38,38,0.08); } 50% { background-color: rgba(220,38,38,0.28); } }
         .critical-pulse { animation: pulseCritical 2s ease-in-out infinite; font-weight: 800; color: #dc2626 !important; border-radius: 4px; padding: 2px 6px; display: inline-block; }
 
-        /* 3.1 Barras */
         .kpi-bar-track { width: 100%; height: 5px; background: rgba(0,0,0,0.06); border-radius: 999px; overflow: hidden; margin-top: 8px; }
         .kpi-bar-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
 
-        /* 5.1 Modo oscuro */
         body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
         body.dark-mode main, body.dark-mode section.bg-white, body.dark-mode .bg-white { background-color: #1e293b !important; }
         body.dark-mode .bg-gray-50, body.dark-mode .bg-gray-100 { background-color: #0f172a !important; }
@@ -155,9 +146,6 @@
         body.dark-mode .fullscreen-active { background-color: #0f172a !important; }
         body.dark-mode #column-filter-modal > div { background: #1e293b !important; }
 
-        /* ============================================================
-           SISTEMA DE NOTIFICACIONES
-           ============================================================ */
         #notif-bell {
             position: relative;
             background: var(--btn-upload-bg);
@@ -320,11 +308,7 @@
 </head>
 <body class="min-h-screen text-gray-800 flex flex-col relative">
 
-    <!-- ============================================================
-         BANNER MAESTRO UNIFICADO
-         ============================================================ -->
     <header class="master-header sticky top-0 z-50">
-        <!-- Logo y Títulos -->
         <div class="header-brand">
             <div class="brand-logo">E</div>
             <div class="brand-titles">
@@ -333,9 +317,7 @@
             </div>
         </div>
 
-        <!-- Acciones a la derecha -->
         <div class="header-actions" id="header-actions-container">
-            <!-- Botón de Carga Excel -->
             <div class="upload-btn-wrapper">
                 <input type="file" id="excel-file-input" accept="*">
                 <i class="fa-solid fa-file-excel upload-btn-icon"></i>
@@ -345,7 +327,6 @@
                 </div>
             </div>
 
-            <!-- Información del archivo cargado -->
             <div id="file-info" class="hidden items-center bg-black/20 px-4 py-2 rounded-lg text-sm" style="display:none;">
                 <i class="fa-solid fa-file-excel text-green-400 mr-2 text-lg"></i>
                 <span id="file-name" class="font-medium mr-3 truncate max-w-xs">archivo.xlsx</span>
@@ -354,10 +335,8 @@
                 </button>
             </div>
 
-            <!-- Contenedor para la Campana -->
             <div class="notification-slot" id="notif-bell-container"></div>
 
-            <!-- Botón de Tema -->
             <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
                 <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
             </button>
@@ -672,7 +651,6 @@
         <i class="fa-solid fa-rotate-left"></i><span>Limpiar Filtros</span>
     </button>
 
-    <!-- Contenedores del sistema de notificaciones -->
     <div id="notif-toast-container"></div>
     <div id="notif-panel">
         <div class="notif-panel-header">
@@ -697,33 +675,34 @@
 
     <script>
     /* ============================================================
-       AUTENTICACIÓN
+       AUTENTICACIÓN DESHABILITADA
        ============================================================ */
-    window.addEventListener('DOMContentLoaded', () => {
-        const encodedRole = localStorage.getItem('auth_role');
-        if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
-        let rol = '';
-        try {
-            const decoded = atob(encodedRole);
-            const parts = decoded.split('|');
-            if (parts.length >= 1) rol = parts[0];
-        } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
-        if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
+    // window.addEventListener('DOMContentLoaded', () => {
+    //     const encodedRole = localStorage.getItem('auth_role');
+    //     if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
+    //     let rol = '';
+    //     try {
+    //         const decoded = atob(encodedRole);
+    //         const parts = decoded.split('|');
+    //         if (parts.length >= 1) rol = parts[0];
+    //     } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
+    //     if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
 
-        let inactivityTimer;
-        const maxInactivityMinutes = 30;
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(() => {
-                alert("Su sesión ha expirado por inactividad.");
-                localStorage.removeItem('auth_role');
-                window.location.href = 'Panel de Control Operativo.html';
-            }, maxInactivityMinutes * 60 * 1000);
-        }
-        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => window.addEventListener(event, resetInactivityTimer));
-        resetInactivityTimer();
-        if (rol === 'admin') console.warn("Modo Administrador activo.");
-    });
+    //     let inactivityTimer;
+    //     const maxInactivityMinutes = 30;
+    //     function resetInactivityTimer() {
+    //         clearTimeout(inactivityTimer);
+    //         inactivityTimer = setTimeout(() => {
+    //             alert("Su sesión ha expirado por inactividad.");
+    //             localStorage.removeItem('auth_role');
+    //             window.location.href = 'Panel de Control Operativo.html';
+    //         }, maxInactivityMinutes * 60 * 1000);
+    //     }
+    //     ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => window.addEventListener(event, resetInactivityTimer));
+    //     resetInactivityTimer();
+    //     if (rol === 'admin') console.warn("Modo Administrador activo.");
+    // });
+    console.warn("🔓 Autenticación deshabilitada (modo standalone)");
 
     function debounce(fn, ms = 250) {
         let t;
@@ -1439,9 +1418,6 @@
         });
     }
 
-    /* ============================================================
-       TEMA CLARO/OSCURO — Toggle en el header
-       ============================================================ */
     function aplicarTema(tema) {
         if (tema === 'dark') document.body.classList.add('dark-mode');
         else document.body.classList.remove('dark-mode');
@@ -1495,12 +1471,6 @@
     });
     </script>
 
-    <!-- ============================================================
-         SISTEMA DE NOTIFICACIONES CON CAMPANA
-         100% independiente (sin index, sin postMessage)
-         Toasts personalizados: Top 3 motivos, día crítico,
-         top 3 destinos y top 3 orígenes
-         ============================================================ -->
     <script>
     (function initAfectacionNotifications() {
         'use strict';
@@ -1553,9 +1523,6 @@
             }
         }
 
-        /* ============================================================
-           INYECTAR CAMPANA EN EL SLOT DEL HEADER
-           ============================================================ */
         function injectBell() {
             const slot = document.getElementById('notif-bell-container');
             if (!slot) return;
@@ -1580,9 +1547,6 @@
             });
         }
 
-        /* ============================================================
-           BADGE
-           ============================================================ */
         function updateBadge() {
             const history = loadHistory();
             const unread = history.filter(n => !n.read).length;
@@ -1601,9 +1565,6 @@
             if (countEl) countEl.textContent = `(${history.length})`;
         }
 
-        /* ============================================================
-           RENDER PANEL
-           ============================================================ */
         function renderPanel() {
             const history = loadHistory();
             const body = document.getElementById('notif-panel-body');
@@ -1636,9 +1597,6 @@
             }).join('');
         }
 
-        /* ============================================================
-           TOASTS TEMPORALES
-           ============================================================ */
         function showToast(notif, duration = 6000) {
             const container = document.getElementById('notif-toast-container');
             if (!container) return;
@@ -1674,9 +1632,6 @@
             if (duration > 0) setTimeout(remove, duration);
         }
 
-        /* ============================================================
-           AGREGAR NOTIFICACIONES
-           ============================================================ */
         function addNotifications(notifs) {
             if (!notifs || notifs.length === 0) return;
 
@@ -1702,9 +1657,6 @@
             renderPanel();
         }
 
-        /* ============================================================
-           ACCIONES DEL PANEL
-           ============================================================ */
         window.openNotifPanel = function() {
             const panel = document.getElementById('notif-panel');
             if (!panel) return;
@@ -1732,9 +1684,6 @@
             renderPanel();
         };
 
-        /* ============================================================
-           ANÁLISIS DE DATOS → TOASTS PERSONALIZADOS
-           ============================================================ */
         function analyzeAndAlert() {
             if (typeof rawData === 'undefined' || !rawData || rawData.length === 0) return;
 
@@ -1872,9 +1821,6 @@
             addNotifications(notifs);
         }
 
-        /* ============================================================
-           DETECCIÓN DE CARGA + INIT
-           ============================================================ */
         let lastAnalyzed = 0;
 
         function tryAnalyze() {

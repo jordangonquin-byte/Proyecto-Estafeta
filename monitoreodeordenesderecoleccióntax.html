@@ -939,7 +939,7 @@
     }
 
     /* ============================================================
-       AUTENTICACIÓN + INICIALIZACIÓN
+       INICIALIZACIÓN (SIN AUTENTICACIÓN)
        ============================================================ */
     window.addEventListener('DOMContentLoaded', () => {
         initTema();
@@ -949,35 +949,6 @@
         window.addEventListener('message', (e) => {
             if (e.data && e.data.theme) aplicarTema(e.data.theme);
         });
-
-        const encodedRole = localStorage.getItem('auth_role');
-        if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
-
-        let rol = '';
-        try {
-            const decoded = atob(encodedRole);
-            const parts = decoded.split('|');
-            if (parts.length >= 1) rol = parts[0];
-        } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
-        if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
-
-        let inactivityTimer;
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(() => {
-                alert("Su sesión ha expirado por inactividad.");
-                localStorage.removeItem('auth_role');
-                window.location.href = 'Panel de Control Operativo.html';
-            }, 30 * 60 * 1000);
-        }
-        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(ev => window.addEventListener(ev, resetInactivityTimer));
-        resetInactivityTimer();
-
-        if (rol !== 'admin') {
-            document.addEventListener('contextmenu', e => e.preventDefault());
-            document.addEventListener('selectstart', e => e.preventDefault());
-            document.addEventListener('copy', e => e.preventDefault());
-        }
     });
 
     function initRipple() {
@@ -1976,7 +1947,6 @@
         }, dur);
     }
 
-    /* 🔁 addNotifications CON DEDUPLICACIÓN */
     function addNotifications(notifs) {
         if (!notifs || notifs.length === 0) return;
 
@@ -1993,7 +1963,6 @@
 
         enriched.sort((a, b) => NOTIF_PRIORITY[a.type] - NOTIF_PRIORITY[b.type]);
 
-        // Deduplicar: mismo type+title en últimos 5 min → no se repiten
         const cincoMin = 5 * 60 * 1000;
         const sinDuplicados = enriched.filter(nuevo => {
             return !notifHistory.some(existente =>
@@ -2086,7 +2055,6 @@
         const effReco = (recolectados / total) * 100;
         const effVisita = (visitados / total) * 100;
 
-        // 1. No Show Crítico (umbral > 8.5%)
         if (pctNoShow > 8.5) {
             const topClientes = Object.entries(clienteNoShowMap)
                 .sort((a, b) => b[1] - a[1])
@@ -2100,7 +2068,6 @@
             });
         }
 
-        // 2. Eficiencia de Recolección Baja (umbral < 91%)
         if (effReco < 91) {
             notifs.push({
                 type: 'danger',
@@ -2109,7 +2076,6 @@
             });
         }
 
-        // 3. Eficiencia de Visita Baja (< 90%)
         if (effVisita < 90) {
             notifs.push({
                 type: 'warning',
@@ -2118,7 +2084,6 @@
             });
         }
 
-        // 4. Top 5 Motivos de No Recolección
         const topMotivos = Object.entries(motivoMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
         if (topMotivos.length > 0) {
             const motivosTxt = topMotivos.map(([m, n], i) => `${['🥇','🥈','🥉','4️⃣','5️⃣'][i]} ${esc(m)} (${n})`).join('<br>');
@@ -2129,7 +2094,6 @@
             });
         }
 
-        // 5. Top 3 Plazas con Peor No Show (> 15%)
         const plazasConNS = Object.entries(plazaMap)
             .map(([p, d]) => ({ plaza: p, pct: d.total > 0 ? (d.noshow / d.total) * 100 : 0, noshow: d.noshow, total: d.total }))
             .filter(p => p.pct > 15 && p.noshow > 0)
@@ -2145,7 +2109,6 @@
             });
         }
 
-        // 6. Validación No Show Fuera de Rango (> 10%)
         const pctFuera = total > 0 ? (fueraRango / total) * 100 : 0;
         if (pctFuera > 10) {
             notifs.push({
@@ -2155,7 +2118,6 @@
             });
         }
 
-        // 7. Top 3 Rutas con Más Recolección
         const topRutas = Object.entries(rutaRecoMap)
             .map(([ruta, d]) => ({ ruta, recolectados: d.recolectados, total: d.total }))
             .filter(r => r.recolectados > 0)
@@ -2173,7 +2135,6 @@
             });
         }
 
-        // 8. Análisis Completado
         notifs.push({
             type: 'success',
             title: 'Análisis Completado',

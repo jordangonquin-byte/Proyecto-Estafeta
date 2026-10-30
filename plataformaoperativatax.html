@@ -956,34 +956,9 @@
     </div>
 
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            const encodedRole = localStorage.getItem('auth_role');
-            if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
-            let rol = '';
-            try {
-                const decoded = atob(encodedRole);
-                const parts = decoded.split('|');
-                if (parts.length >= 1) rol = parts[0];
-            } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
-            if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
-
-            let inactivityTimer;
-            const maxInactivityMinutes = 30;
-            function resetInactivityTimer() {
-                clearTimeout(inactivityTimer);
-                inactivityTimer = setTimeout(() => {
-                    alert("Su sesión ha expirado por inactividad.");
-                    localStorage.removeItem('auth_role');
-                    window.location.href = 'Panel de Control Operativo.html';
-                }, maxInactivityMinutes * 60 * 1000);
-            }
-            ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
-                window.addEventListener(event, resetInactivityTimer);
-            });
-            resetInactivityTimer();
-            if (rol === 'admin') console.warn("Modo Administrador activo.");
-            else console.log("Modo Usuario activo.");
-        });
+        /* ============================================================
+           AUTENTICACIÓN ELIMINADA
+           ============================================================ */
 
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
             '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -1141,7 +1116,6 @@
             const container = document.getElementById('notif-toast-container');
             if (!container) return;
 
-            // Máximo 3 toasts visibles
             while (container.children.length >= 3) {
                 container.removeChild(container.firstChild);
             }
@@ -1172,7 +1146,6 @@
         function addNotifications(notifs) {
             if (!notifs || notifs.length === 0) return;
 
-            // Ordenar por prioridad: danger > warning > info > success
             const priority = { danger: 0, warning: 1, info: 2, success: 3 };
             const sorted = [...notifs].sort((a, b) => (priority[a.type] ?? 99) - (priority[b.type] ?? 99));
 
@@ -1187,15 +1160,12 @@
                 duration: n.duration || 6000
             }));
 
-            // Guardar en historial (más nuevas primero)
             const history = loadNotifHistory();
             const updated = [...enriched, ...history].slice(0, CONFIG.maxHistory);
             saveNotifHistory(updated);
 
-            // Toasts: solo los 2 más críticos
             enriched.slice(0, 2).forEach(n => showToast(n, n.duration));
 
-            // Badge y panel
             updateBadge();
             pulseBadge();
             renderPanel();
@@ -1266,7 +1236,6 @@
             renderPanel();
         }
 
-        // Cerrar panel al hacer clic fuera o ESC
         document.addEventListener('click', (e) => {
             const panel = document.getElementById('notif-panel');
             const bell = document.getElementById('notif-bell');
@@ -1281,7 +1250,6 @@
 
         /* ============================================================
            ANÁLISIS DE DATOS → NOTIFICACIONES
-           Se ejecuta SOLO al cargar Excel
            ============================================================ */
         function analyzeAndAlert(data) {
             if (!data || data.length === 0) return;
@@ -1294,7 +1262,6 @@
 
             const notifs = [];
 
-            // 1. 🚨 Guías vencidas
             if (vencido > 0) {
                 const pct = ((vencido / total) * 100).toFixed(1);
                 notifs.push({
@@ -1305,7 +1272,6 @@
                 });
             }
 
-            // 2. ⏰ Vencen HOY
             if (hoy > 0) {
                 notifs.push({
                     type: 'warning',
@@ -1315,7 +1281,6 @@
                 });
             }
 
-            // 3. 📍 Top 3 Plazas de Destino
             const plazaCounts = {};
             data.forEach(r => {
                 const p = r['Plaza Destino'] || 'N/A';
@@ -1335,7 +1300,6 @@
                 });
             }
 
-            // 4. 🏷️ Tipos de Garantía
             const garCounts = {};
             data.forEach(r => {
                 const g = r['Garantía'] || 'No especificada';
@@ -1352,7 +1316,6 @@
                 });
             }
 
-            // 5. 🔴 Cliente con más vencidas (≥5 o ≥20% de vencidas)
             if (vencido > 0) {
                 const vencidasPorCliente = {};
                 data.filter(r => r['Semáforo'] === 'Vencido').forEach(r => {
@@ -1371,7 +1334,6 @@
                 }
             }
 
-            // 6. 🗺️ Cobertura de Destinos
             const plazasUnicas = Object.keys(plazaCounts).length;
             const plazasOrdenadas = Object.entries(plazaCounts).sort((a, b) => b[1] - a[1]);
             if (plazasUnicas > 0) {
@@ -1383,7 +1345,6 @@
                 });
             }
 
-            // 7. ✅ Carga exitosa
             notifs.push({
                 type: 'success',
                 title: '✅ Excel Cargado Correctamente',
@@ -1393,9 +1354,6 @@
 
             addNotifications(notifs);
         }
-        /* ============================================================
-           FIN CAMPANA
-           ============================================================ */
 
         function handleFileSelect(e) {
             const files = e.target.files || e.dataTransfer.files;
@@ -1468,7 +1426,6 @@
                         applyFilters();
                         runVisualEffects();
 
-                        // 🔔 Disparar análisis y notificaciones SOLO al cargar Excel
                         analyzeAndAlert(globalData);
                     } else {
                         document.getElementById('skeletonLoader').classList.add('hidden');

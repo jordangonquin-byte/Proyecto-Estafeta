@@ -81,6 +81,11 @@
             z-index: 50;
         }
 
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
         .header-brand { display: flex; align-items: center; gap: 15px; }
         .brand-logo {
             background-color: var(--badge-bg); color: var(--badge-text);
@@ -349,7 +354,7 @@
 
     <div class="modal-backdrop" id="modal-backdrop" onclick="closeAllModals()"></div>
 
-    <!-- MODALES DE MULTISELECT (Mismo comportamiento que el original) -->
+    <!-- MODALES DE MULTISELECT -->
     <div class="multiselect-dropdown" id="plaza-multiselect-dropdown-box">
         <div class="modal-title-bar"><span>Filtrar Plaza Operativa</span><i class="fa-solid fa-xmark modal-close-x" onclick="closeAllModals()"></i></div>
         <input type="text" class="multiselect-search-box" id="search-plaza" placeholder="Buscar plaza..." oninput="filterMultiselectOptions('plaza-multiselect-options-container', 'search-plaza')">
@@ -789,34 +794,8 @@
     <script>
         let _isRebuilding = false;
 
+        // Autenticación eliminada - solo se inicializa el ripple
         window.addEventListener('DOMContentLoaded', () => {
-            const encodedRole = localStorage.getItem('auth_role');
-            if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
-            let rol = '';
-            try {
-                const decoded = atob(encodedRole);
-                const parts = decoded.split('|');
-                if (parts.length >= 1) rol = parts[0];
-            } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
-            if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
-
-            let inactivityTimer;
-            const maxInactivityMinutes = 30;
-            function resetInactivityTimer() {
-                clearTimeout(inactivityTimer);
-                inactivityTimer = setTimeout(() => {
-                    alert("Su sesión ha expirado por inactividad.");
-                    localStorage.removeItem('auth_role');
-                    window.location.href = 'Panel de Control Operativo.html';
-                }, maxInactivityMinutes * 60 * 1000);
-            }
-            ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
-                window.addEventListener(event, resetInactivityTimer);
-            });
-            resetInactivityTimer();
-            if (rol === 'admin') console.warn("Modo Administrador activo.");
-            else console.log("Modo Usuario activo.");
-
             initRipple();
         });
 
