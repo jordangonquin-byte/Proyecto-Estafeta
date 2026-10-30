@@ -548,7 +548,7 @@
                 </div>
             </div>
 
-            <!-- Campana de Notificaciones (se inyecta por JS o está aquí) -->
+            <!-- Campana de Notificaciones -->
             <div id="notif-bell-slot"></div>
 
             <!-- Botón de Modo Oscuro/Claro -->
@@ -939,7 +939,7 @@
     }
 
     /* ============================================================
-       INICIALIZACIÓN (SIN AUTENTICACIÓN)
+       INICIALIZACIÓN
        ============================================================ */
     window.addEventListener('DOMContentLoaded', () => {
         initTema();
@@ -993,7 +993,6 @@
 
     let calCurrentYear = new Date().getFullYear();
     let calCurrentMonth = new Date().getMonth();
-    let searchTimeout = null;
 
     let itemsChartInstance = null, horariosChartInstance = null, noshowDonutChartInstance = null;
 
@@ -1001,7 +1000,7 @@
     fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
 
     /* ============================================================
-       CARGA DE ARCHIVO
+       CARGA DE ARCHIVO Y VALIDACIÓN ACTUALIZADA
        ============================================================ */
     function handleFile(file) {
         document.getElementById('file-status').innerText = `Procesando...`;
@@ -1013,7 +1012,7 @@
                 complete: (res) => {
                     const headers = res.meta.fields || [];
                     if (!validarArchivo(headers)) {
-                        alert('El archivo no tiene las columnas esperadas (Plaza, Estatus, Ruta, etc.)');
+                        alert('El archivo no tiene la estructura de columnas esperada.');
                         document.getElementById('file-status').innerText = 'Error de validación';
                         return;
                     }
@@ -1046,35 +1045,48 @@
         if (!headers || headers.length === 0) return false;
         const n = headers.map(_norm);
         const has = (...frags) => n.some(h => frags.every(f => h.includes(_norm(f))));
-        return has('plaza') && (has('estatus') || has('status')) && (has('ruta'));
+        
+        // Validación compatible con la plantilla general y con la nueva estructura de ArchivoExcel (2).xlsx
+        const tieneRuta = has('ruta');
+        const tieneOrdenOEstatus = has('orden de recoleccion') || has('# orden') || has('estatus');
+        
+        return tieneRuta && tieneOrdenOEstatus;
     }
 
     function initDashboard(data, fileName) {
         rawData = data.filter(r => {
-            const plaza = String(r['Plaza'] || r['PLAZA'] || '').trim();
-            return plaza !== 'Total' && plaza !== '';
+            const firstVal = String(Object.values(r)[0] || '').trim();
+            return firstVal !== 'Total' && firstVal !== '';
         });
 
         if (rawData.length === 0) {
-            alert('El archivo no contiene filas de datos');
+            alert('El archivo no contiene filas de datos válidas.');
             document.getElementById('file-status').innerText = 'Archivo vacío';
             return;
         }
 
         const sample = rawData[0];
-        plazaKey        = findColumn(sample, ['plaza']);
-        dateKey         = findColumn(sample, ['fecha evento']) || findColumn(sample, ['fecha']);
-        routeKey        = findColumn(sample, ['ruta local']) || findColumn(sample, ['ruta']);
-        operatorKey     = findColumn(sample, ['operador']);
-        statusKey       = findColumn(sample, ['estatus de ordenes', 'estatus']);
-        reasonKey       = findColumn(sample, ['motivo de no recoleccion', 'motivo']);
-        eventKey        = findColumn(sample, ['evento or recos', 'evento']);
-        clientKey       = findColumn(sample, ['razon social', 'cliente ajustado']);
-        itemsKey        = findColumn(sample, ['cant or items pactados', 'items']);
-        validationNoShowKey = findColumn(sample, ['validacion no show']);
-        fechaExcepcionKey = findColumn(sample, ['fecha excepcion']);
+
+        // Mapeo exhaustivo adaptado a las columnas exactas de ArchivoExcel (2).xlsx
+        plazaKey        = findColumn(sample, ['plaza']) || null;
+        dateKey         = findColumn(sample, ['fecha']);
+        routeKey        = findColumn(sample, ['ruta']);
+        operatorKey     = findColumn(sample, ['atendio', 'operador']);
+        statusKey       = findColumn(sample, ['estatus']);
+        reasonKey       = findColumn(sample, ['excepción', 'excepcion', 'sub-estatus', 'motivo']);
+        eventKey        = findColumn(sample, ['tipo de recolección', 'tipo de recoleccion', 'evento']);
+        clientKey       = findColumn(sample, ['razón social', 'razon social', 'cliente']);
+        itemsKey        = findColumn(sample, ['items planeados', 'cant or items']);
+        validationNoShowKey = findColumn(sample, ['excepción', 'excepcion', 'sub-estatus']);
+        fechaExcepcionKey = findColumn(sample, ['comentarios or con horario', 'hora local', 'fecha excepcion']);
         latKey          = findColumn(sample, ['latitud']);
         lngKey          = findColumn(sample, ['longitud']);
+
+        // Asignación de Plaza por defecto si no viene explícita en el Excel
+        if (!plazaKey) {
+            rawData.forEach(r => r['Plaza_Default'] = 'TAXCO');
+            plazaKey = 'Plaza_Default';
+        }
 
         extractFilters();
         filteredData = [...rawData];
@@ -1351,8 +1363,8 @@
             else adic++;
 
             const st = _norm(row[statusKey]);
-            if (st.includes('recolectado')) { visitados++; recolectados++; }
-            else if (st.includes('no show') || st.includes('no exitosa')) { visitados++; noreco++; noshow++; }
+            if (st.includes('recolectado') || st.includes('enviado') || st.includes('enrutado')) { visitados++; recolectados++; }
+            else if (st.includes('no show') || st.includes('no exitosa') || st.includes('excepción') || st.includes('excepcion')) { visitados++; noreco++; noshow++; }
             else if (st.includes('visitado') || st.includes('pendiente')) visitados++;
             else if (st.includes('no visitado') || st === '') novisitados++;
             else novisitados++;
@@ -1423,8 +1435,8 @@
         let reco = 0, noshow = 0;
         filteredData.forEach(r => {
             const st = _norm(r[statusKey]);
-            if (st.includes('recolectado')) reco++;
-            else if (st.includes('no show') || st.includes('no exitosa')) noshow++;
+            if (st.includes('recolectado') || st.includes('enviado') || st.includes('enrutado')) reco++;
+            else if (st.includes('no show') || st.includes('no exitosa') || st.includes('excepción') || st.includes('excepcion')) noshow++;
         });
         const effVis = total > 0 ? 100 : 0;
         const effReco = total > 0 ? ((reco / total) * 100).toFixed(1) : 0;
@@ -1444,7 +1456,7 @@
         let motivoMap = {};
         filteredData.forEach(r => {
             const st = _norm(r[statusKey]);
-            if (st.includes('no show') || st.includes('no exitosa')) {
+            if (st.includes('no show') || st.includes('no exitosa') || st.includes('excepción') || st.includes('excepcion')) {
                 const mot = r[reasonKey] || 'Sin motivo';
                 motivoMap[mot] = (motivoMap[mot] || 0) + 1;
             }
@@ -1464,8 +1476,8 @@
             if (!clientMap[cli]) clientMap[cli] = { name: cli, total: 0, reco: 0, noshow: 0 };
             clientMap[cli].total++;
             const st = _norm(r[statusKey]);
-            if (st.includes('recolectado')) clientMap[cli].reco++;
-            else if (st.includes('no show') || st.includes('no exitosa')) clientMap[cli].noshow++;
+            if (st.includes('recolectado') || st.includes('enviado') || st.includes('enrutado')) clientMap[cli].reco++;
+            else if (st.includes('no show') || st.includes('no exitosa') || st.includes('excepción') || st.includes('excepcion')) clientMap[cli].noshow++;
         });
 
         let clientArray = Object.values(clientMap).map(d => ({
@@ -1641,7 +1653,7 @@
         let fuera = 0, dentro = 0;
         filteredData.forEach(r => {
             const val = _norm(r[validationNoShowKey]);
-            if (val.includes('fuera')) fuera++;
+            if (val.includes('fuera') || val.includes('excepcion') || val.includes('r11')) fuera++;
             else dentro++;
         });
 
@@ -1649,7 +1661,7 @@
         if (noshowDonutChartInstance) noshowDonutChartInstance.destroy();
         noshowDonutChartInstance = new Chart(ctxDonut, {
             type: 'doughnut',
-            data: { labels: ['Fuera de Rango', 'Dentro de Rango'], datasets: [{ data: [fuera, dentro], backgroundColor: ['#EF4444', '#3B82F6'] }] },
+            data: { labels: ['Fuera de Rango / Excepción', 'Dentro de Rango'], datasets: [{ data: [fuera, dentro], backgroundColor: ['#EF4444', '#3B82F6'] }] },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 plugins: {
@@ -1823,7 +1835,7 @@
             closeBtn.dataset.bound = '1';
         }
 
-        const markReadBtn = document.getElementById('notif-mark-read-btn');
+        const markReadBtn = document.getElementById('notif-[#mark-read-btn]');
         if (markReadBtn && !markReadBtn.dataset.bound) {
             markReadBtn.addEventListener('click', markAllAsRead);
             markReadBtn.dataset.bound = '1';
@@ -2007,7 +2019,7 @@
     }
 
     /* ============================================================
-       🧠 ANALIZADOR DE REGLAS → 8 TOASTS
+       ANALIZADOR DE REGLAS Y ALERTAS
        ============================================================ */
     function analyzeAndAlert(fileName) {
         const notifs = [];
@@ -2033,11 +2045,11 @@
             plazaMap[plaza].total++;
             rutaRecoMap[ruta].total++;
 
-            if (st.includes('recolectado')) {
+            if (st.includes('recolectado') || st.includes('enviado') || st.includes('enrutado')) {
                 recolectados++; visitados++;
                 rutaRecoMap[ruta].recolectados++;
             }
-            else if (st.includes('no show') || st.includes('no exitosa')) {
+            else if (st.includes('no show') || st.includes('no exitosa') || st.includes('excepción') || st.includes('excepcion')) {
                 visitados++; noshow++;
                 plazaMap[plaza].noshow++;
                 const mot = r[reasonKey] || 'Sin motivo';
@@ -2047,7 +2059,7 @@
             else if (st.includes('visitado') || st.includes('pendiente')) visitados++;
 
             const val = _norm(r[validationNoShowKey]);
-            if (val.includes('fuera')) fueraRango++;
+            if (val.includes('fuera') || val.includes('excepcion') || val.includes('r11')) fueraRango++;
             else dentroRango++;
         });
 
@@ -2089,71 +2101,20 @@
             const motivosTxt = topMotivos.map(([m, n], i) => `${['🥇','🥈','🥉','4️⃣','5️⃣'][i]} ${esc(m)} (${n})`).join('<br>');
             notifs.push({
                 type: 'warning',
-                title: 'Top 5 Motivos de No Recolección',
+                title: 'Top Motivos de No Recolección',
                 message: motivosTxt
-            });
-        }
-
-        const plazasConNS = Object.entries(plazaMap)
-            .map(([p, d]) => ({ plaza: p, pct: d.total > 0 ? (d.noshow / d.total) * 100 : 0, noshow: d.noshow, total: d.total }))
-            .filter(p => p.pct > 15 && p.noshow > 0)
-            .sort((a, b) => b.pct - a.pct)
-            .slice(0, 3);
-
-        if (plazasConNS.length > 0) {
-            const plazasTxt = plazasConNS.map((p, i) => `${['🥇','🥈','🥉'][i]} ${esc(p.plaza)}: ${p.pct.toFixed(1)}% (${p.noshow}/${p.total})`).join('<br>');
-            notifs.push({
-                type: 'warning',
-                title: 'Top 3 Plazas con Peor No Show',
-                message: plazasTxt
-            });
-        }
-
-        const pctFuera = total > 0 ? (fueraRango / total) * 100 : 0;
-        if (pctFuera > 10) {
-            notifs.push({
-                type: 'info',
-                title: 'Validación No Show: Fuera de Rango',
-                message: `${pctFuera.toFixed(1)}% fuera de rango (${fueraRango})<br>${dentroRango} dentro de rango`
-            });
-        }
-
-        const topRutas = Object.entries(rutaRecoMap)
-            .map(([ruta, d]) => ({ ruta, recolectados: d.recolectados, total: d.total }))
-            .filter(r => r.recolectados > 0)
-            .sort((a, b) => b.recolectados - a.recolectados)
-            .slice(0, 3);
-
-        if (topRutas.length > 0) {
-            const rutasTxt = topRutas.map((r, i) =>
-                `${['🥇','🥈','🥉'][i]} ${esc(r.ruta)}: ${r.recolectados} recolectadas (${((r.recolectados / r.total) * 100).toFixed(1)}%)`
-            ).join('<br>');
-            notifs.push({
-                type: 'info',
-                title: 'Top 3 Rutas con Más Recolección',
-                message: rutasTxt
             });
         }
 
         notifs.push({
             type: 'success',
             title: 'Análisis Completado',
-            message: `${total} OR analizadas<br>${allPlazasList.length} plazas · ${allRoutesList.length} rutas<br>${esc(fileName || 'archivo cargado')}`,
+            message: `${total} OR analizadas<br>${allPlazasList.length} plaza(s) · ${allRoutesList.length} rutas<br>${esc(fileName || 'archivo cargado')}`,
             duration: 4000
         });
 
         addNotifications(notifs);
     }
-
-    /* ============================================================
-       LOG
-       ============================================================ */
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            console.log('%c🎨 Efectos activos: ripple, dark-mode, gradiente header, cascada, contadores, barras, pulse, view-transitions, Chart.js, Leaflet, campana (8 toasts + dedup)',
-                'background:#DA291C;color:white;padding:6px 10px;border-radius:4px;font-weight:bold;font-size:12px;');
-        }, 500);
-    });
     </script>
 </body>
 </html>
