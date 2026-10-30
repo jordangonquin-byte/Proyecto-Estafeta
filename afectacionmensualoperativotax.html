@@ -128,8 +128,10 @@
         .kpi-bar-track { width: 100%; height: 5px; background: rgba(0,0,0,0.06); border-radius: 999px; overflow: hidden; margin-top: 8px; }
         .kpi-bar-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
 
+        /* Sincronización exacta de colores para el modo oscuro en toda la página */
         body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
-        body.dark-mode main, body.dark-mode section.bg-white, body.dark-mode .bg-white { background-color: #1e293b !important; }
+        body.dark-mode main { background-color: #0f172a !important; }
+        body.dark-mode section.bg-white, body.dark-mode .bg-white { background-color: #1e293b !important; }
         body.dark-mode .bg-gray-50, body.dark-mode .bg-gray-100 { background-color: #0f172a !important; }
         body.dark-mode .bg-gray-200 { background-color: #334155 !important; }
         body.dark-mode .text-gray-800, body.dark-mode .text-gray-700, body.dark-mode .text-gray-900 { color: #e2e8f0 !important; }
@@ -343,9 +345,10 @@
         </div>
     </header>
 
-    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+    <!-- ANCHO AJUSTADO AL 80% -->
+    <main class="flex-grow max-w-[80%] w-[80%] mx-auto w-full">
 
-        <div id="dashboard-content" class="hidden space-y-6">
+        <div id="dashboard-content" class="hidden space-y-6 p-4 md:p-6">
 
             <section class="bg-white rounded-xl shadow-md p-5 border-t-4 border-[#DA291C]">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 pb-3 border-b border-gray-100">
@@ -674,34 +677,6 @@
     </div>
 
     <script>
-    /* ============================================================
-       AUTENTICACIÓN DESHABILITADA
-       ============================================================ */
-    // window.addEventListener('DOMContentLoaded', () => {
-    //     const encodedRole = localStorage.getItem('auth_role');
-    //     if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
-    //     let rol = '';
-    //     try {
-    //         const decoded = atob(encodedRole);
-    //         const parts = decoded.split('|');
-    //         if (parts.length >= 1) rol = parts[0];
-    //     } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
-    //     if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
-
-    //     let inactivityTimer;
-    //     const maxInactivityMinutes = 30;
-    //     function resetInactivityTimer() {
-    //         clearTimeout(inactivityTimer);
-    //         inactivityTimer = setTimeout(() => {
-    //             alert("Su sesión ha expirado por inactividad.");
-    //             localStorage.removeItem('auth_role');
-    //             window.location.href = 'Panel de Control Operativo.html';
-    //         }, maxInactivityMinutes * 60 * 1000);
-    //     }
-    //     ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => window.addEventListener(event, resetInactivityTimer));
-    //     resetInactivityTimer();
-    //     if (rol === 'admin') console.warn("Modo Administrador activo.");
-    // });
     console.warn("🔓 Autenticación deshabilitada (modo standalone)");
 
     function debounce(fn, ms = 250) {
@@ -709,9 +684,6 @@
         return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
     }
 
-    /* ============================================================
-       ESTADO GLOBAL
-       ============================================================ */
     let rawData = [];
     let filteredData = [];
     let chartDaysInstance = null;
@@ -784,7 +756,6 @@
                 clientKeyCached = keys.find(k => _norm(k).includes('nombre') && _norm(k).includes('cliente')) || keys.find(k => _norm(k).includes('cliente')) || keys[14] || '';
                 fechaKeyCached = keys.find(k => _norm(k).includes('fecha') && _norm(k).includes('compromiso')) || keys.find(k => _norm(k).includes('fecha')) || keys[17] || '';
                 delayKeyCached = keys.find(k => _norm(k).includes('retraso') || _norm(k).includes('dias')) || keys[31] || '';
-                console.log('🗺️ Columnas mapeadas:', { colA: colAKeyCached, plaza: plazaKeyCached, colC: colCKeyCached, cliente: clientKeyCached, fecha: fechaKeyCached, retraso: delayKeyCached });
                 currentSortColumn = null;
                 currentSortDirection = 'asc';
                 initDashboard();
@@ -1450,416 +1421,6 @@
             icon.className = newTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
             localStorage.setItem('panel-theme', newTheme);
             try { window.parent.postMessage({ theme: newTheme }, '*'); } catch (e) {}
-        });
-    })();
-
-    document.addEventListener('DOMContentLoaded', () => {
-        initRipple();
-        const main = document.getElementById('dashboard-content');
-        if (main) {
-            let lastCount = -1;
-            const obs = new MutationObserver(() => {
-                if (!main.classList.contains('hidden') && rawData.length > 0 && rawData.length !== lastCount) {
-                    lastCount = rawData.length;
-                    setTimeout(() => applyTiltToCards(), 300);
-                }
-            });
-            obs.observe(main, { attributes: true, attributeFilter: ['class'] });
-        }
-        console.log('%c🎨 Banner maestro integrado: logo E, campana, tema en header, carga Excel',
-            'background:#DA291C;color:white;padding:6px 10px;border-radius:4px;font-weight:bold;font-size:12px;');
-    });
-    </script>
-
-    <script>
-    (function initAfectacionNotifications() {
-        'use strict';
-
-        const CONFIG = {
-            dashboardId: 'afectacion-mensual',
-            storageKey: 'notif_history_afectacion-mensual',
-            maxHistory: 50
-        };
-
-        const iconMap = {
-            danger:  { icon: 'fa-solid fa-triangle-exclamation', color: '#dc2626' },
-            warning: { icon: 'fa-solid fa-circle-exclamation',   color: '#f59e0b' },
-            info:    { icon: 'fa-solid fa-circle-info',          color: '#3b82f6' },
-            success: { icon: 'fa-solid fa-circle-check',         color: '#10b981' }
-        };
-
-        function loadHistory() {
-            try { return JSON.parse(localStorage.getItem(CONFIG.storageKey) || '[]'); }
-            catch (e) { return []; }
-        }
-
-        function saveHistory(history) {
-            try { localStorage.setItem(CONFIG.storageKey, JSON.stringify(history.slice(-CONFIG.maxHistory))); }
-            catch (e) {}
-        }
-
-        function formatRelativeTime(ts) {
-            const diff = Date.now() - ts;
-            const min = Math.floor(diff / 60000);
-            if (min < 1) return 'Ahora mismo';
-            if (min < 60) return `Hace ${min} min`;
-            const hr = Math.floor(min / 60);
-            if (hr < 24) return `Hace ${hr} h`;
-            const d = Math.floor(hr / 24);
-            return `Hace ${d} día${d > 1 ? 's' : ''}`;
-        }
-
-        function formatearFechaBonita(fechaStr) {
-            try {
-                const partes = fechaStr.split('-');
-                if (partes.length !== 3) return fechaStr;
-                const d = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
-                if (isNaN(d)) return fechaStr;
-                const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-                const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-                return `${dias[d.getDay()]} ${d.getDate()} ${meses[d.getMonth()]}`;
-            } catch (e) {
-                return fechaStr;
-            }
-        }
-
-        function injectBell() {
-            const slot = document.getElementById('notif-bell-container');
-            if (!slot) return;
-            if (document.getElementById('notif-bell')) return;
-
-            const bell = document.createElement('button');
-            bell.id = 'notif-bell';
-            bell.title = 'Notificaciones';
-            bell.setAttribute('aria-label', 'Notificaciones');
-            bell.innerHTML = `
-                <i class="fa-solid fa-bell"></i>
-                <span id="notif-badge" class="hidden">0</span>
-            `;
-            slot.appendChild(bell);
-
-            bell.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const panel = document.getElementById('notif-panel');
-                if (!panel) return;
-                if (panel.classList.contains('show')) window.closeNotifPanel();
-                else window.openNotifPanel();
-            });
-        }
-
-        function updateBadge() {
-            const history = loadHistory();
-            const unread = history.filter(n => !n.read).length;
-            const badge = document.getElementById('notif-badge');
-            if (!badge) return;
-            if (unread > 0) {
-                badge.textContent = unread > 99 ? '99+' : unread;
-                badge.classList.remove('hidden');
-                badge.classList.remove('badge-new');
-                void badge.offsetWidth;
-                badge.classList.add('badge-new');
-            } else {
-                badge.classList.add('hidden');
-            }
-            const countEl = document.getElementById('notif-panel-count');
-            if (countEl) countEl.textContent = `(${history.length})`;
-        }
-
-        function renderPanel() {
-            const history = loadHistory();
-            const body = document.getElementById('notif-panel-body');
-            if (!body) return;
-
-            if (history.length === 0) {
-                body.innerHTML = `
-                    <div class="notif-empty">
-                        <i class="fa-regular fa-bell-slash"></i>
-                        <div>Sin notificaciones</div>
-                        <div style="font-size:11px;margin-top:6px;opacity:0.7;">Se mostrarán aquí las alertas del dashboard</div>
-                    </div>
-                `;
-                return;
-            }
-
-            body.innerHTML = history.slice().reverse().map(n => {
-                const conf = iconMap[n.type] || iconMap.info;
-                const unreadClass = n.read ? '' : 'unread';
-                return `
-                    <div class="notif-item ${unreadClass} notif-${n.type}" data-id="${n.id}">
-                        <i class="${conf.icon} notif-item-icon" style="color:${conf.color};"></i>
-                        <div class="notif-item-body">
-                            <div class="notif-item-title">${n.title}</div>
-                            <div class="notif-item-message">${n.message}</div>
-                            <div class="notif-item-time">${formatRelativeTime(n.timestamp)}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function showToast(notif, duration = 6000) {
-            const container = document.getElementById('notif-toast-container');
-            if (!container) return;
-
-            const conf = iconMap[notif.type] || iconMap.info;
-            const toast = document.createElement('div');
-            toast.className = `notif-toast notif-${notif.type}`;
-            toast.innerHTML = `
-                <i class="${conf.icon} notif-toast-icon" style="color:${conf.color};"></i>
-                <div class="notif-toast-body">
-                    <div class="notif-toast-title">${notif.title}</div>
-                    <div class="notif-toast-message">${notif.message}</div>
-                </div>
-                <button class="notif-toast-close" aria-label="Cerrar">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            `;
-
-            const remove = () => {
-                toast.classList.add('removing');
-                setTimeout(() => toast.remove(), 350);
-            };
-
-            toast.querySelector('.notif-toast-close').onclick = remove;
-            container.appendChild(toast);
-
-            const toasts = container.querySelectorAll('.notif-toast:not(.removing)');
-            if (toasts.length > 3) {
-                toasts[0].classList.add('removing');
-                setTimeout(() => toasts[0].remove(), 350);
-            }
-
-            if (duration > 0) setTimeout(remove, duration);
-        }
-
-        function addNotifications(notifs) {
-            if (!notifs || notifs.length === 0) return;
-
-            const priority = { danger: 0, warning: 1, info: 2, success: 3 };
-            notifs.sort((a, b) => (priority[a.type] ?? 99) - (priority[b.type] ?? 99));
-
-            const now = Date.now();
-            const enriched = notifs.map((n, i) => ({
-                ...n,
-                id: `${CONFIG.dashboardId}-${now}-${i}`,
-                timestamp: now,
-                read: false
-            }));
-
-            const history = loadHistory();
-            saveHistory([...history, ...enriched]);
-
-            enriched.slice(0, 2).forEach((n, i) => {
-                setTimeout(() => showToast(n, n.duration || 6000), i * 300);
-            });
-
-            updateBadge();
-            renderPanel();
-        }
-
-        window.openNotifPanel = function() {
-            const panel = document.getElementById('notif-panel');
-            if (!panel) return;
-            renderPanel();
-            panel.classList.add('show');
-        };
-
-        window.closeNotifPanel = function() {
-            const panel = document.getElementById('notif-panel');
-            if (panel) panel.classList.remove('show');
-        };
-
-        window.markAllAsRead = function() {
-            const history = loadHistory();
-            history.forEach(n => n.read = true);
-            saveHistory(history);
-            updateBadge();
-            renderPanel();
-        };
-
-        window.clearNotifHistory = function() {
-            if (!confirm('¿Eliminar todas las notificaciones?')) return;
-            saveHistory([]);
-            updateBadge();
-            renderPanel();
-        };
-
-        function analyzeAndAlert() {
-            if (typeof rawData === 'undefined' || !rawData || rawData.length === 0) return;
-
-            const notifs = [];
-            const total = rawData.length;
-            if (total === 0) return;
-
-            if (colAKeyCached) {
-                const motivosMap = {};
-                rawData.forEach(r => {
-                    const motivo = String(r[colAKeyCached] || 'Sin clasificar').trim();
-                    motivosMap[motivo] = (motivosMap[motivo] || 0) + 1;
-                });
-                const topMotivos = Object.entries(motivosMap)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 3);
-
-                if (topMotivos.length > 0) {
-                    const lista = topMotivos.map(([motivo, count]) => {
-                        const pct = ((count / total) * 100).toFixed(1);
-                        return `<b>${pct}%</b> ${motivo} <span style="opacity:0.7;">(${count.toLocaleString()})</span>`;
-                    }).join('<br>');
-
-                    const pctTop1 = parseFloat(((topMotivos[0][1] / total) * 100).toFixed(1));
-                    const tipo = pctTop1 >= 40 ? 'danger' : (pctTop1 >= 25 ? 'warning' : 'info');
-
-                    notifs.push({
-                        type: tipo,
-                        title: `📊 Detalle de Afectación (Top 3)`,
-                        message: lista
-                    });
-                }
-            }
-
-            if (fechaKeyCached) {
-                const diasMap = {};
-                rawData.forEach(r => {
-                    const fecha = fechaToLocalString(r[fechaKeyCached]);
-                    if (!fecha) return;
-                    diasMap[fecha] = (diasMap[fecha] || 0) + 1;
-                });
-                const topDia = Object.entries(diasMap).sort((a, b) => b[1] - a[1])[0];
-
-                if (topDia) {
-                    const [fecha, count] = topDia;
-                    const pct = ((count / total) * 100).toFixed(1);
-                    const fechaFormateada = formatearFechaBonita(fecha);
-
-                    const otrosDias = Object.values(diasMap).filter(v => v !== count);
-                    const promedioOtros = otrosDias.length > 0 ? otrosDias.reduce((a, b) => a + b, 0) / otrosDias.length : 0;
-                    const ratio = promedioOtros > 0 ? count / promedioOtros : 0;
-
-                    let tipo = 'info';
-                    if (ratio >= 2) tipo = 'danger';
-                    else if (ratio >= 1.5) tipo = 'warning';
-
-                    let detalle = `<b>${count}</b> afectaciones (${pct}%)`;
-                    if (promedioOtros > 0) {
-                        detalle += `<br><span style="opacity:0.8;font-size:11px;">${ratio.toFixed(1)}× el promedio de los otros días (${promedioOtros.toFixed(0)})</span>`;
-                    }
-
-                    notifs.push({
-                        type: tipo,
-                        title: `📅 Día más crítico: ${fechaFormateada}`,
-                        message: detalle
-                    });
-                }
-            }
-
-            if (plazaKeyCached) {
-                const plazasMap = {};
-                rawData.forEach(r => {
-                    const plaza = String(r[plazaKeyCached] || 'N/D').trim();
-                    plazasMap[plaza] = (plazasMap[plaza] || 0) + 1;
-                });
-                const top3 = Object.entries(plazasMap)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 3);
-
-                if (top3.length > 0) {
-                    const medallas = ['🥇', '🥈', '🥉'];
-                    const lista = top3.map(([plaza, count], i) => {
-                        const pct = ((count / total) * 100).toFixed(1);
-                        return `${medallas[i]} <b>${pct}%</b> ${plaza} <span style="opacity:0.7;">(${count.toLocaleString()})</span>`;
-                    }).join('<br>');
-
-                    const pctTop1 = parseFloat(((top3[0][1] / total) * 100).toFixed(1));
-                    const tipo = pctTop1 >= 40 ? 'danger' : (pctTop1 >= 20 ? 'warning' : 'info');
-
-                    notifs.push({
-                        type: tipo,
-                        title: `🗺️ Top 3 Plazas Destino Afectadas`,
-                        message: lista
-                    });
-                }
-            }
-
-            if (colCKeyCached) {
-                const origenesMap = {};
-                rawData.forEach(r => {
-                    let origen = String(r[colCKeyCached] || 'N/D').trim();
-                    if (origen.includes(' - ')) origen = origen.split(' - ')[0].trim();
-                    else if (origen.includes('-')) origen = origen.split('-')[0].trim();
-                    origenesMap[origen] = (origenesMap[origen] || 0) + 1;
-                });
-                const top3Origen = Object.entries(origenesMap)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 3);
-
-                if (top3Origen.length > 0) {
-                    const medallas = ['🥇', '🥈', '🥉'];
-                    const lista = top3Origen.map(([origen, count], i) => {
-                        const pct = ((count / total) * 100).toFixed(1);
-                        return `${medallas[i]} <b>${pct}%</b> ${origen} <span style="opacity:0.7;">(${count.toLocaleString()})</span>`;
-                    }).join('<br>');
-
-                    const pctTop1 = parseFloat(((top3Origen[0][1] / total) * 100).toFixed(1));
-                    const tipo = pctTop1 >= 40 ? 'danger' : (pctTop1 >= 20 ? 'warning' : 'info');
-
-                    notifs.push({
-                        type: tipo,
-                        title: `📦 Top 3 Plazas Origen en Afectación`,
-                        message: lista
-                    });
-                }
-            }
-
-            notifs.push({
-                type: 'success',
-                title: `✅ ${total.toLocaleString()} registros cargados`,
-                message: `Afectación Mensual lista para analizar.`,
-                duration: 4000
-            });
-
-            addNotifications(notifs);
-        }
-
-        let lastAnalyzed = 0;
-
-        function tryAnalyze() {
-            if (typeof rawData !== 'undefined' && rawData.length > 0 && rawData.length !== lastAnalyzed) {
-                lastAnalyzed = rawData.length;
-                setTimeout(analyzeAndAlert, 800);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            injectBell();
-
-            document.addEventListener('click', (e) => {
-                const panel = document.getElementById('notif-panel');
-                const bell = document.getElementById('notif-bell');
-                if (panel && panel.classList.contains('show')) {
-                    if (!panel.contains(e.target) && bell && !bell.contains(e.target)) {
-                        window.closeNotifPanel();
-                    }
-                }
-            });
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') window.closeNotifPanel();
-            });
-
-            updateBadge();
-            renderPanel();
-
-            const dash = document.getElementById('dashboard-content');
-            if (dash) {
-                const obs = new MutationObserver(() => {
-                    if (!dash.classList.contains('hidden')) tryAnalyze();
-                });
-                obs.observe(dash, { attributes: true, attributeFilter: ['class'] });
-            }
-
-            console.log('%c🔔 Notificaciones Afectación Mensual: activas (Top motivos, día crítico, top destinos/orígenes)',
-                'color:#10b981;font-weight:bold;font-size:11px;');
         });
     })();
     </script>

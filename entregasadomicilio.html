@@ -238,7 +238,7 @@
 
         /* ============ MODO OSCURO GENERAL ============ */
         body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
-        body.dark-mode main,
+        body.dark-mode main { background-color: #0f172a !important; }
         body.dark-mode main > div > div,
         body.dark-mode .bg-white,
         body.dark-mode .bg-gray-50,
@@ -262,8 +262,21 @@
         body.dark-mode .bg-amber-50 { background-color: rgba(120, 53, 15, 0.3) !important; }
         body.dark-mode .bg-red-50\/40 { background-color: rgba(127, 29, 29, 0.25) !important; }
         body.dark-mode #map { background-color: #0f172a !important; }
+        
+        /* CORRECCIÓN: Botones de cancelar en los modales para modo oscuro */
         body.dark-mode #route-modal > div,
-        body.dark-mode #cp-modal > div { background: #1e293b !important; }
+        body.dark-mode #cp-modal > div { background: #1e293b !important; color: #e2e8f0 !important; }
+        body.dark-mode #cancel-route-modal,
+        body.dark-mode #cancel-cp-modal {
+            background-color: #334155 !important;
+            color: #f1f5f9 !important;
+            border: 1px solid #475569 !important;
+        }
+        body.dark-mode #cancel-route-modal:hover,
+        body.dark-mode #cancel-cp-modal:hover {
+            background-color: #475569 !important;
+        }
+
         body.dark-mode .shadow-sm,
         body.dark-mode .shadow-md,
         body.dark-mode .shadow-xl,
@@ -440,9 +453,9 @@
     </header>
 
     <!-- ============================================================
-         CONTENIDO DEL DASHBOARD
+         CONTENIDO DEL DASHBOARD (ANCHO ACTUALIZADO AL 90%)
          ============================================================ -->
-    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+    <main class="max-w-[90%] mx-auto px-4 py-6 flex-grow w-full space-y-6">
         <div id="dashboard-content" class="hidden space-y-6">
 
             <!-- Barra de Filtros -->

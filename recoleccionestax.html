@@ -629,7 +629,7 @@
         </div>
     </div>
 
-    <!-- Botón flotante para limpiar filtros (se mantiene por usabilidad en tablas) -->
+    <!-- Botón flotante para limpiar filtros -->
     <div id="floatingActionsContainer" style="position: fixed !important; bottom: 24px !important; right: 24px !important; z-index: 40; display: flex !important; align-items: center !important;">
         <div id="floatingFilterBtnContainer" class="hidden">
             <button onclick="resetFilters()" class="bg-gray-900 hover:bg-gray-800 text-white px-5 py-3 rounded-full shadow-2xl font-medium text-sm flex items-center space-x-2 border border-gray-700 transition">
@@ -725,11 +725,12 @@
             return keys.find(k => fragments.every(f => _norm(k).includes(_norm(f)))) || '';
         }
 
+        // VALIDACIÓN FLEXIBLE: Acepta cualquier archivo que contenga al menos Fecha y algún indicador de orden o ruta
         function validarArchivo(headers) {
             if (!headers || headers.length === 0) return false;
             const n = headers.map(_norm);
             const has = (...frags) => n.some(h => frags.every(f => h.includes(f)));
-            return has('or') && has('cp') && has('fecha');
+            return has('fecha') || has('ruta') || has('or');
         }
 
         function processExcelFile(file) {
@@ -753,21 +754,21 @@
                     const headers = json[0];
                     if (!validarArchivo(headers)) {
                         document.getElementById('skeletonLoader').classList.add('hidden');
-                        alert("El archivo no es válido. Debe contener las columnas: 'OR', 'CP' y 'Fecha de Programación'.");
+                        alert("El archivo no es válido. Se requiere al menos una columna de fecha, ruta u orden.");
                         return;
                     }
 
                     const keyFecha = findKey(headers, 'fecha', 'programa');
-                    const keyOR = findKey(headers, 'or');
-                    const keyCP = findKey(headers, 'cp');
+                    const keyOR = findKey(headers, 'or') || findKey(headers, 'orden');
+                    const keyCP = findKey(headers, 'cp') || findKey(headers, 'postal');
                     const keyRuta = findKey(headers, 'ruta');
                     const keyDireccion = findKey(headers, 'direccion');
-                    const keyCliente = findKey(headers, 'numero', 'cliente');
-                    const keyRazon = findKey(headers, 'razon', 'social');
-                    const keyCantidad = findKey(headers, 'cantidad');
+                    const keyCliente = findKey(headers, 'numero', 'cliente') || findKey(headers, 'cliente');
+                    const keyRazon = findKey(headers, 'razon', 'social') || findKey(headers, 'razon');
+                    const keyCantidad = findKey(headers, 'cantidad') || findKey(headers, 'items planeados');
                     const keyTipo = findKey(headers, 'tipo');
                     const keyExcepcion = findKey(headers, 'excepcion');
-                    const keyEstado = findKey(headers, 'estado');
+                    const keyEstado = findKey(headers, 'estado') || findKey(headers, 'estatus');
                     const keyRecibida = findKey(headers, 'recibida');
 
                     const idxOR = headers.findIndex(h => _norm(h) === _norm(keyOR));
@@ -788,13 +789,23 @@
 
                     rows.forEach(row => {
                         if (!row || row.every(c => c === '' || c === null)) return;
+                        
+                        let direccionStr = idxDireccion !== -1 ? String(row[idxDireccion] || '').trim() : '';
+                        let cpVal = idxCP !== -1 ? String(row[idxCP] || '').trim() : '';
+                        
+                        // Extracción inteligente de CP si no viene en columna dedicada pero está en la dirección
+                        if (!cpVal && direccionStr) {
+                            const matchCP = direccionStr.match(/CP\s*(\d{5})/i) || direccionStr.match(/\b(\d{5})\b/);
+                            if (matchCP) cpVal = matchCP[1];
+                        }
+
                         const item = {
                             Recibida: idxRecibida !== -1 ? row[idxRecibida] : null,
-                            OR: idxOR !== -1 ? row[idxOR] : '',
+                            OR: idxOR !== -1 ? row[idxOR] : (row[0] || 'S/N'),
                             Fecha: idxFecha !== -1 ? parseDateValue(row[idxFecha]) : '',
-                            Ruta: idxRuta !== -1 ? String(row[idxRuta] || '').trim() : '',
-                            CP: idxCP !== -1 ? String(row[idxCP] || '').trim() : '',
-                            Dirección: idxDireccion !== -1 ? String(row[idxDireccion] || '').trim() : '',
+                            Ruta: idxRuta !== -1 ? String(row[idxRuta] || '').trim() : 'GENERAL',
+                            CP: cpVal,
+                            Dirección: direccionStr,
                             "Número de Cliente": idxCliente !== -1 ? String(row[idxCliente] || '').trim() : '',
                             "Razón Social": idxRazon !== -1 ? String(row[idxRazon] || '').trim() : '',
                             Cantidad: idxCantidad !== -1 ? (Number(row[idxCantidad]) || 1) : 1,
@@ -806,7 +817,7 @@
                     });
 
                     const badge = document.getElementById('fileNameBadge');
-                    badge.textContent = "Seguimiento OR Recolección por Ruta";
+                    badge.textContent = file.name;
                     badge.classList.remove('hidden');
 
                     document.getElementById('skeletonLoader').classList.add('hidden');
@@ -1465,7 +1476,7 @@
             setTimeout(applyCardStagger, 80);
         }
 
-        // --- TEMA (AHORA EN EL BANNER) ---
+        // --- TEMA ---
         function aplicarTema(tema) {
             const icon = document.getElementById('theme-toggle-icon');
             if (tema === 'dark') { document.body.classList.add('dark-mode'); if (icon) icon.className = 'fa-solid fa-sun'; }

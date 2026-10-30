@@ -334,10 +334,10 @@
     </header>
 
     <!-- ============================================================
-         CONTENIDO PRINCIPAL DEL DASHBOARD
+         CONTENIDO PRINCIPAL DEL DASHBOARD (AJUSTADO AL 80%)
          ============================================================ -->
-    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
-        <div id="dashboard-content" class="hidden space-y-6 w-full">
+    <main id="main-container" class="w-[80%] max-w-[80%] mx-auto px-4 py-6 flex-grow space-y-6 hidden">
+        <div id="dashboard-content" class="space-y-6 w-full">
             <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100"><h3 class="text-lg font-bold text-gray-800 flex items-center"><i class="fa-solid fa-chart-pie estafeta-red-text mr-2"></i> Avance General</h3><div class="text-xs font-semibold text-gray-500">Total Registros: <span id="status-board-total" class="font-bold text-gray-800">0</span></div></div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -601,10 +601,6 @@
     </div>
 
     <script>
-        /* ============================================================
-           AUTENTICACIÓN ELIMINADA
-           ============================================================ */
-
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
             '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
         }[c]));
@@ -614,14 +610,10 @@
             return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
         }
 
-        /* 🔧 CRITERIO: "programada" = guía de exactamente 10 dígitos numéricos */
         function isProgramada(guideVal) {
             return /^\d{10}$/.test(String(guideVal ?? '').trim());
         }
 
-        /* ============================================================
-           ESTADO GLOBAL
-           ============================================================ */
         let rawData = [];
         let filteredData = [];
         let plazaKeyName = '';
@@ -796,16 +788,11 @@
                 });
             }
 
-            console.log('🗺️ Columnas mapeadas:', {
-                guia: guideKeyName, estatus: statusKeyName, ruta: routeKeyName,
-                garantia: garantiaKeyName, hora: eventTimeKeyName, coord: coordKeyName,
-                plaza: plazaKeyName, programada: progKeyName
-            });
-
             initSelections();
 
             document.getElementById('file-status').innerText = fileName;
-            document.getElementById('dashboard-content').classList.remove('hidden');
+            
+            document.getElementById('main-container').classList.remove('hidden');
             document.getElementById('floating-plaza-filter').classList.remove('hidden');
 
             renderPlazaFilterList();
@@ -868,7 +855,7 @@
         function toggleGpsMapSection() {
             isGpsMapCollapsed = !isGpsMapCollapsed;
             document.getElementById('gps-map-section-body').style.display = isGpsMapCollapsed ? 'none' : 'block';
-            document.getElementById('gps-map-collapse-icon').style.transform = isGpsMapCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+            document.getElementById('gps-map-collapse-icon').style.transform = isGpsMapCollapsed ? 'rotate(0deg)' : 'rotate(-90deg)';
             if (!isGpsMapCollapsed) {
                 prepareGpsMapEvents();
                 if (gpsMapInstance) gpsMapInstance.invalidateSize();
@@ -1897,7 +1884,6 @@
             });
             renderCards(filteredData);
             prepareDeadTimes();
-            // 🔔 Analizar y notificar
             if (!window._notifAnalyzed || window._notifAnalyzed !== rawData.length) {
                 window._notifAnalyzed = rawData.length;
                 setTimeout(analyzeAndNotify, 700);
@@ -2169,9 +2155,6 @@
             if (e.key === 'Escape') closeNotifPanel();
         });
 
-        /* ============================================================
-           ANALIZADOR DE REGLAS DE NEGOCIO
-           ============================================================ */
         function analyzeAndNotify() {
             if (!rawData || rawData.length === 0) return;
 
@@ -2179,7 +2162,6 @@
             const R = NOTIF_CONFIG.rules;
             const fmt = n => Number(n).toLocaleString('es-MX');
 
-            /* 1. Rutas con tiempo muerto extremo (> 60 min máx) */
             if (cachedDeadTimesList && cachedDeadTimesList.length > 0) {
                 const criticas = cachedDeadTimesList.filter(r => r.max >= R.deadTimeCriticoMax);
                 if (criticas.length > 0) {
@@ -2192,7 +2174,6 @@
                     });
                 }
 
-                /* 2. Rutas con tiempo muerto alto (avg ≥ 30 min) */
                 const alertas = cachedDeadTimesList.filter(r => r.avg >= R.deadTimeAltoAvg && r.max < R.deadTimeAltoMax);
                 if (alertas.length > 0) {
                     const nombres = alertas.slice(0, 3).map(r => r.ruta).join(', ');
@@ -2205,7 +2186,6 @@
                 }
             }
 
-            /* 3. Excepcionados */
             const excepcionados = rawData.filter(r => {
                 const st = String(r[statusKeyName] || '').toUpperCase();
                 return st.includes('EXCEPCION');
@@ -2225,7 +2205,6 @@
                 });
             }
 
-            /* 4. OR pendientes */
             const orPendientes = rawData.filter(r => {
                 const guide = String(r[guideKeyName] || '').toUpperCase().trim();
                 const st = String(r[statusKeyName] || '').toUpperCase();
@@ -2239,7 +2218,6 @@
                 });
             }
 
-            /* 5. Eventos fuera de horario */
             if (eventTimeKeyName) {
                 let fueraHorario = 0;
                 rawData.forEach(r => {
@@ -2260,7 +2238,6 @@
                 }
             }
 
-            /* 6. Ruta con mayor tiempo muerto total */
             if (cachedDeadTimesList && cachedDeadTimesList.length > 0) {
                 const top = [...cachedDeadTimesList].sort((a, b) => b.total - a.total).slice(0, R.topRutasCount);
                 if (top.length > 0) {
@@ -2276,7 +2253,6 @@
                 }
             }
 
-            /* 7. Rutas sin actividad reciente */
             if (eventTimeKeyName && cachedCronoList) {
                 const now = Date.now();
                 let maxTimeGlobal = 0;
@@ -2318,7 +2294,6 @@
                 }
             }
 
-            /* 8. Distribución de estatus */
             const confirmados = rawData.filter(r => {
                 const st = String(r[statusKeyName] || '').toUpperCase();
                 return st.includes('CONFIRMAD');
@@ -2335,7 +2310,6 @@
                 message: `✅ ${fmt(confirmados)} (${pctConf.toFixed(1)}%) · 🚨 ${fmt(excepcionados)} (${pctExcep.toFixed(1)}%) · 📦 ${fmt(orPendientes)} OR · ⏳ ${fmt(pendientes)} (${pctPend.toFixed(1)}%)`
             });
 
-            /* 9. Top 2 plazas con mayor tiempo muerto promedio */
             if (eventTimeKeyName && plazaKeyName) {
                 const plazasMap = {};
                 rawData.forEach(r => {
@@ -2371,7 +2345,6 @@
                 }
             }
 
-            /* 10. Carga exitosa */
             notifs.push({
                 type: 'success',
                 title: `✅ ${fmt(rawData.length)} registros cargados`,
@@ -2382,9 +2355,6 @@
             addNotifications(notifs);
         }
 
-        /* ============================================================
-           INICIALIZACIÓN
-           ============================================================ */
         document.addEventListener('DOMContentLoaded', () => {
             injectBell();
             initTema();
@@ -2394,9 +2364,6 @@
             injectBell();
         });
 
-        /* ============================================================
-           TEMA (MODO OSCURO / CLARO)
-           ============================================================ */
         function aplicarTema(tema) {
             const body = document.body;
             const icon = document.getElementById('theme-toggle-icon');
@@ -2434,9 +2401,6 @@
             }
         }
 
-        /* ============================================================
-           EFECTOS VISUALES EXTRA
-           ============================================================ */
         function animateNumber(el, to, duration = 800) {
             if (!el) return;
             const from = 0;
@@ -2621,7 +2585,7 @@
             initRipple();
             patchViewTransitions();
 
-            const dash = document.getElementById('dashboard-content');
+            const dash = document.getElementById('main-container');
             if (!dash) return;
 
             let lastCount = -1;

@@ -189,28 +189,6 @@
             color: var(--subtext-color);
         }
 
-        /* --- BOTÓN LIMPIAR --- */
-        .clear-btn {
-            background: var(--btn-upload-bg);
-            border: 1px solid var(--btn-upload-border);
-            color: var(--text-color);
-            padding: 10px 16px;
-            border-radius: 10px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(4px);
-        }
-
-        .clear-btn:hover {
-            background: var(--btn-upload-hover);
-            transform: translateY(-1px);
-        }
-
         /* --- BOTÓN DE MODO OSCURO/CLARO EN EL BANNER --- */
         #theme-toggle {
             background: var(--btn-upload-bg);
@@ -418,7 +396,7 @@
             <div class="brand-logo">E</div>
             <div class="brand-titles">
                 <h1 class="brand-title">Desempeño TR2</h1>
-                <p class="brand-subtitle">Torre de Control & Operación Logística</p>
+                <p class="brand-subtitle">Monitoreo Carga de Gasolina</p>
             </div>
         </div>
 
@@ -435,12 +413,6 @@
                 </div>
             </div>
 
-            <!-- Botón Limpiar -->
-            <button id="header-reset-btn" class="clear-btn" title="Limpiar datos">
-                <i class="fa-solid fa-trash-can"></i>
-                <span>Limpiar</span>
-            </button>
-
             <!-- Campana de Notificaciones (se inyecta por JS) -->
             <div id="notif-bell-slot"></div>
 
@@ -452,7 +424,7 @@
         </div>
     </header>
 
-    <main id="dashboard-container" class="max-w-7xl mx-auto px-4 py-6 space-y-6 hidden">
+    <main id="dashboard-container" class="max-w-[85%] mx-auto px-4 py-6 space-y-6 hidden">
 
         <div class="bg-white p-4 rounded-xl shadow-sm flex flex-wrap gap-4 items-center justify-between">
             <div class="flex flex-wrap gap-3 items-center w-full">
@@ -620,24 +592,11 @@
         </div>
     </main>
 
-    <div id="welcome-state" class="max-w-4xl mx-auto px-4 py-20 text-center hidden">
-        <div class="bg-white p-10 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center justify-center space-y-4">
-            <div class="w-20 h-20 bg-[#DA291C]/10 text-[#DA291C] rounded-full flex items-center justify-center text-3xl shadow-inner">
-                <i class="fa-solid fa-file-excel"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800 hidden">Ningún archivo cargado</h2>
-            <p class="text-sm text-slate-500 max-w-md hidden">Por favor, carga o arrastra un archivo de Excel compatible.</p>
-        </div>
-    </div>
-
+    <!-- Botón flotante para limpiar filtros -->
     <button id="floatingClearFiltersBtn" onclick="resetAllFilters()" style="position: fixed; bottom: 25px; right: 25px; background-color: #1e293b; color: #ffffff; border: none; padding: 12px 22px; border-radius: 30px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); z-index: 9999; transition: background-color 0.2s ease, transform 0.2s ease;" onmouseover="this.style.backgroundColor='#0f172a'" onmouseout="this.style.backgroundColor='#1e293b'">
         <i class="fa-solid fa-rotate-left"></i>
         <span id="floatingClearFiltersText">Limpiar Filtros (0)</span>
     </button>
-
-    <footer class="bg-white border-t border-slate-200 mt-12 py-6 text-center text-xs text-slate-500">
-        <p class="hidden">Dashboard Analítico Estafeta</p>
-    </footer>
 
     <!-- Contenedores del sistema de notificaciones -->
     <div id="notif-toast-container"></div>
@@ -783,38 +742,6 @@ function resetAllFilters() {
     applyFilters();
 }
 
-document.getElementById('header-reset-btn').addEventListener('click', () => {
-    rawData = [];
-    filteredData = [];
-    selectedRutas.clear();
-    allAvailableRutas = [];
-    fileInput.value = '';
-    currentPage = 1;
-    document.getElementById('file-name').textContent = 'Cargar Excel';
-    document.getElementById('dashboard-container').classList.add('hidden');
-    document.getElementById('welcome-state').classList.add('hidden');
-    document.getElementById('filter-regional').innerHTML = '<option value="">Todas las Regionales</option>';
-    document.getElementById('filter-plaza').innerHTML = '<option value="">Todas las Plazas</option>';
-    document.getElementById('filter-vehiculo').innerHTML = '<option value="">Todos los Tipos de Vehículo</option>';
-    document.getElementById('filter-cumplimiento').innerHTML = '<option value="">Todo Cumplimiento</option>';
-    document.getElementById('table-search').value = '';
-    document.getElementById('sort-rendimiento-real').value = '';
-    document.getElementById('rutas-checkboxes-container').innerHTML = `<div class="text-xs text-slate-400">Sin datos cargados</div>`;
-    document.getElementById('rutas-header-text').textContent = 'Rutas (Todas)';
-    document.getElementById('kpi-rendimiento-objetivo').textContent = '0.00 Km/L';
-    document.getElementById('kpi-recorrido').textContent = '0 Km';
-    document.getElementById('kpi-perdida').textContent = '$0.00';
-    document.getElementById('kpi-rendimiento-real').textContent = '0.00 Km/L';
-    Object.values(charts).forEach(chart => chart.destroy());
-    charts = {};
-    document.getElementById('tbody-rendimiento-x-ruta').innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-slate-400">Sin datos cargados</td></tr>`;
-    document.getElementById('contador-rendimiento-ruta').textContent = '0 registros';
-    document.getElementById('table-body').innerHTML = `<tr><td colspan="10" class="px-3 py-4 text-center text-slate-400">Sin datos cargados</td></tr>`;
-    document.getElementById('table-count').textContent = 'Mostrando 0 de 0 registros';
-    document.getElementById('pagination-controls').innerHTML = '';
-    updateFloatingClearFiltersButton();
-});
-
 const rutasHeader = document.getElementById('rutas-header');
 const rutasListBox = document.getElementById('rutas-list-box');
 rutasHeader.addEventListener('click', (e) => {
@@ -842,7 +769,7 @@ function handleFile(file) {
 
             if (!validarArchivo(headers)) {
                 alert('El archivo cargado no contiene la estructura o encabezados requeridos ("Estatus", "Estado", "Recorrido").');
-                document.getElementById('header-reset-btn').click();
+                fileInput.value = '';
                 return;
             }
 
@@ -873,7 +800,6 @@ function handleFile(file) {
             rawData = [];
         }
 
-        document.getElementById('welcome-state').classList.add('hidden');
         document.getElementById('dashboard-container').classList.remove('hidden');
         fileInput.value = '';
         initializeDashboard();
@@ -1117,9 +1043,6 @@ function updateKPIs() {
 
     const rendObjAvg = countRendObj ? sumRendObj / countRendObj : 0;
     const rendRealAvg = countRendReal ? sumRendReal / countRendReal : 0;
-
-    if (skippedRecorrido > 0) console.warn(`⚠️ ${skippedRecorrido} filas con Recorrido no numérico`);
-    if (skippedPerdida > 0) console.warn(`⚠️ ${skippedPerdida} filas con Pérdida no numérica`);
 
     const elObj = document.getElementById('kpi-rendimiento-objetivo');
     elObj.textContent = '0.00 Km/L';
@@ -1446,8 +1369,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         obs.observe(dash, { attributes: true, attributeFilter: ['class'] });
     }
-    console.log('%c🎨 Efectos TR2: ripple, dark-mode, gradiente, cascada, glow, tilt, contadores, barras',
-        'background:#DA291C;color:white;padding:6px 10px;border-radius:4px;font-weight:bold;font-size:12px;');
 });
     </script>
 
@@ -1603,9 +1524,6 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPanel();
         };
 
-        /* ============================================================
-           ANÁLISIS DE DATOS → 7 TOASTS PERSONALIZADOS
-           ============================================================ */
         function analyzeAndAlert() {
             if (typeof filteredData === 'undefined' || !filteredData || filteredData.length === 0) return;
             const data = filteredData;
@@ -1615,15 +1533,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const notifs = [];
             const fmtMoney = v => '$' + v.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-            const recKey = (typeof recorridoKey !== 'undefined' && recorridoKey) ? recorridoKey : 'Recorrido';
             const perdKey = (typeof perdidaKey !== 'undefined' && perdidaKey) ? perdidaKey : 'Perdida economica';
-            const rutasK = (typeof rutasKey !== 'undefined' && rutasKey) ? rutasKey : '';
-            const plazaK = (typeof plazaKey !== 'undefined' && plazaKey) ? plazaKey : 'Plaza';
-            const yKey = (typeof colYKey !== 'undefined' && colYKey) ? colYKey : 'Rendimiento Objetivo';
-            const zKey = (typeof colZKey !== 'undefined' && colZKey) ? colZKey : 'Rendimiento Real';
             const pNum = (typeof parseNumero === 'function') ? parseNumero : (v => { const n = Number(v); return isNaN(n) ? 0 : n; });
 
-            /* TOAST 1: PÉRDIDA ECONÓMICA TOTAL */
             let totalPerdida = 0;
             data.forEach(r => { totalPerdida += pNum(r[perdKey]); });
             if (totalPerdida > 0) {
@@ -1639,7 +1551,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            /* TOAST 2: % CUMPLIMIENTO */
             const cumplMap = { 'Cumple': 0, 'No Cumple': 0, 'Mala Captura': 0, 'Otro': 0 };
             data.forEach(r => {
                 const c = String(r['Cumplimiento'] || '').trim().toUpperCase();
@@ -1649,182 +1560,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 else cumplMap['Otro']++;
             });
             const pctCumple = ((cumplMap['Cumple'] / total) * 100).toFixed(1);
-            const pctNoCumple = ((cumplMap['No Cumple'] / total) * 100).toFixed(1);
-            const pctMala = ((cumplMap['Mala Captura'] / total) * 100).toFixed(1);
 
             let tipoCump = 'info';
             if (parseFloat(pctCumple) >= 80) tipoCump = 'success';
             else if (parseFloat(pctCumple) >= 60) tipoCump = 'warning';
             else tipoCump = 'danger';
 
-            let msgCump = `<b>${pctCumple}%</b> Cumple (${cumplMap['Cumple'].toLocaleString()})<br>`;
-            if (cumplMap['No Cumple'] > 0) msgCump += `<b>${pctNoCumple}%</b> No Cumple (${cumplMap['No Cumple'].toLocaleString()})<br>`;
-            if (cumplMap['Mala Captura'] > 0) msgCump += `<b>${pctMala}%</b> Mala Captura (${cumplMap['Mala Captura'].toLocaleString()})`;
-
             notifs.push({
                 type: tipoCump,
                 title: `✅ % Cumplimiento de Rendimiento`,
-                message: msgCump
+                message: `<b>${pctCumple}%</b> Cumple (${cumplMap['Cumple'].toLocaleString()})`
             });
 
-            /* TOAST 3: TOP 3 RUTAS CON PEOR RENDIMIENTO */
-            if (rutasK && yKey && zKey) {
-                const rutasMap = {};
-                data.forEach(r => {
-                    const ruta = String(r[rutasK] || 'N/D').trim();
-                    if (!rutasMap[ruta]) rutasMap[ruta] = { real: 0, obj: 0, count: 0 };
-                    const real = pNum(r[zKey]);
-                    const obj = pNum(r[yKey]);
-                    if (real > 0) rutasMap[ruta].real += real;
-                    if (obj > 0) rutasMap[ruta].obj += obj;
-                    rutasMap[ruta].count++;
-                });
-                const peores = Object.entries(rutasMap)
-                    .map(([ruta, v]) => {
-                        const promReal = v.count > 0 ? v.real / v.count : 0;
-                        const promObj = v.count > 0 ? v.obj / v.count : 0;
-                        const desviacion = promObj > 0 ? ((promObj - promReal) / promObj) * 100 : 0;
-                        return { ruta, promReal, promObj, desviacion, count: v.count };
-                    })
-                    .filter(r => r.desviacion > 0 && r.count >= 2)
-                    .sort((a, b) => b.desviacion - a.desviacion)
-                    .slice(0, 3);
-
-                if (peores.length > 0) {
-                    const medallas = ['🥇', '🥈', '🥉'];
-                    const lista = peores.map((r, i) => {
-                        return `${medallas[i]} <b>-${r.desviacion.toFixed(1)}%</b> ${r.ruta} <span style="opacity:0.7;">(${r.promReal.toFixed(2)} vs ${r.promObj.toFixed(2)} Km/L)</span>`;
-                    }).join('<br>');
-                    const tipo = peores[0].desviacion >= 20 ? 'danger' : (peores[0].desviacion >= 10 ? 'warning' : 'info');
-
-                    notifs.push({
-                        type: tipo,
-                        title: `🚨 Top 3 Rutas con Peor Rendimiento`,
-                        message: lista
-                    });
-                }
-            }
-
-            /* TOAST 4: TOP 3 PLAZAS CON MÁS PÉRDIDA ECONÓMICA */
-            if (plazaK && totalPerdida > 0) {
-                const plazasMap = {};
-                data.forEach(r => {
-                    const plaza = String(r[plazaK] || 'N/D').trim();
-                    if (!plazasMap[plaza]) plazasMap[plaza] = 0;
-                    plazasMap[plaza] += pNum(r[perdKey]);
-                });
-                const topPlazas = Object.entries(plazasMap)
-                    .filter(([_, v]) => v > 0)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 3);
-
-                if (topPlazas.length > 0) {
-                    const medallas = ['🥇', '🥈', '🥉'];
-                    const lista = topPlazas.map(([plaza, perdida], i) => {
-                        const pct = ((perdida / totalPerdida) * 100).toFixed(1);
-                        return `${medallas[i]} <b>${fmtMoney(perdida)}</b> ${plaza} <span style="opacity:0.7;">(${pct}%)</span>`;
-                    }).join('<br>');
-                    const pctTop1 = (topPlazas[0][1] / totalPerdida) * 100;
-                    const tipo = pctTop1 >= 40 ? 'danger' : (pctTop1 >= 20 ? 'warning' : 'info');
-
-                    notifs.push({
-                        type: tipo,
-                        title: `🗺️ Top 3 Plazas con Más Pérdida`,
-                        message: lista
-                    });
-                }
-            }
-
-            /* TOAST 5: TOP 3 VEHÍCULOS CON PEOR RENDIMIENTO */
-            if (yKey && zKey) {
-                const vehiculosMap = {};
-                data.forEach(r => {
-                    const veh = String(r['Tipo de Vehiculo'] || r['Vehiculo'] || 'N/D').trim();
-                    if (veh === 'N/D' || veh === '') return;
-                    if (!vehiculosMap[veh]) vehiculosMap[veh] = { real: 0, obj: 0, count: 0 };
-                    const real = pNum(r[zKey]);
-                    const obj = pNum(r[yKey]);
-                    if (real > 0) vehiculosMap[veh].real += real;
-                    if (obj > 0) vehiculosMap[veh].obj += obj;
-                    vehiculosMap[veh].count++;
-                });
-                const peoresVeh = Object.entries(vehiculosMap)
-                    .map(([veh, v]) => {
-                        const promReal = v.count > 0 ? v.real / v.count : 0;
-                        const promObj = v.count > 0 ? v.obj / v.count : 0;
-                        const desviacion = promObj > 0 ? ((promObj - promReal) / promObj) * 100 : 0;
-                        return { veh, promReal, promObj, desviacion, count: v.count };
-                    })
-                    .filter(v => v.desviacion > 0 && v.count >= 2)
-                    .sort((a, b) => b.desviacion - a.desviacion)
-                    .slice(0, 3);
-
-                if (peoresVeh.length > 0) {
-                    const medallas = ['🥇', '🥈', '🥉'];
-                    const lista = peoresVeh.map((v, i) => {
-                        return `${medallas[i]} <b>-${v.desviacion.toFixed(1)}%</b> ${v.veh} <span style="opacity:0.7;">(${v.promReal.toFixed(2)} vs ${v.promObj.toFixed(2)} Km/L)</span>`;
-                    }).join('<br>');
-                    const tipo = peoresVeh[0].desviacion >= 20 ? 'danger' : (peoresVeh[0].desviacion >= 10 ? 'warning' : 'info');
-
-                    notifs.push({
-                        type: tipo,
-                        title: `🚛 Top 3 Vehículos con Peor Rendimiento`,
-                        message: lista
-                    });
-                }
-            }
-
-            /* TOAST 6: BRECHA RENDIMIENTO REAL vs OBJETIVO */
-            if (yKey && zKey) {
-                let sumReal = 0, cntReal = 0, sumObj = 0, cntObj = 0;
-                data.forEach(r => {
-                    const real = pNum(r[zKey]);
-                    const obj = pNum(r[yKey]);
-                    if (real > 0) { sumReal += real; cntReal++; }
-                    if (obj > 0) { sumObj += obj; cntObj++; }
-                });
-                const promReal = cntReal > 0 ? sumReal / cntReal : 0;
-                const promObj = cntObj > 0 ? sumObj / cntObj : 0;
-                if (promObj > 0 && promReal > 0) {
-                    const brecha = ((promObj - promReal) / promObj) * 100;
-                    let tipo = 'success';
-                    if (brecha >= 15) tipo = 'danger';
-                    else if (brecha >= 8) tipo = 'warning';
-                    else if (brecha > 0) tipo = 'info';
-
-                    let msg = `Real: <b>${promReal.toFixed(2)}</b> Km/L vs Objetivo: <b>${promObj.toFixed(2)}</b> Km/L<br>`;
-                    if (brecha > 0) {
-                        msg += `<span style="color:${brecha >= 15 ? '#dc2626' : (brecha >= 8 ? '#f59e0b' : '#6b7280')};font-weight:700;">-${brecha.toFixed(1)}%</span> por debajo del objetivo`;
-                    } else if (brecha < 0) {
-                        msg += `<span style="color:#10b981;font-weight:700;">+${Math.abs(brecha).toFixed(1)}%</span> por encima del objetivo 🎉`;
-                    } else {
-                        msg += `En el objetivo exacto`;
-                    }
-
-                    notifs.push({
-                        type: tipo,
-                        title: `⚖️ Brecha de Rendimiento`,
-                        message: msg
-                    });
-                }
-            }
-
-            /* TOAST 7: CARGA EXITOSA */
             notifs.push({
                 type: 'success',
                 title: `✅ ${total.toLocaleString()} registros procesados`,
-                message: `Desempeño TR2 listo para analizar.`,
+                message: `Monitoreo Carga de Gasolina listo para analizar.`,
                 duration: 4000
             });
 
             addNotifications(notifs);
         }
 
-        /* ============================================================
-           DETECCIÓN DE CARGA + INIT
-           ============================================================ */
         let lastAnalyzed = 0;
-
         function tryAnalyze() {
             if (typeof filteredData !== 'undefined' && filteredData.length > 0 && filteredData.length !== lastAnalyzed) {
                 lastAnalyzed = filteredData.length;
@@ -1834,21 +1592,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.addEventListener('DOMContentLoaded', () => {
             injectBell();
-
-            document.addEventListener('click', (e) => {
-                const panel = document.getElementById('notif-panel');
-                const bell = document.getElementById('notif-bell');
-                if (panel && panel.classList.contains('show')) {
-                    if (!panel.contains(e.target) && bell && !bell.contains(e.target)) {
-                        window.closeNotifPanel();
-                    }
-                }
-            });
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') window.closeNotifPanel();
-            });
-
             updateBadge();
             renderPanel();
 
@@ -1859,9 +1602,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 obs.observe(dash, { attributes: true, attributeFilter: ['class'] });
             }
-
-            console.log('%c🔔 Notificaciones Desempeño TR2: activas (pérdida, cumplimiento, top rutas/plazas/vehículos, brecha)',
-                'color:#10b981;font-weight:bold;font-size:11px;');
         });
     })();
     </script>

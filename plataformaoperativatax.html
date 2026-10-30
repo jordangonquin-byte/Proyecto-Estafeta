@@ -706,7 +706,8 @@
         </div>
     </header>
 
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+    <!-- Contenedor principal ajustado al 85% de anchura -->
+    <main class="flex-grow max-w-[85%] w-full mx-auto px-4 py-6 space-y-6">
 
         <div id="skeletonLoader" class="hidden space-y-6">
             <div class="bg-white p-4 rounded-xl card-shadow"><div class="skeleton h-10"></div></div>
@@ -956,10 +957,6 @@
     </div>
 
     <script>
-        /* ============================================================
-           AUTENTICACIÓN ELIMINADA
-           ============================================================ */
-
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
             '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
         }[c]));
@@ -2171,8 +2168,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             initTema();
             initRipple();
-            injectBell();      // 🔔 Inyectar campana en el header
-            updateBadge();     // Mostrar badge si hay notificaciones previas en localStorage
+            injectBell();      
+            updateBadge();     
         });
     </script>
 </body>
