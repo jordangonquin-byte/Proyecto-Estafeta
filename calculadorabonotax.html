@@ -201,7 +201,7 @@
         }
 
         /* ============================================================
-           RESTO DE ESTILOS (sin cambios funcionales)
+           RESTO DE ESTILOS
            ============================================================ */
 
         .dashboard-container {
@@ -760,6 +760,9 @@
         }
         .kpi-card.kpi-gray .kpi-value { color: #475569 !important; }
 
+        /* ============ ESTADO INICIAL (antes de cargar archivo) ============ */
+        #mainContent { display: none; }
+
         /* ============ MODO OSCURO ============ */
         body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
         body.dark-mode .schema-card,
@@ -828,7 +831,7 @@
 <body>
 
     <!-- ============================================================
-         BANNER MAESTRO (reemplaza al top-banner anterior)
+         BANNER MAESTRO
          ============================================================ -->
     <header class="master-header">
         <div class="header-brand">
@@ -857,7 +860,10 @@
         </div>
     </header>
 
-    <main class="dashboard-container">
+    <!-- ============================================================
+         CONTENIDO OCULTO HASTA CARGAR ARCHIVO
+         ============================================================ -->
+    <main class="dashboard-container" id="mainContent">
         <div class="schemas-wrapper">
             <div class="schema-card">
                 <div class="schema-title title-39">Esquema 39</div>
@@ -1018,36 +1024,8 @@
     <script>
         /* ============================================================
            AUTENTICACIÓN — DESACTIVADA TEMPORALMENTE
-           Para reactivar: descomenta el bloque y elimina el console.log final.
            ============================================================ */
         window.addEventListener('DOMContentLoaded', () => {
-            // --- AUTENTICACIÓN DESACTIVADA TEMPORALMENTE ---
-            // const encodedRole = localStorage.getItem('auth_role');
-            // if (!encodedRole) { window.location.href = 'Panel de Control Operativo.html'; return; }
-            // let rol = '';
-            // try {
-            //     const decoded = atob(encodedRole);
-            //     const parts = decoded.split('|');
-            //     if (parts.length >= 1) rol = parts[0];
-            // } catch (e) { window.location.href = 'Panel de Control Operativo.html'; return; }
-            // if (!rol) { window.location.href = 'Panel de Control Operativo.html'; return; }
-            //
-            // let inactivityTimer;
-            // const maxInactivityMinutes = 30;
-            // function resetInactivityTimer() {
-            //     clearTimeout(inactivityTimer);
-            //     inactivityTimer = setTimeout(() => {
-            //         alert("Su sesión ha expirado por inactividad.");
-            //         localStorage.removeItem('auth_role');
-            //         window.location.href = 'Panel de Control Operativo.html';
-            //     }, maxInactivityMinutes * 60 * 1000);
-            // }
-            // ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
-            //     window.addEventListener(event, resetInactivityTimer);
-            // });
-            // resetInactivityTimer();
-            // if (rol === 'admin') console.warn("Modo Administrador activo.");
-
             console.log("🔓 Modo sin autenticación activo.");
         });
 
@@ -1101,6 +1079,7 @@
                             alert('El archivo cargado no contiene la estructura o encabezados requeridos ("Dueño Ruta", "Clasificación Rutas TR2", "Pickup Size").');
                             document.getElementById('excelFile').value = '';
                             fileNameDisplay.textContent = 'Arrastra o clic aquí';
+                            document.getElementById('mainContent').style.display = 'none';
                             document.getElementById('dynamicTableContainer2').innerHTML = '<p style="color: red; text-align: center;">El archivo no cuenta con los encabezados válidos.</p>';
                             document.getElementById('concentradoTableContainer').innerHTML = '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">Cargue un archivo Excel válido.</p>';
                             document.getElementById('filtersBar2').style.display = 'none';
@@ -1118,7 +1097,10 @@
                         cachedKeys = getKeys(globalRawData);
                         setupInitialFiltersAndTable(globalRawData, 2);
                         renderConcentradoTable(globalRawData);
+                        // ✅ MOSTRAR EL CONTENIDO SOLO CUANDO HAY DATOS VÁLIDOS
+                        document.getElementById('mainContent').style.display = 'block';
                     } else {
+                        document.getElementById('mainContent').style.display = 'none';
                         document.getElementById('dynamicTableContainer2').innerHTML = '<p style="color: red; text-align: center;">El archivo Excel no contiene datos legibles.</p>';
                         document.getElementById('concentradoTableContainer').innerHTML = '<p style="color: red; text-align: center;">El archivo Excel no contiene datos legibles.</p>';
                         document.getElementById('filtersBar2').style.display = 'none';
@@ -1130,6 +1112,7 @@
                 reader.readAsArrayBuffer(file);
             } else {
                 fileNameDisplay.textContent = 'Arrastra o clic aquí';
+                document.getElementById('mainContent').style.display = 'none';
                 document.getElementById('filtersBar2').style.display = 'none';
                 document.getElementById('kpiContainer2').style.display = 'none';
                 document.getElementById('floatingFilterBtn').style.display = 'none';
@@ -1493,11 +1476,6 @@
             const prodColumn = headers.find(h => _norm(h).includes('productividad'));
             const efiColumn = findEfficiencyColumn(headers);
 
-            console.log('🔍 Detección de columnas para promedios:', {
-                productividad: prodColumn || '(no encontrada)',
-                eficiencia: efiColumn || '(no encontrada)'
-            });
-
             const totalPages = Math.ceil(data.length / rowsPerPage) || 1;
             if (currentPage > totalPages) currentPage = totalPages;
             if (currentPage < 1) currentPage = 1;
@@ -1589,12 +1567,6 @@
 
             const avgProd = countProd > 0 ? (sumProd / countProd) : 0;
             const avgEfi = countEfi > 0 ? (sumEfi / countEfi) : 0;
-
-            console.log(`📊 Promedios (${isFiltered ? 'filtrado: ' + selectedOperator : 'general'}):`, {
-                productividad: avgProd.toFixed(2),
-                eficiencia: avgEfi.toFixed(2) + '%',
-                filas: data.length
-            });
 
             const kpiProdEl = document.getElementById('kpiProd2');
             kpiProdEl.textContent = '0.00';
