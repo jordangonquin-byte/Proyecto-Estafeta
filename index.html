@@ -11,7 +11,7 @@
            ============================================================ */
         :root {
             --estafeta-red: #DA291C;
-            --sidebar-width-collapsed: 60px; /* Ancho cuando está oculto (solo el botón) */
+            --sidebar-width-collapsed: 70px; /* Ajustado ligeramente para acomodar el logo */
             --sidebar-width-expanded: 260px;
             --transition-speed: 0.3s;
             --ease-cubic: cubic-bezier(0.4, 0, 0.2, 1);
@@ -70,33 +70,60 @@
             width: var(--sidebar-width-expanded);
         }
 
-        /* Header del sidebar (contiene el botón de menú) */
+        /* Header del sidebar (contiene el logo 'E' de Estafeta y el reloj) */
         .sidebar-header {
             height: 64px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             flex-shrink: 0;
             border-bottom: 1px solid var(--border-color);
-            padding: 0;
+            padding: 0 12px;
+            background-color: rgba(0, 0, 0, 0.15);
         }
 
-        .menu-toggle-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
+        /* Estilo para el botón con la 'E' corporativa de Estafeta */
+        .brand-logo-btn {
+            background-color: var(--estafeta-red);
+            color: #ffffff;
+            font-weight: 900;
+            font-size: 22px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.3rem;
-            transition: background var(--transition-speed) ease;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            flex-shrink: 0;
         }
 
-        .menu-toggle-btn:hover {
-            background-color: var(--hover-bg);
+        .brand-logo-btn:hover {
+            background-color: #b81810;
+            transform: scale(1.05);
+        }
+
+        /* Contenedor del reloj en el header (se oculta colapsado, aparece expandido) */
+        .sidebar-header-clock {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            padding-right: 5px;
+        }
+
+        .sidebar.expanded .sidebar-header-clock {
+            opacity: 1;
+            visibility: visible;
+            transition-delay: 0.1s;
         }
 
         .sidebar-nav {
@@ -216,6 +243,27 @@
         .iframe-container iframe.active {
             display: block;
         }
+
+        /* Estilos del Reloj y Fecha */
+        .datetime-display {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            font-size: 0.8rem;
+            line-height: 1.2;
+        }
+
+        .datetime-display .time {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .datetime-display .date {
+            font-size: 0.7rem;
+            text-transform: capitalize;
+            color: var(--text-secondary);
+        }
     </style>
 </head>
 <body>
@@ -224,9 +272,17 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <button class="menu-toggle-btn" id="menuToggleBtn" aria-label="Alternar menú">
-                    <i class="fa-solid fa-bars"></i>
+                <!-- Botón con la 'E' de Estafeta que también expande o colapsa el menú -->
+                <button class="brand-logo-btn" id="menuToggleBtn" title="Menú / Panel Estafeta" aria-label="Alternar menú">
+                    E
                 </button>
+                <!-- Reloj integrado en la parte superior -->
+                <div class="sidebar-header-clock">
+                    <div class="datetime-display">
+                        <span id="timeDisplay" class="time">00:00:00</span>
+                        <span id="dateDisplay" class="date">...</span>
+                    </div>
+                </div>
             </div>
 
             <ul class="sidebar-nav" id="sidebarNav">
@@ -279,6 +335,13 @@
                     <span class="nav-icon"><i class="fa-solid fa-database"></i></span>
                     <span class="nav-text">Dashboard Maestro</span>
                 </li>
+                
+                <!-- MÓDULO: Checklist Digital -->
+                <li class="nav-item" data-iframe="checklist.html" data-title="Checklist Digital de Unidades">
+                    <span class="nav-icon"><i class="fa-solid fa-clipboard-check"></i></span>
+                    <span class="nav-text">Checklist de Unidades</span>
+                </li>
+
                 <li class="nav-item" data-iframe="presentacion.html" data-title="Presentación del Sistema">
                     <span class="nav-icon"><i class="fa-solid fa-circle-info"></i></span>
                     <span class="nav-text">Presentación del Sistema</span>
@@ -300,6 +363,8 @@
             const sidebarNav = document.getElementById('sidebarNav');
             const menuToggleBtn = document.getElementById('menuToggleBtn');
             const iframeContainer = document.getElementById('iframeContainer');
+            const timeDisplay = document.getElementById('timeDisplay');
+            const dateDisplay = document.getElementById('dateDisplay');
 
             // --- 1. GESTIÓN DE IFRAMES ---
             const navItems = sidebarNav.querySelectorAll('.nav-item');
@@ -334,9 +399,6 @@
                     // Cargar iframe
                     const iframeSrc = item.dataset.iframe;
                     loadIframe(iframeSrc);
-
-                    // Ocultar el sidebar automáticamente al seleccionar
-                    sidebar.classList.remove('expanded');
                 });
             });
 
@@ -359,6 +421,19 @@
                     sidebar.classList.remove('expanded');
                 }
             });
+
+            // --- 3. FECHA Y HORA EN TIEMPO REAL ---
+            function updateDateTime() {
+                const now = new Date();
+                const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                const dateOptions = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+
+                timeDisplay.textContent = now.toLocaleTimeString('es-MX', timeOptions);
+                dateDisplay.textContent = now.toLocaleDateString('es-MX', dateOptions);
+            }
+
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
         });
     </script>
 </body>
