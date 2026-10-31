@@ -1,0 +1,9 @@
+{
+  "version": "1.0",
+  "ultimaActualizacion": "2026-10-31",
+  "elementosChecklist": [
+    { "id": "liq_1", "categoria": "Liquidos", "nombre": "Aceite de Motor", "estadoDefault": "OK" },
+    { "id": "liq_2", "categoria": "Liquidos", "nombre": "Líq. de Frenos", "estadoDefault": "OK" },
+    { "id": "tool_1", "categoria": "Herramientas", "nombre": "Llanta de Refacción", "estadoDefault": "OK" }
+  ]
+}
