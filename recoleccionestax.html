@@ -658,10 +658,6 @@
     </footer>
 
     <script>
-        /* ============================================================
-           AUTENTICACIÓN ELIMINADA
-           ============================================================ */
-
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
             '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
         }[c]));
@@ -725,12 +721,15 @@
             return keys.find(k => fragments.every(f => _norm(k).includes(_norm(f)))) || '';
         }
 
-        // VALIDACIÓN FLEXIBLE: Acepta cualquier archivo que contenga al menos Fecha y algún indicador de orden o ruta
+        // VALIDACIÓN DE COLUMNAS EXACTAS DE TU EXCEL
         function validarArchivo(headers) {
             if (!headers || headers.length === 0) return false;
-            const n = headers.map(_norm);
-            const has = (...frags) => n.some(h => frags.every(f => h.includes(f)));
-            return has('fecha') || has('ruta') || has('or');
+            const headersNorm = headers.map(_norm);
+            const tieneOR = headersNorm.some(h => h === 'or' || h.includes('orden'));
+            const tieneFecha = headersNorm.some(h => h.includes('fecha'));
+            const tieneRuta = headersNorm.some(h => h.includes('ruta'));
+            const tieneEstado = headersNorm.some(h => h.includes('estado') || h.includes('estatus'));
+            return tieneOR && tieneFecha && tieneRuta && tieneEstado;
         }
 
         function processExcelFile(file) {
@@ -754,18 +753,18 @@
                     const headers = json[0];
                     if (!validarArchivo(headers)) {
                         document.getElementById('skeletonLoader').classList.add('hidden');
-                        alert("El archivo no es válido. Se requiere al menos una columna de fecha, ruta u orden.");
+                        alert("El archivo no es válido. Asegúrate de incluir las columnas requeridas (OR, Fecha Programa, Ruta, Estado).");
                         return;
                     }
 
-                    const keyFecha = findKey(headers, 'fecha', 'programa');
+                    const keyFecha = findKey(headers, 'fecha', 'programa') || findKey(headers, 'fecha');
                     const keyOR = findKey(headers, 'or') || findKey(headers, 'orden');
                     const keyCP = findKey(headers, 'cp') || findKey(headers, 'postal');
                     const keyRuta = findKey(headers, 'ruta');
                     const keyDireccion = findKey(headers, 'direccion');
                     const keyCliente = findKey(headers, 'numero', 'cliente') || findKey(headers, 'cliente');
                     const keyRazon = findKey(headers, 'razon', 'social') || findKey(headers, 'razon');
-                    const keyCantidad = findKey(headers, 'cantidad') || findKey(headers, 'items planeados');
+                    const keyCantidad = findKey(headers, 'items', 'planeados') || findKey(headers, 'cantidad');
                     const keyTipo = findKey(headers, 'tipo');
                     const keyExcepcion = findKey(headers, 'excepcion');
                     const keyEstado = findKey(headers, 'estado') || findKey(headers, 'estatus');
@@ -793,7 +792,6 @@
                         let direccionStr = idxDireccion !== -1 ? String(row[idxDireccion] || '').trim() : '';
                         let cpVal = idxCP !== -1 ? String(row[idxCP] || '').trim() : '';
                         
-                        // Extracción inteligente de CP si no viene en columna dedicada pero está en la dirección
                         if (!cpVal && direccionStr) {
                             const matchCP = direccionStr.match(/CP\s*(\d{5})/i) || direccionStr.match(/\b(\d{5})\b/);
                             if (matchCP) cpVal = matchCP[1];
@@ -1476,7 +1474,6 @@
             setTimeout(applyCardStagger, 80);
         }
 
-        // --- TEMA ---
         function aplicarTema(tema) {
             const icon = document.getElementById('theme-toggle-icon');
             if (tema === 'dark') { document.body.classList.add('dark-mode'); if (icon) icon.className = 'fa-solid fa-sun'; }
@@ -1551,9 +1548,6 @@
             initNotificaciones();
         });
 
-        /* ============================================================ */
-        /* ============ CAMPANA DE NOTIFICACIONES - LÓGICA ============ */
-        /* ============================================================ */
         const NOTIF_CONFIG = {
             dashboardId: 'recolecciones',
             storageKey: 'notif_history_recolecciones',
@@ -1761,9 +1755,6 @@
             });
         }
 
-        /* ============================================================ */
-        /* ============ ANÁLISIS Y GENERACIÓN DE ALERTAS ============== */
-        /* ============================================================ */
         function analyzeAndAlert() {
             const notifs = [];
             const data = globalData;
@@ -1813,7 +1804,6 @@
                 }
             });
 
-            // 1. Excepciones críticas (>10%)
             const pctExc = total > 0 ? (excepcionados / total) * 100 : 0;
             if (pctExc >= 10) {
                 notifs.push({
@@ -1824,7 +1814,6 @@
                 });
             }
 
-            // 2. Órdenes sin recolectar
             if (sinRecolectar > 0) {
                 const pctSin = (sinRecolectar / total) * 100;
                 notifs.push({
@@ -1835,7 +1824,6 @@
                 });
             }
 
-            // 3. Ruta con mayor concentración de paquetes (>30%)
             const rutaEntries = Object.entries(rutaPaquetes).sort((a, b) => b[1] - a[1]);
             if (rutaEntries.length > 0 && totalPaquetes > 0) {
                 const [topRuta, topCant] = rutaEntries[0];
@@ -1850,7 +1838,6 @@
                 }
             }
 
-            // 4. Top 3 CPs con más volumen
             const cpEntries = Object.entries(cpCount).sort((a, b) => b[1] - a[1]).slice(0, 3);
             if (cpEntries.length > 0) {
                 const medallas = ['🥇', '🥈', '🥉'];
@@ -1863,7 +1850,6 @@
                 });
             }
 
-            // 5. Órdenes antiguas (>2 días)
             if (antiguas > 0) {
                 notifs.push({
                     type: 'warning',
@@ -1873,7 +1859,6 @@
                 });
             }
 
-            // 6. Carga exitosa
             notifs.push({
                 type: 'success',
                 title: '✅ Carga Exitosa',

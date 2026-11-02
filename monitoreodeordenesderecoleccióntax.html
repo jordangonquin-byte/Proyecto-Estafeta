@@ -1046,11 +1046,12 @@
         const n = headers.map(_norm);
         const has = (...frags) => n.some(h => frags.every(f => h.includes(_norm(f))));
         
-        // Validación compatible con la plantilla general y con la nueva estructura de ArchivoExcel (2).xlsx
-        const tieneRuta = has('ruta');
-        const tieneOrdenOEstatus = has('orden de recoleccion') || has('# orden') || has('estatus');
+        // Validación adaptada a los encabezados exactos del archivo de recolecciones
+        const tieneRuta = has('ruta local') || has('ruta');
+        const tieneOrden = has('numero orden reco') || has('orden de recoleccion') || has('# orden');
+        const tieneEstatus = has('estatus de ordenes') || has('estatus');
         
-        return tieneRuta && tieneOrdenOEstatus;
+        return (tieneRuta || tieneOrden) && tieneEstatus;
     }
 
     function initDashboard(data, fileName) {
@@ -1067,18 +1068,18 @@
 
         const sample = rawData[0];
 
-        // Mapeo exhaustivo adaptado a las columnas exactas de ArchivoExcel (2).xlsx
+        // Mapeo adaptado a los encabezados exactos del archivo Excel
         plazaKey        = findColumn(sample, ['plaza']) || null;
-        dateKey         = findColumn(sample, ['fecha']);
-        routeKey        = findColumn(sample, ['ruta']);
-        operatorKey     = findColumn(sample, ['atendio', 'operador']);
-        statusKey       = findColumn(sample, ['estatus']);
-        reasonKey       = findColumn(sample, ['excepción', 'excepcion', 'sub-estatus', 'motivo']);
-        eventKey        = findColumn(sample, ['tipo de recolección', 'tipo de recoleccion', 'evento']);
-        clientKey       = findColumn(sample, ['razón social', 'razon social', 'cliente']);
-        itemsKey        = findColumn(sample, ['items planeados', 'cant or items']);
-        validationNoShowKey = findColumn(sample, ['excepción', 'excepcion', 'sub-estatus']);
-        fechaExcepcionKey = findColumn(sample, ['comentarios or con horario', 'hora local', 'fecha excepcion']);
+        dateKey         = findColumn(sample, ['fecha evento', 'fecha']);
+        routeKey        = findColumn(sample, ['ruta local', 'ruta']);
+        operatorKey     = findColumn(sample, ['operador', 'atendio']);
+        statusKey       = findColumn(sample, ['estatus de ordenes', 'estatus']);
+        reasonKey       = findColumn(sample, ['motivo de no recolección', 'motivo de no recoleccion', 'excepción', 'excepcion']);
+        eventKey        = findColumn(sample, ['evento or recos', 'evento', 'tipo de recolección']);
+        clientKey       = findColumn(sample, ['razon social', 'razón social', 'cliente']);
+        itemsKey        = findColumn(sample, ['cant or items pactados', 'items planeados']);
+        validationNoShowKey = findColumn(sample, ['validación no show', 'validacion no show']);
+        fechaExcepcionKey = findColumn(sample, ['fecha excepción', 'fecha excepcion']);
         latKey          = findColumn(sample, ['latitud']);
         lngKey          = findColumn(sample, ['longitud']);
 
@@ -1835,7 +1836,7 @@
             closeBtn.dataset.bound = '1';
         }
 
-        const markReadBtn = document.getElementById('notif-[#mark-read-btn]');
+        const markReadBtn = document.getElementById('notif-mark-read-btn');
         if (markReadBtn && !markReadBtn.dataset.bound) {
             markReadBtn.addEventListener('click', markAllAsRead);
             markReadBtn.dataset.bound = '1';
