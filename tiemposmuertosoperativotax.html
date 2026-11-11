@@ -13,20 +13,10 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-    <!-- Librería QRCode.js para los modales de contacto -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
-        /* ============================================================
-           RESET GLOBAL Y VARIABLES DEL BANNER MAESTRO
-           ============================================================ */
-        html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100%;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+        html, body { margin: 0 !important; padding: 0 !important; width: 100%; min-height: 100vh; overflow-x: hidden; }
 
         :root {
             --estafeta-red: #DA291C;
@@ -48,7 +38,6 @@
 
         @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
-        /* --- BANNER MAESTRO --- */
         .master-header {
             background: var(--header-bg);
             background-size: 300% 100%;
@@ -97,10 +86,7 @@
             transition: all 0.3s ease;
         }
         .upload-btn-wrapper:hover { background-color: rgba(0, 0, 0, 0.15); border-radius: 10px; }
-        .upload-btn-wrapper.drag-over {
-            background-color: rgba(16, 185, 129, 0.2) !important;
-            border-radius: 10px;
-        }
+        .upload-btn-wrapper.drag-over { background-color: rgba(16, 185, 129, 0.2) !important; border-radius: 10px; }
         .upload-btn-wrapper input[type="file"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
 
         #theme-toggle {
@@ -129,9 +115,6 @@
         @keyframes badgePulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
         #notif-badge.pulse { animation: badgePulse 0.5s ease-out; }
 
-        /* ============================================================
-           ESTILOS BASE DEL DASHBOARD (TIEMPOS MUERTOS)
-           ============================================================ */
         .estafeta-red { background-color: #DA291C; }
         .estafeta-red-text { color: #DA291C; }
         .estafeta-border { border-color: #DA291C; }
@@ -141,8 +124,6 @@
         .horizontal-scroll-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .horizontal-scroll-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .horizontal-scroll-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        /* MODO OSCURO PARA SCROLLBARS */
         body.dark-mode .horizontal-scroll-container::-webkit-scrollbar-track { background: #1e293b; }
         body.dark-mode .horizontal-scroll-container::-webkit-scrollbar-thumb { background: #475569; }
         body.dark-mode .horizontal-scroll-container::-webkit-scrollbar-thumb:hover { background: #64748b; }
@@ -151,6 +132,7 @@
         body.dark-mode .fullscreen-section { background-color: #0f172a !important; }
 
         .fullscreen-section #gps-map { height: calc(100vh - 220px) !important; }
+        .fullscreen-section #crono-map { height: calc(100vh - 280px) !important; }
         #map-card.fullscreen, #gps-map-section-card.fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; border-radius: 0 !important; padding: 16px !important; background-color: white !important; box-shadow: none !important; display: flex; flex-direction: column; }
         body.dark-mode #map-card.fullscreen, body.dark-mode #gps-map-section-card.fullscreen { background-color: #0f172a !important; }
 
@@ -159,7 +141,6 @@
 
         button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid #DA291C; outline-offset: 2px; border-radius: 4px; }
 
-        /* CAMPANA DE NOTIFICACIONES - PANEL ESTILOS */
         #notif-toast-container {
             position: fixed; top: 90px; right: 20px; z-index: 100000;
             display: flex; flex-direction: column; gap: 10px;
@@ -230,7 +211,6 @@
         .notif-panel-footer button:hover { background: var(--estafeta-red, #DA291C); color: white; border-color: var(--estafeta-red, #DA291C); }
         .notif-panel-footer button.danger-btn:hover { background: #dc2626; border-color: #dc2626; }
 
-        /* MODO OSCURO GENERAL Y ADAPTACIONES COMPLETAS DE MODALES Y COMPONENTES */
         body.dark-mode { background-color: #0f172a !important; color: #e2e8f0 !important; }
         body.dark-mode main, body.dark-mode main > div > div, body.dark-mode .bg-white, body.dark-mode .bg-gray-50, body.dark-mode .bg-gray-100 { background-color: #1e293b !important; }
         body.dark-mode .bg-gray-50\/60 { background-color: rgba(30, 41, 59, 0.6) !important; }
@@ -240,61 +220,50 @@
         body.dark-mode .shadow-sm, body.dark-mode .shadow-xl, body.dark-mode .shadow-2xl { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -2px rgba(0,0,0,0.4) !important; }
         body.dark-mode .divide-gray-100 > * + *, body.dark-mode .divide-gray-200 > * + * { border-color: #334155 !important; }
         body.dark-mode input, body.dark-mode select { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
-        
-        /* Ajuste de contenedores específicos en modo oscuro */
         body.dark-mode .bg-green-50\/60 { background-color: rgba(20, 83, 45, 0.3) !important; border-color: rgba(22, 101, 52, 0.5) !important; }
         body.dark-mode .bg-red-50\/60 { background-color: rgba(127, 29, 29, 0.3) !important; border-color: rgba(153, 27, 27, 0.5) !important; }
         body.dark-mode .bg-blue-50\/60 { background-color: rgba(30, 58, 138, 0.3) !important; border-color: rgba(30, 64, 175, 0.5) !important; }
         body.dark-mode .bg-yellow-50\/60 { background-color: rgba(120, 53, 15, 0.3) !important; border-color: rgba(146, 64, 14, 0.5) !important; }
         body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; color: #fca5a5 !important; }
-        
-        /* ADAPTACIÓN EXPLÍCITA PARA EL MODAL Y FILTRO DE PLAZAS (MODO OSCURO / CLARO) */
-        body:not(.dark-mode) #plaza-modal > div {
-            background: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            color: #1e293b !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+
+        /* ============================================================
+           FIX MODO OSCURO: HOVERS (Evita texto invisible en tablas y botones)
+           ============================================================ */
+        body.dark-mode tr.hover\:bg-gray-50:hover,
+        body.dark-mode .hover\:bg-gray-50:hover,
+        body.dark-mode .hover\:bg-gray-100:hover,
+        body.dark-mode .hover\:bg-gray-200:hover {
+            background-color: #334155 !important; /* Fondo gris oscuro para hover */
         }
-        body:not(.dark-mode) #plaza-modal .border-slate-800 {
-            border-color: #e2e8f0 !important;
+        body.dark-mode .hover\:bg-red-50:hover {
+            background-color: rgba(185, 28, 28, 0.2) !important; /* Fondo rojo oscuro sutil */
         }
-        body:not(.dark-mode) #plaza-list-container {
-            background-color: #f8fafc !important;
+        body.dark-mode tr.hover\:bg-gray-50:hover td {
+            color: #f1f5f9 !important; /* Asegura texto claro en hover */
         }
-        body:not(.dark-mode) #plaza-list-container label {
-            background-color: #ffffff !important;
-            color: #1e293b !important;
-            border-color: #e2e8f0 !important;
+        body.dark-mode tr.hover\:bg-gray-50:hover td.text-red-600 {
+            color: #f87171 !important; /* Rojo más brillante para legibilidad */
         }
-        body:not(.dark-mode) #plaza-list-container label:hover {
-            background-color: #f1f5f9 !important;
-            border-color: #cbd5e1 !important;
-        }
+        /* ============================================================ */
+
+        body:not(.dark-mode) #plaza-modal > div { background: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #1e293b !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important; }
+        body:not(.dark-mode) #plaza-modal .border-slate-800 { border-color: #e2e8f0 !important; }
+        body:not(.dark-mode) #plaza-list-container { background-color: #f8fafc !important; }
+        body:not(.dark-mode) #plaza-list-container label { background-color: #ffffff !important; color: #1e293b !important; border-color: #e2e8f0 !important; }
+        body:not(.dark-mode) #plaza-list-container label:hover { background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; }
 
         body.dark-mode #card-modal > div, 
         body.dark-mode #qr-modal > div, 
         body.dark-mode #custom-filter-modal > div, 
         body.dark-mode #plaza-modal > div { 
-            background: #1e293b !important; 
-            border: 1px solid #334155 !important; 
-            color: #e2e8f0 !important; 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
+            background: #1e293b !important; border: 1px solid #334155 !important; color: #e2e8f0 !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
         }
-        
-        body.dark-mode #card-modal .border-gray-100,
-        body.dark-mode #qr-modal .border-slate-800,
-        body.dark-mode #custom-filter-modal .border-slate-800,
-        body.dark-mode #plaza-modal .border-slate-800 {
-            border-color: #334155 !important;
-        }
-
+        body.dark-mode #card-modal .border-gray-100, body.dark-mode #qr-modal .border-slate-800, body.dark-mode #custom-filter-modal .border-slate-800, body.dark-mode #plaza-modal .border-slate-800 { border-color: #334155 !important; }
         body.dark-mode #card-modal #modal-body .text-gray-800 { color: #e2e8f0 !important; }
         body.dark-mode #card-modal #modal-body .text-gray-500 { color: #94a3b8 !important; }
-        
         body.dark-mode #custom-options-container, body.dark-mode #plaza-list-container { background-color: #0f172a !important; }
         body.dark-mode #custom-options-container label, body.dark-mode #plaza-list-container label { background-color: rgba(15, 23, 42, 0.6) !important; color: #e2e8f0 !important; border-color: #334155 !important; }
         body.dark-mode #custom-options-container label:hover, body.dark-mode #plaza-list-container label:hover { background: rgba(218, 41, 28, 0.25) !important; border-color: #DA291C !important; }
-        
         body.dark-mode #custom-modal-search, body.dark-mode #plaza-modal input { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
         body.dark-mode .estafeta-red { background-color: #b91c1c !important; }
 
@@ -319,19 +288,10 @@
         body.dark-mode .notif-panel-footer button { background: #1e293b; color: #cbd5e1; border-color: #334155; }
         body.dark-mode .notif-empty { color: #64748b; }
 
-        body.dark-mode #segmentedNavContainer {
-            background-color: #0f172a !important;
-            border-color: #334155 !important;
-        }
-        body.dark-mode .main-tab-btn {
-            color: #94a3b8 !important;
-        }
-        body.dark-mode .main-tab-btn:hover {
-            color: #f1f5f9 !important;
-        }
-        body.dark-mode .main-tab-btn.text-white {
-            color: #ffffff !important;
-        }
+        body.dark-mode #segmentedNavContainer { background-color: #0f172a !important; border-color: #334155 !important; }
+        body.dark-mode .main-tab-btn { color: #94a3b8 !important; }
+        body.dark-mode .main-tab-btn:hover { color: #f1f5f9 !important; }
+        body.dark-mode .main-tab-btn.text-white { color: #ffffff !important; }
 
         @media (max-width: 640px) {
             #notif-toast-container { top: auto; bottom: 20px; right: 10px; left: 10px; width: auto; max-width: none; }
@@ -348,18 +308,12 @@
         @keyframes cardEnter { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
 
-        .tab-indicator {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            will-change: transform, width;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        @keyframes slideUp {
-            0% { opacity: 0; transform: translateY(8px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
+        .tab-indicator { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform, width; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        @keyframes slideUp { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+        
         .animate-slide-up {
-            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .float-btn-hidden { opacity: 0; pointer-events: none; transform: scale(0.85); }
@@ -370,7 +324,6 @@
 </head>
 <body class="bg-gray-100 font-sans antialiased min-h-screen flex flex-col relative pb-20">
 
-    <!-- BANNER MAESTRO -->
     <header class="master-header">
         <div class="header-brand">
             <div class="brand-logo">E</div>
@@ -381,7 +334,6 @@
         </div>
 
         <div class="header-actions" id="header-actions-container">
-            <!-- Botón Cargar Excel -->
             <div class="upload-btn-wrapper" id="banner-drop-zone" title="Cargar archivo Excel">
                 <input type="file" id="file-input" accept=".csv, .xlsx, .xls">
                 <div class="relative flex items-center justify-center p-1">
@@ -394,23 +346,19 @@
                 </div>
             </div>
 
-            <!-- Campana de Notificaciones -->
             <button id="notif-bell" onclick="togglePanel()" aria-label="Ver notificaciones" title="Notificaciones">
                 <i class="fa-solid fa-bell"></i>
                 <span id="notif-badge" class="hidden">0</span>
             </button>
 
-            <!-- Botón del Modo Oscuro -->
             <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
                 <i class="fa-solid fa-moon" id="theme-icon"></i>
             </button>
         </div>
     </header>
 
-    <!-- CONTENIDO PRINCIPAL -->
     <main id="main-container" class="w-[80%] max-w-[80%] mx-auto px-4 py-6 flex-grow space-y-6 hidden">
         
-        <!-- Menú de Pestañas Estilo Segmented Control -->
         <div class="bg-white p-2 rounded-2xl shadow-sm border border-gray-200 transition-colors duration-300">
             <div class="w-full relative p-1 bg-gray-100 rounded-xl border border-gray-200 flex flex-wrap md:flex-nowrap items-center gap-1 transition-colors duration-300" id="segmentedNavContainer">
                 <div id="segmentedBg" class="tab-indicator absolute top-1 bottom-1 bg-[#DA291C]"></div>
@@ -438,7 +386,6 @@
 
         <div id="dashboard-content" class="space-y-6 w-full">
             
-            <!-- SECCIÓN 1: Avance General -->
             <div id="section-avance" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100"><h3 class="text-lg font-bold text-gray-800 flex items-center"><i class="fa-solid fa-chart-pie estafeta-red-text mr-2"></i> Avance General</h3><div class="text-xs font-semibold text-gray-500">Total Registros: <span id="status-board-total" class="font-bold text-gray-800">0</span></div></div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -461,7 +408,6 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 2: Tarjetas de Registro -->
             <div id="section-tarjetas" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up" style="display: none;">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
                     <div class="flex items-center space-x-2.5"><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-address-card estafeta-red-text mr-1.5"></i> Tarjetas de Registro</h3></div>
@@ -503,7 +449,6 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 3: Tiempos Muertos -->
             <div id="section-tiempos" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up" style="display: none;">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
                     <div class="flex items-center space-x-2.5"><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-clock estafeta-red-text mr-1.5"></i> Tiempos Muertos entre Entregas</h3></div>
@@ -525,7 +470,6 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 4: Detalle Cronológico -->
             <div id="section-crono" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up" style="display: none;">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
                     <div class="flex items-center space-x-2.5"><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-clock-rotate-left estafeta-red-text mr-1.5"></i> Detalle Cronológico de Tiempos Muertos</h3></div>
@@ -582,7 +526,6 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 5: Línea de Tiempo -->
             <div id="section-timeline" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up" style="display: none;">
                 <div id="timeline-section-card" class="bg-white p-6 rounded-xl shadow-sm space-y-4 border border-gray-200/90">
                     <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
@@ -648,7 +591,6 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 6: Mapa GPS -->
             <div id="section-gpsmap" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up" style="display: none;">
                 <div id="gps-map-section-card" class="bg-white p-6 rounded-xl shadow-sm space-y-4 border border-gray-200/90">
                     <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
@@ -702,7 +644,6 @@
         </div>
     </main>
 
-    <!-- Modales -->
     <div id="card-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 relative animate-in fade-in zoom-in duration-200">
             <div class="flex justify-between items-center pb-3 border-b border-gray-100">
@@ -714,7 +655,6 @@
         </div>
     </div>
 
-    <!-- MODAL UNIFICADO PARA MOSTRAR EL CÓDIGO QR -->
     <div id="qr-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-xs rounded-2xl p-5 shadow-2xl space-y-4 text-center relative animate-in fade-in zoom-in duration-200">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -732,7 +672,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE FILTROS ESTILO PLAZAS (UNIFICADO) -->
     <div id="custom-filter-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-md rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200 flex flex-col">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -758,7 +697,6 @@
         </div>
     </div>
 
-    <!-- FILTRO DE PLAZAS -->
     <div class="fixed bottom-6 left-6 z-30 hidden" id="floating-plaza-container">
         <button onclick="openPlazaModal()" class="bg-red-600 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-sm font-semibold hover:bg-red-700 transition">
             <i class="fas fa-map-marked-alt"></i>
@@ -777,14 +715,12 @@
         </div>
     </div>
 
-    <!-- BOTÓN FLOTANTE DE BORRAR FILTROS -->
     <div id="floating-reset-btn" class="float-btn-hidden fixed bottom-6 right-6 transition-all duration-300 z-30">
         <button onclick="resetFilters()" class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl hover:bg-red-700 transition" title="Restablecer Filtros">
             <i class="fa-solid fa-rotate-left"></i>
         </button>
     </div>
 
-    <!-- NOTIFICACIONES (PANEL Y TOASTS) -->
     <div id="notif-toast-container" aria-live="polite"></div>
     <div id="notif-panel">
         <div class="bg-red-600 text-white p-3 font-bold text-sm rounded-t-xl flex justify-between items-center">
@@ -828,8 +764,8 @@
         let garantiaKeyName = '';
         let eventTimeKeyName = '';
         let coordKeyName = '';
-        let cellPhoneKeyName = ''; // Campo para Celular Destinatario
-        let phoneKeyName = '';     // Campo de respaldo para Teléfono Destinatario
+        let cellPhoneKeyName = '';
+        let phoneKeyName = '';
         let allKeysFull = [];
 
         let activePlazaFilter = null;
@@ -881,20 +817,18 @@
         let cronoPolyline = null;
         let filterBackup = null;
 
+        let initialRouteCount = 0;
+        let initialGarantiaCount = 0;
+
         const hiddenColumns = [
             'DISTRITO', 'REGIONAL', 'CELULA', 'UNIDAD DE TRANSPORTE',
             'OPERADOR', 'IMEI', 'NIVEL DE BATERIA', 'NIVEL DE BATERI',
             'COORDENADA EVENTO', 'COORDENADA EVENTO:', 'COORDENADA'
         ];
 
-        // --- SISTEMA UNIFICADO DE NOTIFICACIONES ---
         let notificationsList = [];
 
         function addNotification(title, message, type = 'info') {
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const notif = { id: Date.now(), title, message, time: timeStr, type, unread: true };
-            notificationsList.unshift(notif);
-            renderNotifications();
             showToast(title, message, type);
         }
 
@@ -961,7 +895,7 @@
                     <div class="notif-toast-msg">${esc(message)}</div>
                 </div>
                 <button class="notif-toast-close" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
-                <div class="notif-toast-progress" style="animation-duration: 5s;"></div>
+                <div class="notif-toast-progress" style="animation-duration: 3s;"></div>
             `;
             toastContainer.appendChild(toast);
 
@@ -970,13 +904,12 @@
                     toast.classList.add('removing');
                     setTimeout(() => toast.remove(), 300);
                 }
-            }, 5000);
+            }, 3000);
         }
 
         function markAllAsRead() {
             notificationsList.forEach(n => n.unread = false);
             renderNotifications();
-            addNotification("Historial", "Todas las notificaciones fueron marcadas como leídas.", "info");
         }
 
         function clearNotifHistory() {
@@ -990,6 +923,15 @@
 
         const dropZone = document.getElementById('banner-drop-zone');
         const fileInput = document.getElementById('file-input');
+
+        function resetFileUploaderState(statusMessage) {
+            const textContainer = document.getElementById('upload-text-container');
+            document.getElementById('file-name-display').innerText = 'Cargar Excel';
+            document.getElementById('file-status').innerText = statusMessage || 'Error de validación';
+            if (textContainer) textContainer.style.display = 'flex';
+            dropZone.title = 'Cargar archivo Excel';
+            fileInput.value = '';
+        }
 
         ['dragenter', 'dragover'].forEach(evt => {
             dropZone.addEventListener(evt, (e) => {
@@ -1035,9 +977,7 @@
             document.getElementById('file-status').innerText = 'Procesando archivo...';
             
             const textContainer = document.getElementById('upload-text-container');
-            if (textContainer) {
-                textContainer.style.display = 'none';
-            }
+            if (textContainer) textContainer.style.display = 'none';
             dropZone.title = `Archivo cargado: ${file.name}`;
 
             const ext = file.name.split('.').pop().toLowerCase();
@@ -1049,44 +989,53 @@
                         const headers = res.meta.fields || (res.data.length > 0 ? Object.keys(res.data[0]) : []);
                         if (!validarArchivo(headers)) {
                             alert("El archivo no cuenta con los encabezados requeridos (Guia/OR, Coordenada Evento, Celular/Teléfono Destinatario).");
-                            document.getElementById('file-status').innerText = 'Error de validación';
                             addNotification("Error de validación", "El archivo CSV no cuenta con los encabezados requeridos.", "danger");
-                            fileInput.value = "";
-                            if (textContainer) textContainer.style.display = 'flex';
+                            resetFileUploaderState('Error de validación');
                             return;
                         }
                         initDashboard(res.data, file.name);
                         fileInput.value = "";
+                    },
+                    error: function() {
+                        alert("Error al procesar el archivo CSV.");
+                        addNotification("Error de lectura", "No se pudo procesar el archivo CSV.", "danger");
+                        resetFileUploaderState('Error de lectura');
                     }
                 });
             } else if (['xlsx', 'xls'].includes(ext)) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
 
-                    const headers = XLSX.utils.sheet_to_json(worksheet, {header: 1})[0] || [];
-                    if (!validarArchivo(headers)) {
-                        alert("El archivo no cuenta con los encabezados requeridos (Guia/OR, Coordenada Evento, Celular/Teléfono Destinatario).");
-                        document.getElementById('file-status').innerText = 'Error de validación';
-                        addNotification("Error de validación", "El archivo Excel no cuenta con los encabezados requeridos.", "danger");
+                        const headers = XLSX.utils.sheet_to_json(worksheet, {header: 1})[0] || [];
+                        if (!validarArchivo(headers)) {
+                            alert("El archivo no cuenta con los encabezados requeridos (Guia/OR, Coordenada Evento, Celular/Teléfono Destinatario).");
+                            addNotification("Error de validación", "El archivo Excel no cuenta con los encabezados requeridos.", "danger");
+                            resetFileUploaderState('Error de validación');
+                            return;
+                        }
+                        const json = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
+                        initDashboard(json, file.name);
                         fileInput.value = "";
-                        if (textContainer) textContainer.style.display = 'flex';
-                        return;
+                    } catch(err) {
+                        alert("Error al procesar el archivo Excel.");
+                        addNotification("Error de lectura", "No se pudo leer el archivo Excel.", "danger");
+                        resetFileUploaderState('Error de lectura');
                     }
-                    const json = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
-                    initDashboard(json, file.name);
-                    fileInput.value = "";
+                };
+                reader.onerror = function() {
+                    alert("Error al leer el archivo.");
+                    resetFileUploaderState('Error de lectura');
                 };
                 reader.readAsArrayBuffer(file);
             } else {
                 alert('Formato no soportado.');
-                document.getElementById('file-status').innerText = 'Error de formato';
                 addNotification("Formato no soportado", "Por favor carga un archivo válido en formato .csv, .xlsx o .xls", "warning");
-                fileInput.value = "";
-                if (textContainer) textContainer.style.display = 'flex';
+                resetFileUploaderState('Error de formato');
             }
         }
 
@@ -1095,9 +1044,8 @@
 
             if (rawData.length === 0) {
                 alert('El archivo no contiene filas de datos (sólo encabezados).');
-                document.getElementById('file-status').innerText = 'Archivo vacío';
                 addNotification("Archivo vacío", "El archivo cargado no contiene registros.", "warning");
-                fileInput.value = '';
+                resetFileUploaderState('Archivo vacío');
                 return;
             }
 
@@ -1114,7 +1062,6 @@
             coordKeyName     = _findKey(allKeys, 'coordenada') || '';
             dateKeyName      = _findKey(allKeys, 'fecha') || _findKey(allKeys, 'hora') || '';
             
-            // Extracción inteligente de columnas de contacto con prioridad para Celular Destinatario y respaldo Teléfono Destinatario
             cellPhoneKeyName = _findKey(allKeys, 'celular', 'destinatario') || _findKey(allKeys, 'celular') || '';
             phoneKeyName     = _findKey(allKeys, 'telefono', 'destinatario') || _findKey(allKeys, 'telefono') || '';
 
@@ -1172,7 +1119,7 @@
                 cachedDeadTimesList.forEach(item => {
                     allDiffsSum += item.total;
                     allDiffsCount += item.count;
-                } );
+                });
                 const generalAvg = allDiffsCount > 0 ? allDiffsSum / allDiffsCount : 0;
 
                 addNotification(
@@ -1208,7 +1155,7 @@
         
         function updateTabIndicator(btn) {
             const bg = document.getElementById('segmentedBg');
-            if (!bg || !btn) return;
+            if (!bg || !btn || btn.offsetWidth === 0) return;
             bg.style.width = `${btn.offsetWidth}px`;
             bg.style.transform = `translateX(${btn.offsetLeft}px)`;
         }
@@ -1269,6 +1216,9 @@
                 activeMapRouteSelections.add(r);
                 activeMapGarantiaSelections.add(g);
             });
+
+            initialRouteCount = activeRouteSelections.size;
+            initialGarantiaCount = activeGarantiaSelections.size;
         }
 
         function toggleStatusTableSection() {
@@ -1338,6 +1288,7 @@
             container.innerHTML = '';
             let key = (currentModalType.includes('ruta')) ? routeKeyName : garantiaKeyName;
             let activeSet = getActiveSetFor(currentModalType);
+            if (!activeSet) return;
             let activeRows = rawData.filter(row => {
                 if (!activePlazaFilter || activePlazaFilter.size === 0) return true;
                 return activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
@@ -1359,7 +1310,7 @@
                 label.className = 'flex items-center justify-between gap-2 text-xs cursor-pointer p-2 rounded-lg border transition select-none';
                 label.innerHTML = `
                     <div class="flex items-center gap-2 truncate">
-                        <input type="checkbox" value="${esc(val)}" ${isChecked ? 'checked' : ''} onchange="toggleCustomOption('${esc(val).replace(/'/g, "\\'")}', this.checked)" class="custom-cb text-red-600 accent-red-600 rounded w-3.5 h-3.5">
+                        <input type="checkbox" value="${esc(val)}" ${isChecked ? 'checked' : ''} onchange="toggleCustomOption(${esc(JSON.stringify(val))}, this.checked)" class="custom-cb text-red-600 accent-red-600 rounded w-3.5 h-3.5">
                         <span class="font-medium truncate" title="${esc(val)}">${esc(val)}</span>
                     </div>
                     <span class="text-[10px] px-2 py-0.5 rounded-full font-bold flex-shrink-0">${valuesMap[val]} reg.</span>
@@ -1497,20 +1448,19 @@
         }
 
         function getStatusBadge(statusVal) {
-            const val = String(statusVal || '').trim().toUpperCase();
-            if (val.includes('CONFIRMADA') || val.includes('CONFIRMADO')) {
+            const val = _norm(statusVal || '').toUpperCase();
+            if (val.includes('CONFIRMAD')) {
                 return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-green-100 text-green-800 shadow-sm">Confirmados</span>';
-            } else if (val.includes('PENDIENTE')) {
+            } else if (val.includes('PENDIENT')) {
                 return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-yellow-100 text-yellow-800 shadow-sm">Pendientes</span>';
-            } else if (val.includes('EXCEPCIONADO') || val.includes('EXCEPCIONADA')) {
+            } else if (val.includes('EXCEPCION')) {
                 return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-red-100 text-red-800 shadow-sm">Excepcionados</span>';
-            } else if (val.includes('RECOLECTADO') || val.includes('RECOLECCION')) {
+            } else if (val.includes('RECOLECT') || val.includes('RECOLECCION')) {
                 return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gray-200 text-gray-800 shadow-sm">Recolección</span>';
             }
             return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gray-100 text-gray-700 shadow-sm">${esc(statusVal || 'N/D')}</span>`;
         }
 
-        // Renderizado de tarjetas priorizando Celular Destinatario, respaldado por Teléfono Destinatario
         function renderCards(dataToRender) {
             const container = document.getElementById('cards-container');
             container.innerHTML = '';
@@ -1544,9 +1494,8 @@
                 let guideVal = row[guideKeyName] !== undefined && row[guideKeyName] !== null ? row[guideKeyName] : '—';
                 let statusBadgeHtml = getStatusBadge(row[statusKeyName]);
                 
-                // Lógica de prioridad: Celular Destinatario -> Teléfono Destinatario
-                let rawCellPhone = cellPhoneKeyName && row[cellPhoneKeyName] !== undefined ? String(row[cellPhoneKeyName]).trim() : '';
-                let rawPhone = phoneKeyName && row[phoneKeyName] !== undefined ? String(row[phoneKeyName]).trim() : '';
+                let rawCellPhone = cellPhoneKeyName && row[cellPhoneKeyName] !== undefined && row[cellPhoneKeyName] !== null ? String(row[cellPhoneKeyName]).trim() : '';
+                let rawPhone = phoneKeyName && row[phoneKeyName] !== undefined && row[phoneKeyName] !== null ? String(row[phoneKeyName]).trim() : '';
 
                 let activeRawContact = rawCellPhone !== '' ? rawCellPhone : rawPhone;
                 let cleanPhone = activeRawContact.replace(/\D/g, '');
@@ -1559,7 +1508,7 @@
                         <span class="bg-gray-900 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm">#${absoluteIndex}</span>
                         <div>${statusBadgeHtml}</div>
                     </div>
-                    <div class="py-1 cursor-pointer" onclick='openCardModal(${JSON.stringify(row).replace(/'/g, "&#39;")})'>
+                    <div class="py-1 cursor-pointer" onclick='openCardModal(${esc(JSON.stringify(row))})'>
                         <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wider flex justify-between items-center"><span>Guía / OR</span><span class="text-[10px] estafeta-red-text font-semibold opacity-80"><i class="fa-solid fa-arrow-pointer mr-1"></i>Ver detalle</span></div>
                         <div class="font-bold text-gray-900 text-sm truncate mt-0.5" title="${esc(guideVal)}"><i class="fa-solid fa-barcode estafeta-red-text mr-1.5"></i>${esc(guideVal)}</div>
                         <div class="text-[11px] text-gray-500 mt-1 truncate" title="Tel: ${esc(activeRawContact || 'Sin número')}"><i class="fa-solid fa-phone text-gray-400 mr-1"></i>${esc(activeRawContact || 'Sin número de contacto')}</div>
@@ -1581,7 +1530,6 @@
             container.appendChild(fragment);
         }
 
-        // Apertura del modal QR respetando el número priorizado obtenido de los datos
         function openQRModal(type, phone) {
             const modal = document.getElementById('qr-modal');
             const titleEl = document.getElementById('qr-modal-title');
@@ -1600,11 +1548,11 @@
             let qrText = "";
             if (type === 'call') {
                 titleEl.innerHTML = `<i class="fa-solid fa-phone text-emerald-400 mr-2"></i> QR para Llamada`;
-                descEl.innerText = `Escanea para marcar al número: ${phone}`;
+                descEl.innerText = `Escanea para marcar al número: ${cleanPhone}`;
                 qrText = `tel:${cleanPhone}`;
             } else if (type === 'whatsapp') {
                 titleEl.innerHTML = `<i class="fa-brands fa-whatsapp text-green-400 mr-2"></i> QR para WhatsApp`;
-                descEl.innerText = `Escanea para iniciar chat directo con: ${phone}`;
+                descEl.innerText = `Escanea para iniciar chat directo con: ${cleanPhone}`;
                 const message = encodeURIComponent("Hola, nos comunicamos de Estafeta respecto a tu envío.");
                 qrText = `https://wa.me/${cleanPhone}?text=${message}`;
             }
@@ -1882,7 +1830,7 @@
                             if (!isNaN(d)) timeOnly = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} hrs`;
                             else { let parts = String(item.rowObj[eventTimeKeyName]).split(' '); timeOnly = parts.length > 1 ? parts[1] : String(item.rowObj[eventTimeKeyName]); }
                         }
-                        const pointColor = targetSeqs !== null ? '#DA291C' : '#DA291C';
+                        const pointColor = '#DA291C';
                         const numberedIcon = L.divIcon({
                             className: 'custom-div-icon',
                             html: `<div style="background-color:${pointColor};color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">${item.sequenceNumber}</div>`,
@@ -1952,7 +1900,7 @@
                 const fullscreenText = document.getElementById('gps-fullscreen-text');
                 if (fullscreenIcon) fullscreenIcon.className = isFullscreen ? "fa-solid fa-compress" : "fa-solid fa-expand";
                 if (fullscreenText) fullscreenText.innerText = isFullscreen ? "Restaurar" : "Pantalla Completa";
-                setTimeout(() => { if (gpsMapInstance) gpsMapInstance.invalidateSize(); }, 100);
+                setTimeout(() => { if (gpsMapInstance) gpsMapInstance.invalidateSize(); }, 150);
             });
         }
 
@@ -2049,7 +1997,7 @@
                 const fullscreenText = document.getElementById('fullscreen-text');
                 if (fullscreenIcon) fullscreenIcon.className = isFullscreen ? "fa-solid fa-compress" : "fa-solid fa-expand";
                 if (fullscreenText) fullscreenText.innerText = isFullscreen ? "Restaurar" : "Pantalla Completa";
-                setTimeout(() => { if (timelineMapInstance) timelineMapInstance.invalidateSize(); }, 100);
+                setTimeout(() => { if (timelineMapInstance) timelineMapInstance.invalidateSize(); }, 150);
             });
         }
 
@@ -2089,6 +2037,8 @@
             let currCoords = coordKeyName && item.currRow ? parseCoordinates(item.currRow[coordKeyName]) : null;
 
             if (!cronoMapInstance) {
+                const el = document.getElementById('crono-map');
+                if (!el) return;
                 cronoMapInstance = L.map('crono-map').setView([19.4326, -99.1332], 6);
                 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(cronoMapInstance);
             }
@@ -2099,22 +2049,51 @@
             let latLngs = [];
 
             if (prevCoords) {
-                let markerPrev = L.circleMarker(prevCoords, { radius: 8, color: '#4B5563', fillColor: '#6B7280', fillOpacity: 0.9 });
+                const prevIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background-color:#4B5563;color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">1</div>`,
+                    iconSize: [28, 28], iconAnchor: [14, 14]
+                });
+                let markerPrev = L.marker(prevCoords, { icon: prevIcon });
                 markerPrev.bindPopup(`<b>Guía Anterior:</b> ${esc(item.prevGuide)}<br><b>Hora:</b> ${esc(item.prevTime)}`);
+                if (item.prevRow) markerPrev.on('click', () => openCardModal(item.prevRow));
                 cronoClusterGroup.addLayer(markerPrev);
                 latLngs.push(prevCoords);
             }
+
             if (currCoords) {
-                let markerCurr = L.circleMarker(currCoords, { radius: 9, color: '#991B1B', fillColor: '#DA291C', fillOpacity: 1 });
+                const currIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background-color:#DA291C;color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">2</div>`,
+                    iconSize: [28, 28], iconAnchor: [14, 14]
+                });
+                let markerCurr = L.marker(currCoords, { icon: currIcon });
                 markerCurr.bindPopup(`<b>Guía Actual:</b> ${esc(item.currGuide)}<br><b>Hora:</b> ${esc(item.currTime)}`);
+                if (item.currRow) markerCurr.on('click', () => openCardModal(item.currRow));
                 cronoClusterGroup.addLayer(markerCurr);
                 latLngs.push(currCoords);
             }
+            
             cronoMapInstance.addLayer(cronoClusterGroup);
 
             if (prevCoords && currCoords) {
-                cronoPolyline = L.polyline([prevCoords, currCoords], { color: '#DA291C', weight: 3, dashArray: '5, 5' }).addTo(cronoMapInstance);
+                const p1 = L.latLng(prevCoords[0], prevCoords[1]);
+                const p2 = L.latLng(currCoords[0], currCoords[1]);
+                let diffMeters = p1.distanceTo(p2);
+                let distText = diffMeters >= 1000 ? (diffMeters / 1000).toFixed(2) + ' km' : diffMeters.toFixed(1) + ' metros';
+                
+                let timeText = '';
+                if (item.diff !== undefined && item.diff !== null && item.diff >= 0) {
+                    let totalMins = Math.floor(item.diff / 60000);
+                    let hrs = Math.floor(totalMins / 60);
+                    let mins = totalMins % 60;
+                    timeText = hrs > 0 ? `<br>Tiempo transcurrido: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo transcurrido: <b>${totalMins} min</b>`;
+                }
+
+                cronoPolyline = L.polyline([prevCoords, currCoords], { color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5' }).addTo(cronoMapInstance);
+                cronoPolyline.bindTooltip(`Distancia: <b>${distText}</b>${timeText}`, { sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200' });
             }
+            
             if (latLngs.length > 0) cronoMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15 });
             cronoMapInstance.invalidateSize();
         }
@@ -2138,6 +2117,14 @@
                 handleSearchInput(input, resetBtnId);
                 input.dispatchEvent(new Event('input'));
             }
+        }
+
+        function bindEnterTrigger(inputId) {
+            const el = document.getElementById(inputId);
+            if (!el) return;
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); el.dispatchEvent(new Event('input')); }
+            });
         }
 
         if (document.getElementById('timeline-advanced-search')) {
@@ -2170,6 +2157,11 @@
                 deadTimesCurrentPage = 1; cronoCurrentPage = 1; applyCronoDetailFilter(); toggleFloatingResetButton();
             }));
         }
+        bindEnterTrigger('timeline-advanced-search');
+        bindEnterTrigger('sequence-search-input');
+        bindEnterTrigger('map-advanced-search');
+        bindEnterTrigger('table-advanced-search');
+        bindEnterTrigger('crono-advanced-search');
 
         function renderTimelineTablePage() {
             const container = document.getElementById('timeline-grid-container');
@@ -2476,8 +2468,8 @@
                 activePlazaFilter = selected;
             }
 
-            updatePlazaButtonCount();
             closePlazaModal();
+            renderPlazaFilterList();
             initSelections();
             currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
             updateDashboard();
@@ -2539,10 +2531,14 @@
                 activeStatusFilter !== 'ALL' || activeCronoStatusFilter !== 'ALL' || activeTimelineStatusFilter !== 'ALL' || activeMapStatusFilter !== 'ALL' ||
                 tableVal.trim() !== '' || cronoTableVal.trim() !== '' || timelineVal.trim() !== '' || seqVal.trim() !== '' || mapVal.trim() !== '' ||
                 !showProgData || !showCronoProgData || !showTimelineProgData || !showMapProgData ||
-                activeRouteSelections.size < rawData.length || activeGarantiaSelections.size < rawData.length ||
-                activeCronoRouteSelections.size < rawData.length || activeCronoGarantiaSelections.size < rawData.length ||
-                activeTimelineRouteSelections.size < rawData.length || activeTimelineGarantiaSelections.size < rawData.length ||
-                activeMapRouteSelections.size < rawData.length || activeMapGarantiaSelections.size < rawData.length;
+                activeRouteSelections.size < initialRouteCount ||
+                activeGarantiaSelections.size < initialGarantiaCount ||
+                activeCronoRouteSelections.size < initialRouteCount ||
+                activeCronoGarantiaSelections.size < initialGarantiaCount ||
+                activeTimelineRouteSelections.size < initialRouteCount ||
+                activeTimelineGarantiaSelections.size < initialGarantiaCount ||
+                activeMapRouteSelections.size < initialRouteCount ||
+                activeMapGarantiaSelections.size < initialGarantiaCount;
 
             if (hasFilters) {
                 resetBtn.classList.remove('float-btn-hidden');
