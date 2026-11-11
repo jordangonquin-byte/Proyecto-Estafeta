@@ -40,7 +40,6 @@
             --estafeta-dark: #1e293b;
             --estafeta-white: #ffffff;
             --header-bg: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
-            /* Fondos totalmente transparentes por defecto para los botones superiores */
             --btn-upload-bg: transparent;
             --btn-upload-hover: rgba(255, 255, 255, 0.15);
             --btn-upload-border: transparent;
@@ -52,9 +51,10 @@
             --adaptive-btn-text: #475569;
             --adaptive-btn-border: #cbd5e1;
             --adaptive-btn-hover: #f1f5f9;
+            /* Botón de embudo en modo claro: icono negro/oscuro */
             --funnel-btn-bg: #ffffff;
             --funnel-btn-border: #cbd5e1;
-            --funnel-btn-text: #334155;
+            --funnel-btn-text: #0f172a; 
             --funnel-btn-hover: #f1f5f9;
         }
 
@@ -71,9 +71,10 @@
             --adaptive-btn-text: #f43f5e;
             --adaptive-btn-border: #334155;
             --adaptive-btn-hover: #334155;
+            /* Botón de embudo en modo oscuro: icono rojo (#ef4444) */
             --funnel-btn-bg: #1e293b;
             --funnel-btn-border: #475569;
-            --funnel-btn-text: #cbd5e1;
+            --funnel-btn-text: #ef4444; 
             --funnel-btn-hover: #334155;
         }
 
@@ -144,6 +145,8 @@
         .kpi-2dias:hover { transform: translateY(-4px); box-shadow: 0 12px 30px -8px rgba(168, 85, 247, 0.45); background-color: rgba(168, 85, 247, 0.12); }
         .kpi-tiempo { background-color: rgba(16, 185, 129, 0.06); border-left-color: #10B981; }
         .kpi-tiempo:hover { transform: translateY(-4px); box-shadow: 0 12px 30px -8px rgba(16, 185, 129, 0.45); background-color: rgba(16, 185, 129, 0.12); }
+        .kpi-sininfo { background-color: rgba(100, 116, 139, 0.08); border-left-color: #64748B; }
+        .kpi-sininfo:hover { transform: translateY(-4px); box-shadow: 0 12px 30px -8px rgba(100, 116, 139, 0.45); background-color: rgba(100, 116, 139, 0.15); }
 
         body.dark-mode .kpi-total { background-color: rgba(148, 163, 184, 0.06); }
         body.dark-mode .kpi-total:hover { background-color: rgba(148, 163, 184, 0.14); box-shadow: 0 12px 30px -8px rgba(148, 163, 184, 0.35); }
@@ -157,6 +160,37 @@
         body.dark-mode .kpi-2dias:hover { background-color: rgba(168, 85, 247, 0.22); box-shadow: 0 12px 30px -8px rgba(168, 85, 247, 0.5); }
         body.dark-mode .kpi-tiempo { background-color: rgba(16, 185, 129, 0.12); }
         body.dark-mode .kpi-tiempo:hover { background-color: rgba(16, 185, 129, 0.22); box-shadow: 0 12px 30px -8px rgba(16, 185, 129, 0.5); }
+        body.dark-mode .kpi-sininfo { background-color: rgba(100, 116, 139, 0.18); }
+        body.dark-mode .kpi-sininfo:hover { background-color: rgba(100, 116, 139, 0.28); box-shadow: 0 12px 30px -8px rgba(100, 116, 139, 0.5); }
+
+        /* Banner de archivo desactualizado */
+        #stale-file-banner {
+            display: none;
+            background: linear-gradient(90deg, #7c2d12, #9a3412, #c2410c, #9a3412, #7c2d12);
+            background-size: 300% 100%;
+            animation: gradientShift 12s ease infinite;
+            color: #fff;
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 40;
+            position: relative;
+        }
+        #stale-file-banner.visible { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        #stale-file-banner .stale-date-badge {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.35);
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+        body.dark-mode #stale-file-banner {
+            background: linear-gradient(90deg, #431407, #7c2d12, #9a3412, #7c2d12, #431407);
+            background-size: 300% 100%;
+        }
 
         .theme-adaptive-btn {
             background-color: var(--adaptive-btn-bg) !important;
@@ -216,7 +250,6 @@
         .brand-subtitle { font-size: 0.75rem; color: var(--subtext-color); margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
         .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
-        /* Botón de carga de Excel sin fondo oscuro */
         .upload-btn-wrapper {
             position: relative;
             display: inline-flex;
@@ -257,7 +290,6 @@
             transform: scale(1.03);
         }
 
-        /* Botón de tema transparente */
         #theme-toggle {
             background: var(--btn-upload-bg);
             border: 1px solid var(--btn-upload-border);
@@ -269,7 +301,6 @@
         }
         #theme-toggle:hover { background: var(--btn-upload-hover); transform: translateY(-1px) rotate(15deg); }
 
-        /* Botón de notificaciones transparente */
         #notif-bell {
             position: relative;
             background: var(--btn-upload-bg);
@@ -381,6 +412,7 @@
         }
         .pulse-hover:hover { animation: pulseHover 1s infinite; }
 
+        /* Estilos generales adaptativos para modo oscuro / claro */
         body.dark-mode { background-color: #0f172a !important; color: #e2e8f0 !important; }
         body.dark-mode .bg-white { background-color: #1e293b !important; color: #e2e8f0 !important; }
         body.dark-mode .bg-slate-50,
@@ -401,20 +433,72 @@
         body.dark-mode .hover\:bg-slate-200:hover { background-color: #475569 !important; }
         body.dark-mode .hover\:bg-slate-100:hover { background-color: #334155 !important; }
         body.dark-mode .hover\:bg-slate-50:hover { background-color: #334155 !important; }
-        body.dark-mode #filter-modal > div,
-        body.dark-mode #plaza-modal > div { background-color: #1e293b !important; color: #e2e8f0 !important; }
-        body.dark-mode .modal-checkbox-label:hover,
-        body.dark-mode .plaza-checkbox-label:hover { background-color: #334155 !important; }
-        body.dark-mode #modal-checkboxes-container,
-        body.dark-mode #plaza-modal-checkboxes-container { background-color: #0f172a !important; border-color: #334155 !important; }
-        body.dark-mode .bg-slate-900 { background-color: #0f172a !important; }
         body.dark-mode .sortable-th:hover { background-color: #334155 !important; }
 
-        .glass-modal {
-            background: rgba(15, 23, 42, 0.88);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+        /* Adaptabilidad completa para los modales flotantes en modo claro y oscuro */
+        .adaptive-modal-box {
+            background-color: #ffffff;
+            color: #1e293b;
+            border-color: #cbd5e1;
         }
+        body.dark-mode .adaptive-modal-box {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+            border-color: #334155 !important;
+        }
+
+        .adaptive-modal-header {
+            border-bottom: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+        }
+        body.dark-mode .adaptive-modal-header {
+            border-bottom: 1px solid #334155 !important;
+            background-color: #0f172a !important;
+        }
+
+        .adaptive-modal-footer {
+            border-top: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+        }
+        body.dark-mode .adaptive-modal-footer {
+            border-top: 1px solid #334155 !important;
+            background-color: #0f172a !important;
+        }
+
+        .adaptive-input-search {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+        body.dark-mode .adaptive-input-search {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #f1f5f9 !important;
+        }
+
+        .adaptive-list-container {
+            border-color: #e2e8f0;
+            background-color: #f8fafc;
+        }
+        body.dark-mode .adaptive-list-container {
+            border-color: #334155 !important;
+            background-color: rgba(15, 23, 42, 0.5) !important;
+        }
+
+        .adaptive-checkbox-row {
+            background-color: rgba(241, 245, 249, 0.6);
+        }
+        .adaptive-checkbox-row:hover {
+            background-color: rgba(226, 232, 240, 0.8);
+        }
+        body.dark-mode .adaptive-checkbox-row {
+            background-color: rgba(30, 41, 59, 0.6) !important;
+        }
+        body.dark-mode .adaptive-checkbox-row:hover {
+            background-color: rgba(239, 68, 68, 0.15) !important;
+            border-color: rgba(239, 68, 68, 0.4) !important;
+        }
+
         @keyframes modalPop {
             0% { opacity: 0; transform: scale(0.95) translateY(10px); }
             100% { opacity: 1; transform: scale(1) translateY(0); }
@@ -575,13 +659,21 @@
         </div>
     </header>
 
+    <!-- Banner permanente cuando el Excel es de un día anterior -->
+    <div id="stale-file-banner" role="alert">
+        <i class="fas fa-exclamation-triangle text-lg"></i>
+        <span>Este archivo corresponde a una fecha anterior.</span>
+        <span class="stale-date-badge" id="stale-file-date">—</span>
+        <span class="text-sm opacity-90">Los semáforos reflejan el estado al momento de la generación del Excel, no la fecha de hoy.</span>
+    </div>
+
     <main class="flex-grow max-w-[85%] w-full mx-auto px-4 py-6 space-y-6">
 
         <div id="skeletonLoader" class="hidden space-y-6">
             <div class="bg-white p-4 rounded-xl card-shadow"><div class="skeleton h-10"></div></div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
                 <div class="skeleton h-24"></div><div class="skeleton h-24"></div><div class="skeleton h-24"></div>
-                <div class="skeleton h-24"></div><div class="skeleton h-24"></div><div class="skeleton h-24"></div>
+                <div class="skeleton h-24"></div><div class="skeleton h-24"></div><div class="skeleton h-24"></div><div class="skeleton h-24"></div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="skeleton h-64"></div><div class="skeleton h-64"></div><div class="skeleton h-64"></div>
@@ -595,7 +687,7 @@
                 <div id="filter-badges" class="flex flex-wrap gap-2 items-center"></div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
                 <div class="p-4 rounded-xl card-shadow border-l-4 flex items-center justify-between kpi-card-glow kpi-total">
                     <div>
                         <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Guías</p>
@@ -637,6 +729,13 @@
                         <h3 id="kpi-tiempo" class="text-2xl font-black text-emerald-600 mt-1">0</h3>
                     </div>
                     <div class="bg-emerald-100 p-3 rounded-2xl text-emerald-500 shadow-inner"><i class="fas fa-check-circle text-lg"></i></div>
+                </div>
+                <div class="p-4 rounded-xl card-shadow border-l-4 flex items-center justify-between cursor-pointer kpi-card-glow kpi-sininfo" onclick="toggleSemaphor('Sin información')">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Sin Info</p>
+                        <h3 id="kpi-sininfo" class="text-2xl font-black text-slate-600 mt-1">0</h3>
+                    </div>
+                    <div class="bg-slate-200 p-3 rounded-2xl text-slate-500 shadow-inner"><i class="fas fa-question-circle text-lg"></i></div>
                 </div>
             </div>
 
@@ -770,6 +869,7 @@
                                     </div>
                                 </th>
                                 <th class="p-3 sortable-th" onclick="handleTableSort('Fecha compromiso de entrega')">Compromiso <span id="sort-icon-Fecha compromiso de entrega" class="text-slate-400 ml-1">↕</span></th>
+                                <th class="p-3 sortable-th" onclick="handleTableSort('Tipo')">Tipo <span id="sort-icon-Tipo" class="text-slate-400 ml-1">↕</span></th>
                             </tr>
                         </thead>
                         <tbody id="data-table-body"></tbody>
@@ -780,73 +880,69 @@
         </div>
     </main>
 
+    <!-- MODAL DE FILTRO DE COLUMNAS (ADAPTADO MODO CLARO / OSCURO) -->
     <div id="filter-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden p-3 sm:p-6 overflow-y-auto">
-        <div class="w-full max-w-3xl glass-modal border border-slate-700/60 rounded-2xl shadow-2xl overflow-hidden animate-modal-pop bg-slate-900/90 text-slate-100 flex flex-col max-h-[90vh]">
-            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
-                <div class="flex items-center space-x-3">
-                    <div class="p-2 bg-estafeta-red/10 text-estafeta-red rounded-lg"><i class="fa-solid fa-filter"></i></div>
-                    <div>
-                        <h3 class="text-sm font-bold text-white" id="modal-title">Filtrar Columna</h3>
-                        <p class="text-xs text-slate-400">Selección de valores y elementos operativos</p>
-                    </div>
-                </div>
-                <button type="button" onclick="closeModalFilter()" class="text-slate-400 hover:text-white p-1 rounded-lg transition cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <div class="w-full max-w-md adaptive-modal-box border rounded-2xl shadow-2xl overflow-hidden animate-modal-pop flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center adaptive-modal-header px-6 py-4">
+                <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-stream text-estafeta-red"></i> <span id="modal-title">Filtrar Columna</span></h3>
+                <button type="button" onclick="closeModalFilter()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <div class="p-6 space-y-4 flex-grow overflow-hidden flex flex-col">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="relative">
-                        <i class="fa-solid fa-search absolute left-3 top-2.5 text-xs text-slate-400"></i>
-                        <input type="text" id="modal-search-input" placeholder="Buscar valor..." class="w-full bg-slate-900/90 border border-slate-700 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-estafeta-red">
-                    </div>
-                    <div class="flex justify-end items-center text-xs space-x-2 font-semibold">
-                        <button type="button" onclick="selectAllModalCheckboxes()" class="text-estafeta-red hover:underline cursor-pointer">Todos</button>
-                        <span class="text-slate-600">|</span>
-                        <button type="button" onclick="deselectAllModalCheckboxes()" class="text-slate-400 hover:underline cursor-pointer">Ninguno</button>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </span>
+                    <input type="text" id="modal-search-input" placeholder="Buscar valor..." class="w-full pl-9 pr-4 py-2 adaptive-input-search border text-xs rounded-lg focus:ring-estafeta-red focus:border-estafeta-red focus:outline-none">
+                </div>
+                <div class="flex justify-between items-center text-xs font-semibold text-slate-500 dark:text-slate-400 px-1">
+                    <span>Seleccionar valores:</span>
+                    <div class="space-x-3">
+                        <button type="button" onclick="selectAllModalCheckboxes()" class="text-red-600 dark:text-red-500 hover:underline cursor-pointer">Todos</button>
+                        <span class="text-slate-400">|</span>
+                        <button type="button" onclick="deselectAllModalCheckboxes()" class="text-slate-500 dark:text-slate-400 hover:underline cursor-pointer">Ninguno</button>
                     </div>
                 </div>
-                <div class="max-h-64 overflow-y-auto space-y-2 pr-1 border border-slate-800 rounded-xl p-3 bg-slate-950/40" id="modal-checkboxes-container"></div>
+                <div id="modal-checkboxes-container" class="border adaptive-list-container rounded-xl p-3 max-h-56 overflow-y-auto space-y-2 text-xs"></div>
             </div>
-            <div class="px-6 py-3.5 border-t border-slate-800 bg-slate-900/80 flex items-center justify-between">
-                <span class="text-xs text-slate-400"><strong id="modal-count-selected" class="text-estafeta-red">0</strong> seleccionadas</span>
+            <div class="px-6 py-3.5 adaptive-modal-footer flex items-center justify-between">
+                <span class="text-xs text-slate-500 dark:text-slate-400"><strong id="modal-count-selected" class="text-estafeta-red">0</strong> seleccionadas</span>
                 <div class="flex space-x-2">
-                    <button type="button" onclick="closeModalFilter()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 border border-slate-700 cursor-pointer">Cancelar</button>
-                    <button type="button" onclick="applyModalFilter()" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-estafeta-red hover:bg-estafeta-darkRed cursor-pointer">Aplicar Filtro</button>
+                    <button type="button" onclick="closeModalFilter()" class="px-4 py-2 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 cursor-pointer">Cancelar</button>
+                    <button type="button" onclick="applyModalFilter()" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-estafeta-red hover:bg-estafeta-darkRed cursor-pointer shadow-sm">Aplicar Filtro</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- MODAL DE FILTRO DE PLAZAS (ADAPTADO MODO CLARO / OSCURO) -->
     <div id="plaza-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden p-3 sm:p-6 overflow-y-auto">
-        <div id="modal1" class="w-full max-w-3xl glass-modal border border-slate-700/60 rounded-2xl shadow-2xl overflow-hidden animate-modal-pop bg-slate-900/90 text-slate-100 flex flex-col max-h-[90vh]">
-            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
-                <div class="flex items-center space-x-3">
-                    <div class="p-2 bg-estafeta-red/10 text-estafeta-red rounded-lg"><i class="fa-solid fa-map-marked-alt"></i></div>
-                    <div>
-                        <h3 class="text-sm font-bold text-white" id="plaza-modal-title-text">Filtrar por Plaza</h3>
-                        <p class="text-xs text-slate-400">Selección de plazas y nodos operativos</p>
-                    </div>
-                </div>
-                <button onclick="closePlazaModal()" class="text-slate-400 hover:text-white p-1 rounded-lg transition cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <div class="w-full max-w-md adaptive-modal-box border rounded-2xl shadow-2xl overflow-hidden animate-modal-pop flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center adaptive-modal-header px-6 py-4">
+                <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-stream text-estafeta-red"></i> <span id="plaza-modal-title-text">Filtrar por Plaza</span></h3>
+                <button type="button" onclick="closePlazaModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <div class="p-6 space-y-4 flex-grow overflow-hidden flex flex-col">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="relative">
-                        <i class="fa-solid fa-search absolute left-3 top-2.5 text-xs text-slate-400"></i>
-                        <input type="text" id="plaza-modal-search" placeholder="Buscar valor..." class="w-full bg-slate-900/90 border border-slate-700 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-estafeta-red">
-                    </div>
-                    <div class="flex justify-end items-center text-xs space-x-2 font-semibold">
-                        <button type="button" onclick="selectAllPlazaCheckboxes()" class="text-estafeta-red hover:underline cursor-pointer">Todos</button>
-                        <span class="text-slate-600">|</span>
-                        <button type="button" onclick="deselectAllPlazaCheckboxes()" class="text-slate-400 hover:underline cursor-pointer">Ninguno</button>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </span>
+                    <input type="text" id="plaza-modal-search" placeholder="Buscar valor..." class="w-full pl-9 pr-4 py-2 adaptive-input-search border text-xs rounded-lg focus:ring-estafeta-red focus:border-estafeta-red focus:outline-none">
+                </div>
+                <div class="flex justify-between items-center text-xs font-semibold text-slate-500 dark:text-slate-400 px-1">
+                    <span>Seleccionar valores:</span>
+                    <div class="space-x-3">
+                        <button type="button" onclick="selectAllPlazaCheckboxes()" class="text-red-600 dark:text-red-500 hover:underline cursor-pointer">Todos</button>
+                        <span class="text-slate-400">|</span>
+                        <button type="button" onclick="deselectAllPlazaCheckboxes()" class="text-slate-500 dark:text-slate-400 hover:underline cursor-pointer">Ninguno</button>
                     </div>
                 </div>
-                <div class="max-h-64 overflow-y-auto space-y-2 pr-1 border border-slate-800 rounded-xl p-3 bg-slate-950/40" id="plaza-modal-checkboxes-container"></div>
+                <div id="plaza-modal-checkboxes-container" class="border adaptive-list-container rounded-xl p-3 max-h-56 overflow-y-auto space-y-2 text-xs"></div>
             </div>
-            <div class="px-6 py-3.5 border-t border-slate-800 bg-slate-900/80 flex items-center justify-between">
-                <span class="text-xs text-slate-400"><strong id="plaza-count-selected" class="text-estafeta-red">0</strong> seleccionadas</span>
+            <div class="px-6 py-3.5 adaptive-modal-footer flex items-center justify-between">
+                <span class="text-xs text-slate-500 dark:text-slate-400"><strong id="plaza-count-selected" class="text-estafeta-red">0</strong> seleccionadas</span>
                 <div class="flex space-x-2">
-                    <button onclick="closePlazaModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 border border-slate-700 cursor-pointer">Cancelar</button>
-                    <button onclick="applyPlazaModalFilter()" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-estafeta-red hover:bg-estafeta-darkRed cursor-pointer">Aplicar Filtro</button>
+                    <button type="button" onclick="closePlazaModal()" class="px-4 py-2 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 cursor-pointer">Cancelar</button>
+                    <button type="button" onclick="applyPlazaModalFilter()" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-estafeta-red hover:bg-estafeta-darkRed cursor-pointer shadow-sm">Aplicar Filtro</button>
                 </div>
             </div>
         </div>
@@ -918,14 +1014,15 @@
             'Vence hoy': '#F59E0B',
             'Vence mañana': '#3B82F6',
             'Vence en 2 días': '#A855F7',
-            'En tiempo': '#10B981'
+            'En tiempo': '#10B981',
+            'Sin información': '#64748B'
         };
 
         const _norm = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
         const COLUMNAS_REQUERIDAS = {
             movimiento: { aliases: ['movimiento'],                    label: 'Movimiento', critica: true },
-            tipo:       { aliases: ['tipo', 'garantia'],              label: 'Tipo',       critica: true },
+            tipo:       { aliases: ['tipo'],                          label: 'Tipo',       critica: true },
             semaforo:   { aliases: ['semaforo'],                      label: 'Semáforo',   critica: true },
             guia:       { aliases: ['guia', 'numero de guia', 'num guia', 'no guia'], label: 'Guía', critica: true }
         };
@@ -968,13 +1065,45 @@
         }
 
         function normalizeSemaphor(val) {
-            const v = String(val || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const raw = String(val || '').trim();
+            if (!raw) return 'Sin información';
+            const v = raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             if (v.includes('vencido') || v === 'rojo') return 'Vencido';
             if (v.includes('vence hoy') || v === 'hoy') return 'Vence hoy';
             if (v.includes('manana')) return 'Vence mañana';
             if (v.includes('2 dia') || v.includes('2dia') || v.includes('dos dia')) return 'Vence en 2 días';
             if (v.includes('tiempo') || v.includes('verde') || v === 'ok') return 'En tiempo';
-            return val;
+            if (v.includes('sin informacion') || v.includes('sin info') || v === 'n/a' || v === 'na') return 'Sin información';
+            return raw;
+        }
+
+        /** Corrige mojibake común (UTF-8 leído como Latin-1) y caracteres de reemplazo */
+        function fixEncoding(str) {
+            if (str == null || str === '') return str;
+            let s = String(str);
+            // Reemplazos frecuentes de mojibake español
+            const map = {
+                'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
+                'Ã±': 'ñ', 'Ã': 'Á', 'Ã‰': 'É', 'Ã': 'Í', 'Ã“': 'Ó',
+                'Ãš': 'Ú', 'Ã‘': 'Ñ', 'Ã¼': 'ü', 'Ãœ': 'Ü',
+                'Â¿': '¿', 'Â¡': '¡', 'â€™': "'", 'â€œ': '"', 'â€': '"',
+                'â€“': '–', 'â€”': '—', 'â€¦': '…'
+            };
+            for (const [bad, good] of Object.entries(map)) {
+                if (s.includes(bad)) s = s.split(bad).join(good);
+            }
+            // Caracter de reemplazo Unicode o "?" suelto en medio de palabra (típico de encoding roto)
+            s = s.replace(/\uFFFD/g, '');
+            // Casos específicos observados en este archivo: "m?di" → "médicos", "Sill?n" → "Sillón"
+            s = s.replace(/m\?di/gi, 'médicos').replace(/Sill\?n/gi, 'Sillón').replace(/\?/g, (m, offset, full) => {
+                // Solo reemplazar ? cuando parece parte de una palabra (letra antes y después)
+                const prev = full[offset - 1], next = full[offset + 1];
+                if (prev && next && /[a-zA-ZáéíóúñÁÉÍÓÚÑ]/.test(prev) && /[a-zA-ZáéíóúñÁÉÍÓÚÑ]/.test(next)) {
+                    return 'ó'; // heurística razonable para español
+                }
+                return m;
+            });
+            return s;
         }
 
         function parseFechaRobusta(dateStr) {
@@ -1187,16 +1316,76 @@
             if (tableFull || chartsFull || modalOpen) document.body.style.overflow = '';
         });
 
+        /**
+         * Detecta si el Excel es de un día anterior a hoy.
+         * Usa: 1) fecha en el nombre del archivo (YYYY-MM-DD), 2) máxima Fecha último movimiento.
+         * Si es anterior, muestra el banner permanente con la fecha del archivo.
+         */
+        function detectAndShowStaleBanner(data, fileName) {
+            const banner = document.getElementById('stale-file-banner');
+            const dateBadge = document.getElementById('stale-file-date');
+            if (!banner || !dateBadge) return;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let excelDate = null;
+
+            // 1) Intentar extraer fecha del nombre del archivo (ej. ...2026-11-10...)
+            if (fileName) {
+                const m = String(fileName).match(/(20\d{2})[-_\/](\d{1,2})[-_\/](\d{1,2})/);
+                if (m) {
+                    const d = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+                    if (!isNaN(d.getTime())) excelDate = d;
+                }
+            }
+
+            // 2) Si no, tomar la fecha máxima de "Fecha último movimiento"
+            if (!excelDate && data && data.length) {
+                let maxTs = 0;
+                data.forEach(r => {
+                    const d = parseFechaRobusta(r['Fecha último movimiento']);
+                    if (d && d.getTime() > maxTs) maxTs = d.getTime();
+                });
+                if (maxTs > 0) excelDate = new Date(maxTs);
+            }
+
+            if (!excelDate) {
+                banner.classList.remove('visible');
+                return;
+            }
+
+            excelDate.setHours(0, 0, 0, 0);
+            const diffDays = Math.round((today.getTime() - excelDate.getTime()) / 86400000);
+
+            if (diffDays >= 1) {
+                const opts = { year: 'numeric', month: 'long', day: 'numeric' };
+                const fechaTxt = excelDate.toLocaleDateString('es-MX', opts);
+                const diasTxt = diffDays === 1 ? '1 día' : `${diffDays} días`;
+                banner.innerHTML = `
+                    <i class="fas fa-exclamation-triangle text-lg"></i>
+                    <span>Este archivo corresponde a una fecha anterior (<b>${diasTxt}</b> de antigüedad).</span>
+                    <span class="stale-date-badge">${fechaTxt}</span>
+                    <span class="text-sm opacity-90">Los semáforos reflejan el estado al momento de la generación del Excel, no la fecha de hoy.</span>
+                `;
+                banner.classList.add('visible');
+            } else {
+                banner.classList.remove('visible');
+            }
+        }
+
         function analyzeAndAlert(data) {
             if (!data || data.length === 0) return;
             const total = data.length;
             const vencido = data.filter(r => r['Semáforo'] === 'Vencido').length;
             const hoy = data.filter(r => r['Semáforo'] === 'Vence hoy').length;
             const tiempo = data.filter(r => r['Semáforo'] === 'En tiempo').length;
+            const sinInfo = data.filter(r => !r['Semáforo'] || r['Semáforo'] === 'Sin información' || r['Semáforo'] === 'Sin estado').length;
             const notifs = [];
             if (vencido > 0) notifs.push({ type: 'danger', title: '🚨 Guías Vencidas Detectadas', message: `<b>${vencido}</b> guías con compromiso de entrega vencido.`, duration: 6000 });
             if (hoy > 0) notifs.push({ type: 'warning', title: '⏰ Guías que Vencen Hoy', message: `<b>${hoy}</b> guías con fecha compromiso = hoy.`, duration: 6000 });
-            notifs.push({ type: 'success', title: '✅ Excel Cargado Correctamente', message: `<b>${total}</b> guías procesadas · <b>${vencido}</b> vencidas · <b>${tiempo}</b> en tiempo.`, duration: 4000 });
+            if (sinInfo > 0) notifs.push({ type: 'warning', title: '❔ Guías sin información de semáforo', message: `<b>${sinInfo}</b> guía(s) sin estado de compromiso (revisar fecha de entrega).`, duration: 5500 });
+            notifs.push({ type: 'success', title: '✅ Excel Cargado Correctamente', message: `<b>${total}</b> guías procesadas · <b>${vencido}</b> vencidas · <b>${tiempo}</b> en tiempo · <b>${sinInfo}</b> sin info.`, duration: 4000 });
             addNotifications(notifs);
         }
 
@@ -1212,6 +1401,7 @@
 
             document.getElementById('skeletonLoader').classList.remove('hidden');
             document.getElementById('dashboard-content').classList.add('hidden');
+            document.getElementById('stale-file-banner')?.classList.remove('visible');
 
             const reader = new FileReader();
             reader.onload = function(ev) {
@@ -1252,9 +1442,19 @@
 
                         globalData = rawRows.slice(1).map(row => {
                             let obj = {};
-                            headers.forEach((h, index) => { if (h) obj[h] = row[index] !== undefined ? row[index] : ''; });
+                            headers.forEach((h, index) => {
+                                if (!h) return;
+                                let val = row[index] !== undefined ? row[index] : '';
+                                // Corregir encoding en campos de texto
+                                if (typeof val === 'string') val = fixEncoding(val);
+                                obj[h] = val;
+                            });
+                            // Garantía: solo buscar columnas de garantía (NO usar Tipo)
                             if (!obj['Garantía']) {
-                                const keyGarantia = Object.keys(obj).find(k => _norm(k).includes('garantia') || _norm(k) === 'tipo');
+                                const keyGarantia = Object.keys(obj).find(k => {
+                                    const n = _norm(k);
+                                    return n.includes('garantia') && !n.includes('tipo');
+                                });
                                 if (keyGarantia) obj['Garantía'] = obj[keyGarantia];
                             }
                             let cpVal = 'N/A';
@@ -1277,7 +1477,8 @@
                                 });
                                 if (keySem) obj['Semáforo'] = obj[keySem];
                             }
-                            if (obj['Semáforo']) obj['Semáforo'] = normalizeSemaphor(obj['Semáforo']);
+                            // Siempre normalizar (vacío → "Sin información")
+                            obj['Semáforo'] = normalizeSemaphor(obj['Semáforo']);
                             return obj;
                         })
                         .map(obj => {
@@ -1296,6 +1497,9 @@
                         document.getElementById('skeletonLoader').classList.add('hidden');
                         document.getElementById('dashboard-content').classList.remove('hidden');
                         document.getElementById('floating-plaza-btn').classList.remove('hidden');
+
+                        // Detectar si el Excel es de un día anterior y mostrar banner permanente
+                        detectAndShowStaleBanner(globalData, file.name);
 
                         activeFilters = { semaphors: [], garantias: [], cp: [], plazaColC: [], movimientos: [], ultimosMovimientos: [], search: '', sortColumn: null, sortDirection: 'asc' };
                         currentTablePage = 0;
@@ -1366,9 +1570,12 @@
                 .sort();
             container.innerHTML = uniqueValues.map(val => {
                 const isChecked = activeFilters.plazaColC.includes(val);
-                return `<label class="flex items-center gap-2.5 cursor-pointer hover:bg-slate-800/60 p-2 rounded plaza-checkbox-label transition">
-                    <input type="checkbox" value="${esc(val)}" ${isChecked ? 'checked' : ''} onchange="updatePlazaCount()" class="plaza-item-checkbox rounded border-slate-700 bg-slate-800 text-estafeta-red focus:ring-estafeta-red w-4 h-4 cursor-pointer">
-                    <span class="truncate text-slate-200 text-xs font-medium">${esc(val)}</span>
+                return `<label class="flex items-center justify-between adaptive-checkbox-row p-2.5 rounded-xl cursor-pointer border border-transparent transition plaza-checkbox-label">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-2.5 h-2.5 rounded-full ${isChecked ? 'bg-estafeta-red' : 'bg-slate-400 dark:bg-slate-600'}"></span>
+                        <span class="font-medium text-xs">${esc(val)}</span>
+                    </div>
+                    <input type="checkbox" value="${esc(val)}" ${isChecked ? 'checked' : ''} onchange="updatePlazaCount(); updateTimelineVisuals(this);" class="plaza-item-checkbox accent-red-600 rounded bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 w-4 h-4 cursor-pointer">
                 </label>`;
             }).join('');
             updatePlazaCount();
@@ -1376,11 +1583,21 @@
         document.getElementById('plaza-modal-search')?.addEventListener('input', populatePlazaModalCheckboxes);
 
         function selectAllPlazaCheckboxes() {
-            document.querySelectorAll('.plaza-item-checkbox').forEach(cb => { if (cb.closest('label').style.display !== 'none') cb.checked = true; });
+            document.querySelectorAll('.plaza-item-checkbox').forEach(cb => { 
+                if (cb.closest('label').style.display !== 'none') {
+                    cb.checked = true;
+                    updateTimelineVisuals(cb);
+                }
+            });
             updatePlazaCount();
         }
         function deselectAllPlazaCheckboxes() {
-            document.querySelectorAll('.plaza-item-checkbox').forEach(cb => { if (cb.closest('label').style.display !== 'none') cb.checked = false; });
+            document.querySelectorAll('.plaza-item-checkbox').forEach(cb => { 
+                if (cb.closest('label').style.display !== 'none') {
+                    cb.checked = false;
+                    updateTimelineVisuals(cb);
+                }
+            });
             updatePlazaCount();
         }
         function updatePlazaCount() {
@@ -1499,6 +1716,20 @@
             document.getElementById('filter-modal').classList.add('hidden');
             currentModalColumn = null;
         }
+
+        function updateTimelineVisuals(checkbox) {
+            const dot = checkbox.closest('label').querySelector('span.w-2\\.5');
+            if (dot) {
+                if (checkbox.checked) {
+                    dot.classList.remove('bg-slate-400', 'dark:bg-slate-600');
+                    dot.classList.add('bg-estafeta-red');
+                } else {
+                    dot.classList.remove('bg-estafeta-red');
+                    dot.classList.add('bg-slate-400', 'dark:bg-slate-600');
+                }
+            }
+        }
+
         function populateModalCheckboxes() {
             const container = document.getElementById('modal-checkboxes-container');
             container.innerHTML = '';
@@ -1520,11 +1751,15 @@
             else if (currentModalColumn === 'Garantía') currentActiveValues = activeFilters.garantias;
             else if (currentModalColumn === 'C:P') currentActiveValues = activeFilters.cp;
             else if (currentModalColumn === 'Fecha último movimiento') currentActiveValues = activeFilters.ultimosMovimientos;
+            
             container.innerHTML = uniqueValues.map(val => {
                 const isChecked = currentActiveValues.includes(val);
-                return `<label class="flex items-center gap-2.5 cursor-pointer hover:bg-slate-800/60 p-2 rounded modal-checkbox-label transition">
-                    <input type="checkbox" value="${esc(val)}" ${isChecked ? 'checked' : ''} onchange="updateModalCount()" class="modal-item-checkbox rounded border-slate-700 bg-slate-800 text-estafeta-red focus:ring-estafeta-red w-4 h-4 cursor-pointer">
-                    <span class="truncate text-slate-200 text-xs font-medium">${esc(val)}</span>
+                return `<label class="flex items-center justify-between adaptive-checkbox-row p-2.5 rounded-xl cursor-pointer border border-transparent transition modal-checkbox-label">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-2.5 h-2.5 rounded-full ${isChecked ? 'bg-estafeta-red' : 'bg-slate-400 dark:bg-slate-600'}"></span>
+                        <span class="font-medium text-xs">${esc(val)}</span>
+                    </div>
+                    <input type="checkbox" value="${esc(val)}" ${isChecked ? 'checked' : ''} onchange="updateModalCount(); updateTimelineVisuals(this);" class="modal-item-checkbox accent-red-600 rounded bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 w-4 h-4 cursor-pointer">
                 </label>`;
             }).join('');
             updateModalCount();
@@ -1532,11 +1767,21 @@
         document.getElementById('modal-search-input')?.addEventListener('input', populateModalCheckboxes);
 
         function selectAllModalCheckboxes() {
-            document.querySelectorAll('.modal-item-checkbox').forEach(cb => { if (cb.closest('label').style.display !== 'none') cb.checked = true; });
+            document.querySelectorAll('.modal-item-checkbox').forEach(cb => { 
+                if (cb.closest('label').style.display !== 'none') {
+                    cb.checked = true;
+                    updateTimelineVisuals(cb);
+                }
+            });
             updateModalCount();
         }
         function deselectAllModalCheckboxes() {
-            document.querySelectorAll('.modal-item-checkbox').forEach(cb => { if (cb.closest('label').style.display !== 'none') cb.checked = false; });
+            document.querySelectorAll('.modal-item-checkbox').forEach(cb => { 
+                if (cb.closest('label').style.display !== 'none') {
+                    cb.checked = false;
+                    updateTimelineVisuals(cb);
+                }
+            });
             updateModalCount();
         }
         function updateModalCount() {
@@ -1592,7 +1837,7 @@
         }
 
         function updateSortIcons() {
-            const columns = ['Movimiento', 'Guía', 'Semáforo', 'Garantía', 'C:P', 'Plaza origen', 'Plaza Destino', 'Nom cliente', 'Fecha último movimiento', 'Fecha compromiso de entrega'];
+            const columns = ['Movimiento', 'Guía', 'Semáforo', 'Garantía', 'C:P', 'Plaza origen', 'Plaza Destino', 'Nom cliente', 'Fecha último movimiento', 'Fecha compromiso de entrega', 'Tipo'];
             columns.forEach(col => {
                 const iconEl = document.getElementById(`sort-icon-${col}`);
                 if (!iconEl) return;
@@ -1716,12 +1961,17 @@
             const manana = filteredData.filter(r => r['Semáforo'] === 'Vence mañana').length;
             const dosDias = filteredData.filter(r => r['Semáforo'] === 'Vence en 2 días').length;
             const tiempo = filteredData.filter(r => r['Semáforo'] === 'En tiempo').length;
+            const sinInfo = filteredData.filter(r => {
+                const s = r['Semáforo'];
+                return !s || s === 'Sin información' || s === 'Sin estado';
+            }).length;
             animateNumber(document.getElementById('kpi-total'), total);
             animateNumber(document.getElementById('kpi-vencido'), vencido);
             animateNumber(document.getElementById('kpi-hoy'), hoy);
             animateNumber(document.getElementById('kpi-mañana'), manana);
             animateNumber(document.getElementById('kpi-2dias'), dosDias);
             animateNumber(document.getElementById('kpi-tiempo'), tiempo);
+            animateNumber(document.getElementById('kpi-sininfo'), sinInfo);
         }
 
         function updateFilterBadges() {
@@ -1753,6 +2003,10 @@
                 'Vence mañana': filteredData.filter(r => r['Semáforo'] === 'Vence mañana').length,
                 'Vence en 2 días': filteredData.filter(r => r['Semáforo'] === 'Vence en 2 días').length,
                 'En tiempo': filteredData.filter(r => r['Semáforo'] === 'En tiempo').length,
+                'Sin información': filteredData.filter(r => {
+                    const s = r['Semáforo'];
+                    return !s || s === 'Sin información' || s === 'Sin estado';
+                }).length,
             };
 
             const ctxSem = document.getElementById('chartSemaforo').getContext('2d');
@@ -1869,7 +2123,7 @@
             document.getElementById('table-record-counter').textContent = `${filteredData.length} paquetes`;
 
             if (displayData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="p-4 text-center text-slate-400">No se encontraron registros.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-slate-400">No se encontraron registros.</td></tr>`;
                 document.getElementById('table-pagination-info').innerHTML = `<span>Mostrando 0 de ${filteredData.length}</span><div></div>`;
                 return;
             }
@@ -1877,7 +2131,8 @@
             const isDark = document.body.classList.contains('dark-mode');
             let rowsHtml = '';
             displayData.forEach(row => {
-                let semVal = row['Semáforo'] || 'Sin estado';
+                let semVal = row['Semáforo'] || 'Sin información';
+                if (semVal === 'Sin estado') semVal = 'Sin información';
                 let isUrgentSem = (semVal === 'Vencido' || semVal === 'Vence hoy');
                 let semPulseClass = isUrgentSem ? 'animate-soft-pulse' : '';
                 let semBadgeStyle = '';
@@ -1885,11 +2140,16 @@
                     semBadgeStyle = isDark ? 'background-color: #EF4444; color: #ffffff;' : 'background-color: #FEE2E2; color: #991B1B; border: 2px solid #EF4444; font-weight: 850;';
                 } else if (semVal === 'Vence hoy') {
                     semBadgeStyle = isDark ? 'background-color: #F59E0B; color: #ffffff;' : 'background-color: #FEF3C7; color: #92400E; border: 2px solid #F59E0B; font-weight: 850;';
+                } else if (semVal === 'Sin información') {
+                    semBadgeStyle = isDark
+                        ? 'background-color: #475569; color: #e2e8f0; border: 1px solid #64748B;'
+                        : 'background-color: #F1F5F9; color: #475569; border: 2px solid #94A3B8; font-weight: 700;';
                 } else {
                     let color = semaphorColors[semVal] || '#64748B';
                     semBadgeStyle = `background-color: ${color}; color: #ffffff;`;
                 }
                 const compromisoFormatted = getCommitmentBadge(row['Fecha compromiso de entrega'], semVal);
+                const tipoVal = row['Tipo'] || 'N/A';
                 rowsHtml += `
                     <tr class="transition">
                         <td class="p-3 font-semibold">${esc(row['Movimiento'] || 'N/A')}</td>
@@ -1902,6 +2162,7 @@
                         <td class="p-3 truncate max-w-[150px]">${esc(row['Nom cliente'] || 'N/A')}</td>
                         <td class="p-3 text-xs">${esc(row['Fecha último movimiento'] || 'N/A')}</td>
                         <td class="p-3 text-xs">${compromisoFormatted}</td>
+                        <td class="p-3 text-xs max-w-[140px] truncate" title="${esc(tipoVal)}">${esc(tipoVal)}</td>
                     </tr>
                 `;
             });
