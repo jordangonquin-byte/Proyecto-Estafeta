@@ -38,6 +38,35 @@
 
         @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
+        /* Banner de archivo desactualizado */
+        #stale-file-banner {
+            display: none;
+            background: linear-gradient(90deg, #7c2d12, #9a3412, #c2410c, #9a3412, #7c2d12);
+            background-size: 300% 100%;
+            animation: gradientShift 12s ease infinite;
+            color: #fff;
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 40;
+            position: relative;
+        }
+        #stale-file-banner.visible { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        #stale-file-banner .stale-date-badge {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.35);
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+        body.dark-mode #stale-file-banner {
+            background: linear-gradient(90deg, #431407, #7c2d12, #9a3412, #7c2d12, #431407);
+            background-size: 300% 100%;
+        }
+
         .master-header {
             background: var(--header-bg);
             background-size: 300% 100%;
@@ -357,6 +386,14 @@
         </div>
     </header>
 
+    <!-- Banner permanente cuando el Excel es de un día anterior -->
+    <div id="stale-file-banner" role="alert">
+        <i class="fas fa-exclamation-triangle text-lg"></i>
+        <span>Este archivo corresponde a una fecha anterior.</span>
+        <span class="stale-date-badge" id="stale-file-date">—</span>
+        <span class="text-sm opacity-90">Los vencimientos y estados reflejan el momento de generación del Excel, no la fecha de hoy.</span>
+    </div>
+
     <main id="main-container" class="w-[80%] max-w-[80%] mx-auto px-4 py-6 flex-grow space-y-6 hidden">
         
         <div class="bg-white p-2 rounded-2xl shadow-sm border border-gray-200 transition-colors duration-300">
@@ -425,6 +462,8 @@
                                 <button onclick="setStatusFilter('CONFIRMADO')" id="btn-status-confirmado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Confirmados</button>
                                 <button onclick="setStatusFilter('EXCEPCIONADO')" id="btn-status-excepcionado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Excepcionados</button>
                                 <button onclick="setStatusFilter('PENDIENTE')" id="btn-status-pendiente" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Pendientes</button>
+                                <button onclick="setStatusFilter('ENRUTADO')" id="btn-status-enrutado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Enrutados</button>
+                                <button onclick="setStatusFilter('RECOLECTADO')" id="btn-status-recolectado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Recolectados</button>
                             </div>
                             <button onclick="toggleProgramadaVisibility()" id="btn-toggle-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="prog-toggle-icon"></i><span id="prog-toggle-text">Ocultar Programadas</span></button>
                             
@@ -488,6 +527,8 @@
                                 <button onclick="setCronoStatusFilter('CONFIRMADO')" id="btn-crono-status-confirmado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Confirmados</button>
                                 <button onclick="setCronoStatusFilter('EXCEPCIONADO')" id="btn-crono-status-excepcionado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Excepcionados</button>
                                 <button onclick="setCronoStatusFilter('PENDIENTE')" id="btn-crono-status-pendiente" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Pendientes</button>
+                                <button onclick="setCronoStatusFilter('ENRUTADO')" id="btn-crono-status-enrutado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Enrutados</button>
+                                <button onclick="setCronoStatusFilter('RECOLECTADO')" id="btn-crono-status-recolectado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Recolectados</button>
                             </div>
                             <button onclick="toggleCronoProgramadaVisibility()" id="btn-toggle-crono-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="crono-prog-toggle-icon"></i><span id="crono-prog-toggle-text">Ocultar Programadas</span></button>
                             
@@ -548,6 +589,8 @@
                                     <button onclick="setTimelineStatusFilter('CONFIRMADO')" id="btn-timeline-status-confirmado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Confirmados</button>
                                     <button onclick="setTimelineStatusFilter('EXCEPCIONADO')" id="btn-timeline-status-excepcionado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Excepcionados</button>
                                     <button onclick="setTimelineStatusFilter('PENDIENTE')" id="btn-timeline-status-pendiente" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Pendientes</button>
+                                    <button onclick="setTimelineStatusFilter('ENRUTADO')" id="btn-timeline-status-enrutado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Enrutados</button>
+                                    <button onclick="setTimelineStatusFilter('RECOLECTADO')" id="btn-timeline-status-recolectado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Recolectados</button>
                                 </div>
                                 <button onclick="toggleTimelineProgramadaVisibility()" id="btn-toggle-timeline-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="timeline-prog-toggle-icon"></i><span id="timeline-prog-toggle-text">Ocultar Programadas</span></button>
                                 
@@ -613,6 +656,8 @@
                                     <button onclick="setMapStatusFilter('CONFIRMADO')" id="btn-map-status-confirmado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Confirmados</button>
                                     <button onclick="setMapStatusFilter('EXCEPCIONADO')" id="btn-map-status-excepcionado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Excepcionados</button>
                                     <button onclick="setMapStatusFilter('PENDIENTE')" id="btn-map-status-pendiente" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Pendientes</button>
+                                    <button onclick="setMapStatusFilter('ENRUTADO')" id="btn-map-status-enrutado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Enrutados</button>
+                                    <button onclick="setMapStatusFilter('RECOLECTADO')" id="btn-map-status-recolectado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Recolectados</button>
                                 </div>
                                 <button onclick="toggleMapProgramadaVisibility()" id="btn-toggle-map-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="map-prog-toggle-icon"></i><span id="map-prog-toggle-text">Ocultar Programadas</span></button>
                             </div>
@@ -751,6 +796,24 @@
 
         function isProgramada(guideVal) {
             return /^\d{10}$/.test(String(guideVal ?? '').trim());
+        }
+
+        /** Match de estatus unificado (incluye ENRUTADO y RECOLECTADO) */
+        function matchRowStatus(rowStatus, filter) {
+            if (!filter || filter === 'ALL') return true;
+            const st = String(rowStatus || '').trim().toUpperCase();
+            if (filter === 'CONFIRMADO') return st.includes('CONFIRMADA') || st.includes('CONFIRMADO');
+            if (filter === 'EXCEPCIONADO') return st.includes('EXCEPCIONADO') || st.includes('EXCEPCIONADA');
+            if (filter === 'PENDIENTE') return st.includes('PENDIENTE');
+            if (filter === 'ENRUTADO') return st.includes('ENRUTAD');
+            if (filter === 'RECOLECTADO') return st.includes('RECOLECT');
+            return true;
+        }
+
+        /** true si la hora del evento es exactamente medianoche (00:00:00) */
+        function isMidnightEvent(dateObj) {
+            if (!dateObj || isNaN(dateObj.getTime())) return false;
+            return dateObj.getHours() === 0 && dateObj.getMinutes() === 0 && dateObj.getSeconds() === 0;
         }
 
         let rawData = [];
@@ -1039,6 +1102,57 @@
             }
         }
 
+        function detectAndShowStaleBanner(data, fileName) {
+            const banner = document.getElementById('stale-file-banner');
+            if (!banner) return;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            let excelDate = null;
+
+            if (fileName) {
+                const m = String(fileName).match(/(20\d{2})[-_\/](\d{1,2})[-_\/](\d{1,2})/);
+                if (m) {
+                    const d = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+                    if (!isNaN(d.getTime())) excelDate = d;
+                }
+            }
+
+            if (!excelDate && data && data.length && eventTimeKeyName) {
+                let maxTs = 0;
+                data.forEach(r => {
+                    const v = r[eventTimeKeyName];
+                    if (!v) return;
+                    const d = v instanceof Date ? v : new Date(v);
+                    if (!isNaN(d.getTime()) && d.getTime() > maxTs) maxTs = d.getTime();
+                });
+                if (maxTs > 0) excelDate = new Date(maxTs);
+            }
+
+            if (!excelDate) {
+                banner.classList.remove('visible');
+                return;
+            }
+
+            excelDate.setHours(0, 0, 0, 0);
+            const diffDays = Math.round((today.getTime() - excelDate.getTime()) / 86400000);
+
+            if (diffDays >= 1) {
+                const opts = { year: 'numeric', month: 'long', day: 'numeric' };
+                const fechaTxt = excelDate.toLocaleDateString('es-MX', opts);
+                const diasTxt = diffDays === 1 ? '1 día' : `${diffDays} días`;
+                banner.innerHTML = `
+                    <i class="fas fa-exclamation-triangle text-lg"></i>
+                    <span>Este archivo corresponde a una fecha anterior (<b>${diasTxt}</b> de antigüedad).</span>
+                    <span class="stale-date-badge">${fechaTxt}</span>
+                    <span class="text-sm opacity-90">Los vencimientos y estados reflejan el momento de generación del Excel, no la fecha de hoy.</span>
+                `;
+                banner.classList.add('visible');
+            } else {
+                banner.classList.remove('visible');
+            }
+        }
+
         function initDashboard(data, fileName) {
             rawData = data.filter(row => Object.keys(row).length > 0);
 
@@ -1085,6 +1199,8 @@
             document.getElementById('file-status').innerText = fileName;
             document.getElementById('main-container').classList.remove('hidden');
             document.getElementById('floating-plaza-container').classList.remove('hidden');
+
+            detectAndShowStaleBanner(rawData, fileName);
 
             renderPlazaFilterList();
             updateDashboard();
@@ -1408,7 +1524,7 @@
 
         function setStatusFilter(status) {
             activeStatusFilter = status;
-            ['all', 'confirmado', 'excepcionado', 'pendiente'].forEach(s => {
+            ['all', 'confirmado', 'excepcionado', 'pendiente', 'enrutado', 'recolectado'].forEach(s => {
                 const btn = document.getElementById(`btn-status-${s}`);
                 if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
             });
@@ -1418,7 +1534,7 @@
         }
         function setCronoStatusFilter(status) {
             activeCronoStatusFilter = status;
-            ['all', 'confirmado', 'excepcionado', 'pendiente'].forEach(s => {
+            ['all', 'confirmado', 'excepcionado', 'pendiente', 'enrutado', 'recolectado'].forEach(s => {
                 const btn = document.getElementById(`btn-crono-status-${s}`);
                 if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
             });
@@ -1428,7 +1544,7 @@
         }
         function setTimelineStatusFilter(status) {
             activeTimelineStatusFilter = status;
-            ['all', 'confirmado', 'excepcionado', 'pendiente'].forEach(s => {
+            ['all', 'confirmado', 'excepcionado', 'pendiente', 'enrutado', 'recolectado'].forEach(s => {
                 const btn = document.getElementById(`btn-timeline-status-${s}`);
                 if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
             });
@@ -1438,7 +1554,7 @@
         }
         function setMapStatusFilter(status) {
             activeMapStatusFilter = status;
-            ['all', 'confirmado', 'excepcionado', 'pendiente'].forEach(s => {
+            ['all', 'confirmado', 'excepcionado', 'pendiente', 'enrutado', 'recolectado'].forEach(s => {
                 const btn = document.getElementById(`btn-map-status-${s}`);
                 if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
             });
@@ -1455,8 +1571,10 @@
                 return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-yellow-100 text-yellow-800 shadow-sm">Pendientes</span>';
             } else if (val.includes('EXCEPCION')) {
                 return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-red-100 text-red-800 shadow-sm">Excepcionados</span>';
+            } else if (val.includes('ENRUTAD')) {
+                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-blue-100 text-blue-800 shadow-sm">Enrutado</span>';
             } else if (val.includes('RECOLECT') || val.includes('RECOLECCION')) {
-                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gray-200 text-gray-800 shadow-sm">Recolección</span>';
+                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-100 text-indigo-800 shadow-sm">Recolectado</span>';
             }
             return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gray-100 text-gray-700 shadow-sm">${esc(statusVal || 'N/D')}</span>`;
         }
@@ -1610,10 +1728,7 @@
             let cronoFilteredRows = rawData.filter(row => {
                 let matchPlaza = (!activePlazaFilter || activePlazaFilter.size === 0) ? true : activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
                 let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
-                let matchStatus = true;
-                if (activeCronoStatusFilter === 'CONFIRMADO') matchStatus = rowStatus.includes('CONFIRMADA') || rowStatus.includes('CONFIRMADO');
-                else if (activeCronoStatusFilter === 'EXCEPCIONADO') matchStatus = rowStatus.includes('EXCEPCIONADO') || rowStatus.includes('EXCEPCIONADA');
-                else if (activeCronoStatusFilter === 'PENDIENTE') matchStatus = rowStatus.includes('PENDIENTE');
+                let matchStatus = matchRowStatus(rowStatus, activeCronoStatusFilter);
 
                 let matchProg = true;
                 if (!showCronoProgData) {
@@ -1638,6 +1753,8 @@
                 let timeVal = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
                 let guideVal = row[guideKeyName] !== undefined && row[guideKeyName] !== null ? row[guideKeyName] : '—';
                 if (timeVal && !isNaN(timeVal)) {
+                    // Falla 2: excluir eventos a las 00:00:00 (programadas artificiales) del cálculo de gaps
+                    if (isMidnightEvent(timeVal)) return;
                     routeMap[ruta].push({ time: timeVal.getTime(), dateObj: timeVal, guide: guideVal, originalRow: row });
                 }
             });
@@ -1648,30 +1765,34 @@
             for (let ruta in routeMap) {
                 let events = routeMap[ruta].sort((a, b) => a.time - b.time);
                 let totalEvents = events.length;
-                let diffs = [];
+                let diffsForStats = []; // solo diffs > 0 para avg/max/total (Falla 1)
 
                 for (let i = 1; i < totalEvents; i++) {
                     let prev = events[i - 1];
                     let curr = events[i];
                     let diff = curr.time - prev.time;
-                    if (diff >= 0) {
-                        diffs.push(diff);
-                        rawCachedCronoList.push({
-                            ruta: ruta,
-                            prevTime: formatDateString(prev.dateObj),
-                            prevGuide: String(prev.guide),
-                            prevRow: prev.originalRow,
-                            currGuide: String(curr.guide),
-                            currTime: formatDateString(curr.dateObj),
-                            currRow: curr.originalRow,
-                            diff: diff
-                        });
-                    }
+                    if (diff < 0) continue;
+
+                    // Siempre visible en la tabla cronológica y en el mapa (Falla 1: no se ocultan)
+                    rawCachedCronoList.push({
+                        ruta: ruta,
+                        prevTime: formatDateString(prev.dateObj),
+                        prevGuide: String(prev.guide),
+                        prevRow: prev.originalRow,
+                        currGuide: String(curr.guide),
+                        currTime: formatDateString(curr.dateObj),
+                        currRow: curr.originalRow,
+                        diff: diff,
+                        isSimultaneous: diff === 0
+                    });
+
+                    // Solo diffs reales (> 0) contaminan promedio / total / máximo
+                    if (diff > 0) diffsForStats.push(diff);
                 }
 
-                let totalDiff = diffs.reduce((acc, curr) => acc + curr, 0);
-                let avgDiff = diffs.length > 0 ? totalDiff / diffs.length : 0;
-                let maxDiff = diffs.length > 0 ? Math.max(...diffs) : 0;
+                let totalDiff = diffsForStats.reduce((acc, curr) => acc + curr, 0);
+                let avgDiff = diffsForStats.length > 0 ? totalDiff / diffsForStats.length : 0;
+                let maxDiff = diffsForStats.length > 0 ? Math.max(...diffsForStats) : 0;
 
                 cachedDeadTimesList.push({ ruta, count: totalEvents, avg: avgDiff, max: maxDiff, total: totalDiff });
             }
@@ -1710,10 +1831,7 @@
             rawData.forEach(row => {
                 let matchPlaza = (!activePlazaFilter || activePlazaFilter.size === 0) ? true : activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
                 let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
-                let matchStatus = true;
-                if (activeTimelineStatusFilter === 'CONFIRMADO') matchStatus = rowStatus.includes('CONFIRMADA') || rowStatus.includes('CONFIRMADO');
-                else if (activeTimelineStatusFilter === 'EXCEPCIONADO') matchStatus = rowStatus.includes('EXCEPCIONADO') || rowStatus.includes('EXCEPCIONADA');
-                else if (activeTimelineStatusFilter === 'PENDIENTE') matchStatus = rowStatus.includes('PENDIENTE');
+                let matchStatus = matchRowStatus(rowStatus, activeTimelineStatusFilter);
 
                 let matchProg = true;
                 if (!showTimelineProgData) {
@@ -1757,10 +1875,7 @@
             rawData.forEach(row => {
                 let matchPlaza = (!activePlazaFilter || activePlazaFilter.size === 0) ? true : activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
                 let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
-                let matchStatus = true;
-                if (activeMapStatusFilter === 'CONFIRMADO') matchStatus = rowStatus.includes('CONFIRMADA') || rowStatus.includes('CONFIRMADO');
-                else if (activeMapStatusFilter === 'EXCEPCIONADO') matchStatus = rowStatus.includes('EXCEPCIONADO') || rowStatus.includes('EXCEPCIONADA');
-                else if (activeMapStatusFilter === 'PENDIENTE') matchStatus = rowStatus.includes('PENDIENTE');
+                let matchStatus = matchRowStatus(rowStatus, activeMapStatusFilter);
 
                 let matchProg = true;
                 if (!showMapProgData) {
@@ -1851,6 +1966,8 @@
                     let p1 = validPointsForLines[i];
                     let p2 = validPointsForLines[i + 1];
                     let distMeters = p1.latLng.distanceTo(p2.latLng);
+                    // Falla 8: no dibujar polylines de longitud ~0 (mismo punto / mismo segundo)
+                    if (distMeters < 5) continue;
                     let distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(1) + ' metros';
                     let timeText = '';
                     if (p1.date && p2.date && !isNaN(p1.date) && !isNaN(p2.date)) {
@@ -1950,6 +2067,8 @@
                     let p1 = validPointsForLines[i];
                     let p2 = validPointsForLines[i + 1];
                     let distMeters = p1.latLng.distanceTo(p2.latLng);
+                    // Falla 8: no dibujar polylines de longitud ~0
+                    if (distMeters < 5) continue;
                     let distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(1) + ' metros';
                     let timeText = '';
                     if (p1.date && p2.date && !isNaN(p1.date) && !isNaN(p2.date)) {
@@ -2080,18 +2199,19 @@
                 const p1 = L.latLng(prevCoords[0], prevCoords[1]);
                 const p2 = L.latLng(currCoords[0], currCoords[1]);
                 let diffMeters = p1.distanceTo(p2);
-                let distText = diffMeters >= 1000 ? (diffMeters / 1000).toFixed(2) + ' km' : diffMeters.toFixed(1) + ' metros';
-                
-                let timeText = '';
-                if (item.diff !== undefined && item.diff !== null && item.diff >= 0) {
-                    let totalMins = Math.floor(item.diff / 60000);
-                    let hrs = Math.floor(totalMins / 60);
-                    let mins = totalMins % 60;
-                    timeText = hrs > 0 ? `<br>Tiempo transcurrido: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo transcurrido: <b>${totalMins} min</b>`;
+                // Falla 8: no dibujar línea si es el mismo punto (< 5 m)
+                if (diffMeters >= 5) {
+                    let distText = diffMeters >= 1000 ? (diffMeters / 1000).toFixed(2) + ' km' : diffMeters.toFixed(1) + ' metros';
+                    let timeText = '';
+                    if (item.diff !== undefined && item.diff !== null && item.diff >= 0) {
+                        let totalMins = Math.floor(item.diff / 60000);
+                        let hrs = Math.floor(totalMins / 60);
+                        let mins = totalMins % 60;
+                        timeText = hrs > 0 ? `<br>Tiempo transcurrido: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo transcurrido: <b>${totalMins} min</b>`;
+                    }
+                    cronoPolyline = L.polyline([prevCoords, currCoords], { color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5' }).addTo(cronoMapInstance);
+                    cronoPolyline.bindTooltip(`Distancia: <b>${distText}</b>${timeText}`, { sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200' });
                 }
-
-                cronoPolyline = L.polyline([prevCoords, currCoords], { color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5' }).addTo(cronoMapInstance);
-                cronoPolyline.bindTooltip(`Distancia: <b>${distText}</b>${timeText}`, { sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200' });
             }
             
             if (latLngs.length > 0) cronoMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15 });
@@ -2386,13 +2506,16 @@
                 let absoluteIndex = startIndex + idx + 1;
                 let tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-50 transition-all';
+                const diffCell = item.isSimultaneous || item.diff === 0
+                    ? `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 text-slate-600 border border-slate-300" title="Mismo segundo (batch)">Simultáneo</span>`
+                    : `<span class="font-bold text-red-600">${formatDuration(item.diff)}</span>`;
                 tr.innerHTML = `
                     <td class="p-3 font-semibold text-gray-500">#${absoluteIndex}</td>
                     <td class="p-3 font-bold text-gray-800"><i class="fa-solid fa-route estafeta-red-text mr-1.5"></i>${esc(item.ruta)}</td>
                     <td class="p-3 text-center font-mono text-gray-600">${esc(item.prevTime)}</td>
                     <td class="p-3 font-medium text-gray-700">${esc(item.currGuide)}</td>
                     <td class="p-3 text-center font-mono text-gray-600">${esc(item.currTime)}</td>
-                    <td class="p-3 text-center font-bold text-red-600">${formatDuration(item.diff)}</td>
+                    <td class="p-3 text-center">${diffCell}</td>
                 `;
                 fragment.appendChild(tr);
             });
@@ -2497,10 +2620,7 @@
             filteredData = rawData.filter(row => {
                 let matchPlaza = (!activePlazaFilter || activePlazaFilter.size === 0) ? true : activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
                 let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
-                let matchStatus = true;
-                if (activeStatusFilter === 'CONFIRMADO') matchStatus = rowStatus.includes('CONFIRMADA') || rowStatus.includes('CONFIRMADO');
-                else if (activeStatusFilter === 'EXCEPCIONADO') matchStatus = rowStatus.includes('EXCEPCIONADO') || rowStatus.includes('EXCEPCIONADA');
-                else if (activeStatusFilter === 'PENDIENTE') matchStatus = rowStatus.includes('PENDIENTE');
+                let matchStatus = matchRowStatus(rowStatus, activeStatusFilter);
 
                 let matchProg = true;
                 if (!showProgData) {
