@@ -16,17 +16,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* ============================================================
-           VARIABLES DEL BANNER MAESTRO
-           ============================================================ */
         :root {
             --estafeta-red: #DA291C;
             --estafeta-dark: #1e293b;
             --estafeta-white: #ffffff;
             --header-bg: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
-            --btn-upload-bg: rgba(0, 0, 0, 0.2);
-            --btn-upload-hover: rgba(0, 0, 0, 0.35);
-            --btn-upload-border: rgba(255, 255, 255, 0.2);
             --text-color: #ffffff;
             --subtext-color: #ffcdd2;
             --badge-bg: #ffffff;
@@ -35,9 +29,6 @@
 
         body.dark-mode {
             --header-bg: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
-            --btn-upload-bg: rgba(0, 0, 0, 0.4);
-            --btn-upload-hover: rgba(0, 0, 0, 0.6);
-            --btn-upload-border: rgba(255, 255, 255, 0.1);
             --text-color: #f1f5f9;
             --subtext-color: #fca5a5;
             --badge-bg: #f8fafc;
@@ -52,9 +43,55 @@
             50%      { background-position: 100% 50%; }
         }
 
-        /* ============================================================
-           CONTENEDOR DEL BANNER MAESTRO
-           ============================================================ */
+        /* Banner de archivo histórico */
+        #stale-file-banner {
+            display: none;
+            background: linear-gradient(90deg, #7c2d12, #9a3412, #c2410c, #9a3412, #7c2d12);
+            background-size: 300% 100%;
+            animation: gradientShift 12s ease infinite;
+            color: #fff;
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 40;
+            position: relative;
+        }
+        #stale-file-banner.visible { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        #stale-file-banner .stale-date-badge {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.35);
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+        body.dark-mode #stale-file-banner {
+            background: linear-gradient(90deg, #431407, #7c2d12, #9a3412, #7c2d12, #431407);
+            background-size: 300% 100%;
+        }
+
+        #map-empty-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            z-index: 500;
+            background: rgba(15, 23, 42, 0.55);
+            border-radius: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+            color: #fff;
+            text-align: center;
+            padding: 24px;
+            pointer-events: none;
+        }
+        #map-empty-overlay.visible { display: flex; }
+        #map-empty-overlay i { font-size: 2rem; opacity: 0.9; }
+        #map-empty-overlay p { font-size: 0.9rem; font-weight: 600; max-width: 320px; line-height: 1.4; }
+
         .master-header {
             background: var(--header-bg);
             background-size: 300% 100%;
@@ -96,77 +133,94 @@
             font-size: 0.75rem; color: var(--subtext-color); margin: 0;
             text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;
         }
-        .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .header-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 
-        /* --- BOTÓN DE CARGA EXCEL --- */
         .upload-btn-wrapper {
             position: relative;
             display: inline-flex; align-items: center;
-            background-color: var(--btn-upload-bg);
-            border: 1px solid var(--btn-upload-border);
+            background: transparent !important;
+            border: 1px dashed transparent;
             border-radius: 10px;
-            padding: 8px 16px;
+            padding: 6px 10px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(4px);
+            transition: all 0.25s ease;
+            gap: 10px;
+            color: white;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
         }
         .upload-btn-wrapper:hover {
-            background-color: var(--btn-upload-hover);
-            transform: translateY(-1px);
+            transform: translateY(-2px) scale(1.03);
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+        }
+        .upload-btn-wrapper.drag-over {
+            border: 2px dashed #10b981 !important;
+            background-color: rgba(16, 185, 129, 0.2) !important;
+            transform: scale(1.04);
         }
         .upload-btn-wrapper input[type="file"] {
             position: absolute; left: 0; top: 0;
             width: 100%; height: 100%; opacity: 0; cursor: pointer;
         }
-        .upload-btn-icon { color: #4ade80; font-size: 1.2rem; margin-right: 10px; }
-        .upload-btn-content { display: flex; flex-direction: column; text-align: left; }
-        .upload-btn-title { font-size: 0.85rem; font-weight: 700; color: var(--text-color); }
-        .upload-btn-subtitle { font-size: 0.65rem; color: var(--subtext-color); }
 
-        /* --- BOTÓN DE MODO OSCURO --- */
         #theme-toggle {
-            background: var(--btn-upload-bg);
-            border: 1px solid var(--btn-upload-border);
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
             color: var(--text-color);
-            width: 42px; height: 42px;
-            border-radius: 10px;
+            width: 40px; height: 40px;
+            border-radius: 50%;
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(4px);
+            font-size: 1.35rem;
+            transition: transform 0.25s ease, filter 0.25s ease;
             flex-shrink: 0;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
         }
         #theme-toggle:hover {
-            background: var(--btn-upload-hover);
-            transform: translateY(-1px) rotate(15deg);
+            transform: translateY(-2px) rotate(18deg) scale(1.12);
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
         }
 
-        /* --- CAMPANA (estilos maestros) --- */
         #notif-bell {
             position: relative;
-            background: var(--btn-upload-bg);
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
             color: var(--text-color);
-            border: 1px solid var(--btn-upload-border);
-            width: 42px; height: 42px;
-            border-radius: 10px;
+            width: 40px; height: 40px;
+            border-radius: 50%;
             cursor: pointer;
             display: inline-flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            transition: all 0.2s ease;
+            font-size: 1.35rem;
+            transition: transform 0.25s ease, filter 0.25s ease;
             flex-shrink: 0;
-            backdrop-filter: blur(4px);
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
         }
-        #notif-bell:hover { background: var(--btn-upload-hover); transform: translateY(-1px); }
+        #notif-bell:hover {
+            transform: translateY(-2px) scale(1.12);
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+        }
+        #notif-bell:hover i {
+            animation: bellRing 0.5s ease-in-out;
+        }
+        @keyframes bellRing {
+            0%, 100% { transform: rotate(0deg); }
+            20% { transform: rotate(16deg); }
+            40% { transform: rotate(-14deg); }
+            60% { transform: rotate(10deg); }
+            80% { transform: rotate(-6deg); }
+        }
+        
         #notif-badge {
-            position: absolute; top: -4px; right: -4px;
-            min-width: 20px; height: 20px; padding: 0 5px;
+            position: absolute; top: 0px; right: 0px;
+            min-width: 19px; height: 19px; padding: 0 5px;
             border-radius: 999px;
-            background: #dc2626; color: white;
-            font-size: 11px; font-weight: 800;
+            background: #DA291C;
+            color: #ffffff;
+            font-size: 11px; font-weight: 900;
             display: flex; align-items: center; justify-content: center;
-            border: 2px solid #DA291C;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.35);
         }
         #notif-badge.hidden { display: none; }
         @keyframes badgePulse {
@@ -176,9 +230,6 @@
         }
         #notif-badge.pulse { animation: badgePulse 0.6s ease; }
 
-        /* ============================================================
-           ESTILOS DEL DASHBOARD
-           ============================================================ */
         .estafeta-red { background-color: #DA291C; }
         .estafeta-red-text { color: #DA291C; }
         .estafeta-border { border-color: #DA291C; }
@@ -236,7 +287,12 @@
             transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ============ MODO OSCURO GENERAL ============ */
+        .filter-btn-hidden { opacity: 0; pointer-events: none; }
+        .filter-btn-visible { opacity: 1; pointer-events: auto; }
+
+        /* ============================================================
+           ADAPTACIÓN COMPLETA A MODO OSCURO (GLOBAL Y FILTROS)
+           ============================================================ */
         body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
         body.dark-mode main { background-color: #0f172a !important; }
         body.dark-mode main > div > div,
@@ -256,33 +312,60 @@
         body.dark-mode input,
         body.dark-mode select,
         body.dark-mode textarea { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        
+        /* Adaptación de tarjetas y fondos con tonos semitransparentes en modo oscuro */
         body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; }
         body.dark-mode .bg-emerald-50 { background-color: rgba(20, 83, 45, 0.3) !important; }
         body.dark-mode .bg-blue-50 { background-color: rgba(30, 58, 138, 0.3) !important; }
         body.dark-mode .bg-amber-50 { background-color: rgba(120, 53, 15, 0.3) !important; }
         body.dark-mode .bg-red-50\/40 { background-color: rgba(127, 29, 29, 0.25) !important; }
-        body.dark-mode #map { background-color: #0f172a !important; }
         
-        /* CORRECCIÓN: Botones de cancelar en los modales para modo oscuro */
+        /* Dropdowns, calendarios y modales de filtros adaptados al modo oscuro */
+        body.dark-mode #date-picker-dropdown { background-color: #1e293b !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+        body.dark-mode #date-picker-trigger { background-color: #1e293b !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+        
+        /* Modales flotantes de filtros (Plazas, Ruta, C.P.) en modo oscuro */
+        body.dark-mode #plaza-modal > div,
         body.dark-mode #route-modal > div,
-        body.dark-mode #cp-modal > div { background: #1e293b !important; color: #e2e8f0 !important; }
-        body.dark-mode #cancel-route-modal,
-        body.dark-mode #cancel-cp-modal {
-            background-color: #334155 !important;
-            color: #f1f5f9 !important;
-            border: 1px solid #475569 !important;
+        body.dark-mode #cp-modal > div {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #e2e8f0 !important;
         }
-        body.dark-mode #cancel-route-modal:hover,
-        body.dark-mode #cancel-cp-modal:hover {
-            background-color: #475569 !important;
+        body.dark-mode #plaza-modal input,
+        body.dark-mode #route-modal input,
+        body.dark-mode #cp-modal input {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #e2e8f0 !important;
         }
+        body.dark-mode .plaza-item,
+        body.dark-mode .route-item,
+        body.dark-mode .cp-item {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+        }
+        body.dark-mode .plaza-item:hover,
+        body.dark-mode .route-item:hover,
+        body.dark-mode .cp-item:hover {
+            background-color: #273548 !important;
+        }
+
+        body.dark-mode #data-table th { background-color: #0f172a !important; color: #cbd5e1 !important; border-color: #334155 !important; }
+        body.dark-mode #data-table td { border-color: #334155 !important; color: #cbd5e1 !important; }
+        body.dark-mode #data-table tbody tr { background-color: #1e293b !important; }
+        body.dark-mode #data-table tbody tr:hover { background-color: #273548 !important; }
+        body.dark-mode #map { background-color: #0f172a !important; }
 
         body.dark-mode .shadow-sm,
         body.dark-mode .shadow-md,
         body.dark-mode .shadow-xl,
         body.dark-mode .shadow-2xl { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -2px rgba(0,0,0,0.4) !important; }
 
-        /* ============ TOASTS & PANEL ============ */
+        .float-btn-hidden { opacity: 0; pointer-events: none; transform: scale(0.85); }
+        .float-btn-visible { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+        /* Estilos de notificaciones y toasts */
         #notif-toast-container {
             position: fixed; top: 80px; right: 20px;
             z-index: 9998;
@@ -417,12 +500,7 @@
 </head>
 <body class="bg-gray-100 font-sans antialiased min-h-screen flex flex-col relative">
 
-    <!-- ============================================================
-         BANNER MAESTRO INTEGRADO
-         ============================================================ -->
     <header class="master-header">
-        
-        <!-- Logo y Títulos -->
         <div class="header-brand">
             <div class="brand-logo">E</div>
             <div class="brand-titles">
@@ -431,161 +509,144 @@
             </div>
         </div>
 
-        <!-- Acciones a la derecha -->
         <div class="header-actions" id="header-actions-container">
-            
-            <!-- Botón de Carga Excel / CSV -->
             <div class="upload-btn-wrapper" id="banner-drop-zone" onclick="document.getElementById('file-input').click()">
-                <input type="file" id="file-input" accept=".csv, .xlsx, .xls">
-                <i class="fa-solid fa-file-excel upload-btn-icon"></i>
-                <div class="upload-btn-content">
-                    <span class="upload-btn-title" id="file-status">Cargar Excel / CSV</span>
-                    <span class="upload-btn-subtitle">Arrastra o clic aquí</span>
+                <input type="file" id="file-input" accept=".csv, .xlsx, .xls" class="hidden">
+                <div class="relative flex items-center justify-center p-1">
+                    <i class="fa-solid fa-cloud text-3xl text-white"></i>
+                    <i class="fa-solid fa-file-excel text-sm text-emerald-300 absolute animate-bounce"></i>
+                </div>
+                <div class="flex flex-col text-left">
+                    <span class="text-xs font-bold leading-tight" id="file-status">Cargar Excel / CSV</span>
+                    <span class="text-[10px] text-white/85">Arrastra tu archivo o haz clic</span>
                 </div>
             </div>
 
-            <!-- Botón de Modo Oscuro/Claro -->
             <button id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
                 <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
             </button>
-
         </div>
     </header>
 
-    <!-- ============================================================
-         CONTENIDO DEL DASHBOARD (ANCHO ACTUALIZADO AL 90%)
-         ============================================================ -->
+    <!-- Banner permanente cuando el Excel es de un periodo anterior -->
+    <div id="stale-file-banner" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Este archivo corresponde a un periodo anterior.</span>
+        <span class="stale-date-badge" id="stale-file-date">—</span>
+        <span style="font-size:0.8rem;opacity:0.9;">Los indicadores reflejan el momento de generación del Excel, no la fecha de hoy.</span>
+    </div>
+
     <main class="max-w-[90%] mx-auto px-4 py-6 flex-grow w-full space-y-6">
         <div id="dashboard-content" class="hidden space-y-6">
 
-            <!-- Barra de Filtros -->
             <div class="bg-white p-4 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto relative">
 
                     <div class="relative">
-                        <div id="plaza-picker-trigger" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-300 px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 cursor-pointer shadow-sm select-none">
-                            <i class="fa-solid fa-map-marked-alt estafeta-red-text"></i>
-                            <span id="plaza-trigger-label" class="font-bold text-gray-800">Plazas (Todas)</span>
-                            <i class="fa-solid fa-chevron-down text-xs text-gray-400 ml-1"></i>
-                        </div>
-                        <div id="plaza-picker-dropdown" class="absolute left-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 w-72 z-50 hidden">
-                            <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-3">
-                                <div class="flex items-center space-x-2">
-                                    <i class="fa-solid fa-map-marked-alt estafeta-red-text"></i>
-                                    <span class="font-bold text-gray-800 tracking-wide text-sm">PLAZAS</span>
-                                </div>
-                                <div class="flex items-center space-x-2 text-xs font-bold">
-                                    <button type="button" onclick="selectAllPlazas()" class="estafeta-red-text hover:underline">Todas</button>
-                                    <span class="text-gray-300">|</span>
-                                    <button type="button" onclick="deselectAllPlazas()" class="text-gray-500 hover:underline">Ninguna</button>
-                                </div>
-                            </div>
-                            <div id="plaza-options-container" class="space-y-1.5 max-h-60 overflow-y-auto"></div>
-                        </div>
-                    </div>
-
-                    <div class="relative">
                         <div id="date-picker-trigger" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-300 px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 cursor-pointer shadow-sm select-none">
-                            <span class="text-xs font-semibold text-gray-500">Inicio</span>
-                            <span id="date-trigger-label" class="font-bold text-gray-800">Seleccionar días</span>
+                            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Inicio</span>
+                            <span id="date-trigger-label" class="font-bold text-gray-800 dark:text-gray-200">Seleccionar días</span>
                             <i class="fa-solid fa-calendar-days estafeta-red-text ml-1"></i>
                         </div>
                         <div id="date-picker-dropdown" class="absolute left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl p-4 w-80 z-50 hidden">
-                            <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+                            <div class="flex items-center justify-between mb-3 border-b border-gray-100 dark:border-slate-700 pb-2">
                                 <div class="flex space-x-1">
-                                    <button type="button" id="cal-prev-year" class="p-1.5 hover:bg-gray-100 rounded text-gray-600 text-xs font-bold" title="Año Anterior">&laquo;</button>
-                                    <button type="button" id="cal-prev-month" class="p-1.5 hover:bg-gray-100 rounded text-gray-600 text-xs font-bold" title="Mes Anterior">&#8249;</button>
+                                    <button type="button" id="cal-prev-year" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-600 dark:text-gray-300 text-xs font-bold" title="Año Anterior">&laquo;</button>
+                                    <button type="button" id="cal-prev-month" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-600 dark:text-gray-300 text-xs font-bold" title="Mes Anterior">&#8249;</button>
                                 </div>
-                                <span id="cal-month-year-title" class="font-bold text-sm text-gray-800">October 2026</span>
+                                <span id="cal-month-year-title" class="font-bold text-sm text-gray-800 dark:text-gray-200">Octubre 2026</span>
                                 <div class="flex space-x-1">
-                                    <button type="button" id="cal-next-month" class="p-1.5 hover:bg-gray-100 rounded text-gray-600 text-xs font-bold" title="Mes Siguiente">&#8250;</button>
-                                    <button type="button" id="cal-next-year" class="p-1.5 hover:bg-gray-100 rounded text-gray-600 text-xs font-bold" title="Año Siguiente">&raquo;</button>
+                                    <button type="button" id="cal-next-month" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-600 dark:text-gray-300 text-xs font-bold" title="Mes Siguiente">&#8250;</button>
+                                    <button type="button" id="cal-next-year" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-600 dark:text-gray-300 text-xs font-bold" title="Año Siguiente">&raquo;</button>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-400 mb-2">
-                                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                            <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2">
+                                <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
                             </div>
                             <div id="cal-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
-                            <div class="flex items-center justify-between mt-3 pt-2 border-t border-gray-100 text-xs">
+                            <div class="flex items-center justify-between mt-3 pt-2 border-t border-gray-100 dark:border-slate-700 text-xs">
                                 <button type="button" id="cal-select-all" class="estafeta-red-text font-bold hover:underline">Todas</button>
-                                <button type="button" id="cal-today" class="estafeta-red-text font-bold hover:underline">Today</button>
-                                <button type="button" id="cal-clear-all" class="text-gray-500 font-bold hover:underline">Ninguna</button>
+                                <button type="button" id="cal-today" class="estafeta-red-text font-bold hover:underline">Hoy</button>
+                                <button type="button" id="cal-clear-all" class="text-gray-500 dark:text-gray-400 font-bold hover:underline">Ninguna</button>
                             </div>
                         </div>
                     </div>
 
-                    <button id="open-route-modal" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
+                    <button id="open-route-modal" class="bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-slate-700 px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
                         <i class="fa-solid fa-route estafeta-red-text"></i>
                         <span>Filtrar Ruta</span>
                     </button>
-                    <button id="open-cp-modal" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
+                    <button id="open-cp-modal" class="bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-slate-700 px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
                         <i class="fa-solid fa-map-pin estafeta-red-text"></i>
                         <span>C.P.</span>
                     </button>
-                    <div class="relative flex-grow sm:flex-grow-0 sm:w-60">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-red-500">
-                            <i class="fa-solid fa-magnifying-glass text-sm"></i>
+
+                    <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                            <i class="fas fa-search text-sm"></i>
                         </span>
-                        <input type="text" id="global-search-input" placeholder="Buscar cualquier dato..." class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium transition-all">
+                        <input type="text" id="global-search-input" placeholder="Buscar guía, cliente, C.P...." oninput="handleSearchInput(this)" class="w-full pl-9 pr-14 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-600 text-sm font-medium shadow-sm transition-all text-gray-800 dark:text-gray-200">
+                        <button id="btn-table-reset" onclick="clearSearch()" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold uppercase transition-all duration-300 cursor-pointer">
+                            Reset
+                        </button>
                     </div>
+
                 </div>
                 <div class="flex items-center justify-end w-full lg:w-auto">
-                    <span class="text-xs text-gray-500 font-medium"><span id="search-counter" class="font-bold text-gray-800">0</span> registros</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium"><span id="search-counter" class="font-bold text-gray-800 dark:text-gray-200">0</span> registros</span>
                 </div>
             </div>
 
-            <!-- Línea de Tiempo -->
             <div class="bg-white p-6 rounded-xl shadow-sm space-y-5">
-                <div class="border-b border-gray-100 pb-3">
-                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                <div class="border-b border-gray-100 dark:border-slate-700 pb-3">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center">
                         <i class="fa-solid fa-timeline estafeta-red-text mr-2"></i> Línea de Tiempo de Entregas (Secuencia Ordenada por Hora)
                     </h3>
                 </div>
                 <div id="timeline-kpi-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3"></div>
-                <div id="timeline-pagination-container" class="flex items-center justify-center gap-4 pt-3 border-t border-gray-100"></div>
+                <div id="timeline-pagination-container" class="flex items-center justify-center gap-4 pt-3 border-t border-gray-100 dark:border-slate-700"></div>
             </div>
 
-            <!-- Gráfica de Picos -->
             <div class="bg-white p-6 rounded-xl shadow-sm space-y-5">
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-3 gap-3">
-                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 dark:border-slate-700 pb-3 gap-3">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center">
                         <i class="fa-solid fa-chart-line estafeta-red-text mr-2"></i> Picos de Mayor Entrega (Intervalos de 30 Minutos)
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full lg:w-auto">
-                        <div class="flex items-center space-x-3 bg-red-50 border border-red-200 px-3.5 py-2 rounded-xl shadow-sm">
+                        <div class="flex items-center space-x-3 bg-red-50 border border-red-200 dark:border-red-900/60 px-3.5 py-2 rounded-xl shadow-sm">
                             <div class="w-9 h-9 rounded-lg bg-[#DA291C] text-white flex items-center justify-center shadow-md flex-shrink-0">
                                 <i class="fa-solid fa-arrow-trend-up text-sm"></i>
                             </div>
                             <div>
-                                <p class="text-[10px] uppercase font-bold text-red-600 tracking-wider">Pico Máximo</p>
-                                <p id="kpi-max-val" class="text-xs font-extrabold text-gray-800">-</p>
+                                <p class="text-[10px] uppercase font-bold text-red-600 dark:text-red-400 tracking-wider">Pico Máximo</p>
+                                <p id="kpi-max-val" class="text-xs font-extrabold text-gray-800 dark:text-gray-200">-</p>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-3 bg-emerald-50 border border-emerald-200 px-3.5 py-2 rounded-xl shadow-sm">
+                        <div class="flex items-center space-x-3 bg-emerald-50 border border-emerald-200 dark:border-emerald-900/60 px-3.5 py-2 rounded-xl shadow-sm">
                             <div class="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-md flex-shrink-0">
                                 <i class="fa-solid fa-arrow-trend-down text-sm"></i>
                             </div>
                             <div>
-                                <p class="text-[10px] uppercase font-bold text-emerald-600 tracking-wider">Pico Mínimo</p>
-                                <p id="kpi-min-val" class="text-xs font-extrabold text-gray-800">-</p>
+                                <p class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">Pico Mínimo</p>
+                                <p id="kpi-min-val" class="text-xs font-extrabold text-gray-800 dark:text-gray-200">-</p>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-3 bg-blue-50 border border-blue-200 px-3.5 py-2 rounded-xl shadow-sm">
+                        <div class="flex items-center space-x-3 bg-blue-50 border border-blue-200 dark:border-blue-900/60 px-3.5 py-2 rounded-xl shadow-sm">
                             <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-md flex-shrink-0">
                                 <i class="fa-solid fa-clock text-sm"></i>
                             </div>
                             <div>
-                                <p class="text-[10px] uppercase font-bold text-blue-600 tracking-wider">Promedio Entrega</p>
-                                <p id="kpi-avg-time-val" class="text-xs font-extrabold text-gray-800">-</p>
+                                <p class="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Promedio Entrega</p>
+                                <p id="kpi-avg-time-val" class="text-xs font-extrabold text-gray-800 dark:text-gray-200">-</p>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-3 bg-amber-50 border border-amber-200 px-3.5 py-2 rounded-xl shadow-sm">
+                        <div class="flex items-center space-x-3 bg-amber-50 border border-amber-200 dark:border-amber-900/60 px-3.5 py-2 rounded-xl shadow-sm">
                             <div class="w-9 h-9 rounded-lg bg-amber-600 text-white flex items-center justify-center shadow-md flex-shrink-0">
                                 <i class="fa-solid fa-hourglass-half text-sm"></i>
                             </div>
                             <div>
-                                <p class="text-[10px] uppercase font-bold text-amber-600 tracking-wider">Tiempo en Ruta</p>
-                                <p id="kpi-sum-dead-time-val" class="text-xs font-extrabold text-gray-800">-</p>
+                                <p class="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">Tiempo en Ruta</p>
+                                <p id="kpi-sum-dead-time-val" class="text-xs font-extrabold text-gray-800 dark:text-gray-200">-</p>
                             </div>
                         </div>
                     </div>
@@ -595,10 +656,9 @@
                 </div>
             </div>
 
-            <!-- Mapa -->
             <div id="map-card" class="bg-white p-6 rounded-xl shadow-sm transition-all duration-300">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center">
                         <i class="fa-solid fa-map-location-dot estafeta-red-text mr-2"></i> Secuencia Cronológica y Ubicaciones en Mapa
                     </h3>
                     <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -606,115 +666,153 @@
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-red-500">
                                 <i class="fa-solid fa-filter text-sm"></i>
                             </span>
-                            <input type="text" id="sequence-search-input" placeholder="Filtrar secuencia Ej: 1, 3, 5" class="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium transition-all">
+                            <input type="text" id="sequence-search-input" placeholder="Filtrar secuencia Ej: 1, 3, 5" class="w-full pl-9 pr-3 py-1.5 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium transition-all text-gray-800 dark:text-gray-200">
                         </div>
-                        <button id="toggle-lines-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
+                        <button id="toggle-lines-btn" class="bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-slate-700 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
                             <i id="lines-icon" class="fa-solid fa-eye-slash"></i>
                             <span id="lines-text">Mostrar Líneas</span>
                         </button>
-                        <button id="toggle-fullscreen-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
+                        <button id="toggle-fullscreen-btn" class="bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-slate-700 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm">
                             <i id="fullscreen-icon" class="fa-solid fa-expand"></i>
                             <span id="fullscreen-text">Pantalla Completa</span>
                         </button>
                     </div>
                 </div>
-                <div id="map" class="h-96 rounded-lg w-full z-10"></div>
+                <div class="relative">
+                    <div id="map" class="h-96 rounded-lg w-full z-10"></div>
+                    <div id="map-empty-overlay" aria-live="polite">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                        <p id="map-empty-msg">No hay puntos con coordenadas GPS válidas en los datos cargados o filtrados.</p>
+                    </div>
+                </div>
             </div>
 
-            <!-- Tabla -->
             <div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
-                <h3 class="text-lg font-bold text-gray-800">Bitácora de Eventos Ejecutados</h3>
+                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Bitácora de Eventos Ejecutados</h3>
                 <div class="overflow-x-auto">
-                    <table id="data-table" class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50"><tr id="table-headers"></tr></thead>
-                        <tbody id="table-body" class="divide-y divide-gray-200 bg-white"></tbody>
+                    <table id="data-table" class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 text-sm">
+                        <thead class="bg-gray-50 dark:bg-slate-800"><tr id="table-headers"></tr></thead>
+                        <tbody id="table-body" class="divide-y divide-gray-200 dark:divide-slate-700 bg-white dark:bg-slate-900"></tbody>
                     </table>
                 </div>
-                <div id="table-pagination-container" class="flex items-center justify-center gap-4 pt-3 border-t border-gray-100"></div>
+                <div id="table-pagination-container" class="flex items-center justify-center gap-4 pt-3 border-t border-gray-100 dark:border-slate-700"></div>
             </div>
         </div>
     </main>
 
-    <button id="reset-filters" class="fixed bottom-6 right-6 z-50 bg-gray-900 hover:bg-gray-800 text-white px-4 py-3 rounded-full shadow-2xl transition-all duration-300 flex items-center space-x-2 text-sm font-medium transform scale-0 opacity-0 pointer-events-none">
+    <!-- Botón flotante de Plazas en Rojo Estafeta -->
+    <button id="floating-plaza-btn" onclick="openPlazaModal()" class="hidden fixed bottom-6 left-6 z-50 bg-[#DA291C] hover:bg-[#b81810] text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-sm font-semibold border border-red-500/40 transition">
+        <i class="fas fa-map-marked-alt text-white"></i>
+        <span>Plazas</span>
+    </button>
+
+    <div id="plaza-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-[#111827] text-gray-800 dark:text-slate-200 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl border border-gray-200 dark:border-slate-800 transition-colors">
+            <div class="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-slate-800">
+                <h3 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2.5">
+                    <i class="fa-solid fa-bars text-red-500"></i> Filtrar por Plaza Destino
+                </h3>
+                <button onclick="closePlazaModal()" class="text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg font-bold">&times;</button>
+            </div>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 text-xs">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="plaza-modal-search" placeholder="Buscar valor..." class="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-[#1f2937] border border-gray-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-red-500 text-xs text-gray-800 dark:text-white placeholder-slate-400">
+            </div>
+            <div class="flex justify-between items-center text-xs px-1 text-gray-500 dark:text-slate-400">
+                <span>Seleccionar valores:</span>
+                <div class="space-x-2 font-medium">
+                    <button type="button" onclick="selectAllPlazasModal()" class="text-red-500 hover:underline">Todos</button>
+                    <span class="text-gray-300 dark:text-slate-600">|</span>
+                    <button type="button" onclick="deselectAllPlazasModal()" class="text-gray-500 dark:text-slate-400 hover:underline">Ninguno</button>
+                </div>
+            </div>
+            <div id="plaza-checkboxes-container" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+            <div class="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-slate-800 mt-2">
+                <span id="plaza-selected-count-label" class="text-xs text-red-600 dark:text-red-400 font-semibold">0 seleccionadas</span>
+                <div class="flex space-x-2">
+                    <button onclick="closePlazaModal()" class="px-4 py-2 rounded-xl bg-transparent hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300 border border-gray-300 dark:border-slate-700 text-xs font-semibold transition">Cancelar</button>
+                    <button onclick="applyPlazaFilters()" class="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-lg">Aplicar Filtro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="route-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-[#111827] text-gray-800 dark:text-slate-200 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl border border-gray-200 dark:border-slate-800 transition-colors">
+            <div class="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-slate-800">
+                <h3 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2.5">
+                    <i class="fa-solid fa-route text-red-500"></i> Filtrar por Ruta
+                </h3>
+                <button id="close-route-modal" class="text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg font-bold">&times;</button>
+            </div>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 text-xs">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="route-modal-search" placeholder="Buscar valor..." class="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-[#1f2937] border border-gray-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-red-500 text-xs text-gray-800 dark:text-white placeholder-slate-400">
+            </div>
+            <div class="flex justify-between items-center text-xs px-1 text-gray-500 dark:text-slate-400">
+                <span>Seleccionar valores:</span>
+                <div class="space-x-2 font-medium">
+                    <button type="button" onclick="selectAllRoutesModal()" class="text-red-500 hover:underline">Todos</button>
+                    <span class="text-gray-300 dark:text-slate-600">|</span>
+                    <button type="button" onclick="deselectAllRoutesModal()" class="text-gray-500 dark:text-slate-400 hover:underline">Ninguno</button>
+                </div>
+            </div>
+            <div id="route-checkboxes-container" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+            <div class="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-slate-800 mt-2">
+                <span id="route-selected-count-label" class="text-xs text-red-600 dark:text-red-400 font-semibold">0 seleccionadas</span>
+                <div class="flex space-x-2">
+                    <button id="cancel-route-modal" class="px-4 py-2 rounded-xl bg-transparent hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300 border border-gray-300 dark:border-slate-700 text-xs font-semibold transition">Cancelar</button>
+                    <button id="apply-route-filter" class="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-lg">Aplicar Filtro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="cp-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-[#111827] text-gray-800 dark:text-slate-200 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl border border-gray-200 dark:border-slate-800 transition-colors">
+            <div class="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-slate-800">
+                <h3 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2.5">
+                    <i class="fa-solid fa-map-pin text-red-500"></i> Filtrar por Código Postal (C.P.)
+                </h3>
+                <button id="close-cp-modal" class="text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg font-bold">&times;</button>
+            </div>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 text-xs">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="cp-modal-search" placeholder="Buscar valor..." class="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-[#1f2937] border border-gray-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-red-500 text-xs text-gray-800 dark:text-white placeholder-slate-400">
+            </div>
+            <div class="flex justify-between items-center text-xs px-1 text-gray-500 dark:text-slate-400">
+                <span>Seleccionar valores:</span>
+                <div class="space-x-2 font-medium">
+                    <button type="button" onclick="selectAllCpModal()" class="text-red-500 hover:underline">Todos</button>
+                    <span class="text-gray-300 dark:text-slate-600">|</span>
+                    <button type="button" onclick="deselectAllCpModal()" class="text-gray-500 dark:text-slate-400 hover:underline">Ninguno</button>
+                </div>
+            </div>
+            <div id="cp-checkboxes-container" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+            <div class="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-slate-800 mt-2">
+                <span id="cp-selected-count-label" class="text-xs text-red-600 dark:text-red-400 font-semibold">0 seleccionadas</span>
+                <div class="flex space-x-2">
+                    <button id="cancel-cp-modal" class="px-4 py-2 rounded-xl bg-transparent hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300 border border-gray-300 dark:border-slate-700 text-xs font-semibold transition">Cancelar</button>
+                    <button id="apply-cp-filter" class="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-lg">Aplicar Filtro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button id="reset-filters" class="float-btn-hidden fixed bottom-6 right-6 z-50 bg-gray-900 hover:bg-gray-800 text-white px-4 py-3 rounded-full shadow-2xl transition-all duration-300 flex items-center space-x-2 text-sm font-medium">
         <i class="fa-solid fa-rotate-left estafeta-red-text"></i>
         <span>Restablecer Filtros</span>
     </button>
 
-    <!-- CAMPANA: contenedor de toasts (la campana se inyecta por JS) -->
     <div id="notif-toast-container"></div>
 
-    <!-- MODALES -->
-    <div id="route-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-filter estafeta-red-text"></i>
-                    <h3 class="font-bold text-lg">Filtrar Ruta</h3>
-                </div>
-                <button id="close-route-modal" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
-            </div>
-            <div class="p-6 space-y-4 flex-grow overflow-y-auto">
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </span>
-                    <input type="text" id="route-search-input" placeholder="Buscar ruta..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
-                </div>
-                <div class="flex justify-between items-center text-sm font-semibold px-1">
-                    <span class="text-gray-600">Seleccionar rutas:</span>
-                    <div class="space-x-3">
-                        <button type="button" id="select-all-routes" class="estafeta-red-text hover:underline">Todas</button>
-                        <span class="text-gray-300">|</span>
-                        <button type="button" id="deselect-all-routes" class="estafeta-red-text hover:underline">Ninguna</button>
-                    </div>
-                </div>
-                <div id="route-checkboxes-container" class="border border-gray-200 rounded-xl p-3 space-y-2 max-h-60 overflow-y-auto bg-gray-50"></div>
-            </div>
-            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-                <button id="cancel-route-modal" class="px-5 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium text-sm transition-all">Cancelar</button>
-                <button id="apply-route-filter" class="px-5 py-2 rounded-xl estafeta-red hover:opacity-90 text-white font-medium text-sm shadow-md transition-all">Aplicar Filtro</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="cp-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-map-pin estafeta-red-text"></i>
-                    <h3 class="font-bold text-lg">Filtrar C.P.</h3>
-                </div>
-                <button id="close-cp-modal" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
-            </div>
-            <div class="p-6 space-y-4 flex-grow overflow-y-auto">
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </span>
-                    <input type="text" id="cp-search-input" placeholder="Buscar código postal..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
-                </div>
-                <div class="flex justify-between items-center text-sm font-semibold px-1">
-                    <span class="text-gray-600">Seleccionar C.P.:</span>
-                    <div class="space-x-3">
-                        <button type="button" id="select-all-cps" class="estafeta-red-text hover:underline">Todas</button>
-                        <span class="text-gray-300">|</span>
-                        <button type="button" id="deselect-all-cps" class="estafeta-red-text hover:underline">Ninguna</button>
-                    </div>
-                </div>
-                <div id="cp-checkboxes-container" class="border border-gray-200 rounded-xl p-3 space-y-2 max-h-60 overflow-y-auto bg-gray-50"></div>
-            </div>
-            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-                <button id="cancel-cp-modal" class="px-5 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium text-sm transition-all">Cancelar</button>
-                <button id="apply-cp-filter" class="px-5 py-2 rounded-xl estafeta-red hover:opacity-90 text-white font-medium text-sm shadow-md transition-all">Aplicar Filtro</button>
-            </div>
-        </div>
-    </div>
-
 <script>
-    /* ============================================================
-       AUTENTICACIÓN ELIMINADA
-       ============================================================ */
-
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
         '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
     }[c]));
@@ -724,9 +822,64 @@
         return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
     }
 
-    /* ============================================================
-       ESTADO GLOBAL
-       ============================================================ */
+    function parseDateTime(val) {
+        if (val === null || val === undefined || val === '') return null;
+        if (val instanceof Date && !isNaN(val.getTime())) return val;
+        if (typeof val === 'number' && val > 20000 && val < 80000) {
+            const ms = Math.round((val - 25569) * 86400 * 1000);
+            const d = new Date(ms);
+            return isNaN(d.getTime()) ? null : d;
+        }
+        const s = String(val).trim();
+
+        let m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T\s](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+        if (m) {
+            return new Date(
+                parseInt(m[1], 10),
+                parseInt(m[2], 10) - 1,
+                parseInt(m[3], 10),
+                parseInt(m[4] || 0, 10),
+                parseInt(m[5] || 0, 10),
+                parseInt(m[6] || 0, 10)
+            );
+        }
+
+        m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})(?:[T\s](\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?/i);
+        if (m) {
+            let a = parseInt(m[1], 10), b = parseInt(m[2], 10);
+            let day, month;
+            if (a > 12) { day = a; month = b; }
+            else if (b > 12) { day = b; month = a; }
+            else { day = a; month = b; }
+
+            let hour = parseInt(m[4] || 0, 10);
+            const ampm = (m[7] || '').toUpperCase();
+            if (ampm === 'PM' && hour < 12) hour += 12;
+            if (ampm === 'AM' && hour === 12) hour = 0;
+
+            return new Date(
+                parseInt(m[3], 10),
+                month - 1,
+                day,
+                hour,
+                parseInt(m[5] || 0, 10),
+                parseInt(m[6] || 0, 10)
+            );
+        }
+
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    function parseDateString(val) {
+        const d = parseDateTime(val);
+        if (!d) return '';
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    window.parseDateTime = parseDateTime;
+    window.parseDateString = parseDateString;
+
     let rawData = [];
     let filteredData = [];
     let mapInstance = null;
@@ -747,24 +900,43 @@
 
     let allPlazasList = [];
     let selectedPlazasSet = new Set();
+    
     let allDatesList = [];
     let selectedDatesSet = new Set();
+    
     let allRoutesList = [];
+    let selectedRoutesSet = new Set();
+
     let allCpList = [];
+    let selectedCpSet = new Set();
+
     let currentTimelinePage = 0;
     let currentTablePage = 0;
     const ITEMS_PER_PAGE = 10;
 
-    let calCurrentYear = 2026;
-    let calCurrentMonth = 9;
+    const _todayInit = new Date();
+    let calCurrentYear = _todayInit.getFullYear();
+    let calCurrentMonth = _todayInit.getMonth();
+
+    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
     const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('banner-drop-zone');
 
     window.addEventListener('dragover', (e) => e.preventDefault());
     window.addEventListener('drop', (e) => {
         e.preventDefault();
+        dropZone.classList.remove('drag-over');
         if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
     });
+
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropZone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('drag-over'); });
+    });
+    ['dragleave', 'dragend'].forEach(evt => {
+        dropZone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('drag-over'); });
+    });
+
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length) handleFile(e.target.files[0]);
     });
@@ -774,14 +946,135 @@
         .toLowerCase().trim();
 
     function validarArchivo(encabezados) {
-        if (!encabezados || encabezados.length === 0) return false;
+        if (!encabezados || encabezados.length === 0) {
+            return { ok: false, missing: ['(archivo sin encabezados)'] };
+        }
         const n = encabezados.map(_norm);
         const has = (...frags) => n.some(h => frags.every(f => h.includes(_norm(f))));
-        return has('system', 'name') && has('delivery', 'date') && has('longitude');
+        const hasAny = (...words) => n.some(h => words.some(w => h === _norm(w) || h.includes(_norm(w))));
+
+        const hasSystem = has('system', 'name') || has('nombre', 'sistema')
+            || hasAny('tracking', 'guia', 'guía', 'item', 'waybill', 'guide');
+        const hasDate = has('delivery', 'date') || has('fecha', 'entrega') || has('fecha', 'evento')
+            || hasAny('timestamp', 'datetime', 'hora evento', 'delivery date');
+        const hasLng = has('longitude') || has('longitud')
+            || n.some(h => h === 'lng' || h === 'lon' || h === 'long');
+        const hasLat = has('latitude') || has('latitud')
+            || n.some(h => h === 'lat');
+
+        const missing = [];
+        if (!hasSystem) missing.push('Identificador (System Name / Guía / Item / Tracking)');
+        if (!hasDate) missing.push('Fecha de entrega o evento (Delivery Date / Fecha Entrega / Hora Evento)');
+        if (!hasLng) missing.push('Longitud GPS (Longitude / Longitud)');
+        if (!hasLat) missing.push('Latitud GPS (Latitude / Latitud) — recomendada');
+
+        const blocking = missing.filter(m => !m.includes('recomendada'));
+        return { ok: blocking.length === 0, missing, hasLat };
+    }
+
+    function mensajeValidacion(result) {
+        if (result.ok) return '';
+        const lineas = result.missing.map(m => '• ' + m).join('\n');
+        return 'El archivo no cuenta con los encabezados requeridos para Entregas a Domicilio:\n\n'
+            + lineas
+            + '\n\nEste dashboard necesita datos de entregas con coordenadas GPS (lat/lon), no reportes de afectación/incumplimiento.';
+    }
+
+    function findColumn(row, keywords, opts = {}) {
+        const keys = Object.keys(row || {});
+        const exclude = (opts.exclude || []).map(_norm);
+        const preferExact = opts.preferExact !== false;
+        const scored = [];
+
+        for (const k of keys) {
+            const nk = _norm(k);
+            if (exclude.some(ex => nk.includes(ex))) continue;
+            for (let i = 0; i < keywords.length; i++) {
+                const kw = _norm(keywords[i]);
+                if (!kw) continue;
+                if (preferExact && nk === kw) return k;
+                if (nk.startsWith(kw) || kw.startsWith(nk)) scored.push({ k, score: 2, pri: i });
+                else if (nk.includes(kw)) scored.push({ k, score: 1, pri: i });
+            }
+        }
+        if (scored.length === 0) return null;
+        scored.sort((a, b) => b.score - a.score || a.pri - b.pri);
+        return scored[0].k;
+    }
+
+    let _isHistoricalFile = false;
+
+    function detectAndShowStaleBanner(fileName, data) {
+        const banner = document.getElementById('stale-file-banner');
+        if (!banner) return;
+        _isHistoricalFile = false;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let excelDate = null;
+        let periodLabel = '';
+
+        if (fileName) {
+            const months = {
+                enero: 0, febrero: 1, marzo: 2, abril: 3, mayo: 4, junio: 5,
+                julio: 6, agosto: 7, septiembre: 8, setiembre: 8, octubre: 9,
+                noviembre: 10, diciembre: 11
+            };
+            const fn = String(fileName).toLowerCase();
+            const mName = fn.match(/(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)[\s_\-]*?(20\d{2})?/i);
+            if (mName) {
+                const mi = months[mName[1].toLowerCase()];
+                const yr = mName[2] ? parseInt(mName[2], 10) : today.getFullYear();
+                excelDate = new Date(yr, mi, 15);
+                periodLabel = mName[1].charAt(0).toUpperCase() + mName[1].slice(1).toLowerCase() + (mName[2] ? ' ' + mName[2] : '');
+            }
+            const mIso = String(fileName).match(/(20\d{2})[-_\/](\d{1,2})[-_\/](\d{1,2})/);
+            if (!excelDate && mIso) {
+                excelDate = new Date(parseInt(mIso[1], 10), parseInt(mIso[2], 10) - 1, parseInt(mIso[3], 10));
+            }
+        }
+
+        if (!excelDate && data && data.length && dateKey) {
+            const dates = [];
+            data.forEach(r => {
+                const d = parseDateTime(r[dateKey]);
+                if (d && !isNaN(d.getTime())) dates.push(d);
+            });
+            if (dates.length) {
+                dates.sort((a, b) => a - b);
+                excelDate = dates[Math.floor(dates.length / 2)];
+            }
+        }
+
+        if (!excelDate || isNaN(excelDate.getTime())) {
+            banner.classList.remove('visible');
+            return;
+        }
+
+        const fileMonth = new Date(excelDate.getFullYear(), excelDate.getMonth(), 1);
+        const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const monthsDiff = (thisMonth.getFullYear() - fileMonth.getFullYear()) * 12 + (thisMonth.getMonth() - fileMonth.getMonth());
+
+        if (monthsDiff >= 1) {
+            _isHistoricalFile = true;
+            if (!periodLabel) {
+                periodLabel = excelDate.toLocaleDateString('es-MX', { year: 'numeric', month: 'long' });
+            }
+            const ant = monthsDiff === 1 ? '1 mes' : `${monthsDiff} meses`;
+            banner.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Este archivo corresponde a un periodo anterior (<b>${ant}</b> de antigüedad).</span>
+                <span class="stale-date-badge">${periodLabel}</span>
+                <span style="font-size:0.8rem;opacity:0.9;">Los indicadores reflejan el momento de generación del Excel, no la fecha de hoy.</span>
+            `;
+            banner.classList.add('visible');
+        } else {
+            banner.classList.remove('visible');
+        }
     }
 
     function handleFile(file) {
-        document.getElementById('file-status').innerText = `Procesando...`;
+        document.getElementById('file-status').textContent = `Procesando...`;
         const extension = file.name.split('.').pop().toLowerCase();
 
         if (extension === 'csv') {
@@ -789,9 +1082,10 @@
                 header: true, dynamicTyping: false, skipEmptyLines: true,
                 complete: function(results) {
                     const headers = results.meta.fields || (results.data.length > 0 ? Object.keys(results.data[0]) : []);
-                    if (!validarArchivo(headers)) {
-                        alert("El archivo no cuenta con los encabezados requeridos (System Name, Delivery Date Time Text, Longitude).");
-                        document.getElementById('file-status').innerText = 'Error de validación';
+                    const v = validarArchivo(headers);
+                    if (!v.ok) {
+                        alert(mensajeValidacion(v));
+                        document.getElementById('file-status').textContent = 'Error de validación';
                         document.getElementById('file-input').value = "";
                         return;
                     }
@@ -805,9 +1099,10 @@
                 const workbook = XLSX.read(data, { type: 'array', cellDates: true });
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                 const headers = XLSX.utils.sheet_to_json(worksheet, {header: 1})[0] || [];
-                if (!validarArchivo(headers)) {
-                    alert("El archivo no cuenta con los encabezados requeridos (System Name, Delivery Date Time Text, Longitude).");
-                    document.getElementById('file-status').innerText = 'Error de validación';
+                const v = validarArchivo(headers);
+                if (!v.ok) {
+                    alert(mensajeValidacion(v));
+                    document.getElementById('file-status').textContent = 'Error de validación';
                     document.getElementById('file-input').value = "";
                     return;
                 }
@@ -817,7 +1112,7 @@
             reader.readAsArrayBuffer(file);
         } else {
             alert('Formato no soportado. Por favor sube un archivo CSV o Excel.');
-            document.getElementById('file-status').innerText = 'Error de formato';
+            document.getElementById('file-status').textContent = 'Error de formato';
             document.getElementById('file-input').value = "";
         }
     }
@@ -833,27 +1128,45 @@
         const sample = rawData[0] || {};
         const keys = Object.keys(sample);
 
-        plazaKey = findColumn(sample, ['plaza', 'distrito']) || '';
-        dateKey = findColumn(sample, ['delivery date time', 'delivery date', 'fecha', 'date', 'timestamp', 'hora']) || '';
-        routeKey = findColumn(sample, ['route code', 'route', 'ruta']) || '';
+        plazaKey = findColumn(sample, ['plaza'], { exclude: ['origen', 'destino', 'incumplimiento', 'conexion', 'conexión'] })
+            || findColumn(sample, ['distrito'], { exclude: ['origen', 'destino'] })
+            || '';
+
+        dateKey = findColumn(sample, [
+            'delivery date time', 'delivery date time local', 'delivery date',
+            'fecha entrega', 'fecha de entrega', 'hora evento', 'fecha evento',
+            'timestamp', 'date time', 'datetime'
+        ]) || findColumn(sample, ['fecha'], { exclude: ['compromiso', 'recoleccion', 'recolección', 'limite', 'límite', 'econ', 'sconf', 'primer intento'] })
+          || findColumn(sample, ['date', 'hora'])
+          || '';
+
+        routeKey = findColumn(sample, ['route code', 'route id', 'codigo ruta', 'código ruta'], { exclude: ['conexion', 'conexión', 'incorrecta'] })
+            || findColumn(sample, ['route', 'ruta'], { exclude: ['conexion', 'conexión', 'incorrecta', 'opciones'] })
+            || '';
 
         if (keys.includes('Postal Code')) {
             cpKey = 'Postal Code';
         } else {
-            cpKey = findColumn(sample, ['postal code', 'postal', 'codigo postal', 'cp', 'zip']) || '';
+            cpKey = findColumn(sample, ['postal code', 'codigo postal', 'código postal', 'cp', 'zip', 'postal']) || '';
         }
 
-        latKeyCached = findColumn(sample, ['latitude', 'latitud', 'lat']) || '';
-        lngKeyCached = findColumn(sample, ['longitude', 'longitud', 'lng', 'lon']) || '';
-        statusKeyCached = findColumn(sample, ['status', 'estatus', 'tr2 process', 'estado']) || keys[0];
-        descKeyCached = findColumn(sample, ['receiver name', 'direccion', 'cliente', 'tracking', 'guia']) || keys[0];
+        latKeyCached = findColumn(sample, ['latitude', 'latitud'])
+            || findColumn(sample, ['lat'], { exclude: ['plate', 'plata', 'relat'] })
+            || '';
+        lngKeyCached = findColumn(sample, ['longitude', 'longitud'])
+            || findColumn(sample, ['lng', 'lon', 'long'], { exclude: ['along', 'belong'] })
+            || '';
+
+        statusKeyCached = findColumn(sample, ['tr2 process', 'status', 'estatus', 'estado', 'resumen']) || keys[0];
+        descKeyCached = findColumn(sample, ['receiver name', 'nombre cliente', 'nombre de cliente', 'direccion', 'dirección', 'cliente', 'tracking', 'guia', 'guía', 'item'])
+            || keys[0];
 
         if (dateKey) {
             rawData.sort((a, b) => {
-                let tA = a[dateKey] ? new Date(a[dateKey]).getTime() : 0;
-                let tB = b[dateKey] ? new Date(b[dateKey]).getTime() : 0;
-                if (isNaN(tA)) tA = 0;
-                if (isNaN(tB)) tB = 0;
+                const dA = parseDateTime(a[dateKey]);
+                const dB = parseDateTime(b[dateKey]);
+                const tA = dA ? dA.getTime() : 0;
+                const tB = dB ? dB.getTime() : 0;
                 return tA - tB;
             });
         }
@@ -864,14 +1177,12 @@
         currentTimelinePage = 0;
         currentTablePage = 0;
         isInitialMapLoad = true;
-        document.getElementById('file-status').innerText = fileName;
+        document.getElementById('file-status').textContent = fileName;
         document.getElementById('dashboard-content').classList.remove('hidden');
 
-        console.log('🗺️ Columnas mapeadas:', {
-            plaza: plazaKey, fecha: dateKey, ruta: routeKey, cp: cpKey,
-            lat: latKeyCached, lng: lngKeyCached,
-            estatus: statusKeyCached, descripcion: descKeyCached
-        });
+        document.getElementById('floating-plaza-btn').classList.remove('hidden');
+
+        detectAndShowStaleBanner(fileName, rawData);
 
         initMap();
         updateDashboard();
@@ -881,130 +1192,269 @@
         }
     }
 
-    function parseDateString(val) {
-        if (val === undefined || val === null || val === '') return '';
-        let strVal = String(val).trim();
-        if (strVal.includes('T')) strVal = strVal.split('T')[0];
-        else if (strVal.includes(' ')) strVal = strVal.split(' ')[0];
-        let match = strVal.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-        if (match) return `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
-        return strVal;
-    }
-
     function extractFilters() {
         if (plazaKey) {
             allPlazasList = [...new Set(rawData.map(r => r[plazaKey]).filter(v => v !== undefined && v !== null && v !== ''))];
             allPlazasList.sort();
             selectedPlazasSet = new Set(allPlazasList);
-            renderPlazaDropdown();
-            updatePlazaTriggerLabel();
+            renderPlazaModalList(allPlazasList);
+            updatePlazaSelectedCountLabel();
+        }
+        if (routeKey) {
+            allRoutesList = [...new Set(rawData.map(r => r[routeKey]).filter(v => v !== undefined && v !== null && v !== ''))];
+            allRoutesList.sort();
+            selectedRoutesSet = new Set(allRoutesList);
+            renderRouteModalList(allRoutesList);
+            updateRouteSelectedCountLabel();
+        }
+        if (cpKey) {
+            allCpList = [...new Set(rawData.map(r => r[cpKey]).filter(v => v !== undefined && v !== null && v !== ''))];
+            allCpList.sort();
+            selectedCpSet = new Set(allCpList);
+            renderCpModalList(allCpList);
+            updateCpSelectedCountLabel();
         }
         if (dateKey) {
             allDatesList = [...new Set(rawData.map(r => parseDateString(r[dateKey])).filter(v => v !== ''))];
             allDatesList.sort();
             selectedDatesSet = new Set(allDatesList);
             if (allDatesList.length > 0) {
-                let firstParsed = new Date(allDatesList[0] + 'T00:00:00');
-                if (!isNaN(firstParsed)) {
-                    calCurrentYear = firstParsed.getFullYear();
-                    calCurrentMonth = firstParsed.getMonth();
+                const mid = allDatesList[Math.floor(allDatesList.length / 2)];
+                const midParsed = parseDateTime(mid + 'T00:00:00');
+                if (midParsed && !isNaN(midParsed.getTime())) {
+                    calCurrentYear = midParsed.getFullYear();
+                    calCurrentMonth = midParsed.getMonth();
+                } else {
+                    const firstParsed = parseDateTime(allDatesList[0] + 'T00:00:00');
+                    if (firstParsed && !isNaN(firstParsed.getTime())) {
+                        calCurrentYear = firstParsed.getFullYear();
+                        calCurrentMonth = firstParsed.getMonth();
+                    }
                 }
             }
             renderCalendar();
             updateDateTriggerLabel();
         }
-        updateDependentFiltersLists();
     }
 
-    function updateDependentFiltersLists() {
-        let tempFiltered = rawData.filter(row => {
-            let matchPlaza = plazaKey && selectedPlazasSet.size > 0 ? selectedPlazasSet.has(String(row[plazaKey])) : true;
-            let matchDate = dateKey && selectedDatesSet.size > 0 ? selectedDatesSet.has(parseDateString(row[dateKey])) : true;
-            return matchPlaza && matchDate;
+    function bindPlazaItems() {
+        document.querySelectorAll('#plaza-checkboxes-container .plaza-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const val = item.getAttribute('data-plaza');
+                togglePlazaModalItem(val);
+            });
         });
-        if (routeKey) {
-            allRoutesList = [...new Set(tempFiltered.map(r => r[routeKey]).filter(v => v !== undefined && v !== null && v !== ''))];
-            allRoutesList.sort();
-            renderRouteCheckboxes(allRoutesList);
-        }
-        if (cpKey) {
-            allCpList = [...new Set(tempFiltered.map(r => r[cpKey]).filter(v => v !== undefined && v !== null && v !== ''))];
-            allCpList.sort();
-            renderCpCheckboxes(allCpList);
-        }
     }
 
-    function renderPlazaDropdown() {
-        const container = document.getElementById('plaza-options-container');
+    function renderPlazaModalList(plazas) {
+        const container = document.getElementById('plaza-checkboxes-container');
         if (!container) return;
-        let html = '';
-        allPlazasList.forEach(plaza => {
-            const isSelected = selectedPlazasSet.has(plaza);
-            const count = rawData.filter(r => r[plazaKey] === plaza).length;
-            html += `
-                <div onclick="togglePlazaSelection('${esc(plaza).replace(/'/g, "\\'")}')" class="flex items-center justify-between p-2 rounded-xl cursor-pointer transition-all hover:bg-gray-50 text-gray-800">
-                    <div class="flex items-center space-x-2">
-                        <input type="checkbox" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500 pointer-events-none">
-                        <span class="text-sm font-medium ${isSelected ? 'font-bold text-[#DA291C]' : 'text-gray-700'}">${esc(plaza)}</span>
+        container.innerHTML = plazas.map(plaza => {
+            const isChecked = selectedPlazasSet.has(plaza);
+            const safeValue = esc(plaza);
+            return `
+                <div data-plaza="${safeValue}" class="plaza-item flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-[#1f2937]/70 hover:bg-gray-100 dark:hover:bg-[#1f2937] border border-gray-200 dark:border-slate-800 cursor-pointer transition">
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full ${isChecked ? 'bg-red-600 dark:bg-slate-300' : 'bg-gray-400 dark:bg-slate-500'}"></span>
+                        <span class="font-semibold text-xs text-gray-800 dark:text-slate-200">${safeValue}</span>
                     </div>
-                    <span class="bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">${count}</span>
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-red-600 rounded bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 w-4 h-4 pointer-events-none">
                 </div>
             `;
-        });
-        container.innerHTML = html;
+        }).join('');
+        bindPlazaItems();
+        updatePlazaSelectedCountLabel();
     }
 
-    window.togglePlazaSelection = function(plaza) {
+    function openPlazaModal() {
+        renderPlazaModalList(allPlazasList);
+        document.getElementById('plaza-modal').classList.remove('hidden');
+    }
+    function closePlazaModal() { document.getElementById('plaza-modal').classList.add('hidden'); }
+
+    function togglePlazaModalItem(plaza) {
         if (selectedPlazasSet.has(plaza)) selectedPlazasSet.delete(plaza);
         else selectedPlazasSet.add(plaza);
-        renderPlazaDropdown();
-        updatePlazaTriggerLabel();
-        debouncedDependentUpdate();
-        currentTimelinePage = 0; currentTablePage = 0;
-        applyCombinedFilters();
+        const searchVal = document.getElementById('plaza-modal-search').value.toLowerCase();
+        renderPlazaModalList(allPlazasList.filter(p => String(p).toLowerCase().includes(searchVal)));
     }
+    window.togglePlazaModalItem = togglePlazaModalItem;
 
-    window.selectAllPlazas = function() {
-        selectedPlazasSet = new Set(allPlazasList);
-        renderPlazaDropdown();
-        updatePlazaTriggerLabel();
-        debouncedDependentUpdate();
-        currentTimelinePage = 0; currentTablePage = 0;
-        applyCombinedFilters();
+    function selectAllPlazasModal() {
+        allPlazasList.forEach(p => selectedPlazasSet.add(p));
+        const searchVal = document.getElementById('plaza-modal-search').value.toLowerCase();
+        renderPlazaModalList(allPlazasList.filter(p => String(p).toLowerCase().includes(searchVal)));
     }
+    window.selectAllPlazasModal = selectAllPlazasModal;
 
-    window.deselectAllPlazas = function() {
+    function deselectAllPlazasModal() {
         selectedPlazasSet.clear();
-        renderPlazaDropdown();
-        updatePlazaTriggerLabel();
-        debouncedDependentUpdate();
+        const searchVal = document.getElementById('plaza-modal-search').value.toLowerCase();
+        renderPlazaModalList(allPlazasList.filter(p => String(p).toLowerCase().includes(searchVal)));
+    }
+    window.deselectAllPlazasModal = deselectAllPlazasModal;
+
+    function updatePlazaSelectedCountLabel() {
+        const label = document.getElementById('plaza-selected-count-label');
+        if (label) label.textContent = `${selectedPlazasSet.size} seleccionadas`;
+    }
+
+    document.getElementById('plaza-modal-search').addEventListener('input', (e) => {
+        renderPlazaModalList(allPlazasList.filter(p => String(p).toLowerCase().includes(e.target.value.toLowerCase().trim())));
+    });
+
+    function applyPlazaFilters() {
+        closePlazaModal();
         currentTimelinePage = 0; currentTablePage = 0;
         applyCombinedFilters();
     }
 
-    const debouncedDependentUpdate = debounce(updateDependentFiltersLists, 150);
-
-    function updatePlazaTriggerLabel() {
-        const labelEl = document.getElementById('plaza-trigger-label');
-        if (!labelEl) return;
-        if (selectedPlazasSet.size === 0) labelEl.innerText = "Ninguna plaza";
-        else if (selectedPlazasSet.size === allPlazasList.length) labelEl.innerText = "Plazas (Todas)";
-        else if (selectedPlazasSet.size === 1) labelEl.innerText = `Plaza: ${Array.from(selectedPlazasSet)[0]}`;
-        else labelEl.innerText = `Plazas (${selectedPlazasSet.size})`;
+    function bindRouteItems() {
+        document.querySelectorAll('#route-checkboxes-container .route-item').forEach(item => {
+            item.addEventListener('click', () => {
+                toggleRouteModalItem(item.getAttribute('data-route'));
+            });
+        });
     }
 
-    const plazaTrigger = document.getElementById('plaza-picker-trigger');
-    const plazaDropdown = document.getElementById('plaza-picker-dropdown');
-    if (plazaTrigger && plazaDropdown) {
-        plazaTrigger.addEventListener('click', (e) => { e.stopPropagation(); plazaDropdown.classList.toggle('hidden'); });
-        window.addEventListener('click', (e) => { if (!plazaDropdown.contains(e.target) && !plazaTrigger.contains(e.target)) plazaDropdown.classList.add('hidden'); });
+    function renderRouteModalList(routes) {
+        const container = document.getElementById('route-checkboxes-container');
+        if (!container) return;
+        container.innerHTML = routes.map(route => {
+            const isChecked = selectedRoutesSet.has(route);
+            const safeValue = esc(route);
+            return `
+                <div data-route="${safeValue}" class="route-item flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-[#1f2937]/70 hover:bg-gray-100 dark:hover:bg-[#1f2937] border border-gray-200 dark:border-slate-800 cursor-pointer transition">
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full ${isChecked ? 'bg-red-600 dark:bg-slate-300' : 'bg-gray-400 dark:bg-slate-500'}"></span>
+                        <span class="font-semibold text-xs text-gray-800 dark:text-slate-200">${safeValue}</span>
+                    </div>
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-red-600 rounded bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 w-4 h-4 pointer-events-none">
+                </div>
+            `;
+        }).join('');
+        bindRouteItems();
+        updateRouteSelectedCountLabel();
     }
 
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    function toggleRouteModalItem(route) {
+        if (selectedRoutesSet.has(route)) selectedRoutesSet.delete(route);
+        else selectedRoutesSet.add(route);
+        const searchVal = document.getElementById('route-modal-search').value.toLowerCase();
+        renderRouteModalList(allRoutesList.filter(r => String(r).toLowerCase().includes(searchVal)));
+    }
+    window.toggleRouteModalItem = toggleRouteModalItem;
+
+    function selectAllRoutesModal() {
+        allRoutesList.forEach(r => selectedRoutesSet.add(r));
+        const searchVal = document.getElementById('route-modal-search').value.toLowerCase();
+        renderRouteModalList(allRoutesList.filter(r => String(r).toLowerCase().includes(searchVal)));
+    }
+    window.selectAllRoutesModal = selectAllRoutesModal;
+
+    function deselectAllRoutesModal() {
+        selectedRoutesSet.clear();
+        const searchVal = document.getElementById('route-modal-search').value.toLowerCase();
+        renderRouteModalList(allRoutesList.filter(r => String(r).toLowerCase().includes(searchVal)));
+    }
+    window.deselectAllRoutesModal = deselectAllRoutesModal;
+
+    function updateRouteSelectedCountLabel() {
+        const label = document.getElementById('route-selected-count-label');
+        if (label) label.textContent = `${selectedRoutesSet.size} seleccionadas`;
+    }
+
+    document.getElementById('route-modal-search').addEventListener('input', (e) => {
+        renderRouteModalList(allRoutesList.filter(r => String(r).toLowerCase().includes(e.target.value.toLowerCase().trim())));
+    });
+
+    document.getElementById('open-route-modal').addEventListener('click', () => {
+        renderRouteModalList(allRoutesList);
+        document.getElementById('route-modal').classList.remove('hidden');
+    });
+    document.getElementById('close-route-modal').addEventListener('click', () => document.getElementById('route-modal').classList.add('hidden'));
+    document.getElementById('cancel-route-modal').addEventListener('click', () => document.getElementById('route-modal').classList.add('hidden'));
+    document.getElementById('apply-route-filter').addEventListener('click', () => {
+        document.getElementById('route-modal').classList.add('hidden');
+        currentTimelinePage = 0; currentTablePage = 0;
+        applyCombinedFilters();
+    });
+
+    function bindCpItems() {
+        document.querySelectorAll('#cp-checkboxes-container .cp-item').forEach(item => {
+            item.addEventListener('click', () => {
+                toggleCpModalItem(item.getAttribute('data-cp'));
+            });
+        });
+    }
+
+    function renderCpModalList(cps) {
+        const container = document.getElementById('cp-checkboxes-container');
+        if (!container) return;
+        container.innerHTML = cps.map(cp => {
+            const isChecked = selectedCpSet.has(cp);
+            const safeValue = esc(cp);
+            return `
+                <div data-cp="${safeValue}" class="cp-item flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-[#1f2937]/70 hover:bg-gray-100 dark:hover:bg-[#1f2937] border border-gray-200 dark:border-slate-800 cursor-pointer transition">
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full ${isChecked ? 'bg-red-600 dark:bg-slate-300' : 'bg-gray-400 dark:bg-slate-500'}"></span>
+                        <span class="font-semibold text-xs text-gray-800 dark:text-slate-200">${safeValue}</span>
+                    </div>
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} class="accent-red-600 rounded bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 w-4 h-4 pointer-events-none">
+                </div>
+            `;
+        }).join('');
+        bindCpItems();
+        updateCpSelectedCountLabel();
+    }
+
+    function toggleCpModalItem(cp) {
+        if (selectedCpSet.has(cp)) selectedCpSet.delete(cp);
+        else selectedCpSet.add(cp);
+        const searchVal = document.getElementById('cp-modal-search').value.toLowerCase();
+        renderCpModalList(allCpList.filter(c => String(c).toLowerCase().includes(searchVal)));
+    }
+    window.toggleCpModalItem = toggleCpModalItem;
+
+    function selectAllCpModal() {
+        allCpList.forEach(c => selectedCpSet.add(c));
+        const searchVal = document.getElementById('cp-modal-search').value.toLowerCase();
+        renderCpModalList(allCpList.filter(c => String(c).toLowerCase().includes(searchVal)));
+    }
+    window.selectAllCpModal = selectAllCpModal;
+
+    function deselectAllCpModal() {
+        selectedCpSet.clear();
+        const searchVal = document.getElementById('cp-modal-search').value.toLowerCase();
+        renderCpModalList(allCpList.filter(c => String(c).toLowerCase().includes(searchVal)));
+    }
+    window.deselectAllCpModal = deselectAllCpModal;
+
+    function updateCpSelectedCountLabel() {
+        const label = document.getElementById('cp-selected-count-label');
+        if (label) label.textContent = `${selectedCpSet.size} seleccionadas`;
+    }
+
+    document.getElementById('cp-modal-search').addEventListener('input', (e) => {
+        renderCpModalList(allCpList.filter(c => String(c).toLowerCase().includes(e.target.value.toLowerCase().trim())));
+    });
+
+    document.getElementById('open-cp-modal').addEventListener('click', () => {
+        renderCpModalList(allCpList);
+        document.getElementById('cp-modal').classList.remove('hidden');
+    });
+    document.getElementById('close-cp-modal').addEventListener('click', () => document.getElementById('cp-modal').classList.add('hidden'));
+    document.getElementById('cancel-cp-modal').addEventListener('click', () => document.getElementById('cp-modal').classList.add('hidden'));
+    document.getElementById('apply-cp-filter').addEventListener('click', () => {
+        document.getElementById('cp-modal').classList.add('hidden');
+        currentTimelinePage = 0; currentTablePage = 0;
+        applyCombinedFilters();
+    });
 
     function renderCalendar() {
         const titleEl = document.getElementById('cal-month-year-title');
         const gridEl = document.getElementById('cal-days-grid');
+        if (!titleEl || !gridEl) return;
         titleEl.innerText = `${monthNames[calCurrentMonth]} ${calCurrentYear}`;
         const firstDayIndex = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
         const totalDaysInMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
@@ -1012,7 +1462,7 @@
 
         let html = '';
         for (let i = firstDayIndex - 1; i >= 0; i--) {
-            html += `<span class="p-1.5 text-gray-300 cursor-default">${prevMonthDays - i}</span>`;
+            html += `<span class="p-1.5 text-gray-400 dark:text-gray-600 cursor-default">${prevMonthDays - i}</span>`;
         }
         for (let day = 1; day <= totalDaysInMonth; day++) {
             let mStr = String(calCurrentMonth + 1).padStart(2, '0');
@@ -1022,9 +1472,9 @@
             let isSelected = selectedDatesSet.has(dateStr);
             if (hasData) {
                 if (isSelected) html += `<button type="button" onclick="toggleCalendarDate('${dateStr}')" class="p-1.5 rounded-lg bg-[#DA291C] text-white font-bold shadow-sm hover:opacity-90 transition-all">${day}</button>`;
-                else html += `<button type="button" onclick="toggleCalendarDate('${dateStr}')" class="p-1.5 rounded-lg bg-red-50 text-gray-800 font-semibold border border-red-200 hover:bg-red-100 transition-all">${day}</button>`;
+                else html += `<button type="button" onclick="toggleCalendarDate('${dateStr}')" class="p-1.5 rounded-lg bg-red-50 dark:bg-red-950/40 text-gray-800 dark:text-gray-200 font-semibold border border-red-200 dark:border-red-900/60 hover:bg-red-100 dark:hover:bg-red-900/60 transition-all">${day}</button>`;
             } else {
-                html += `<span class="p-1.5 text-gray-300 cursor-default">${day}</span>`;
+                html += `<span class="p-1.5 text-gray-400 dark:text-gray-600 cursor-default">${day}</span>`;
             }
         }
         gridEl.innerHTML = html;
@@ -1035,7 +1485,6 @@
         else selectedDatesSet.add(dateStr);
         renderCalendar();
         updateDateTriggerLabel();
-        debouncedDependentUpdate();
         currentTimelinePage = 0; currentTablePage = 0;
         applyCombinedFilters();
     }
@@ -1044,9 +1493,25 @@
     document.getElementById('cal-next-month').addEventListener('click', () => { calCurrentMonth++; if (calCurrentMonth > 11) { calCurrentMonth = 0; calCurrentYear++; } renderCalendar(); });
     document.getElementById('cal-prev-year').addEventListener('click', () => { calCurrentYear--; renderCalendar(); });
     document.getElementById('cal-next-year').addEventListener('click', () => { calCurrentYear++; renderCalendar(); });
-    document.getElementById('cal-select-all').addEventListener('click', () => { selectedDatesSet = new Set(allDatesList); renderCalendar(); updateDateTriggerLabel(); debouncedDependentUpdate(); applyCombinedFilters(); });
-    document.getElementById('cal-clear-all').addEventListener('click', () => { selectedDatesSet.clear(); renderCalendar(); updateDateTriggerLabel(); debouncedDependentUpdate(); applyCombinedFilters(); });
-    document.getElementById('cal-today').addEventListener('click', () => { let t = new Date(); calCurrentYear = t.getFullYear(); calCurrentMonth = t.getMonth(); renderCalendar(); });
+    document.getElementById('cal-select-all').addEventListener('click', () => { selectedDatesSet = new Set(allDatesList); renderCalendar(); updateDateTriggerLabel(); applyCombinedFilters(); });
+    document.getElementById('cal-clear-all').addEventListener('click', () => { selectedDatesSet.clear(); renderCalendar(); updateDateTriggerLabel(); applyCombinedFilters(); });
+
+    document.getElementById('cal-today').addEventListener('click', () => {
+        if (allDatesList && allDatesList.length > 0) {
+            const mid = allDatesList[Math.floor(allDatesList.length / 2)];
+            const midParsed = parseDateTime(mid + 'T00:00:00');
+            if (midParsed && !isNaN(midParsed.getTime())) {
+                calCurrentYear = midParsed.getFullYear();
+                calCurrentMonth = midParsed.getMonth();
+                renderCalendar();
+                return;
+            }
+        }
+        const t = new Date();
+        calCurrentYear = t.getFullYear();
+        calCurrentMonth = t.getMonth();
+        renderCalendar();
+    });
 
     function updateDateTriggerLabel() {
         const labelEl = document.getElementById('date-trigger-label');
@@ -1062,52 +1527,31 @@
     dateTrigger.addEventListener('click', (e) => { e.stopPropagation(); dateDropdown.classList.toggle('hidden'); });
     window.addEventListener('click', (e) => { if (!dateDropdown.contains(e.target) && !dateTrigger.contains(e.target)) dateDropdown.classList.add('hidden'); });
 
-    function renderRouteCheckboxes(routes) {
-        document.getElementById('route-checkboxes-container').innerHTML = routes.map(r => `
-            <label class="flex items-center space-x-3 p-1.5 hover:bg-white rounded-lg cursor-pointer transition-all">
-                <input type="checkbox" name="route-checkbox" value="${esc(r)}" checked class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
-                <span class="text-sm text-gray-700">${esc(r)}</span>
-            </label>`).join('');
-    }
-    function renderCpCheckboxes(cps) {
-        document.getElementById('cp-checkboxes-container').innerHTML = cps.map(c => `
-            <label class="flex items-center space-x-3 p-1.5 hover:bg-white rounded-lg cursor-pointer transition-all">
-                <input type="checkbox" name="cp-checkbox" value="${esc(c)}" checked class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
-                <span class="text-sm text-gray-700">${esc(c)}</span>
-            </label>`).join('');
-    }
-
-    document.getElementById('route-search-input').addEventListener('input', debounce((e) => {
-        renderRouteCheckboxes(allRoutesList.filter(r => String(r).toLowerCase().includes(e.target.value.toLowerCase())));
-    }, 200));
-    document.getElementById('cp-search-input').addEventListener('input', debounce((e) => {
-        renderCpCheckboxes(allCpList.filter(c => String(c).toLowerCase().includes(e.target.value.toLowerCase())));
-    }, 200));
-
-    document.getElementById('global-search-input').addEventListener('input', debounce(() => {
+    const debouncedFilter = debounce(() => {
         currentTimelinePage = 0; currentTablePage = 0; applyCombinedFilters();
-    }, 300));
+    }, 300);
+
+    function handleSearchInput(input) {
+        const btn = document.getElementById('btn-table-reset');
+        if (input.value.trim() !== "") {
+            btn.classList.remove('filter-btn-hidden');
+            btn.classList.add('filter-btn-visible');
+        } else {
+            btn.classList.remove('filter-btn-visible');
+            btn.classList.add('filter-btn-hidden');
+        }
+        debouncedFilter();
+    }
+
+    function clearSearch() {
+        const input = document.getElementById('global-search-input');
+        input.value = "";
+        handleSearchInput(input);
+    }
 
     document.getElementById('sequence-search-input').addEventListener('input', debounce(() => {
         currentTimelinePage = 0; currentTablePage = 0; updateDashboard();
     }, 300));
-
-    document.getElementById('select-all-routes').addEventListener('click', () => document.querySelectorAll('input[name="route-checkbox"]').forEach(cb => cb.checked = true));
-    document.getElementById('deselect-all-routes').addEventListener('click', () => document.querySelectorAll('input[name="route-checkbox"]').forEach(cb => cb.checked = false));
-    document.getElementById('select-all-cps').addEventListener('click', () => document.querySelectorAll('input[name="cp-checkbox"]').forEach(cb => cb.checked = true));
-    document.getElementById('deselect-all-cps').addEventListener('click', () => document.querySelectorAll('input[name="cp-checkbox"]').forEach(cb => cb.checked = false));
-
-    const routeModal = document.getElementById('route-modal');
-    document.getElementById('open-route-modal').addEventListener('click', () => routeModal.classList.remove('hidden'));
-    document.getElementById('close-route-modal').addEventListener('click', () => routeModal.classList.add('hidden'));
-    document.getElementById('cancel-route-modal').addEventListener('click', () => routeModal.classList.add('hidden'));
-    document.getElementById('apply-route-filter').addEventListener('click', () => { applyCombinedFilters(); routeModal.classList.add('hidden'); });
-
-    const cpModal = document.getElementById('cp-modal');
-    document.getElementById('open-cp-modal').addEventListener('click', () => cpModal.classList.remove('hidden'));
-    document.getElementById('close-cp-modal').addEventListener('click', () => cpModal.classList.add('hidden'));
-    document.getElementById('cancel-cp-modal').addEventListener('click', () => cpModal.classList.add('hidden'));
-    document.getElementById('apply-cp-filter').addEventListener('click', () => { applyCombinedFilters(); cpModal.classList.add('hidden'); });
 
     const toggleFullscreenBtn = document.getElementById('toggle-fullscreen-btn');
     const mapCard = document.getElementById('map-card');
@@ -1141,17 +1585,23 @@
         const seqQuery = document.getElementById('sequence-search-input').value.trim();
         let plazaUnselected = plazaKey && selectedPlazasSet.size < allPlazasList.length;
         let dateUnselected = dateKey && selectedDatesSet.size < allDatesList.length;
-        let routeUnselected = routeKey && document.querySelectorAll('input[name="route-checkbox"]:checked').length < document.querySelectorAll('input[name="route-checkbox"]').length;
-        let cpUnselected = cpKey && document.querySelectorAll('input[name="cp-checkbox"]:checked').length < document.querySelectorAll('input[name="cp-checkbox"]').length;
+        let routeUnselected = routeKey && selectedRoutesSet.size < allRoutesList.length;
+        let cpUnselected = cpKey && selectedCpSet.size < allCpList.length;
         const hasActive = globalQuery !== '' || seqQuery !== '' || plazaUnselected || dateUnselected || routeUnselected || cpUnselected;
         const resetBtn = document.getElementById('reset-filters');
-        resetBtn.className = hasActive ? "fixed bottom-6 right-6 z-50 bg-gray-900 hover:bg-gray-800 text-white px-4 py-3 rounded-full shadow-2xl transition-all duration-300 flex items-center space-x-2 text-sm font-medium transform scale-100 opacity-100 pointer-events-auto" : "fixed bottom-6 right-6 z-50 bg-gray-900 hover:bg-gray-800 text-white px-4 py-3 rounded-full shadow-2xl transition-all duration-300 flex items-center space-x-2 text-sm font-medium transform scale-0 opacity-0 pointer-events-none";
+        if (hasActive) {
+            resetBtn.classList.remove('float-btn-hidden');
+            resetBtn.classList.add('float-btn-visible');
+        } else {
+            resetBtn.classList.remove('float-btn-visible');
+            resetBtn.classList.add('float-btn-hidden');
+        }
     }
 
     function applyCombinedFilters() {
         const selectedPlazas = plazaKey ? Array.from(selectedPlazasSet) : null;
-        const selectedRoutes = routeKey ? Array.from(document.querySelectorAll('input[name="route-checkbox"]:checked')).map(cb => cb.value) : null;
-        const selectedCps = cpKey ? Array.from(document.querySelectorAll('input[name="cp-checkbox"]:checked')).map(cb => cb.value) : null;
+        const selectedRoutes = routeKey ? Array.from(selectedRoutesSet) : null;
+        const selectedCps = cpKey ? Array.from(selectedCpSet) : null;
         const globalQuery = document.getElementById('global-search-input').value.toLowerCase().trim();
 
         const doFilter = () => {
@@ -1166,10 +1616,10 @@
 
             if (dateKey) {
                 filteredData.sort((a, b) => {
-                    let tA = a[dateKey] ? new Date(a[dateKey]).getTime() : 0;
-                    let tB = b[dateKey] ? new Date(b[dateKey]).getTime() : 0;
-                    if (isNaN(tA)) tA = 0;
-                    if (isNaN(tB)) tB = 0;
+                    const dA = parseDateTime(a[dateKey]);
+                    const dB = parseDateTime(b[dateKey]);
+                    const tA = dA ? dA.getTime() : 0;
+                    const tB = dB ? dB.getTime() : 0;
                     return tA - tB;
                 });
             }
@@ -1178,11 +1628,8 @@
             updateDashboard();
         };
 
-        if (document.startViewTransition) {
-            document.startViewTransition(doFilter);
-        } else {
-            doFilter();
-        }
+        if (document.startViewTransition) document.startViewTransition(doFilter);
+        else doFilter();
     }
 
     function getTargetSequences() {
@@ -1203,15 +1650,6 @@
         renderTable();
         document.getElementById('search-counter').innerText = filteredData.length;
         checkActiveFilters();
-    }
-
-    function findColumn(row, keywords) {
-        const keys = Object.keys(row);
-        for (let kw of keywords) {
-            let found = keys.find(k => _norm(k).includes(_norm(kw)));
-            if (found) return found;
-        }
-        return null;
     }
 
     function formatDuration(ms) {
@@ -1235,8 +1673,8 @@
             const seqNum = index + 1;
             if (targetSeqs !== null && !targetSeqs.includes(seqNum)) return;
             if (dateKey && row[dateKey]) {
-                let d = new Date(row[dateKey]);
-                if (!isNaN(d)) {
+                const d = parseDateTime(row[dateKey]);
+                if (d && !isNaN(d.getTime())) {
                     timestamps.push(d.getTime());
                     let hours = String(d.getHours()).padStart(2, '0');
                     let minutes = d.getMinutes() < 30 ? '00' : '30';
@@ -1255,8 +1693,8 @@
         let totalDiff = diffs.reduce((acc, curr) => acc + curr, 0);
         let avgDiff = diffs.length > 0 ? totalDiff / diffs.length : 0;
 
-        document.getElementById('kpi-avg-time-val').innerText = diffs.length > 0 ? formatDuration(avgDiff) : '00:00:00';
-        document.getElementById('kpi-sum-dead-time-val').innerText = diffs.length > 0 ? formatDuration(totalDiff) : '00:00:00';
+        document.getElementById('kpi-avg-time-val').innerText = diffs.length > 0 ? formatDuration(avgDiff) : '-';
+        document.getElementById('kpi-sum-dead-time-val').innerText = diffs.length > 0 ? formatDuration(totalDiff) : '-';
 
         let sortedLabels = Object.keys(countsByInterval).sort();
         let dataValues = sortedLabels.map(label => countsByInterval[label]);
@@ -1271,13 +1709,14 @@
         document.getElementById('kpi-min-val').innerText = dataValues.length > 0 ? `${minVal} entregas (${minTimeLabel})` : 'Sin datos';
 
         const maxEl = document.getElementById('kpi-max-val');
-        if (maxVal >= 10) {
-            maxEl.classList.add('critical-pulse');
-        } else {
-            maxEl.classList.remove('critical-pulse');
-        }
+        if (maxVal >= 10) maxEl.classList.add('critical-pulse');
+        else maxEl.classList.remove('critical-pulse');
 
         if (timeChart) timeChart.destroy();
+
+        const isDark = document.body.classList.contains('dark-mode');
+        const gridColor = isDark ? '#334155' : '#F3F4F6';
+        const tickColor = isDark ? '#94a3b8' : '#6B7280';
 
         timeChart = new Chart(ctx, {
             type: 'line',
@@ -1289,7 +1728,7 @@
                     borderColor: '#DA291C',
                     backgroundColor: 'rgba(218, 41, 28, 0.1)',
                     borderWidth: 2.5, fill: true, tension: 0.3,
-                    pointBackgroundColor: dataValues.map(v => v === maxVal && v > 0 ? '#DA291C' : '#ffffff'),
+                    pointBackgroundColor: dataValues.map(v => v === maxVal && v > 0 ? '#DA291C' : (isDark ? '#1e293b' : '#ffffff')),
                     pointBorderColor: dataValues.map(v => v === maxVal && v > 0 ? '#990000' : '#DA291C'),
                     pointRadius: dataValues.map(v => v === maxVal && v > 0 ? 6 : 3.5),
                     pointHoverRadius: 7
@@ -1299,8 +1738,8 @@
                 responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` Entregas: ${c.parsed.y}` } } },
                 scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 11, weight: '500' }, color: '#6B7280' } },
-                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 }, color: '#6B7280' }, grid: { color: '#F3F4F6' } }
+                    x: { grid: { display: false }, ticks: { font: { size: 11, weight: '500' }, color: tickColor } },
+                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 }, color: tickColor }, grid: { color: gridColor } }
                 }
             }
         });
@@ -1342,14 +1781,9 @@
                 const lng = parseFloat(row[lngKeyCached]);
                 if (!isNaN(lat) && !isNaN(lng)) {
                     let timeOnly = '-';
-                    if (dateKey && row[dateKey]) {
-                        let d = new Date(row[dateKey]);
-                        if (!isNaN(d)) {
-                            timeOnly = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} hrs`;
-                        } else {
-                            let parts = String(row[dateKey]).split(' ');
-                            timeOnly = parts.length > 1 ? parts[1] : String(row[dateKey]);
-                        }
+                    const rowDate = dateKey ? parseDateTime(row[dateKey]) : null;
+                    if (rowDate && !isNaN(rowDate.getTime())) {
+                        timeOnly = `${String(rowDate.getHours()).padStart(2, '0')}:${String(rowDate.getMinutes()).padStart(2, '0')} hrs`;
                     }
                     const pointColor = targetSeqs !== null ? '#DA291C' : '#10B981';
                     const numberedIcon = L.divIcon({
@@ -1361,11 +1795,26 @@
                         .bindPopup(`<b>Secuencia #${seqNum}</b><br><i class="fa-regular fa-clock text-red-600 mr-1"></i>Hora: <b>${esc(timeOnly)}</b><br>${esc(row[descKeyCached] || 'Evento')}`);
                     markersToAdd.push(marker);
                     bounds.push([lat, lng]);
-                    let rowDate = dateKey ? new Date(row[dateKey]) : null;
                     validPointsForLines.push({ latLng: L.latLng(lat, lng), seqNum, date: rowDate });
                 }
             });
             markersClusterGroup.addLayers(markersToAdd);
+
+            const emptyOverlay = document.getElementById('map-empty-overlay');
+            const emptyMsg = document.getElementById('map-empty-msg');
+            if (emptyOverlay) {
+                if (markersToAdd.length === 0) {
+                    const hasLatLngCols = !!(latKeyCached && lngKeyCached);
+                    if (emptyMsg) {
+                        emptyMsg.textContent = hasLatLngCols
+                            ? 'No hay puntos con coordenadas GPS válidas en los datos cargados o filtrados.'
+                            : 'El archivo no incluye columnas de Latitude/Longitude. El mapa no puede mostrar ubicaciones.';
+                    }
+                    emptyOverlay.classList.add('visible');
+                } else {
+                    emptyOverlay.classList.remove('visible');
+                }
+            }
 
             for (let i = 0; i < validPointsForLines.length - 1; i++) {
                 let p1 = validPointsForLines[i];
@@ -1373,7 +1822,7 @@
                 let distMeters = p1.latLng.distanceTo(p2.latLng);
                 let distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(1) + ' metros';
                 let timeText = '';
-                if (p1.date && p2.date && !isNaN(p1.date) && !isNaN(p2.date)) {
+                if (p1.date && p2.date && !isNaN(p1.date.getTime()) && !isNaN(p2.date.getTime())) {
                     let diffMs = p2.date - p1.date;
                     if (diffMs >= 0) {
                         let totalMins = Math.floor(diffMs / 60000);
@@ -1386,7 +1835,7 @@
                     color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5'
                 });
                 segmentLine.bindTooltip(`Seq #${p1.seqNum} &rarr; #${p2.seqNum}<br>Distancia: <b>${distText}</b>${timeText}`, {
-                    sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200'
+                    sticky: true, className: 'bg-white dark:bg-slate-800 px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-slate-700'
                 });
                 routeLinesLayer.addLayer(segmentLine);
             }
@@ -1419,8 +1868,8 @@
         }
 
         const totalPages = Math.ceil(searchedData.length / ITEMS_PER_PAGE);
-        if (currentTimelinePage >= totalPages) currentTimelinePage = 0;
-        if (currentTimelinePage < 0) currentTimelinePage = totalPages - 1;
+        if (currentTimelinePage >= totalPages) currentTimelinePage = totalPages - 1;
+        if (currentTimelinePage < 0) currentTimelinePage = 0;
         const currentItems = searchedData.slice(currentTimelinePage * ITEMS_PER_PAGE, (currentTimelinePage + 1) * ITEMS_PER_PAGE);
 
         container.innerHTML = currentItems.map(item => {
@@ -1434,28 +1883,31 @@
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:border-red-300 transition-all flex flex-col justify-between space-y-1.5 border-l-4 estafeta-border">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-xs estafeta-red-text">#${seqNum}</span>
-                        <span class="text-[10px] font-semibold text-red-700 bg-red-50 px-2 py-0.5 rounded">${esc(statusVal)}</span>
+                        <span class="text-[10px] font-semibold text-red-700 bg-red-50 dark:bg-red-950/50 px-2 py-0.5 rounded">${esc(statusVal)}</span>
                     </div>
                     <div>
-                        <p class="text-[11px] text-gray-500 font-bold"><i class="fa-regular fa-clock mr-1"></i>${esc(timeVal)}</p>
-                        <p class="text-[11px] text-gray-400 font-medium mt-0.5">Ruta: <span class="text-gray-700 font-bold">${esc(routeVal)}</span> | C.P.: <span class="text-gray-700 font-bold">${esc(cpVal)}</span></p>
-                        <p class="text-xs font-semibold text-gray-800 mt-0.5 truncate" title="${esc(descVal)}">${esc(descVal)}</p>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 font-bold"><i class="fa-regular fa-clock mr-1"></i>${esc(timeVal)}</p>
+                        <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-0.5">Ruta: <span class="text-gray-700 dark:text-gray-300 font-bold">${esc(routeVal)}</span> | C.P.: <span class="text-gray-700 dark:text-gray-300 font-bold">${esc(cpVal)}</span></p>
+                        <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 mt-0.5 truncate" title="${esc(descVal)}">${esc(descVal)}</p>
                     </div>
                 </div>
             `;
         }).join('');
 
+        const prevDisabled = currentTimelinePage === 0;
+        const nextDisabled = currentTimelinePage === totalPages - 1;
         paginationContainer.innerHTML = `
-            <button onclick="changeTimelinePage(${currentTimelinePage - 1}, ${totalPages})" class="px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-sm">Anterior</button>
-            <span class="text-xs font-bold text-gray-800">Página ${currentTimelinePage + 1} de ${totalPages}</span>
-            <button onclick="changeTimelinePage(${currentTimelinePage + 1}, ${totalPages})" class="px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-sm">Siguiente</button>
+            <button ${prevDisabled ? 'disabled' : ''} onclick="changeTimelinePage(${currentTimelinePage - 1}, ${totalPages})" class="px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-sm ${prevDisabled ? 'opacity-50 cursor-not-allowed' : ''}">Anterior</button>
+            <span class="text-xs font-bold text-gray-800 dark:text-gray-200">Página ${currentTimelinePage + 1} de ${totalPages}</span>
+            <button ${nextDisabled ? 'disabled' : ''} onclick="changeTimelinePage(${currentTimelinePage + 1}, ${totalPages})" class="px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-sm ${nextDisabled ? 'opacity-50 cursor-not-allowed' : ''}">Siguiente</button>
         `;
 
         setTimeout(applyCardStagger, 50);
     }
 
     window.changeTimelinePage = function(targetPage, totalPages) {
-        currentTimelinePage = targetPage < 0 ? totalPages - 1 : (targetPage >= totalPages ? 0 : targetPage);
+        if (targetPage < 0 || targetPage >= totalPages) return;
+        currentTimelinePage = targetPage;
         renderTimelineKPIs();
     }
 
@@ -1465,7 +1917,7 @@
         const originalHeaders = Object.keys(sample).filter(h => h && !excludedColumns.includes(_norm(h)));
         const headers = ['# Secuencia', ...originalHeaders];
 
-        document.getElementById('table-headers').innerHTML = headers.map(h => `<th class="px-6 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider">${esc(h)}</th>`).join('');
+        document.getElementById('table-headers').innerHTML = headers.map(h => `<th class="px-6 py-3 text-left font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">${esc(h)}</th>`).join('');
 
         const targetSeqs = getTargetSequences();
         const indexedData = filteredData.map((row, index) => ({ row, seqNum: index + 1 }));
@@ -1481,200 +1933,135 @@
         }
 
         const totalPages = Math.ceil(searchedData.length / ITEMS_PER_PAGE);
-        if (currentTablePage >= totalPages) currentTablePage = 0;
-        if (currentTablePage < 0) currentTablePage = totalPages - 1;
+        if (currentTablePage >= totalPages) currentTablePage = totalPages - 1;
+        if (currentTablePage < 0) currentTablePage = 0;
         const currentItems = searchedData.slice(currentTablePage * ITEMS_PER_PAGE, (currentTablePage + 1) * ITEMS_PER_PAGE);
 
         tbody.innerHTML = currentItems.map(item => {
             let rowHtml = `<td class="px-6 py-4 whitespace-nowrap font-bold estafeta-red-text">#${item.seqNum}</td>`;
-            rowHtml += originalHeaders.map(h => `<td class="px-6 py-4 whitespace-nowrap text-gray-700">${esc(item.row[h] !== undefined && item.row[h] !== null ? item.row[h] : '')}</td>`).join('');
+            rowHtml += originalHeaders.map(h => `<td class="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">${esc(item.row[h] !== undefined && item.row[h] !== null ? item.row[h] : '')}</td>`).join('');
             return `<tr class="bg-red-50/40 hover:bg-gray-50 border-l-2 estafeta-border">${rowHtml}</tr>`;
         }).join('');
 
+        const prevDisabled = currentTablePage === 0;
+        const nextDisabled = currentTablePage === totalPages - 1;
         tablePaginationContainer.innerHTML = `
-            <button onclick="changeTablePage(${currentTablePage - 1}, ${totalPages})" class="px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-sm">Anterior</button>
-            <span class="text-xs font-bold text-gray-800">Página ${currentTablePage + 1} de ${totalPages}</span>
-            <button onclick="changeTablePage(${currentTablePage + 1}, ${totalPages})" class="px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-sm">Siguiente</button>
+            <button ${prevDisabled ? 'disabled' : ''} onclick="changeTablePage(${currentTablePage - 1}, ${totalPages})" class="px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-sm ${prevDisabled ? 'opacity-50 cursor-not-allowed' : ''}">Anterior</button>
+            <span class="text-xs font-bold text-gray-800 dark:text-gray-200">Página ${currentTablePage + 1} de ${totalPages}</span>
+            <button ${nextDisabled ? 'disabled' : ''} onclick="changeTablePage(${currentTablePage + 1}, ${totalPages})" class="px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-sm ${nextDisabled ? 'opacity-50 cursor-not-allowed' : ''}">Siguiente</button>
         `;
     }
 
     window.changeTablePage = function(targetPage, totalPages) {
-        currentTablePage = targetPage < 0 ? totalPages - 1 : (targetPage >= totalPages ? 0 : targetPage);
+        if (targetPage < 0 || targetPage >= totalPages) return;
+        currentTablePage = targetPage;
         renderTable();
     }
 
     document.getElementById('reset-filters').addEventListener('click', () => {
-        document.getElementById('global-search-input').value = '';
+        const globalInput = document.getElementById('global-search-input');
+        globalInput.value = '';
+        handleSearchInput(globalInput);
         document.getElementById('sequence-search-input').value = '';
         selectedPlazasSet = new Set(allPlazasList);
-        renderPlazaDropdown();
-        updatePlazaTriggerLabel();
+        renderPlazaModalList(allPlazasList);
+        selectedRoutesSet = new Set(allRoutesList);
+        renderRouteModalList(allRoutesList);
+        selectedCpSet = new Set(allCpList);
+        renderCpModalList(allCpList);
         selectedDatesSet = new Set(allDatesList);
         renderCalendar();
         updateDateTriggerLabel();
-        updateDependentFiltersLists();
-        document.querySelectorAll('input[name="route-checkbox"]').forEach(cb => cb.checked = true);
-        document.querySelectorAll('input[name="cp-checkbox"]').forEach(cb => cb.checked = true);
-        document.getElementById('route-search-input').value = '';
-        document.getElementById('cp-search-input').value = '';
-        renderRouteCheckboxes(allRoutesList);
-        renderCpCheckboxes(allCpList);
         currentTimelinePage = 0;
         currentTablePage = 0;
         isInitialMapLoad = true;
         applyCombinedFilters();
     });
-            /* ============================================================
-           EFECTOS VISUALES
-           ============================================================ */
 
-        /* 1.3 Cascada en tarjetas */
-        function applyCardStagger() {
-            const container = document.getElementById('timeline-kpi-container');
-            if (!container) return;
-            Array.from(container.children).forEach((card, i) => {
-                if (card.classList.contains('card-enter')) return;
-                card.classList.add('card-enter');
-                card.style.animationDelay = (i * 45) + 'ms';
-            });
-        }
+    function applyCardStagger() {
+        const container = document.getElementById('timeline-kpi-container');
+        if (!container) return;
+        Array.from(container.children).forEach((card, i) => {
+            if (card.classList.contains('card-enter')) return;
+            card.classList.add('card-enter');
+            card.style.animationDelay = (i * 45) + 'ms';
+        });
+    }
 
-        /* 2.1 Ripple */
-        function initRipple() {
-            document.body.addEventListener('click', (e) => {
-                const btn = e.target.closest('button, .plaza-picker-trigger, #plaza-picker-trigger, [onclick]');
-                if (!btn || btn.disabled) return;
-                if (!btn.classList.contains('ripple-host')) btn.classList.add('ripple-host');
+    function initRipple() {
+        document.body.addEventListener('click', (e) => {
+            const btn = e.target.closest('button, [onclick]');
+            if (!btn || btn.disabled) return;
+            if (!btn.classList.contains('ripple-host')) btn.classList.add('ripple-host');
 
-                const rect = btn.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                const ripple = document.createElement('span');
-                ripple.className = 'ripple-effect';
-                ripple.style.width = ripple.style.height = size + 'px';
-                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
-                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple-effect';
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+            ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
 
-                btn.appendChild(ripple);
-                setTimeout(() => ripple.remove(), 650);
-            }, true);
-        }
+            btn.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 650);
+        }, true);
+    }
 
-        /* 2.3 Tilt 3D (solo desktop) */
-        function applyTiltToCards() {
-            if (window.matchMedia('(pointer: coarse)').matches) return;
-            document.querySelectorAll('#timeline-kpi-container > div').forEach(card => {
-                if (card.dataset.tilt === 'on') return;
-                card.dataset.tilt = 'on';
-                card.addEventListener('mousemove', (e) => {
-                    const rect = card.getBoundingClientRect();
-                    const x = (e.clientX - rect.left) / rect.width - 0.5;
-                    const y = (e.clientY - rect.top) / rect.height - 0.5;
-                    card.style.transform = `perspective(1000px) rotateY(${x * 5}deg) rotateX(${-y * 5}deg) translateY(-4px) scale(1.02)`;
-                });
-                card.addEventListener('mouseleave', () => { card.style.transform = ''; });
-            });
-        }
+    function injectKPIBars() {
+        const kpiIds = ['kpi-max-val', 'kpi-min-val'];
+        kpiIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const parent = el.closest('.flex.items-center');
+            if (!parent || parent.querySelector('.kpi-bar-track')) return;
+            const track = document.createElement('div');
+            track.className = 'kpi-bar-track';
+            const fill = document.createElement('div');
+            fill.className = 'kpi-bar-fill';
+            fill.style.background = id === 'kpi-max-val' ? '#dc2626' : '#10b981';
+            track.appendChild(fill);
+            parent.appendChild(track);
+        });
+    }
 
-        /* 3.1 Barras de progreso en KPIs */
-        function injectKPIBars() {
-            const kpiIds = ['kpi-max-val', 'kpi-min-val'];
-            kpiIds.forEach(id => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                const parent = el.closest('.flex.items-center');
-                if (!parent || parent.querySelector('.kpi-bar-track')) return;
-                const track = document.createElement('div');
-                track.className = 'kpi-bar-track';
-                const fill = document.createElement('div');
-                fill.className = 'kpi-bar-fill';
-                fill.style.background = id === 'kpi-max-val' ? '#dc2626' : '#10b981';
-                track.appendChild(fill);
-                parent.appendChild(track);
-            });
-        }
+    (function initTema() {
+        const icon = document.getElementById('theme-toggle-icon');
 
-        /* ============================================================
-           5.1 MODO OSCURO (con toggle manual en el banner)
-           ============================================================ */
-        function aplicarTema(tema) {
-            const icon = document.getElementById('theme-toggle-icon');
+        function aplicarTemaLocal(tema) {
             if (tema === 'dark') {
                 document.body.classList.add('dark-mode');
-                if (icon) icon.className = 'fa-solid fa-sun';
+                if (icon) icon.className = 'fa-solid fa-sun text-amber-300';
             } else {
                 document.body.classList.remove('dark-mode');
                 if (icon) icon.className = 'fa-solid fa-moon';
             }
+            if (typeof timeChart !== 'undefined' && timeChart) {
+                updateDashboard();
+            }
         }
 
-        window.addEventListener('message', (e) => {
-            if (e.data && e.data.theme) aplicarTema(e.data.theme);
-        });
+        const t = localStorage.getItem('theme') || localStorage.getItem('panel-theme');
+        if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            aplicarTemaLocal('dark');
+        }
 
-        (function initTema() {
-            const icon = document.getElementById('theme-toggle-icon');
+        const btn = document.getElementById('theme-toggle');
+        if (btn) {
+            btn.onclick = () => {
+                const isDark = document.body.classList.toggle('dark-mode');
+                aplicarTemaLocal(isDark ? 'dark' : 'light');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                localStorage.setItem('panel-theme', isDark ? 'dark' : 'light');
+            };
+        }
+    })();
 
-            function aplicarTemaLocal(tema) {
-                if (tema === 'dark') {
-                    document.body.classList.add('dark-mode');
-                    if (icon) icon.className = 'fa-solid fa-sun';
-                } else {
-                    document.body.classList.remove('dark-mode');
-                    if (icon) icon.className = 'fa-solid fa-moon';
-                }
-            }
+    document.addEventListener('DOMContentLoaded', () => {
+        initRipple();
+        setTimeout(injectKPIBars, 500);
+    });
+</script>
 
-            const t = localStorage.getItem('panel-theme');
-            if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                aplicarTemaLocal('dark');
-            }
-
-            const btn = document.getElementById('theme-toggle');
-            if (btn) {
-                btn.onclick = () => {
-                    const isDark = document.body.classList.contains('dark-mode');
-                    const next = isDark ? 'light' : 'dark';
-                    aplicarTemaLocal(next);
-                    localStorage.setItem('panel-theme', next);
-                };
-            }
-
-            if (window.matchMedia) {
-                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-                    if (!localStorage.getItem('panel-theme')) aplicarTemaLocal(e.matches ? 'dark' : 'light');
-                });
-            }
-        })();
-
-        /* ============================================================
-           ORQUESTADOR DE EFECTOS
-           ============================================================ */
-        document.addEventListener('DOMContentLoaded', () => {
-            initRipple();
-            setTimeout(injectKPIBars, 500);
-            const dash = document.getElementById('dashboard-content');
-            if (dash) {
-                let lastCount = -1;
-                const obs = new MutationObserver(() => {
-                    if (!dash.classList.contains('hidden') && rawData.length > 0 && rawData.length !== lastCount) {
-                        lastCount = rawData.length;
-                        setTimeout(() => {
-                            applyCardStagger();
-                            applyTiltToCards();
-                            injectKPIBars();
-                        }, 300);
-                    }
-                });
-                obs.observe(dash, { attributes: true, attributeFilter: ['class'] });
-            }
-            console.log('%c🎨 Efectos activados: ripple, dark-mode (con toggle), gradiente, cascada, glow, view-transitions, pulse',
-                'background:#DA291C;color:white;padding:6px 10px;border-radius:4px;font-weight:bold;font-size:12px;');
-        });
-    </script>
-
-    <!-- ============================================================
-     🔔 CAMPANA DE NOTIFICACIONES (LOCAL — sin postMessage)
-     ============================================================ -->
 <script>
 (function initNotifBell() {
     'use strict';
@@ -1694,7 +2081,6 @@
         success: 'fa-solid fa-circle-check'
     };
 
-    /* ---------- Persistencia ---------- */
     function loadHistory() {
         try {
             const raw = localStorage.getItem(CONFIG.storageKey);
@@ -1711,13 +2097,13 @@
 
     let history = loadHistory();
 
-    /* ---------- Inyectar campana ---------- */
     function injectBell() {
         const container = document.getElementById('header-actions-container');
         if (!container || document.getElementById('notif-bell')) return;
         const btn = document.createElement('button');
         btn.id = 'notif-bell';
         btn.setAttribute('aria-label', 'Notificaciones');
+        btn.title = 'Notificaciones';
         btn.innerHTML = `
             <i class="fa-solid fa-bell"></i>
             <span id="notif-badge" class="hidden">0</span>
@@ -1726,7 +2112,7 @@
             e.stopPropagation();
             togglePanel();
         });
-        // Insertar antes del botón de tema
+
         const themeBtn = document.getElementById('theme-toggle');
         if (themeBtn && themeBtn.parentNode === container) {
             container.insertBefore(btn, themeBtn);
@@ -1734,7 +2120,6 @@
             container.appendChild(btn);
         }
 
-        // Panel
         const panel = document.createElement('div');
         panel.id = 'notif-panel';
         panel.innerHTML = `
@@ -1771,7 +2156,6 @@
         renderPanel();
     }
 
-    /* ---------- Panel ---------- */
     function togglePanel() {
         const p = document.getElementById('notif-panel');
         if (!p) return;
@@ -1821,7 +2205,6 @@
         `).join('');
     }
 
-    /* ---------- Badge ---------- */
     function updateBadge() {
         const badge = document.getElementById('notif-badge');
         if (!badge) return;
@@ -1836,7 +2219,6 @@
         }
     }
 
-    /* ---------- Toasts ---------- */
     function showToast(notif, duration) {
         const container = document.getElementById('notif-toast-container');
         if (!container) return;
@@ -1867,7 +2249,6 @@
         }, dur);
     }
 
-    /* ---------- Add / Read / Clear ---------- */
     function addNotifications(notifs) {
         if (!notifs || notifs.length === 0) return;
         const enriched = notifs.map((n, i) => ({
@@ -1906,248 +2287,33 @@
         renderPanel();
     }
 
-    /* ============================================================
-       Detección robusta de la columna de Código Postal
-       ============================================================ */
-    function detectCpColumn() {
-        if (typeof filteredData === 'undefined' || !filteredData.length) return '';
-        const sample = filteredData[0] || {};
-        const keys = Object.keys(sample);
-        if (!keys.length) return '';
-
-        if (keys.includes('Postal Code')) return 'Postal Code';
-        if (typeof cpKey !== 'undefined' && cpKey && keys.includes(cpKey)) return cpKey;
-
-        const norm = s => String(s ?? '')
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase().trim();
-
-        const aliases = [
-            'postal code', 'postal_code', 'postalcode',
-            'codigo postal', 'codigo_postal', 'codigopostal',
-            'cp', 'c.p.', 'c.p', 'cp.', 'zip', 'zipcode', 'zip code',
-            'codigo', 'cod', 'postal'
-        ];
-        const aliasesNorm = aliases.map(norm);
-
-        for (const k of keys) {
-            if (aliasesNorm.includes(norm(k))) return k;
-        }
-        for (const k of keys) {
-            const nk = norm(k);
-            if (aliasesNorm.some(a => nk.includes(a))) return k;
-        }
-        return '';
-    }
-
-    /* ---------- Análisis (solo al cargar Excel) ---------- */
     function analyzeAndAlert() {
-        if (typeof filteredData === 'undefined' || !filteredData || filteredData.length === 0) {
-            console.warn('🔔 [Campana] filteredData vacío, no se analiza.');
-            return;
-        }
+        if (typeof filteredData === 'undefined' || !filteredData || filteredData.length === 0) return;
+        if (typeof dateKey === 'undefined' || !dateKey) return;
 
         const total = filteredData.length;
         const notifs = [];
+        const parseDT = window.parseDateTime || (v => new Date(v));
+        const intervalos = {};
 
-        const _dateKey   = (typeof dateKey !== 'undefined' && dateKey)         ? dateKey         : '';
-        const _plazaKey  = (typeof plazaKey !== 'undefined' && plazaKey)       ? plazaKey        : '';
-        const _routeKey  = (typeof routeKey !== 'undefined' && routeKey)       ? routeKey        : '';
-        const _cpKey     = detectCpColumn();
-        const _latKey    = (typeof latKeyCached !== 'undefined' && latKeyCached)   ? latKeyCached   : '';
-        const _lngKey    = (typeof lngKeyCached !== 'undefined' && lngKeyCached)   ? lngKeyCached   : '';
-        const _statusKey = (typeof statusKeyCached !== 'undefined' && statusKeyCached) ? statusKeyCached : '';
-
-        console.log('🔔 [Campana] Columnas detectadas:', {
-            fecha: _dateKey, plaza: _plazaKey, ruta: _routeKey, cp: _cpKey,
-            lat: _latKey, lng: _lngKey, estatus: _statusKey, total
+        filteredData.forEach(r => {
+            const d = parseDT(r[dateKey]);
+            if (!d || isNaN(d.getTime())) return;
+            const h = String(d.getHours()).padStart(2, '0');
+            const m = d.getMinutes() < 30 ? '00' : '30';
+            const k = `${h}:${m}`;
+            intervalos[k] = (intervalos[k] || 0) + 1;
         });
 
-        /* 1. Pico crítico */
-        if (_dateKey) {
-            const intervalos = {};
-            filteredData.forEach(r => {
-                const d = new Date(r[_dateKey]);
-                if (isNaN(d)) return;
-                const h = String(d.getHours()).padStart(2, '0');
-                const m = d.getMinutes() < 30 ? '00' : '30';
-                const k = `${h}:${m}`;
-                intervalos[k] = (intervalos[k] || 0) + 1;
+        const sorted = Object.entries(intervalos).sort((a, b) => b[1] - a[1]);
+        if (sorted.length > 0 && sorted[0][1] >= 10) {
+            notifs.push({
+                type: 'danger',
+                title: '🚨 Pico crítico de entregas',
+                message: `<b>${sorted[0][1]}</b> entregas en el intervalo <b>${sorted[0][0]}</b>.`
             });
-            const sorted = Object.entries(intervalos).sort((a, b) => b[1] - a[1]);
-            if (sorted.length > 0 && sorted[0][1] >= 10) {
-                notifs.push({
-                    type: 'danger',
-                    title: '🚨 Pico crítico de entregas',
-                    message: `<b>${sorted[0][1]}</b> entregas en el intervalo <b>${sorted[0][0]}</b>.`
-                });
-            }
         }
 
-        /* 2. Brecha temporal */
-        if (_dateKey) {
-            const timestamps = filteredData
-                .map(r => new Date(r[_dateKey]).getTime())
-                .filter(t => !isNaN(t))
-                .sort((a, b) => a - b);
-            let maxGap = 0, gapAt = null;
-            for (let i = 1; i < timestamps.length; i++) {
-                const gap = timestamps[i] - timestamps[i - 1];
-                if (gap > maxGap) { maxGap = gap; gapAt = timestamps[i - 1]; }
-            }
-            if (maxGap > 60 * 60 * 1000 && gapAt !== null) {
-                const mins = Math.round(maxGap / 60000);
-                const hh = new Date(gapAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-                notifs.push({
-                    type: 'danger',
-                    title: '🕳️ Brecha temporal crítica',
-                    message: `<b>${mins} min</b> sin entregas a partir de las <b>${hh}</b>.`
-                });
-            }
-        }
-
-        /* 3. Concentración plaza */
-        if (_plazaKey) {
-            const map = {};
-            filteredData.forEach(r => {
-                const p = String(r[_plazaKey] || 'N/D').trim();
-                map[p] = (map[p] || 0) + 1;
-            });
-            const top = Object.entries(map).sort((a, b) => b[1] - a[1])[0];
-            if (top && top[1] > total * 0.4) {
-                notifs.push({
-                    type: 'warning',
-                    title: `🗺️ Concentración en ${top[0]}`,
-                    message: `<b>${top[1]}</b> entregas (${((top[1]/total)*100).toFixed(1)}%) en una sola plaza.`
-                });
-            }
-        }
-
-        /* 4. Sin coordenadas */
-        if (_latKey && _lngKey) {
-            let invalid = 0;
-            filteredData.forEach(r => {
-                const lat = parseFloat(r[_latKey]);
-                const lng = parseFloat(r[_lngKey]);
-                if (isNaN(lat) || isNaN(lng)) invalid++;
-            });
-            if (invalid > total * 0.1) {
-                notifs.push({
-                    type: 'warning',
-                    title: `📍 ${invalid} registros sin coordenadas`,
-                    message: `${((invalid/total)*100).toFixed(1)}% de los registros no tienen ubicación válida.`
-                });
-            }
-        }
-
-        /* 5. Sin estatus */
-        if (_statusKey) {
-            const sin = filteredData.filter(r => {
-                const st = String(r[_statusKey] || '').trim();
-                return st === '' || st === 'N/D' || st === 'null';
-            }).length;
-            if (sin > total * 0.15) {
-                notifs.push({
-                    type: 'warning',
-                    title: `⚠️ ${sin} registros sin estatus`,
-                    message: `${((sin/total)*100).toFixed(1)}% de los paquetes no tienen estado asignado.`
-                });
-            }
-        }
-
-        /* 6. Ruta con más carga */
-        if (_routeKey) {
-            const map = {};
-            filteredData.forEach(r => {
-                const rt = String(r[_routeKey] || 'N/D').trim();
-                map[rt] = (map[rt] || 0) + 1;
-            });
-            const top = Object.entries(map).sort((a, b) => b[1] - a[1])[0];
-            if (top && top[1] > total * 0.3) {
-                notifs.push({
-                    type: 'warning',
-                    title: `📦 Ruta ${top[0]} con más carga`,
-                    message: `<b>${top[1]}</b> entregas (${((top[1]/total)*100).toFixed(1)}%) en una sola ruta.`
-                });
-            }
-        }
-
-        /* 6b. Top 3 C.P. con más entregas */
-        if (_cpKey) {
-            const map = {};
-            let contadorValidos = 0;
-            filteredData.forEach(r => {
-                let cp = String(r[_cpKey] ?? '').trim();
-                if (!cp || cp === 'N/D' || cp === 'null' || cp === 'undefined') return;
-                cp = cp.replace(/\.0+$/, '');
-                map[cp] = (map[cp] || 0) + 1;
-                contadorValidos++;
-            });
-            const top3 = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 3);
-
-            if (top3.length > 0) {
-                const medals = ['🥇', '🥈', '🥉'];
-                const lines = top3.map(([cp, count], i) => {
-                    const pct = ((count/total)*100).toFixed(1);
-                    return `${medals[i]} <b>${cp}</b>: ${count} entregas (${pct}%)`;
-                });
-                notifs.push({
-                    type: 'warning',
-                    title: '📮 Top 3 C.P. con más entregas',
-                    message: lines.join('<br>')
-                });
-            }
-        }
-
-        /* 7. Fuera de horario */
-        if (_dateKey) {
-            let fuera = 0;
-            filteredData.forEach(r => {
-                const d = new Date(r[_dateKey]);
-                if (isNaN(d)) return;
-                const h = d.getHours();
-                if (h < 6 || h > 22) fuera++;
-            });
-            if (fuera > 5) {
-                notifs.push({
-                    type: 'info',
-                    title: `🕐 ${fuera} entregas fuera de horario`,
-                    message: `(${((fuera/total)*100).toFixed(1)}%) entre 22:00 y 06:00 hrs.`
-                });
-            }
-        }
-
-        /* 8. Jornada larga */
-        if (_dateKey) {
-            const ts = filteredData
-                .map(r => new Date(r[_dateKey]).getTime())
-                .filter(t => !isNaN(t))
-                .sort((a, b) => a - b);
-            if (ts.length > 1) {
-                const durH = (ts[ts.length - 1] - ts[0]) / 3600000;
-                if (durH > 12) {
-                    notifs.push({
-                        type: 'info',
-                        title: '⏱️ Jornada excesivamente larga',
-                        message: `La operación abarcó <b>${durH.toFixed(1)} h</b> desde la primera a la última entrega.`
-                    });
-                }
-            }
-        }
-
-        /* 9. Cobertura geográfica */
-        if (_plazaKey) {
-            const plazasDistintas = new Set(filteredData.map(r => String(r[_plazaKey] || '').trim()).filter(Boolean)).size;
-            if (plazasDistintas > 0) {
-                notifs.push({
-                    type: 'info',
-                    title: '🌍 Cobertura geográfica',
-                    message: `Se detectaron <b>${plazasDistintas}</b> plaza(s) distintas en el archivo.`
-                });
-            }
-        }
-
-        /* 10. Carga exitosa */
         notifs.push({
             type: 'success',
             title: `✅ ${total.toLocaleString()} entregas procesadas`,
@@ -2165,9 +2331,6 @@
     } else {
         injectBell();
     }
-
-    console.log('%c🔔 Campana de notificaciones lista (local, sin postMessage)',
-        'background:#DA291C;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;font-size:11px;');
 })();
 </script>
 
