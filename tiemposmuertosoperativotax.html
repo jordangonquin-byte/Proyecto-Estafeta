@@ -38,7 +38,6 @@
 
         @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
-        /* Banner de archivo desactualizado */
         #stale-file-banner {
             display: none;
             background: linear-gradient(90deg, #7c2d12, #9a3412, #c2410c, #9a3412, #7c2d12);
@@ -255,25 +254,13 @@
         body.dark-mode .bg-yellow-50\/60 { background-color: rgba(120, 53, 15, 0.3) !important; border-color: rgba(146, 64, 14, 0.5) !important; }
         body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; color: #fca5a5 !important; }
 
-        /* ============================================================
-           FIX MODO OSCURO: HOVERS (Evita texto invisible en tablas y botones)
-           ============================================================ */
         body.dark-mode tr.hover\:bg-gray-50:hover,
         body.dark-mode .hover\:bg-gray-50:hover,
         body.dark-mode .hover\:bg-gray-100:hover,
-        body.dark-mode .hover\:bg-gray-200:hover {
-            background-color: #334155 !important; /* Fondo gris oscuro para hover */
-        }
-        body.dark-mode .hover\:bg-red-50:hover {
-            background-color: rgba(185, 28, 28, 0.2) !important; /* Fondo rojo oscuro sutil */
-        }
-        body.dark-mode tr.hover\:bg-gray-50:hover td {
-            color: #f1f5f9 !important; /* Asegura texto claro en hover */
-        }
-        body.dark-mode tr.hover\:bg-gray-50:hover td.text-red-600 {
-            color: #f87171 !important; /* Rojo más brillante para legibilidad */
-        }
-        /* ============================================================ */
+        body.dark-mode .hover\:bg-gray-200:hover { background-color: #334155 !important; }
+        body.dark-mode .hover\:bg-red-50:hover { background-color: rgba(185, 28, 28, 0.2) !important; }
+        body.dark-mode tr.hover\:bg-gray-50:hover td { color: #f1f5f9 !important; }
+        body.dark-mode tr.hover\:bg-gray-50:hover td.text-red-600 { color: #f87171 !important; }
 
         body:not(.dark-mode) #plaza-modal > div { background: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #1e293b !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important; }
         body:not(.dark-mode) #plaza-modal .border-slate-800 { border-color: #e2e8f0 !important; }
@@ -281,10 +268,10 @@
         body:not(.dark-mode) #plaza-list-container label { background-color: #ffffff !important; color: #1e293b !important; border-color: #e2e8f0 !important; }
         body:not(.dark-mode) #plaza-list-container label:hover { background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; }
 
-        body.dark-mode #card-modal > div, 
-        body.dark-mode #qr-modal > div, 
-        body.dark-mode #custom-filter-modal > div, 
-        body.dark-mode #plaza-modal > div { 
+        body.dark-mode #card-modal > div,
+        body.dark-mode #qr-modal > div,
+        body.dark-mode #custom-filter-modal > div,
+        body.dark-mode #plaza-modal > div {
             background: #1e293b !important; border: 1px solid #334155 !important; color: #e2e8f0 !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
         }
         body.dark-mode #card-modal .border-gray-100, body.dark-mode #qr-modal .border-slate-800, body.dark-mode #custom-filter-modal .border-slate-800, body.dark-mode #plaza-modal .border-slate-800 { border-color: #334155 !important; }
@@ -338,12 +325,9 @@
         .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
 
         .tab-indicator { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform, width; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        
+
         @keyframes slideUp { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
-        
-        .animate-slide-up {
-            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 
         .float-btn-hidden { opacity: 0; pointer-events: none; transform: scale(0.85); }
         .float-btn-visible { opacity: 1; pointer-events: auto; transform: scale(1); }
@@ -386,43 +370,23 @@
         </div>
     </header>
 
-    <!-- Banner permanente cuando el Excel es de un día anterior -->
-    <div id="stale-file-banner" role="alert">
-        <i class="fas fa-exclamation-triangle text-lg"></i>
-        <span>Este archivo corresponde a una fecha anterior.</span>
-        <span class="stale-date-badge" id="stale-file-date">—</span>
-        <span class="text-sm opacity-90">Los vencimientos y estados reflejan el momento de generación del Excel, no la fecha de hoy.</span>
-    </div>
+    <div id="stale-file-banner" role="alert"></div>
 
     <main id="main-container" class="w-[80%] max-w-[80%] mx-auto px-4 py-6 flex-grow space-y-6 hidden">
-        
         <div class="bg-white p-2 rounded-2xl shadow-sm border border-gray-200 transition-colors duration-300">
             <div class="w-full relative p-1 bg-gray-100 rounded-xl border border-gray-200 flex flex-wrap md:flex-nowrap items-center gap-1 transition-colors duration-300" id="segmentedNavContainer">
                 <div id="segmentedBg" class="tab-indicator absolute top-1 bottom-1 bg-[#DA291C]"></div>
-
-                <button onclick="switchMainTab('avance', 0, this)" class="main-tab-btn relative z-10 flex-1 py-2.5 px-3 text-xs font-bold text-white text-center transition-colors flex items-center justify-center gap-1.5 rounded-lg">
-                    <i class="fa-solid fa-chart-pie"></i> Avance General
-                </button>
-                <button onclick="switchMainTab('tarjetas', 1, this)" class="main-tab-btn relative z-10 flex-1 py-2.5 px-3 text-xs font-semibold text-gray-600 hover:text-gray-900 text-center transition-colors flex items-center justify-center gap-1.5 rounded-lg">
-                    <i class="fa-solid fa-address-card"></i> Tarjetas de Registro
-                </button>
-                <button onclick="switchMainTab('tiempos', 2, this)" class="main-tab-btn relative z-10 flex-1 py-2.5 px-3 text-xs font-semibold text-gray-600 hover:text-gray-900 text-center transition-colors flex items-center justify-center gap-1.5 rounded-lg">
-                    <i class="fa-solid fa-clock"></i> Tiempos Muertos
-                </button>
-                <button onclick="switchMainTab('crono', 3, this)" class="main-tab-btn relative z-10 flex-1 py-2.5 px-3 text-xs font-semibold text-gray-600 hover:text-gray-900 text-center transition-colors flex items-center justify-center gap-1.5 rounded-lg">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Detalle Cronológico
-                </button>
-                <button onclick="switchMainTab('timeline', 4, this)" class="main-tab-btn relative z-10 flex-1 py-2.5 px-3 text-xs font-semibold text-gray-600 hover:text-gray-900 text-center transition-colors flex items-center justify-center gap-1.5 rounded-lg">
-                    <i class="fa-solid fa-timeline"></i> Línea de Tiempo
-                </button>
-                <button onclick="switchMainTab('gpsmap', 5, this)" class="main-tab-btn relative z-10 flex-1 py-2.5 px-3 text-xs font-semibold text-gray-600 hover:text-gray-900 text-center transition-colors flex items-center justify-center gap-1.5 rounded-lg">
-                    <i class="fa-solid fa-map-location-dot"></i> Mapa GPS
-                </button>
+                <button onclick="switchMainTab('avance', 0, this)" class="main-tab-btn relative z-10 flex-1 py-2.5 px-3 text-xs font-bold text-white text-center transition-colors flex items-center justify-center gap-1.5 rounded-lg"><i class="fa-solid fa-chart-pie"></i> Avance General</button>
+                <button onclick="switchMainTab('tarjetas', 1, this)" class="main-tab-btn relative z-10 flex-1 py-2.5 px-3 text-xs font-semibold text-gray-600 hover:text-gray-900 text-center transition-colors flex items-center justify-center gap-1.5 rounded-lg"><i class="fa-solid fa-address-card"></i> Tarjetas de Registro</button>
+                <button onclick="switchMainTab('tiempos', 2, this)" class="main-tab-btn relative z-10 flex-1 py-2.5 px-3 text-xs font-semibold text-gray-600 hover:text-gray-900 text-center transition-colors flex items-center justify-center gap-1.5 rounded-lg"><i class="fa-solid fa-clock"></i> Tiempos Muertos</button>
+                <button onclick="switchMainTab('crono', 3, this)" class="main-tab-btn relative z-10 flex-1 py-2.5 px-3 text-xs font-semibold text-gray-600 hover:text-gray-900 text-center transition-colors flex items-center justify-center gap-1.5 rounded-lg"><i class="fa-solid fa-clock-rotate-left"></i> Detalle Cronológico</button>
+                <button onclick="switchMainTab('timeline', 4, this)" class="main-tab-btn relative z-10 flex-1 py-2.5 px-3 text-xs font-semibold text-gray-600 hover:text-gray-900 text-center transition-colors flex items-center justify-center gap-1.5 rounded-lg"><i class="fa-solid fa-timeline"></i> Línea de Tiempo</button>
+                <button onclick="switchMainTab('gpsmap', 5, this)" class="main-tab-btn relative z-10 flex-1 py-2.5 px-3 text-xs font-semibold text-gray-600 hover:text-gray-900 text-center transition-colors flex items-center justify-center gap-1.5 rounded-lg"><i class="fa-solid fa-map-location-dot"></i> Mapa GPS</button>
             </div>
         </div>
 
         <div id="dashboard-content" class="space-y-6 w-full">
-            
+            <!-- =================== AVANCE =================== -->
             <div id="section-avance" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100"><h3 class="text-lg font-bold text-gray-800 flex items-center"><i class="fa-solid fa-chart-pie estafeta-red-text mr-2"></i> Avance General</h3><div class="text-xs font-semibold text-gray-500">Total Registros: <span id="status-board-total" class="font-bold text-gray-800">0</span></div></div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -445,6 +409,7 @@
                 </div>
             </div>
 
+            <!-- =================== TARJETAS =================== -->
             <div id="section-tarjetas" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up" style="display: none;">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
                     <div class="flex items-center space-x-2.5"><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-address-card estafeta-red-text mr-1.5"></i> Tarjetas de Registro</h3></div>
@@ -466,13 +431,10 @@
                                 <button onclick="setStatusFilter('RECOLECTADO')" id="btn-status-recolectado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Recolectados</button>
                             </div>
                             <button onclick="toggleProgramadaVisibility()" id="btn-toggle-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="prog-toggle-icon"></i><span id="prog-toggle-text">Ocultar Programadas</span></button>
-                            
                             <div class="relative w-full sm:w-56">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span>
                                 <input type="text" id="table-advanced-search" placeholder="Buscador avanzado..." class="w-full pl-9 pr-14 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
-                                <button id="btn-table-search-reset" onclick="clearSearchInput('table-advanced-search', 'btn-table-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">
-                                    Reset
-                                </button>
+                                <button id="btn-table-search-reset" onclick="clearSearchInput('table-advanced-search', 'btn-table-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
                             </div>
                         </div>
                         <div><span class="font-semibold text-gray-700" id="table-row-count">0</span> tarjetas visibles</div>
@@ -488,6 +450,7 @@
                 </div>
             </div>
 
+            <!-- =================== TIEMPOS MUERTOS =================== -->
             <div id="section-tiempos" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up" style="display: none;">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
                     <div class="flex items-center space-x-2.5"><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-clock estafeta-red-text mr-1.5"></i> Tiempos Muertos entre Entregas</h3></div>
@@ -509,6 +472,7 @@
                 </div>
             </div>
 
+            <!-- =================== CRONO =================== -->
             <div id="section-crono" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up" style="display: none;">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
                     <div class="flex items-center space-x-2.5"><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-clock-rotate-left estafeta-red-text mr-1.5"></i> Detalle Cronológico de Tiempos Muertos</h3></div>
@@ -531,15 +495,11 @@
                                 <button onclick="setCronoStatusFilter('RECOLECTADO')" id="btn-crono-status-recolectado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Recolectados</button>
                             </div>
                             <button onclick="toggleCronoProgramadaVisibility()" id="btn-toggle-crono-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="crono-prog-toggle-icon"></i><span id="crono-prog-toggle-text">Ocultar Programadas</span></button>
-                            
                             <div class="relative w-full sm:w-56">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span>
                                 <input type="text" id="crono-advanced-search" placeholder="Buscador cronológico (ej. guía, OR)..." class="w-full pl-9 pr-14 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
-                                <button id="btn-crono-search-reset" onclick="clearSearchInput('crono-advanced-search', 'btn-crono-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">
-                                    Reset
-                                </button>
+                                <button id="btn-crono-search-reset" onclick="clearSearchInput('crono-advanced-search', 'btn-crono-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
                             </div>
-
                             <div class="flex items-center space-x-2 bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs shadow-sm"><label for="crono-sort-select" class="font-semibold text-gray-600 flex items-center"><i class="fa-solid fa-arrow-down-wide-short estafeta-red-text mr-1.5"></i>Ordenar:</label><select id="crono-sort-select" onchange="onCronoSortChange()" class="bg-transparent font-medium text-gray-800 focus:outline-none cursor-pointer"><option value="desc">Mayor a Menor</option><option value="asc">Menor a Mayor</option></select></div>
                         </div>
                     </div>
@@ -567,6 +527,7 @@
                 </div>
             </div>
 
+            <!-- =================== TIMELINE (con Query by Route + Waybill) =================== -->
             <div id="section-timeline" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up" style="display: none;">
                 <div id="timeline-section-card" class="bg-white p-6 rounded-xl shadow-sm space-y-4 border border-gray-200/90">
                     <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
@@ -593,13 +554,24 @@
                                     <button onclick="setTimelineStatusFilter('RECOLECTADO')" id="btn-timeline-status-recolectado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Recolectados</button>
                                 </div>
                                 <button onclick="toggleTimelineProgramadaVisibility()" id="btn-toggle-timeline-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="timeline-prog-toggle-icon"></i><span id="timeline-prog-toggle-text">Ocultar Programadas</span></button>
-                                
+
+                                <!-- NUEVO: Query by Route + Waybill con botones Reset -->
+                                <div class="relative w-full sm:w-40">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-route text-xs"></i></span>
+                                    <input type="text" id="timeline-route-query" placeholder="Ruta..." class="w-full pl-9 pr-14 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
+                                    <button id="btn-route-query-reset" onclick="clearSearchInput('timeline-route-query', 'btn-route-query-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
+                                </div>
+                                <div class="relative w-full sm:w-48">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-barcode text-xs"></i></span>
+                                    <input type="text" id="timeline-waybill-query" placeholder="Guía / OR..." class="w-full pl-9 pr-14 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
+                                    <button id="btn-waybill-query-reset" onclick="clearSearchInput('timeline-waybill-query', 'btn-waybill-query-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
+                                </div>
+                                <!-- FIN NUEVO -->
+
                                 <div class="relative w-full sm:w-48">
                                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span>
                                     <input type="text" id="timeline-advanced-search" placeholder="Buscar texto..." class="w-full pl-9 pr-14 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
-                                    <button id="btn-timeline-search-reset" onclick="clearSearchInput('timeline-advanced-search', 'btn-timeline-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">
-                                        Reset
-                                    </button>
+                                    <button id="btn-timeline-search-reset" onclick="clearSearchInput('timeline-advanced-search', 'btn-timeline-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
                                 </div>
                             </div>
                         </div>
@@ -615,15 +587,11 @@
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                                 <h3 class="text-lg font-bold text-gray-800 flex items-center"><i class="fa-solid fa-map-location-dot estafeta-red-text mr-2"></i> Secuencia Cronológica y Ubicaciones en Mapa</h3>
                                 <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                                    
                                     <div class="relative w-full sm:w-64">
                                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-red-500"><i class="fa-solid fa-filter text-sm"></i></span>
                                         <input type="text" id="sequence-search-input" placeholder="Filtrar secuencia Ej: 1, 3, 5" class="w-full pl-9 pr-14 py-1.5 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium transition-all">
-                                        <button id="btn-sequence-search-reset" onclick="clearSearchInput('sequence-search-input', 'btn-sequence-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">
-                                            Reset
-                                        </button>
+                                        <button id="btn-sequence-search-reset" onclick="clearSearchInput('sequence-search-input', 'btn-sequence-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
                                     </div>
-
                                     <button id="toggle-lines-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm"><i id="lines-icon" class="fa-solid fa-eye-slash"></i><span id="lines-text">Mostrar Líneas</span></button>
                                     <button id="toggle-fullscreen-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm"><i id="fullscreen-icon" class="fa-solid fa-expand"></i><span id="fullscreen-text">Pantalla Completa</span></button>
                                 </div>
@@ -634,6 +602,7 @@
                 </div>
             </div>
 
+            <!-- =================== GPS MAP =================== -->
             <div id="section-gpsmap" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up" style="display: none;">
                 <div id="gps-map-section-card" class="bg-white p-6 rounded-xl shadow-sm space-y-4 border border-gray-200/90">
                     <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
@@ -667,15 +636,11 @@
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                                 <h3 class="text-base font-bold text-gray-800 flex items-center"><i class="fa-solid fa-map-location-dot estafeta-red-text mr-2"></i> Secuencia Cronológica y Ubicaciones en Mapa GPS</h3>
                                 <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                                    
                                     <div class="relative w-full sm:w-64">
                                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-red-500"><i class="fa-solid fa-filter text-sm"></i></span>
                                         <input type="text" id="map-advanced-search" placeholder="Filtrar secuencia Ej: 1, 3, 5" class="w-full pl-9 pr-14 py-1.5 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium transition-all">
-                                        <button id="btn-map-search-reset" onclick="clearSearchInput('map-advanced-search', 'btn-map-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">
-                                            Reset
-                                        </button>
+                                        <button id="btn-map-search-reset" onclick="clearSearchInput('map-advanced-search', 'btn-map-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
                                     </div>
-
                                     <button id="toggle-gps-lines-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm"><i id="gps-lines-icon" class="fa-solid fa-eye-slash"></i><span id="gps-lines-text">Mostrar Líneas</span></button>
                                     <button id="toggle-gps-fullscreen-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm"><i id="gps-fullscreen-icon" class="fa-solid fa-expand"></i><span id="gps-fullscreen-text">Pantalla Completa</span></button>
                                 </div>
@@ -685,7 +650,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </main>
 
@@ -706,13 +670,10 @@
                 <h3 id="qr-modal-title" class="font-bold text-sm flex items-center gap-2">Código QR</h3>
                 <button onclick="closeQRModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            
             <div class="flex justify-center py-2">
                 <div id="qrcode-container" class="bg-white p-3 rounded-xl border border-slate-700 shadow-inner inline-block"></div>
             </div>
-
-            <p id="qr-modal-desc" class="text-xs text-slate-400">Escanea el código con tu celular para abrir directamente la aplicación.</p>
-            
+            <p id="qr-modal-desc" class="text-xs text-slate-400">Escanea el código con tu celular.</p>
             <button onclick="closeQRModal()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl text-xs font-bold transition">Cerrar</button>
         </div>
     </div>
@@ -773,10 +734,7 @@
             <button onclick="togglePanel()"><i class="fas fa-times"></i></button>
         </div>
         <div class="p-3 text-xs space-y-2 max-h-60 overflow-y-auto" id="notif-list">
-            <div class="notif-empty">
-                <i class="fa-solid fa-bell-slash"></i>
-                <span>Sin notificaciones recientes</span>
-            </div>
+            <div class="notif-empty"><i class="fa-solid fa-bell-slash"></i><span>Sin notificaciones recientes</span></div>
         </div>
         <div class="notif-panel-footer">
             <button onclick="markAllAsRead()"><i class="fa-solid fa-check-double"></i> Marcar leídas</button>
@@ -785,6 +743,9 @@
     </div>
 
     <script>
+        /* =====================================================================
+           HELPERS
+           ===================================================================== */
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
             '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
         }[c]));
@@ -798,7 +759,6 @@
             return /^\d{10}$/.test(String(guideVal ?? '').trim());
         }
 
-        /** Match de estatus unificado (incluye ENRUTADO y RECOLECTADO) */
         function matchRowStatus(rowStatus, filter) {
             if (!filter || filter === 'ALL') return true;
             const st = String(rowStatus || '').trim().toUpperCase();
@@ -810,12 +770,14 @@
             return true;
         }
 
-        /** true si la hora del evento es exactamente medianoche (00:00:00) */
         function isMidnightEvent(dateObj) {
             if (!dateObj || isNaN(dateObj.getTime())) return false;
             return dateObj.getHours() === 0 && dateObj.getMinutes() === 0 && dateObj.getSeconds() === 0;
         }
 
+        /* =====================================================================
+           ESTADO GLOBAL
+           ===================================================================== */
         let rawData = [];
         let filteredData = [];
         let plazaKeyName = '';
@@ -831,7 +793,7 @@
         let phoneKeyName = '';
         let allKeysFull = [];
 
-        let activePlazaFilter = null;
+        let activePlazaFilter = new Set();
         let activeStatusFilter = 'ALL';
         let showProgData = true;
 
@@ -851,6 +813,10 @@
         let timelineClusterGroup = null;
         let routeLinesLayer = null;
         let showRouteLines = false;
+
+        // NUEVO: Query by Route + Waybill
+        let timelineRouteQuery = '';
+        let timelineWaybillQuery = '';
 
         let activeMapStatusFilter = 'ALL';
         let showMapProgData = true;
@@ -882,6 +848,9 @@
 
         let initialRouteCount = 0;
         let initialGarantiaCount = 0;
+        let initialPlazaCount = 0;
+
+        let notificationsList = [];
 
         const hiddenColumns = [
             'DISTRITO', 'REGIONAL', 'CELULA', 'UNIDAD DE TRANSPORTE',
@@ -889,16 +858,23 @@
             'COORDENADA EVENTO', 'COORDENADA EVENTO:', 'COORDENADA'
         ];
 
-        let notificationsList = [];
-
+        /* =====================================================================
+           NOTIFICACIONES
+           ===================================================================== */
         function addNotification(title, message, type = 'info') {
+            notificationsList.unshift({
+                title, message, type,
+                time: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'}),
+                unread: true
+            });
+            renderNotifications();
             showToast(title, message, type);
         }
 
         function renderNotifications() {
             const listContainer = document.getElementById('notif-list');
             const badge = document.getElementById('notif-badge');
-            
+            if (!listContainer || !badge) return;
             const unreadCount = notificationsList.filter(n => n.unread).length;
             if (unreadCount > 0) {
                 badge.innerText = unreadCount;
@@ -908,24 +884,16 @@
             } else {
                 badge.classList.add('hidden');
             }
-
             if (notificationsList.length === 0) {
-                listContainer.innerHTML = `
-                    <div class="notif-empty">
-                        <i class="fa-solid fa-bell-slash"></i>
-                        <span>Sin notificaciones recientes</span>
-                    </div>
-                `;
+                listContainer.innerHTML = `<div class="notif-empty"><i class="fa-solid fa-bell-slash"></i><span>Sin notificaciones recientes</span></div>`;
                 return;
             }
-
             let html = '';
             notificationsList.forEach(n => {
                 let iconClass = 'fa-circle-info';
                 if (n.type === 'success') iconClass = 'fa-circle-check';
                 if (n.type === 'danger') iconClass = 'fa-circle-exclamation';
                 if (n.type === 'warning') iconClass = 'fa-triangle-exclamation';
-
                 html += `
                     <div class="notif-item ${n.unread ? 'unread' : ''} notif-${n.type}">
                         <div class="notif-item-icon"><i class="fa-solid ${iconClass}"></i></div>
@@ -934,8 +902,7 @@
                             <div class="notif-item-msg">${esc(n.message)}</div>
                             <div class="notif-item-time">${n.time}</div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
             listContainer.innerHTML = html;
         }
@@ -943,12 +910,10 @@
         function showToast(title, message, type = 'info') {
             const toastContainer = document.getElementById('notif-toast-container');
             if (!toastContainer) return;
-
             let iconClass = 'fa-circle-info';
             if (type === 'success') iconClass = 'fa-circle-check';
             if (type === 'danger') iconClass = 'fa-circle-exclamation';
             if (type === 'warning') iconClass = 'fa-triangle-exclamation';
-
             const toast = document.createElement('div');
             toast.className = `notif-toast notif-${type}`;
             toast.innerHTML = `
@@ -958,10 +923,8 @@
                     <div class="notif-toast-msg">${esc(message)}</div>
                 </div>
                 <button class="notif-toast-close" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
-                <div class="notif-toast-progress" style="animation-duration: 3s;"></div>
-            `;
+                <div class="notif-toast-progress" style="animation-duration: 3s;"></div>`;
             toastContainer.appendChild(toast);
-
             setTimeout(() => {
                 if (toast.parentElement) {
                     toast.classList.add('removing');
@@ -970,20 +933,13 @@
             }, 3000);
         }
 
-        function markAllAsRead() {
-            notificationsList.forEach(n => n.unread = false);
-            renderNotifications();
-        }
+        function markAllAsRead() { notificationsList.forEach(n => n.unread = false); renderNotifications(); }
+        function clearNotifHistory() { notificationsList = []; renderNotifications(); }
+        function togglePanel() { document.getElementById('notif-panel').classList.toggle('show'); }
 
-        function clearNotifHistory() {
-            notificationsList = [];
-            renderNotifications();
-        }
-
-        function togglePanel() {
-            document.getElementById('notif-panel').classList.toggle('show');
-        }
-
+        /* =====================================================================
+           CARGA DE ARCHIVO
+           ===================================================================== */
         const dropZone = document.getElementById('banner-drop-zone');
         const fileInput = document.getElementById('file-input');
 
@@ -996,37 +952,19 @@
             fileInput.value = '';
         }
 
-        ['dragenter', 'dragover'].forEach(evt => {
-            dropZone.addEventListener(evt, (e) => {
-                e.preventDefault(); e.stopPropagation();
-                dropZone.classList.add('drag-over');
-            });
-        });
+        ['dragenter', 'dragover'].forEach(evt => dropZone.addEventListener(evt, (e) => {
+            e.preventDefault(); e.stopPropagation();
+            dropZone.classList.add('drag-over');
+        }));
+        ['dragleave', 'dragend', 'drop'].forEach(evt => dropZone.addEventListener(evt, (e) => {
+            e.preventDefault(); e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+        }));
+        dropZone.addEventListener('drop', (e) => { if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+        fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
 
-        ['dragleave', 'dragend', 'drop'].forEach(evt => {
-            dropZone.addEventListener(evt, (e) => {
-                e.preventDefault(); e.stopPropagation();
-                dropZone.classList.remove('drag-over');
-            });
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            const files = e.dataTransfer.files;
-            if(files.length) handleFile(files[0]);
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) {
-                handleFile(e.target.files[0]);
-            }
-        });
-
-        const _norm = s => String(s ?? '')
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase().trim();
-
-        const _findKey = (keys, ...fragments) =>
-            keys.find(k => fragments.every(f => _norm(k).includes(_norm(f)))) || '';
+        const _norm = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+        const _findKey = (keys, ...fragments) => keys.find(k => fragments.every(f => _norm(k).includes(_norm(f)))) || '';
 
         function validarArchivo(encabezados) {
             if (!encabezados || encabezados.length === 0) return false;
@@ -1038,11 +976,9 @@
         function handleFile(file) {
             document.getElementById('file-name-display').innerText = file.name;
             document.getElementById('file-status').innerText = 'Procesando archivo...';
-            
             const textContainer = document.getElementById('upload-text-container');
             if (textContainer) textContainer.style.display = 'none';
             dropZone.title = `Archivo cargado: ${file.name}`;
-
             const ext = file.name.split('.').pop().toLowerCase();
 
             if (ext === 'csv') {
@@ -1073,7 +1009,6 @@
                         const workbook = XLSX.read(data, { type: 'array', cellDates: true });
                         const sheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[sheetName];
-
                         const headers = XLSX.utils.sheet_to_json(worksheet, {header: 1})[0] || [];
                         if (!validarArchivo(headers)) {
                             alert("El archivo no cuenta con los encabezados requeridos (Guia/OR, Coordenada Evento, Celular/Teléfono Destinatario).");
@@ -1090,10 +1025,7 @@
                         resetFileUploaderState('Error de lectura');
                     }
                 };
-                reader.onerror = function() {
-                    alert("Error al leer el archivo.");
-                    resetFileUploaderState('Error de lectura');
-                };
+                reader.onerror = function() { alert("Error al leer el archivo."); resetFileUploaderState('Error de lectura'); };
                 reader.readAsArrayBuffer(file);
             } else {
                 alert('Formato no soportado.');
@@ -1105,11 +1037,8 @@
         function detectAndShowStaleBanner(data, fileName) {
             const banner = document.getElementById('stale-file-banner');
             if (!banner) return;
-
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            const today = new Date(); today.setHours(0,0,0,0);
             let excelDate = null;
-
             if (fileName) {
                 const m = String(fileName).match(/(20\d{2})[-_\/](\d{1,2})[-_\/](\d{1,2})/);
                 if (m) {
@@ -1117,7 +1046,6 @@
                     if (!isNaN(d.getTime())) excelDate = d;
                 }
             }
-
             if (!excelDate && data && data.length && eventTimeKeyName) {
                 let maxTs = 0;
                 data.forEach(r => {
@@ -1128,15 +1056,9 @@
                 });
                 if (maxTs > 0) excelDate = new Date(maxTs);
             }
-
-            if (!excelDate) {
-                banner.classList.remove('visible');
-                return;
-            }
-
-            excelDate.setHours(0, 0, 0, 0);
+            if (!excelDate) { banner.classList.remove('visible'); return; }
+            excelDate.setHours(0,0,0,0);
             const diffDays = Math.round((today.getTime() - excelDate.getTime()) / 86400000);
-
             if (diffDays >= 1) {
                 const opts = { year: 'numeric', month: 'long', day: 'numeric' };
                 const fechaTxt = excelDate.toLocaleDateString('es-MX', opts);
@@ -1145,8 +1067,7 @@
                     <i class="fas fa-exclamation-triangle text-lg"></i>
                     <span>Este archivo corresponde a una fecha anterior (<b>${diasTxt}</b> de antigüedad).</span>
                     <span class="stale-date-badge">${fechaTxt}</span>
-                    <span class="text-sm opacity-90">Los vencimientos y estados reflejan el momento de generación del Excel, no la fecha de hoy.</span>
-                `;
+                    <span class="text-sm opacity-90">Los vencimientos y estados reflejan el momento de generación del Excel, no la fecha de hoy.</span>`;
                 banner.classList.add('visible');
             } else {
                 banner.classList.remove('visible');
@@ -1155,17 +1076,14 @@
 
         function initDashboard(data, fileName) {
             rawData = data.filter(row => Object.keys(row).length > 0);
-
             if (rawData.length === 0) {
                 alert('El archivo no contiene filas de datos (sólo encabezados).');
                 addNotification("Archivo vacío", "El archivo cargado no contiene registros.", "warning");
                 resetFileUploaderState('Archivo vacío');
                 return;
             }
-
             const allKeys = Object.keys(rawData[0]);
             allKeysFull = allKeys;
-
             guideKeyName     = _findKey(allKeys, 'guia') || _findKey(allKeys, 'or') || allKeys[0];
             statusKeyName    = _findKey(allKeys, 'estatus') || _findKey(allKeys, 'status') || 'Estatus';
             progKeyName      = _findKey(allKeys, 'programad') || _findKey(allKeys, 'recoleccion') || '';
@@ -1175,7 +1093,6 @@
             eventTimeKeyName = _findKey(allKeys, 'hora', 'evento') || _findKey(allKeys, 'hora') || '';
             coordKeyName     = _findKey(allKeys, 'coordenada') || '';
             dateKeyName      = _findKey(allKeys, 'fecha') || _findKey(allKeys, 'hora') || '';
-            
             cellPhoneKeyName = _findKey(allKeys, 'celular', 'destinatario') || _findKey(allKeys, 'celular') || '';
             phoneKeyName     = _findKey(allKeys, 'telefono', 'destinatario') || _findKey(allKeys, 'telefono') || '';
 
@@ -1187,9 +1104,7 @@
                         r[eventTimeKeyName] = new Date(Math.round((v - 25569) * 86400 * 1000));
                     } else if (typeof v === 'string' && /^\d+(\.\d+)?$/.test(v.trim())) {
                         const n = parseFloat(v);
-                        if (n > 20000 && n < 80000) {
-                            r[eventTimeKeyName] = new Date(Math.round((n - 25569) * 86400 * 1000));
-                        }
+                        if (n > 20000 && n < 80000) r[eventTimeKeyName] = new Date(Math.round((n - 25569) * 86400 * 1000));
                     }
                 });
             }
@@ -1201,7 +1116,6 @@
             document.getElementById('floating-plaza-container').classList.remove('hidden');
 
             detectAndShowStaleBanner(rawData, fileName);
-
             renderPlazaFilterList();
             updateDashboard();
 
@@ -1218,32 +1132,20 @@
             const pConf = totalRegs > 0 ? ((confCount / totalRegs) * 100).toFixed(1) : 0;
             const pExc = totalRegs > 0 ? ((excCount / totalRegs) * 100).toFixed(1) : 0;
             const pPend = totalRegs > 0 ? ((pendCount / totalRegs) * 100).toFixed(1) : 0;
-
             addNotification(
-                "📊 Archivo Procesado con Éxito",
-                `Se han cargado ${totalRegs.toLocaleString()} registros correctamente.\n` +
-                `• Confirmados: ${pConf}% (${confCount.toLocaleString()} guías)\n` +
-                `• Excepcionados: ${pExc}% (${excCount.toLocaleString()} guías)\n` +
-                `• Pendientes: ${pPend}% (${pendCount.toLocaleString()} guías)\n` +
-                `• Órdenes de Recolección (OR): ${orCount.toLocaleString()} registros.`,
+                "Archivo procesado con éxito",
+                `Se cargaron ${totalRegs.toLocaleString()} registros.\n• Confirmados: ${pConf}% (${confCount.toLocaleString()})\n• Excepcionados: ${pExc}% (${excCount.toLocaleString()})\n• Pendientes: ${pPend}% (${pendCount.toLocaleString()})\n• OR: ${orCount.toLocaleString()}`,
                 "success"
             );
 
             if (cachedDeadTimesList && cachedDeadTimesList.length > 0) {
                 const topRoute = cachedDeadTimesList[0];
                 let allDiffsSum = 0, allDiffsCount = 0;
-                cachedDeadTimesList.forEach(item => {
-                    allDiffsSum += item.total;
-                    allDiffsCount += item.count;
-                });
+                cachedDeadTimesList.forEach(item => { allDiffsSum += item.total; allDiffsCount += item.count; });
                 const generalAvg = allDiffsCount > 0 ? allDiffsSum / allDiffsCount : 0;
-
                 addNotification(
-                    "⏱️ Alerta de Tiempos Muertos en Ruta",
-                    `Se detectaron demoras operativas significativas.\n` +
-                    `• Ruta con mayor tiempo muerto: ${topRoute.ruta}\n` +
-                    `• Tiempo máximo registrado: ${formatDuration(topRoute.max)}\n` +
-                    `• Promedio general de inactividad: ${formatDuration(generalAvg)}`,
+                    "Alerta de tiempos muertos",
+                    `Ruta con mayor tiempo muerto: ${topRoute.ruta}\nTiempo máximo: ${formatDuration(topRoute.max)}\nPromedio general: ${formatDuration(generalAvg)}`,
                     "warning"
                 );
             }
@@ -1254,12 +1156,7 @@
                 if (coordKeyName && parseCoordinates(r[coordKeyName])) validCoordsCount++;
                 if (plazaKeyName && r[plazaKeyName]) plazasSet.add(String(r[plazaKeyName]));
             });
-
-            addNotification(
-                "📍 Sincronización de Coordenadas GPS",
-                `Se mapearon exitosamente ${validCoordsCount.toLocaleString()} ubicaciones con coordenadas válidas distribuidas en ${plazasSet.size} plazas. Las rutas y líneas de secuencia están listas para visualizarse en los mapas.`,
-                "info"
-            );
+            addNotification("Sincronización GPS", `Se mapearon ${validCoordsCount.toLocaleString()} ubicaciones en ${plazasSet.size} plazas.`, "info");
 
             setTimeout(() => {
                 const firstBtn = document.querySelector('.main-tab-btn');
@@ -1267,8 +1164,11 @@
             }, 50);
         }
 
+        /* =====================================================================
+           NAVEGACIÓN TABS
+           ===================================================================== */
         const mainTabKeys = ['avance', 'tarjetas', 'tiempos', 'crono', 'timeline', 'gpsmap'];
-        
+
         function updateTabIndicator(btn) {
             const bg = document.getElementById('segmentedBg');
             if (!bg || !btn || btn.offsetWidth === 0) return;
@@ -1279,64 +1179,53 @@
         function switchMainTab(sectionKey, index, btn) {
             const container = document.getElementById('segmentedNavContainer');
             const buttons = container.querySelectorAll('.main-tab-btn');
-
             updateTabIndicator(btn);
-
             buttons.forEach(b => {
                 b.classList.remove('text-white', 'font-bold');
                 b.classList.add('text-gray-600', 'font-semibold');
             });
             btn.classList.remove('text-gray-600', 'font-semibold');
             btn.classList.add('text-white', 'font-bold');
-
             mainTabKeys.forEach(key => {
                 const el = document.getElementById(`section-${key}`);
                 if (el) el.style.display = 'none';
             });
-
             const activeSection = document.getElementById(`section-${sectionKey}`);
             if (activeSection) {
                 activeSection.style.display = 'block';
-                if (sectionKey === 'crono' && cronoMapInstance) cronoMapInstance.invalidateSize();
-                if (sectionKey === 'timeline' && timelineMapInstance) timelineMapInstance.invalidateSize();
-                if (sectionKey === 'gpsmap') {
-                    prepareGpsMapEvents();
-                    if (gpsMapInstance) gpsMapInstance.invalidateSize();
-                }
+                if (sectionKey === 'crono' && cronoMapInstance) setTimeout(() => cronoMapInstance.invalidateSize(), 100);
+                if (sectionKey === 'timeline' && timelineMapInstance) setTimeout(() => timelineMapInstance.invalidateSize(), 100);
+                if (sectionKey === 'gpsmap') { prepareGpsMapEvents(); if (gpsMapInstance) setTimeout(() => gpsMapInstance.invalidateSize(), 100); }
             }
         }
 
+        /* =====================================================================
+           SELECCIONES INICIALES
+           ===================================================================== */
         function initSelections() {
-            activeRouteSelections.clear();
-            activeGarantiaSelections.clear();
-            activeCronoRouteSelections.clear();
-            activeCronoGarantiaSelections.clear();
-            activeTimelineRouteSelections.clear();
-            activeTimelineGarantiaSelections.clear();
-            activeMapRouteSelections.clear();
-            activeMapGarantiaSelections.clear();
+            activeRouteSelections.clear(); activeGarantiaSelections.clear();
+            activeCronoRouteSelections.clear(); activeCronoGarantiaSelections.clear();
+            activeTimelineRouteSelections.clear(); activeTimelineGarantiaSelections.clear();
+            activeMapRouteSelections.clear(); activeMapGarantiaSelections.clear();
 
-            let activeRows = rawData.filter(row => {
-                if (!activePlazaFilter || activePlazaFilter.size === 0) return true;
-                return activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
-            });
+            let activeRows = rawData.filter(row => activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D')));
             activeRows.forEach(row => {
-                let r = String(row[routeKeyName] !== undefined ? row[routeKeyName] : 'N/D');
-                let g = String(row[garantiaKeyName] !== undefined ? row[garantiaKeyName] : 'N/D');
-                activeRouteSelections.add(r);
-                activeGarantiaSelections.add(g);
-                activeCronoRouteSelections.add(r);
-                activeCronoGarantiaSelections.add(g);
-                activeTimelineRouteSelections.add(r);
-                activeTimelineGarantiaSelections.add(g);
-                activeMapRouteSelections.add(r);
-                activeMapGarantiaSelections.add(g);
+                let r = String(row[routeKeyName] ?? 'N/D');
+                let g = String(row[garantiaKeyName] ?? 'N/D');
+                activeRouteSelections.add(r); activeGarantiaSelections.add(g);
+                activeCronoRouteSelections.add(r); activeCronoGarantiaSelections.add(g);
+                activeTimelineRouteSelections.add(r); activeTimelineGarantiaSelections.add(g);
+                activeMapRouteSelections.add(r); activeMapGarantiaSelections.add(g);
             });
 
             initialRouteCount = activeRouteSelections.size;
             initialGarantiaCount = activeGarantiaSelections.size;
+            initialPlazaCount = new Set(rawData.map(r => String(r[plazaKeyName] || 'N/D'))).size;
         }
 
+        /* =====================================================================
+           SECCIONES COLAPSABLES
+           ===================================================================== */
         function toggleStatusTableSection() {
             const body = document.getElementById('status-table-section-body');
             const icon = document.getElementById('status-table-collapse-icon');
@@ -1345,6 +1234,9 @@
             icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
         }
 
+        /* =====================================================================
+           MODALES FILTRO CUSTOM (RUTA / GARANTÍA)
+           ===================================================================== */
         function getActiveSetFor(type) {
             if (type === 'ruta') return activeRouteSelections;
             if (type === 'garantia') return activeGarantiaSelections;
@@ -1362,7 +1254,6 @@
             const modal = document.getElementById('custom-filter-modal');
             const title = document.getElementById('custom-modal-title');
             const subtitle = document.getElementById('custom-modal-subtitle');
-
             const titles = {
                 'ruta': ['Filtrar Ruta (Tarjetas de Registro)', 'Seleccionar rutas:'],
                 'garantia': ['Filtrar Garantía (Tarjetas de Registro)', 'Seleccionar garantías:'],
@@ -1373,14 +1264,12 @@
                 'map-ruta': ['Filtrar Ruta (Mapa GPS)', 'Seleccionar rutas:'],
                 'map-garantia': ['Filtrar Garantía (Mapa GPS)', 'Seleccionar garantías:']
             };
-            if (titles[type]) { 
-                title.innerHTML = `<i class="fa-solid fa-stream text-red-500"></i> ${titles[type][0]}`; 
-                subtitle.innerText = titles[type][1]; 
+            if (titles[type]) {
+                title.innerHTML = `<i class="fa-solid fa-stream text-red-500"></i> ${titles[type][0]}`;
+                subtitle.innerText = titles[type][1];
             }
-
             const activeSet = getActiveSetFor(type);
             filterBackup = activeSet ? new Set(activeSet) : null;
-
             document.getElementById('custom-modal-search').value = '';
             renderCustomOptionsList();
             modal.classList.remove('hidden');
@@ -1389,10 +1278,7 @@
         function closeCustomFilterModal(cancelled = true) {
             if (cancelled && filterBackup && currentModalType) {
                 const activeSet = getActiveSetFor(currentModalType);
-                if (activeSet) {
-                    activeSet.clear();
-                    filterBackup.forEach(v => activeSet.add(v));
-                }
+                if (activeSet) { activeSet.clear(); filterBackup.forEach(v => activeSet.add(v)); }
             }
             filterBackup = null;
             document.getElementById('custom-filter-modal').classList.add('hidden');
@@ -1405,20 +1291,14 @@
             let key = (currentModalType.includes('ruta')) ? routeKeyName : garantiaKeyName;
             let activeSet = getActiveSetFor(currentModalType);
             if (!activeSet) return;
-            let activeRows = rawData.filter(row => {
-                if (!activePlazaFilter || activePlazaFilter.size === 0) return true;
-                return activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
-            });
-
+            let activeRows = rawData.filter(row => activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D')));
             const valuesMap = {};
             activeRows.forEach(row => {
-                let val = String(row[key] !== undefined && row[key] !== null ? row[key] : 'N/D');
+                let val = String(row[key] ?? 'N/D');
                 valuesMap[val] = (valuesMap[val] || 0) + 1;
             });
-
             const sortedValues = Object.keys(valuesMap).sort();
             const searchVal = document.getElementById('custom-modal-search').value.toLowerCase();
-
             sortedValues.forEach(val => {
                 if (searchVal && !val.toLowerCase().includes(searchVal)) return;
                 let isChecked = activeSet.has(val);
@@ -1429,8 +1309,7 @@
                         <input type="checkbox" value="${esc(val)}" ${isChecked ? 'checked' : ''} onchange="toggleCustomOption(${esc(JSON.stringify(val))}, this.checked)" class="custom-cb text-red-600 accent-red-600 rounded w-3.5 h-3.5">
                         <span class="font-medium truncate" title="${esc(val)}">${esc(val)}</span>
                     </div>
-                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold flex-shrink-0">${valuesMap[val]} reg.</span>
-                `;
+                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold flex-shrink-0">${valuesMap[val]} reg.</span>`;
                 container.appendChild(label);
             });
         }
@@ -1440,8 +1319,7 @@
         function toggleCustomOption(val, isChecked) {
             const activeSet = getActiveSetFor(currentModalType);
             if (!activeSet) return;
-            if (isChecked) activeSet.add(val);
-            else activeSet.delete(val);
+            if (isChecked) activeSet.add(val); else activeSet.delete(val);
         }
 
         function setAllCustomOptions(selectBoolean) {
@@ -1449,15 +1327,9 @@
             const activeSet = getActiveSetFor(currentModalType);
             if (!activeSet) return;
             activeSet.clear();
-            let activeRows = rawData.filter(row => {
-                if (!activePlazaFilter || activePlazaFilter.size === 0) return true;
-                return activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
-            });
+            let activeRows = rawData.filter(row => activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D')));
             if (selectBoolean) {
-                activeRows.forEach(row => {
-                    let val = String(row[key] !== undefined && row[key] !== null ? row[key] : 'N/D');
-                    activeSet.add(val);
-                });
+                activeRows.forEach(row => { activeSet.add(String(row[key] ?? 'N/D')); });
             }
             renderCustomOptionsList();
         }
@@ -1468,6 +1340,9 @@
             updateDashboard();
         }
 
+        /* =====================================================================
+           PAGINACIÓN
+           ===================================================================== */
         function changePage(direction) {
             let totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
             currentPage += direction;
@@ -1497,6 +1372,9 @@
             renderTimelineTablePage();
         }
 
+        /* =====================================================================
+           TOGGLES PROGRAMADAS
+           ===================================================================== */
         function toggleProgramadaVisibility() {
             showProgData = !showProgData;
             document.getElementById('prog-toggle-text').innerText = showProgData ? "Ocultar Programadas" : "Mostrar Programadas";
@@ -1522,111 +1400,76 @@
             prepareGpsMapEvents();
         }
 
-        function setStatusFilter(status) {
-            activeStatusFilter = status;
+        /* =====================================================================
+           SETTERS DE ESTATUS
+           ===================================================================== */
+        function _applyStatusBtn(prefix, status) {
             ['all', 'confirmado', 'excepcionado', 'pendiente', 'enrutado', 'recolectado'].forEach(s => {
-                const btn = document.getElementById(`btn-status-${s}`);
+                const btn = document.getElementById(`btn-${prefix}-${s}`);
                 if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
             });
-            const activeBtn = document.getElementById(status === 'ALL' ? 'btn-status-all' : `btn-status-${status.toLowerCase()}`);
+            const activeBtn = document.getElementById(status === 'ALL' ? `btn-${prefix}-all` : `btn-${prefix}-${status.toLowerCase()}`);
             if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
-            currentPage = 1; updateDashboard();
         }
-        function setCronoStatusFilter(status) {
-            activeCronoStatusFilter = status;
-            ['all', 'confirmado', 'excepcionado', 'pendiente', 'enrutado', 'recolectado'].forEach(s => {
-                const btn = document.getElementById(`btn-crono-status-${s}`);
-                if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
-            });
-            const activeBtn = document.getElementById(status === 'ALL' ? 'btn-crono-status-all' : `btn-crono-status-${status.toLowerCase()}`);
-            if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
-            deadTimesCurrentPage = 1; cronoCurrentPage = 1; updateDashboard();
-        }
-        function setTimelineStatusFilter(status) {
-            activeTimelineStatusFilter = status;
-            ['all', 'confirmado', 'excepcionado', 'pendiente', 'enrutado', 'recolectado'].forEach(s => {
-                const btn = document.getElementById(`btn-timeline-status-${s}`);
-                if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
-            });
-            const activeBtn = document.getElementById(status === 'ALL' ? 'btn-timeline-status-all' : `btn-timeline-status-${status.toLowerCase()}`);
-            if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
-            timelineCurrentPage = 1; prepareTimelineEvents();
-        }
-        function setMapStatusFilter(status) {
-            activeMapStatusFilter = status;
-            ['all', 'confirmado', 'excepcionado', 'pendiente', 'enrutado', 'recolectado'].forEach(s => {
-                const btn = document.getElementById(`btn-map-status-${s}`);
-                if (btn) btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all";
-            });
-            const activeBtn = document.getElementById(status === 'ALL' ? 'btn-map-status-all' : `btn-map-status-${status.toLowerCase()}`);
-            if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
-            prepareGpsMapEvents();
-        }
+        function setStatusFilter(status) { activeStatusFilter = status; _applyStatusBtn('status', status); currentPage = 1; updateDashboard(); }
+        function setCronoStatusFilter(status) { activeCronoStatusFilter = status; _applyStatusBtn('crono-status', status); deadTimesCurrentPage = 1; cronoCurrentPage = 1; updateDashboard(); }
+        function setTimelineStatusFilter(status) { activeTimelineStatusFilter = status; _applyStatusBtn('timeline-status', status); timelineCurrentPage = 1; prepareTimelineEvents(); }
+        function setMapStatusFilter(status) { activeMapStatusFilter = status; _applyStatusBtn('map-status', status); prepareGpsMapEvents(); }
 
+        /* =====================================================================
+           BADGE DE ESTATUS
+           ===================================================================== */
         function getStatusBadge(statusVal) {
             const val = _norm(statusVal || '').toUpperCase();
-            if (val.includes('CONFIRMAD')) {
-                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-green-100 text-green-800 shadow-sm">Confirmados</span>';
-            } else if (val.includes('PENDIENT')) {
-                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-yellow-100 text-yellow-800 shadow-sm">Pendientes</span>';
-            } else if (val.includes('EXCEPCION')) {
-                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-red-100 text-red-800 shadow-sm">Excepcionados</span>';
-            } else if (val.includes('ENRUTAD')) {
-                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-blue-100 text-blue-800 shadow-sm">Enrutado</span>';
-            } else if (val.includes('RECOLECT') || val.includes('RECOLECCION')) {
-                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-100 text-indigo-800 shadow-sm">Recolectado</span>';
-            }
+            if (val.includes('CONFIRMAD')) return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-green-100 text-green-800 shadow-sm">Confirmados</span>';
+            if (val.includes('PENDIENT')) return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-yellow-100 text-yellow-800 shadow-sm">Pendientes</span>';
+            if (val.includes('EXCEPCION')) return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-red-100 text-red-800 shadow-sm">Excepcionados</span>';
+            if (val.includes('ENRUTAD')) return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-blue-100 text-blue-800 shadow-sm">Enrutado</span>';
+            if (val.includes('RECOLECT') || val.includes('RECOLECCION')) return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-100 text-indigo-800 shadow-sm">Recolectado</span>';
             return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gray-100 text-gray-700 shadow-sm">${esc(statusVal || 'N/D')}</span>`;
         }
 
+        /* =====================================================================
+           TARJETAS DE REGISTRO
+           ===================================================================== */
         function renderCards(dataToRender) {
             const container = document.getElementById('cards-container');
             container.innerHTML = '';
             document.getElementById('table-row-count').innerText = dataToRender.length.toLocaleString();
-
             let totalPages = Math.ceil(dataToRender.length / itemsPerPage) || 1;
             if (currentPage > totalPages) currentPage = totalPages;
             if (currentPage < 1) currentPage = 1;
             document.getElementById('current-page-num').innerText = currentPage;
             document.getElementById('total-pages-num').innerText = totalPages;
-
             if (dataToRender.length === 0) {
                 container.innerHTML = `<div class="col-span-full py-8 text-center text-gray-400 italic text-xs">No se encontraron registros coincidentes.</div>`;
                 document.getElementById('pagination-container').style.display = 'none';
                 return;
             }
             document.getElementById('pagination-container').style.display = 'flex';
-
             let sortedData = [...dataToRender];
             if (dateKeyName) sortedData.sort((a, b) => new Date(a[dateKeyName] || 0) - new Date(b[dateKeyName] || 0));
-
             const startIndex = (currentPage - 1) * itemsPerPage;
             const pageRows = sortedData.slice(startIndex, startIndex + itemsPerPage);
             let fragment = document.createDocumentFragment();
-
             pageRows.forEach((row, idx) => {
                 let absoluteIndex = startIndex + idx + 1;
                 let card = document.createElement('div');
                 card.className = 'bg-white border border-gray-200/90 rounded-xl p-3.5 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-red-400 transition-all duration-300 flex flex-col justify-between space-y-2.5 relative overflow-hidden border-l-4 estafeta-border';
-
-                let guideVal = row[guideKeyName] !== undefined && row[guideKeyName] !== null ? row[guideKeyName] : '—';
+                let guideVal = row[guideKeyName] ?? '—';
                 let statusBadgeHtml = getStatusBadge(row[statusKeyName]);
-                
-                let rawCellPhone = cellPhoneKeyName && row[cellPhoneKeyName] !== undefined && row[cellPhoneKeyName] !== null ? String(row[cellPhoneKeyName]).trim() : '';
-                let rawPhone = phoneKeyName && row[phoneKeyName] !== undefined && row[phoneKeyName] !== null ? String(row[phoneKeyName]).trim() : '';
-
+                let rawCellPhone = cellPhoneKeyName && row[cellPhoneKeyName] != null ? String(row[cellPhoneKeyName]).trim() : '';
+                let rawPhone = phoneKeyName && row[phoneKeyName] != null ? String(row[phoneKeyName]).trim() : '';
                 let activeRawContact = rawCellPhone !== '' ? rawCellPhone : rawPhone;
                 let cleanPhone = activeRawContact.replace(/\D/g, '');
-
                 let hasValidPhone = cleanPhone.length > 0;
                 let phoneParam = hasValidPhone ? cleanPhone : '';
-
                 card.innerHTML = `
                     <div class="flex justify-between items-center pb-2 border-b border-gray-100">
                         <span class="bg-gray-900 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm">#${absoluteIndex}</span>
                         <div>${statusBadgeHtml}</div>
                     </div>
-                    <div class="py-1 cursor-pointer" onclick='openCardModal(${esc(JSON.stringify(row))})'>
+                    <div class="py-1 cursor-pointer" onclick='openCardModalByIndex(${startIndex + idx})'>
                         <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wider flex justify-between items-center"><span>Guía / OR</span><span class="text-[10px] estafeta-red-text font-semibold opacity-80"><i class="fa-solid fa-arrow-pointer mr-1"></i>Ver detalle</span></div>
                         <div class="font-bold text-gray-900 text-sm truncate mt-0.5" title="${esc(guideVal)}"><i class="fa-solid fa-barcode estafeta-red-text mr-1.5"></i>${esc(guideVal)}</div>
                         <div class="text-[11px] text-gray-500 mt-1 truncate" title="Tel: ${esc(activeRawContact || 'Sin número')}"><i class="fa-solid fa-phone text-gray-400 mr-1"></i>${esc(activeRawContact || 'Sin número de contacto')}</div>
@@ -1641,28 +1484,28 @@
                                 <i class="fa-brands fa-whatsapp text-sm"></i>
                             </button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 fragment.appendChild(card);
             });
             container.appendChild(fragment);
         }
 
+        function openCardModalByIndex(idx) {
+            let dataToRender = filteredData;
+            if (dataToRender[idx]) openCardModal(dataToRender[idx]);
+        }
+
+        /* =====================================================================
+           QR MODAL
+           ===================================================================== */
         function openQRModal(type, phone) {
             const modal = document.getElementById('qr-modal');
             const titleEl = document.getElementById('qr-modal-title');
             const descEl = document.getElementById('qr-modal-desc');
             const container = document.getElementById('qrcode-container');
-            
             container.innerHTML = "";
-
             let cleanPhone = String(phone || '').replace(/\D/g, '');
-
-            if (!cleanPhone) {
-                addNotification("Aviso QR", "Este registro no cuenta con un número de contacto válido en Celular ni en Teléfono Destinatario.", "warning");
-                return;
-            }
-
+            if (!cleanPhone) { addNotification("Aviso QR", "Este registro no cuenta con un número válido.", "warning"); return; }
             let qrText = "";
             if (type === 'call') {
                 titleEl.innerHTML = `<i class="fa-solid fa-phone text-emerald-400 mr-2"></i> QR para Llamada`;
@@ -1674,23 +1517,38 @@
                 const message = encodeURIComponent("Hola, nos comunicamos de Estafeta respecto a tu envío.");
                 qrText = `https://wa.me/${cleanPhone}?text=${message}`;
             }
-
             modal.classList.remove('hidden');
+            new QRCode(container, { text: qrText, width: 160, height: 160, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+        }
+        function closeQRModal() { document.getElementById('qr-modal').classList.add('hidden'); }
 
-            new QRCode(container, {
-                text: qrText,
-                width: 160,
-                height: 160,
-                colorDark: "#0f172a",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
+        /* =====================================================================
+           MODAL DE TARJETA
+           ===================================================================== */
+        function openCardModal(row) {
+            if (!row) return;
+            const modal = document.getElementById('card-modal');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+            title.innerText = `Guía / OR: ${row[guideKeyName] || '—'}`;
+            let html = '';
+            allKeysFull.forEach(k => {
+                if (hiddenColumns.some(h => _norm(k).includes(_norm(h)) && _norm(h) === _norm(k))) return;
+                let val = row[k] !== undefined && row[k] !== null ? row[k] : '';
+                html += `
+                    <div class="flex justify-between gap-2 py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500 font-medium text-[11px] uppercase tracking-wider">${esc(k)}</span>
+                        <span class="text-gray-800 font-semibold text-right break-words">${esc(val)}</span>
+                    </div>`;
             });
+            body.innerHTML = html;
+            modal.classList.remove('hidden');
         }
+        function closeModal() { document.getElementById('card-modal').classList.add('hidden'); }
 
-        function closeQRModal() {
-            document.getElementById('qr-modal').classList.add('hidden');
-        }
-
+        /* =====================================================================
+           HELPERS DE FORMATO
+           ===================================================================== */
         function formatDuration(ms) {
             if (isNaN(ms) || ms < 0) return '00:00:00';
             let seconds = Math.floor(ms / 1000);
@@ -1700,7 +1558,6 @@
             seconds %= 60;
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
-
         function formatDateString(dateObj) {
             if (!dateObj || isNaN(dateObj)) return '—';
             let yyyy = dateObj.getFullYear();
@@ -1711,7 +1568,6 @@
             let ss = String(dateObj.getSeconds()).padStart(2, '0');
             return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
         }
-
         function parseCoordinates(coordStr) {
             if (!coordStr) return null;
             let str = String(coordStr).trim();
@@ -1724,36 +1580,36 @@
             return null;
         }
 
+        /* =====================================================================
+           PREPARAR TIEMPOS MUERTOS (COMPLETADO)
+           ===================================================================== */
         function prepareDeadTimes() {
             let cronoFilteredRows = rawData.filter(row => {
-                let matchPlaza = (!activePlazaFilter || activePlazaFilter.size === 0) ? true : activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
+                let matchPlaza = activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
                 let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
                 let matchStatus = matchRowStatus(rowStatus, activeCronoStatusFilter);
-
                 let matchProg = true;
                 if (!showCronoProgData) {
                     const guideVal = String(row[guideKeyName] || '').trim();
                     if (isProgramada(guideVal)) matchProg = false;
                 }
-
-                let rVal = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                let rVal = String(row[routeKeyName] ?? 'N/D');
                 let matchRoute = activeCronoRouteSelections.has(rVal);
-                let gVal = String(row[garantiaKeyName] !== undefined && row[garantiaKeyName] !== null ? row[garantiaKeyName] : 'N/D');
+                let gVal = String(row[garantiaKeyName] ?? 'N/D');
                 let matchGarantia = activeCronoGarantiaSelections.has(gVal);
                 return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia;
             });
 
-            let plazaFilteredRowsForAvance = rawData.filter(row => (!activePlazaFilter || activePlazaFilter.size === 0) ? true : activePlazaFilter.has(String(row[plazaKeyName] || 'N/D')));
+            let plazaFilteredRowsForAvance = rawData.filter(row => activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D')));
             updateStatusBoard(plazaFilteredRowsForAvance);
 
             const routeMap = {};
             cronoFilteredRows.forEach(row => {
-                let ruta = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                let ruta = String(row[routeKeyName] ?? 'N/D');
                 if (!routeMap[ruta]) routeMap[ruta] = [];
                 let timeVal = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
-                let guideVal = row[guideKeyName] !== undefined && row[guideKeyName] !== null ? row[guideKeyName] : '—';
+                let guideVal = row[guideKeyName] ?? '—';
                 if (timeVal && !isNaN(timeVal)) {
-                    // Falla 2: excluir eventos a las 00:00:00 (programadas artificiales) del cálculo de gaps
                     if (isMidnightEvent(timeVal)) return;
                     routeMap[ruta].push({ time: timeVal.getTime(), dateObj: timeVal, guide: guideVal, originalRow: row });
                 }
@@ -1765,35 +1621,28 @@
             for (let ruta in routeMap) {
                 let events = routeMap[ruta].sort((a, b) => a.time - b.time);
                 let totalEvents = events.length;
-                let diffsForStats = []; // solo diffs > 0 para avg/max/total (Falla 1)
-
+                let diffs = [];
                 for (let i = 1; i < totalEvents; i++) {
                     let prev = events[i - 1];
                     let curr = events[i];
                     let diff = curr.time - prev.time;
-                    if (diff < 0) continue;
-
-                    // Siempre visible en la tabla cronológica y en el mapa (Falla 1: no se ocultan)
-                    rawCachedCronoList.push({
-                        ruta: ruta,
-                        prevTime: formatDateString(prev.dateObj),
-                        prevGuide: String(prev.guide),
-                        prevRow: prev.originalRow,
-                        currGuide: String(curr.guide),
-                        currTime: formatDateString(curr.dateObj),
-                        currRow: curr.originalRow,
-                        diff: diff,
-                        isSimultaneous: diff === 0
-                    });
-
-                    // Solo diffs reales (> 0) contaminan promedio / total / máximo
-                    if (diff > 0) diffsForStats.push(diff);
+                    if (diff >= 0) {
+                        diffs.push(diff);
+                        rawCachedCronoList.push({
+                            ruta: ruta,
+                            prevTime: formatDateString(prev.dateObj),
+                            prevGuide: String(prev.guide),
+                            prevRow: prev.originalRow,
+                            currGuide: String(curr.guide),
+                            currTime: formatDateString(curr.dateObj),
+                            currRow: curr.originalRow,
+                            diff: diff
+                        });
+                    }
                 }
-
-                let totalDiff = diffsForStats.reduce((acc, curr) => acc + curr, 0);
-                let avgDiff = diffsForStats.length > 0 ? totalDiff / diffsForStats.length : 0;
-                let maxDiff = diffsForStats.length > 0 ? Math.max(...diffsForStats) : 0;
-
+                let totalDiff = diffs.reduce((acc, curr) => acc + curr, 0);
+                let avgDiff = diffs.length > 0 ? totalDiff / diffs.length : 0;
+                let maxDiff = diffs.length > 0 ? Math.max(...diffs) : 0;
                 cachedDeadTimesList.push({ ruta, count: totalEvents, avg: avgDiff, max: maxDiff, total: totalDiff });
             }
             cachedDeadTimesList.sort((a, b) => b.max - a.max);
@@ -1801,22 +1650,158 @@
             applyCronoDetailFilter();
         }
 
-        function getTargetSequences() {
-            const seqInput = document.getElementById('sequence-search-input') ? document.getElementById('sequence-search-input').value.trim() : '';
-            if (seqInput === '') return null;
-            const numbers = [];
-            for (let p of seqInput.split(',')) {
-                let num = parseInt(p.trim(), 10);
-                if (!isNaN(num)) numbers.push(num);
+        function renderDeadTimesTablePage() {
+            const tbody = document.getElementById('dead-times-tbody');
+            if (!tbody) return;
+            let totalPages = Math.ceil(cachedDeadTimesList.length / deadTimesPerPage) || 1;
+            if (deadTimesCurrentPage > totalPages) deadTimesCurrentPage = totalPages;
+            if (deadTimesCurrentPage < 1) deadTimesCurrentPage = 1;
+            document.getElementById('dt-current-page-num').innerText = deadTimesCurrentPage;
+            document.getElementById('dt-total-pages-num').innerText = totalPages;
+            if (cachedDeadTimesList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400 italic">No se encontraron tiempos muertos.</td></tr>`;
+                return;
             }
-            return numbers.length > 0 ? numbers : null;
+            const startIndex = (deadTimesCurrentPage - 1) * deadTimesPerPage;
+            const pageRows = cachedDeadTimesList.slice(startIndex, startIndex + deadTimesPerPage);
+            let html = '';
+            pageRows.forEach((item, idx) => {
+                html += `
+                    <tr class="hover:bg-gray-50 transition-all">
+                        <td class="p-3 font-bold text-gray-500">${startIndex + idx + 1}</td>
+                        <td class="p-3 font-semibold text-gray-800">${esc(item.ruta)}</td>
+                        <td class="p-3 text-center font-semibold text-gray-700">${item.count}</td>
+                        <td class="p-3 text-center font-medium text-gray-700">${formatDuration(item.avg)}</td>
+                        <td class="p-3 text-center font-bold text-red-600">${formatDuration(item.max)}</td>
+                        <td class="p-3 text-center font-medium text-gray-700">${formatDuration(item.total)}</td>
+                    </tr>`;
+            });
+            tbody.innerHTML = html;
         }
 
-        function getTargetGpsSequences() {
-            const seqInput = document.getElementById('map-advanced-search') ? document.getElementById('map-advanced-search').value.trim() : '';
-            if (seqInput === '') return null;
+        /* =====================================================================
+           CRONO DETALLE
+           ===================================================================== */
+        function applyCronoDetailFilter() {
+            const searchValEl = document.getElementById('crono-advanced-search');
+            const searchVal = searchValEl ? searchValEl.value.toLowerCase().trim() : '';
+            if (searchVal === '') {
+                cachedCronoList = [...rawCachedCronoList];
+            } else {
+                cachedCronoList = rawCachedCronoList.filter(item =>
+                    item.currGuide.toLowerCase().includes(searchVal) ||
+                    item.prevGuide.toLowerCase().includes(searchVal) ||
+                    item.ruta.toLowerCase().includes(searchVal) ||
+                    (item.currRow && Object.values(item.currRow).some(v => v !== null && String(v).toLowerCase().includes(searchVal))) ||
+                    (item.prevRow && Object.values(item.prevRow).some(v => v !== null && String(v).toLowerCase().includes(searchVal)))
+                );
+            }
+            const sortEl = document.getElementById('crono-sort-select');
+            const sortOrder = sortEl ? sortEl.value : 'desc';
+            cachedCronoList.sort((a, b) => sortOrder === 'asc' ? a.diff - b.diff : b.diff - a.diff);
+            cronoCurrentPage = 1;
+            renderCronoTablePage();
+            renderCronoSearchKPIs(searchVal);
+        }
+
+        function renderCronoSearchKPIs(searchVal) {
+            const containerKPIs = document.getElementById('crono-search-kpis-container');
+            const gridKPIs = document.getElementById('crono-kpis-grid');
+            const mapWrapper = document.getElementById('crono-map-wrapper');
+            if (!containerKPIs || !gridKPIs || !mapWrapper) return;
+            gridKPIs.innerHTML = '';
+            if (searchVal === '' || cachedCronoList.length === 0) {
+                containerKPIs.classList.add('hidden');
+                mapWrapper.classList.add('hidden');
+                return;
+            }
+            containerKPIs.classList.remove('hidden');
+            const first = cachedCronoList[0];
+            gridKPIs.innerHTML = `
+                <div class="bg-white border border-gray-200 rounded-xl p-3 space-y-1.5 shadow-sm">
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Guía Anterior</div>
+                    <div class="font-bold text-gray-900 text-sm">${esc(first.prevGuide)}</div>
+                    <div class="text-xs text-gray-500">${esc(first.prevTime)}</div>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-xl p-3 space-y-1.5 shadow-sm">
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Guía Actual</div>
+                    <div class="font-bold text-gray-900 text-sm">${esc(first.currGuide)}</div>
+                    <div class="text-xs text-gray-500">${esc(first.currTime)}</div>
+                    <div class="text-xs font-bold text-red-600">Δ ${formatDuration(first.diff)}</div>
+                </div>`;
+            mapWrapper.classList.remove('hidden');
+            renderCronoMap(first);
+        }
+
+        function renderCronoTablePage() {
+            const tbody = document.getElementById('crono-dead-times-tbody');
+            if (!tbody) return;
+            document.getElementById('crono-row-count').innerText = cachedCronoList.length.toLocaleString();
+            let totalPages = Math.ceil(cachedCronoList.length / cronoPerPage) || 1;
+            if (cronoCurrentPage > totalPages) cronoCurrentPage = totalPages;
+            if (cronoCurrentPage < 1) cronoCurrentPage = 1;
+            document.getElementById('crono-current-page-num').innerText = cronoCurrentPage;
+            document.getElementById('crono-total-pages-num').innerText = totalPages;
+            if (cachedCronoList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400 italic">Sin registros cronológicos.</td></tr>`;
+                return;
+            }
+            const startIndex = (cronoCurrentPage - 1) * cronoPerPage;
+            const pageRows = cachedCronoList.slice(startIndex, startIndex + cronoPerPage);
+            let html = '';
+            pageRows.forEach((item, idx) => {
+                html += `
+                    <tr class="hover:bg-gray-50 transition-all">
+                        <td class="p-3 font-bold text-gray-500">${startIndex + idx + 1}</td>
+                        <td class="p-3 font-semibold text-gray-800">${esc(item.ruta)}</td>
+                        <td class="p-3 text-center text-gray-600">${esc(item.prevTime)}</td>
+                        <td class="p-3 font-semibold text-gray-800">${esc(item.currGuide)}</td>
+                        <td class="p-3 text-center text-gray-600">${esc(item.currTime)}</td>
+                        <td class="p-3 text-center font-bold text-red-600">${formatDuration(item.diff)}</td>
+                    </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function onCronoSortChange() { applyCronoDetailFilter(); }
+
+        function renderCronoMap(item) {
+            if (!item) return;
+            let prevCoords = coordKeyName && item.prevRow ? parseCoordinates(item.prevRow[coordKeyName]) : null;
+            let currCoords = coordKeyName && item.currRow ? parseCoordinates(item.currRow[coordKeyName]) : null;
+            if (!cronoMapInstance) {
+                cronoMapInstance = L.map('crono-map').setView([19.4326, -99.1332], 6);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(cronoMapInstance);
+            }
+            if (cronoClusterGroup) cronoMapInstance.removeLayer(cronoClusterGroup);
+            if (cronoPolyline) { cronoMapInstance.removeLayer(cronoPolyline); cronoPolyline = null; }
+            cronoClusterGroup = L.markerClusterGroup();
+            let latLngs = [];
+            if (prevCoords) {
+                let m = L.circleMarker(prevCoords, { radius: 8, color: '#4B5563', fillColor: '#6B7280', fillOpacity: 0.9 });
+                m.bindPopup(`<b>Guía Anterior:</b> ${esc(item.prevGuide)}<br><b>Hora:</b> ${esc(item.prevTime)}`);
+                cronoClusterGroup.addLayer(m); latLngs.push(prevCoords);
+            }
+            if (currCoords) {
+                let m = L.circleMarker(currCoords, { radius: 9, color: '#991B1B', fillColor: '#DA291C', fillOpacity: 1 });
+                m.bindPopup(`<b>Guía Actual:</b> ${esc(item.currGuide)}<br><b>Hora:</b> ${esc(item.currTime)}`);
+                cronoClusterGroup.addLayer(m); latLngs.push(currCoords);
+            }
+            cronoMapInstance.addLayer(cronoClusterGroup);
+            if (prevCoords && currCoords) cronoPolyline = L.polyline([prevCoords, currCoords], { color: '#DA291C', weight: 3, dashArray: '5, 5' }).addTo(cronoMapInstance);
+            if (latLngs.length > 0) cronoMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15 });
+            cronoMapInstance.invalidateSize();
+        }
+
+        /* =====================================================================
+           LÍNEA DE TIEMPO (con Query by Route + Waybill)
+           ===================================================================== */
+        function getTargetSequences() {
+            const seqInput = document.getElementById('sequence-search-input');
+            const seqVal = seqInput ? seqInput.value.trim() : '';
+            if (seqVal === '') return null;
             const numbers = [];
-            for (let p of seqInput.split(',')) {
+            for (let p of seqVal.split(',')) {
                 let num = parseInt(p.trim(), 10);
                 if (!isNaN(num)) numbers.push(num);
             }
@@ -1824,34 +1809,36 @@
         }
 
         function prepareTimelineEvents() {
-            let timelineSearch = document.getElementById('timeline-advanced-search') ? document.getElementById('timeline-advanced-search').value.toLowerCase().trim() : '';
+            let timelineSearchEl = document.getElementById('timeline-advanced-search');
+            let timelineSearch = timelineSearchEl ? timelineSearchEl.value.toLowerCase().trim() : '';
             let targetSeqs = getTargetSequences();
 
             let allMappedRows = [];
             rawData.forEach(row => {
-                let matchPlaza = (!activePlazaFilter || activePlazaFilter.size === 0) ? true : activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
+                let matchPlaza = activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
                 let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
                 let matchStatus = matchRowStatus(rowStatus, activeTimelineStatusFilter);
-
                 let matchProg = true;
                 if (!showTimelineProgData) {
                     const guideVal = String(row[guideKeyName] || '').trim();
                     if (isProgramada(guideVal)) matchProg = false;
                 }
-
-                let rVal = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                let rVal = String(row[routeKeyName] ?? 'N/D');
                 let matchRoute = activeTimelineRouteSelections.has(rVal);
-                let gVal = String(row[garantiaKeyName] !== undefined && row[garantiaKeyName] !== null ? row[garantiaKeyName] : 'N/D');
+                let gVal = String(row[garantiaKeyName] ?? 'N/D');
                 let matchGarantia = activeTimelineGarantiaSelections.has(gVal);
                 let matchSearch = timelineSearch === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(timelineSearch));
 
-                if (matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchSearch) {
+                // NUEVO: Query by Route + Waybill
+                let matchRouteQuery = timelineRouteQuery === '' || String(row[routeKeyName] ?? '').toLowerCase().includes(timelineRouteQuery);
+                let matchWaybillQuery = timelineWaybillQuery === '' || String(row[guideKeyName] ?? '').toLowerCase().includes(timelineWaybillQuery);
+
+                if (matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchSearch && matchRouteQuery && matchWaybillQuery) {
                     let timeVal = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
                     let timeStamp = timeVal && !isNaN(timeVal) ? timeVal.getTime() : 0;
-                    let ruta = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
-                    let guide = String(row[guideKeyName] !== undefined && row[guideKeyName] !== null ? row[guideKeyName] : '—');
-                    let status = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]) : 'N/D';
-                    allMappedRows.push({ timestamp: timeStamp, ruta, guide, status, rowObj: row });
+                    let guide = String(row[guideKeyName] ?? '—');
+                    let status = row[statusKeyName] ?? 'N/D';
+                    allMappedRows.push({ timestamp: timeStamp, ruta: rVal, guide, status: String(status), rowObj: row });
                 }
             });
 
@@ -1867,55 +1854,137 @@
             renderTimelineMap();
         }
 
-        function prepareGpsMapEvents() {
-            let mapSearch = document.getElementById('map-advanced-search') ? document.getElementById('map-advanced-search').value.toLowerCase().trim() : '';
-            let targetSeqs = getTargetGpsSequences();
+        function renderTimelineTablePage() {
+            const container = document.getElementById('timeline-grid-container');
+            if (!container) return;
+            container.innerHTML = '';
+            document.getElementById('timeline-row-count').innerText = cachedTimelineList.length.toLocaleString();
+            let totalPages = Math.ceil(cachedTimelineList.length / timelinePerPage) || 1;
+            if (timelineCurrentPage > totalPages) timelineCurrentPage = totalPages;
+            if (timelineCurrentPage < 1) timelineCurrentPage = 1;
+            document.getElementById('timeline-current-page-num').innerText = timelineCurrentPage;
+            document.getElementById('timeline-total-pages-num').innerText = totalPages;
+            if (cachedTimelineList.length === 0) {
+                container.innerHTML = `<div class="py-8 text-center text-gray-400 italic text-xs w-full">No hay eventos con los filtros seleccionados.</div>`;
+                document.getElementById('timeline-pagination-container').style.display = 'none';
+                return;
+            }
+            document.getElementById('timeline-pagination-container').style.display = 'flex';
+            const startIndex = (timelineCurrentPage - 1) * timelinePerPage;
+            const pageRows = cachedTimelineList.slice(startIndex, startIndex + timelinePerPage);
+            let fragment = document.createDocumentFragment();
+            pageRows.forEach((item) => {
+                let statusBadge = getStatusBadge(item.status);
+                let card = document.createElement('div');
+                card.className = 'bg-white border border-gray-200/90 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-red-400 transition-all flex flex-col justify-between space-y-2 border-l-4 estafeta-border cursor-pointer min-w-[280px] max-w-[280px] flex-shrink-0';
+                card.onclick = () => openCardModal(item.rowObj);
+                let timeStr = item.rowObj[eventTimeKeyName] ? String(item.rowObj[eventTimeKeyName]) : '—';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                        <span class="bg-gray-900 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm">#${item.sequenceNumber}</span>
+                        <div>${statusBadge}</div>
+                    </div>
+                    <div class="space-y-1.5 text-xs py-1">
+                        <div class="estafeta-red-text font-semibold flex items-center"><i class="fa-solid fa-clock mr-1.5"></i><span class="truncate" title="${esc(timeStr)}">${esc(timeStr)}</span></div>
+                        <div class="truncate"><span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Guía:</span><span class="font-bold text-gray-900 ml-1 truncate"><i class="fa-solid fa-barcode estafeta-red-text mr-1"></i>${esc(item.guide)}</span></div>
+                        <div class="truncate"><span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Ruta:</span><span class="font-medium text-gray-700 ml-1 truncate"><i class="fa-solid fa-route text-gray-400 mr-1"></i>${esc(item.ruta)}</span></div>
+                    </div>
+                    <div class="pt-1.5 border-t border-gray-100 flex justify-end"><span class="text-[10px] estafeta-red-text font-semibold hover:underline"><i class="fa-solid fa-arrow-pointer mr-1"></i>Ver Detalle</span></div>`;
+                fragment.appendChild(card);
+            });
+            container.appendChild(fragment);
+        }
 
-            let allMappedRows = [];
+        function renderTimelineMap() {
+            if (window._timelineTimer) clearTimeout(window._timelineTimer);
+            window._timelineTimer = setTimeout(() => {
+                if (!timelineMapInstance) {
+                    timelineMapInstance = L.map('map').setView([19.4326, -99.1332], 6);
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(timelineMapInstance);
+                    routeLinesLayer = L.layerGroup().addTo(timelineMapInstance);
+                }
+                if (timelineClusterGroup) timelineMapInstance.removeLayer(timelineClusterGroup);
+                timelineClusterGroup = L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false, zoomToBoundsOnClick: true });
+                if (routeLinesLayer) routeLinesLayer.clearLayers();
+                let latLngs = [];
+                let validPointsForLines = [];
+                const targetSeqs = getTargetSequences();
+                cachedTimelineList.forEach(item => {
+                    let coords = coordKeyName && item.rowObj ? parseCoordinates(item.rowObj[coordKeyName]) : null;
+                    if (!coords) return;
+                    let timeOnly = '—';
+                    if (eventTimeKeyName && item.rowObj[eventTimeKeyName]) {
+                        let d = new Date(item.rowObj[eventTimeKeyName]);
+                        if (!isNaN(d)) timeOnly = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} hrs`;
+                        else { let parts = String(item.rowObj[eventTimeKeyName]).split(' '); timeOnly = parts.length > 1 ? parts[1] : String(item.rowObj[eventTimeKeyName]); }
+                    }
+                    const pointColor = targetSeqs !== null ? '#DA291C' : '#10B981';
+                    const numberedIcon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color:${pointColor};color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">${item.sequenceNumber}</div>`,
+                        iconSize: [28, 28], iconAnchor: [14, 14]
+                    });
+                    let marker = L.marker(coords, { icon: numberedIcon });
+                    marker.bindPopup(`<b>Secuencia #${item.sequenceNumber}</b><br>Hora: <b>${esc(timeOnly)}</b><br><b>Guía:</b> ${esc(item.guide)}`);
+                    timelineClusterGroup.addLayer(marker);
+                    latLngs.push(coords);
+                    let rowDate = eventTimeKeyName ? new Date(item.rowObj[eventTimeKeyName]) : null;
+                    validPointsForLines.push({ latLng: L.latLng(coords[0], coords[1]), seqNum: item.sequenceNumber, date: rowDate });
+                });
+                timelineMapInstance.addLayer(timelineClusterGroup);
+                for (let i = 0; i < validPointsForLines.length - 1; i++) {
+                    let p1 = validPointsForLines[i];
+                    let p2 = validPointsForLines[i + 1];
+                    let distMeters = p1.latLng.distanceTo(p2.latLng);
+                    let distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(1) + ' metros';
+                    let timeText = '';
+                    if (p1.date && p2.date && !isNaN(p1.date) && !isNaN(p2.date)) {
+                        let diffMs = p2.date - p1.date;
+                        if (diffMs >= 0) {
+                            let totalMins = Math.floor(diffMs / 60000);
+                            let hrs = Math.floor(totalMins / 60);
+                            let mins = totalMins % 60;
+                            timeText = hrs > 0 ? `<br>Tiempo: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo: <b>${totalMins} min</b>`;
+                        }
+                    }
+                    let segmentLine = L.polyline([p1.latLng, p2.latLng], { color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5' });
+                    segmentLine.bindTooltip(`Seq #${p1.seqNum} &rarr; #${p2.seqNum}<br>Distancia: <b>${distText}</b>${timeText}`, { sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200' });
+                    routeLinesLayer.addLayer(segmentLine);
+                }
+                if (showRouteLines && routeLinesLayer) { if (!timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.addLayer(routeLinesLayer); }
+                else { if (routeLinesLayer && timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.removeLayer(routeLinesLayer); }
+                timelineMapInstance.invalidateSize();
+            }, 100);
+        }
+
+        /* =====================================================================
+           MAPA GPS
+           ===================================================================== */
+        function prepareGpsMapEvents() {
+            let mapSearchEl = document.getElementById('map-advanced-search');
+            let mapSearch = mapSearchEl ? mapSearchEl.value.toLowerCase().trim() : '';
+            cachedGpsMapList = [];
             rawData.forEach(row => {
-                let matchPlaza = (!activePlazaFilter || activePlazaFilter.size === 0) ? true : activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
+                let matchPlaza = activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
                 let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
                 let matchStatus = matchRowStatus(rowStatus, activeMapStatusFilter);
-
                 let matchProg = true;
                 if (!showMapProgData) {
                     const guideVal = String(row[guideKeyName] || '').trim();
                     if (isProgramada(guideVal)) matchProg = false;
                 }
-
-                let rVal = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
+                let rVal = String(row[routeKeyName] ?? 'N/D');
                 let matchRoute = activeMapRouteSelections.has(rVal);
-                let gVal = String(row[garantiaKeyName] !== undefined && row[garantiaKeyName] !== null ? row[garantiaKeyName] : 'N/D');
+                let gVal = String(row[garantiaKeyName] ?? 'N/D');
                 let matchGarantia = activeMapGarantiaSelections.has(gVal);
-
-                let isNumericSearch = targetSeqs !== null;
-                let matchSearch = isNumericSearch || mapSearch === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(mapSearch));
-
+                let matchSearch = mapSearch === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(mapSearch));
                 if (matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchSearch) {
-                    let timeVal = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
-                    let timeStamp = timeVal && !isNaN(timeVal) ? timeVal.getTime() : 0;
                     let coords = coordKeyName ? parseCoordinates(row[coordKeyName]) : null;
                     if (coords) {
-                        allMappedRows.push({
-                            timestamp: timeStamp,
-                            coords, rowObj: row,
-                            guide: row[guideKeyName] || '—',
-                            ruta: rVal,
-                            status: row[statusKeyName] || 'N/D'
-                        });
+                        cachedGpsMapList.push({ coords, rowObj: row, guide: row[guideKeyName] || '—', ruta: rVal, status: row[statusKeyName] || 'N/D' });
                     }
                 }
             });
-
-            allMappedRows.sort((a, b) => a.timestamp - b.timestamp);
-            cachedGpsMapList = [];
-            allMappedRows.forEach((item, index) => {
-                item.sequenceNumber = index + 1;
-                let matchSeq = targetSeqs === null || targetSeqs.includes(item.sequenceNumber);
-                let matchText = mapSearch === '' || Object.values(item.rowObj).some(v => v !== null && String(v).toLowerCase().includes(mapSearch));
-                if (matchSeq && matchText) cachedGpsMapList.push(item);
-            });
-
             document.getElementById('gps-map-row-count').innerText = cachedGpsMapList.length.toLocaleString();
             renderGpsMap();
         }
@@ -1931,195 +2000,242 @@
                 if (gpsClusterGroup) gpsMapInstance.removeLayer(gpsClusterGroup);
                 gpsClusterGroup = L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false, zoomToBoundsOnClick: true });
                 if (gpsRouteLinesLayer) gpsRouteLinesLayer.clearLayers();
-
                 let latLngs = [];
-                let validPointsForLines = [];
-                const targetSeqs = getTargetGpsSequences();
-
+                let pointsForLines = [];
                 cachedGpsMapList.forEach(item => {
-                    let coords = item.coords;
-                    if (coords) {
-                        let timeOnly = '—';
-                        if (eventTimeKeyName && item.rowObj[eventTimeKeyName]) {
-                            let d = new Date(item.rowObj[eventTimeKeyName]);
-                            if (!isNaN(d)) timeOnly = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} hrs`;
-                            else { let parts = String(item.rowObj[eventTimeKeyName]).split(' '); timeOnly = parts.length > 1 ? parts[1] : String(item.rowObj[eventTimeKeyName]); }
-                        }
-                        const pointColor = '#DA291C';
-                        const numberedIcon = L.divIcon({
-                            className: 'custom-div-icon',
-                            html: `<div style="background-color:${pointColor};color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">${item.sequenceNumber}</div>`,
-                            iconSize: [28, 28], iconAnchor: [14, 14]
-                        });
-                        let marker = L.marker(coords, { icon: numberedIcon });
-                        marker.bindPopup(`<b>Secuencia #${item.sequenceNumber}</b><br>Hora: <b>${esc(timeOnly)}</b><br><b>Guía:</b> ${esc(item.guide)}<br><b>Ruta:</b> ${esc(item.ruta)}`);
-                        marker.on('click', () => openCardModal(item.rowObj));
-                        gpsClusterGroup.addLayer(marker);
-                        latLngs.push(coords);
-                        let rowDate = eventTimeKeyName ? new Date(item.rowObj[eventTimeKeyName]) : null;
-                        validPointsForLines.push({ latLng: L.latLng(coords[0], coords[1]), seqNum: item.sequenceNumber, date: rowDate });
-                    }
+                    let marker = L.circleMarker(item.coords, { radius: 8, color: '#991B1B', fillColor: '#DA291C', fillOpacity: 1 });
+                    let timeStr = eventTimeKeyName && item.rowObj[eventTimeKeyName] ? item.rowObj[eventTimeKeyName] : '—';
+                    marker.bindPopup(`<b>Guía:</b> ${esc(item.guide)}<br><b>Ruta:</b> ${esc(item.ruta)}<br><b>Hora:</b> ${esc(timeStr)}`);
+                    marker.on('click', () => openCardModal(item.rowObj));
+                    gpsClusterGroup.addLayer(marker);
+                    latLngs.push(item.coords);
+                    let d = eventTimeKeyName ? new Date(item.rowObj[eventTimeKeyName]) : null;
+                    pointsForLines.push({ latLng: L.latLng(item.coords[0], item.coords[1]), date: d });
                 });
                 gpsMapInstance.addLayer(gpsClusterGroup);
-
-                for (let i = 0; i < validPointsForLines.length - 1; i++) {
-                    let p1 = validPointsForLines[i];
-                    let p2 = validPointsForLines[i + 1];
+                for (let i = 0; i < pointsForLines.length - 1; i++) {
+                    let p1 = pointsForLines[i], p2 = pointsForLines[i + 1];
                     let distMeters = p1.latLng.distanceTo(p2.latLng);
-                    // Falla 8: no dibujar polylines de longitud ~0 (mismo punto / mismo segundo)
-                    if (distMeters < 5) continue;
                     let distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(1) + ' metros';
-                    let timeText = '';
-                    if (p1.date && p2.date && !isNaN(p1.date) && !isNaN(p2.date)) {
-                        let diffMs = p2.date - p1.date;
-                        if (diffMs >= 0) {
-                            let totalMins = Math.floor(diffMs / 60000);
-                            let hrs = Math.floor(totalMins / 60);
-                            let mins = totalMins % 60;
-                            timeText = hrs > 0 ? `<br>Tiempo transcurrido: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo transcurrido: <b>${totalMins} min</b>`;
-                        }
-                    }
-                    let segmentLine = L.polyline([p1.latLng, p2.latLng], { color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5' });
-                    segmentLine.bindTooltip(`Seq #${p1.seqNum} &rarr; #${p2.seqNum}<br>Distancia: <b>${distText}</b>${timeText}`, { sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200' });
-                    gpsRouteLinesLayer.addLayer(segmentLine);
+                    let line = L.polyline([p1.latLng, p2.latLng], { color: '#DA291C', weight: 3, opacity: 0.7, dashArray: '5, 5' });
+                    line.bindTooltip(`Distancia: <b>${distText}</b>`, { sticky: true, className: 'bg-white px-3 py-1 rounded-lg shadow text-xs' });
+                    gpsRouteLinesLayer.addLayer(line);
                 }
-
                 if (showGpsRouteLines && gpsRouteLinesLayer) { if (!gpsMapInstance.hasLayer(gpsRouteLinesLayer)) gpsMapInstance.addLayer(gpsRouteLinesLayer); }
                 else { if (gpsRouteLinesLayer && gpsMapInstance.hasLayer(gpsRouteLinesLayer)) gpsMapInstance.removeLayer(gpsRouteLinesLayer); }
-
                 if (latLngs.length > 0) gpsMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15 });
                 gpsMapInstance.invalidateSize();
             }, 100);
         }
 
-        const toggleGpsLinesBtn = document.getElementById('toggle-gps-lines-btn');
-        if (toggleGpsLinesBtn) {
-            toggleGpsLinesBtn.addEventListener('click', () => {
-                showGpsRouteLines = !showGpsRouteLines;
-                const linesIcon = document.getElementById('gps-lines-icon');
-                const linesText = document.getElementById('gps-lines-text');
-                if (linesIcon) linesIcon.className = showGpsRouteLines ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
-                if (linesText) linesText.innerText = showGpsRouteLines ? "Ocultar Líneas" : "Mostrar Líneas";
-                if (gpsRouteLinesLayer && gpsMapInstance) {
-                    if (showGpsRouteLines) { if (!gpsMapInstance.hasLayer(gpsRouteLinesLayer)) gpsMapInstance.addLayer(gpsRouteLinesLayer); }
-                    else { if (gpsMapInstance.hasLayer(gpsRouteLinesLayer)) gpsMapInstance.removeLayer(gpsRouteLinesLayer); }
+        /* =====================================================================
+           STATUS BOARD / DASHBOARD
+           ===================================================================== */
+        function updateStatusBoard(rows) {
+            let total = rows.length;
+            document.getElementById('status-board-total').innerText = total.toLocaleString();
+            let confirmadosCount = 0, excepcionadosCount = 0, orCount = 0, pendientesCount = 0, otrosCount = 0;
+            rows.forEach(r => {
+                const st = String(r[statusKeyName] || '').trim().toUpperCase();
+                const guideVal = String(r[guideKeyName] || '').trim().toUpperCase();
+                const isOR = guideVal.startsWith('OR');
+                if (isOR) orCount++;
+                if (!isOR) {
+                    if (st.includes('CONFIRMAD')) confirmadosCount++;
+                    else if (st.includes('EXCEPCION')) excepcionadosCount++;
+                    else if (st.includes('PENDIENT')) pendientesCount++;
+                    else otrosCount++;
                 }
             });
+            const pct = c => total > 0 ? ((c / total) * 100).toFixed(1) : 0;
+            document.getElementById('badge-total-confirmados').innerText = confirmadosCount.toLocaleString();
+            document.getElementById('percent-confirmados').innerText = pct(confirmadosCount) + '%';
+            document.getElementById('badge-total-excepcionados').innerText = excepcionadosCount.toLocaleString();
+            document.getElementById('percent-excepcionados').innerText = pct(excepcionadosCount) + '%';
+            document.getElementById('badge-total-or').innerText = orCount.toLocaleString();
+            document.getElementById('percent-or').innerText = pct(orCount) + '%';
+            document.getElementById('badge-total-pendientes').innerText = pendientesCount.toLocaleString();
+            document.getElementById('percent-pendientes').innerText = pct(pendientesCount) + '%';
+            const tbody = document.getElementById('status-board-tbody');
+            tbody.innerHTML = `
+                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-green-800"><i class="fa-solid fa-circle-check text-green-600 mr-1.5"></i> Confirmados</td><td class="p-3 text-center font-semibold text-gray-800">${confirmadosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(confirmadosCount)}%</td></tr>
+                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-red-800"><i class="fa-solid fa-circle-exclamation estafeta-red-text mr-1.5"></i> Excepcionados</td><td class="p-3 text-center font-semibold text-gray-800">${excepcionadosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(excepcionadosCount)}%</td></tr>
+                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-blue-800"><i class="fa-solid fa-barcode text-blue-600 mr-1.5"></i> Órdenes de Recolección (OR)</td><td class="p-3 text-center font-semibold text-gray-800">${orCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(orCount)}%</td></tr>
+                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-yellow-800"><i class="fa-solid fa-clock-rotate-left text-yellow-600 mr-1.5"></i> Pendientes</td><td class="p-3 text-center font-semibold text-gray-800">${pendientesCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(pendientesCount)}%</td></tr>
+                ${otrosCount > 0 ? `<tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-gray-700"><i class="fa-solid fa-circle-question text-gray-400 mr-1.5"></i> Otros</td><td class="p-3 text-center font-semibold text-gray-800">${otrosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(otrosCount)}%</td></tr>` : ''}`;
         }
 
-        const toggleGpsFullscreenBtn = document.getElementById('toggle-gps-fullscreen-btn');
-        const gpsMapCard = document.getElementById('gps-map-section-card');
-        if (toggleGpsFullscreenBtn && gpsMapCard) {
-            toggleGpsFullscreenBtn.addEventListener('click', () => {
-                gpsMapCard.classList.toggle('fullscreen');
-                const isFullscreen = gpsMapCard.classList.contains('fullscreen');
-                const fullscreenIcon = document.getElementById('gps-fullscreen-icon');
-                const fullscreenText = document.getElementById('gps-fullscreen-text');
-                if (fullscreenIcon) fullscreenIcon.className = isFullscreen ? "fa-solid fa-compress" : "fa-solid fa-expand";
-                if (fullscreenText) fullscreenText.innerText = isFullscreen ? "Restaurar" : "Pantalla Completa";
-                setTimeout(() => { if (gpsMapInstance) gpsMapInstance.invalidateSize(); }, 150);
-            });
-        }
-
-        function renderTimelineMap() {
-            if (window._timelineTimer) clearTimeout(window._timelineTimer);
-            window._timelineTimer = setTimeout(() => {
-                if (!timelineMapInstance) {
-                    timelineMapInstance = L.map('map').setView([19.4326, -99.1332], 6);
-                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(timelineMapInstance);
-                    routeLinesLayer = L.layerGroup().addTo(timelineMapInstance);
+        function applyFilters() {
+            let searchEl = document.getElementById('table-advanced-search');
+            let searchVal = searchEl ? searchEl.value.toLowerCase().trim() : '';
+            filteredData = rawData.filter(row => {
+                let matchPlaza = activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
+                let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
+                let matchStatus = matchRowStatus(rowStatus, activeStatusFilter);
+                let matchProg = true;
+                if (!showProgData) {
+                    const guideVal = String(row[guideKeyName] || '').trim();
+                    if (isProgramada(guideVal)) matchProg = false;
                 }
-                if (timelineClusterGroup) timelineMapInstance.removeLayer(timelineClusterGroup);
-                timelineClusterGroup = L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false, zoomToBoundsOnClick: true });
-                if (routeLinesLayer) routeLinesLayer.clearLayers();
-
-                let latLngs = [];
-                let validPointsForLines = [];
-                const targetSeqs = getTargetSequences();
-
-                cachedTimelineList.forEach(item => {
-                    let coords = coordKeyName && item.rowObj ? parseCoordinates(item.rowObj[coordKeyName]) : null;
-                    if (coords) {
-                        let timeOnly = '—';
-                        if (eventTimeKeyName && item.rowObj[eventTimeKeyName]) {
-                            let d = new Date(item.rowObj[eventTimeKeyName]);
-                            if (!isNaN(d)) timeOnly = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} hrs`;
-                            else { let parts = String(item.rowObj[eventTimeKeyName]).split(' '); timeOnly = parts.length > 1 ? parts[1] : String(item.rowObj[eventTimeKeyName]); }
-                        }
-                        const pointColor = targetSeqs !== null ? '#DA291C' : '#10B981';
-                        const numberedIcon = L.divIcon({
-                            className: 'custom-div-icon',
-                            html: `<div style="background-color:${pointColor};color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">${item.sequenceNumber}</div>`,
-                            iconSize: [28, 28], iconAnchor: [14, 14]
-                        });
-                        let marker = L.marker(coords, { icon: numberedIcon });
-                        marker.bindPopup(`<b>Secuencia #${item.sequenceNumber}</b><br>Hora: <b>${esc(timeOnly)}</b><br><b>Guía:</b> ${esc(item.guide)}`);
-                        marker.on('click', () => openCardModal(item.rowObj));
-                        timelineClusterGroup.addLayer(marker);
-                        latLngs.push(coords);
-                        let rowDate = eventTimeKeyName ? new Date(item.rowObj[eventTimeKeyName]) : null;
-                        validPointsForLines.push({ latLng: L.latLng(coords[0], coords[1]), seqNum: item.sequenceNumber, date: rowDate });
-                    }
-                });
-                timelineMapInstance.addLayer(timelineClusterGroup);
-
-                for (let i = 0; i < validPointsForLines.length - 1; i++) {
-                    let p1 = validPointsForLines[i];
-                    let p2 = validPointsForLines[i + 1];
-                    let distMeters = p1.latLng.distanceTo(p2.latLng);
-                    // Falla 8: no dibujar polylines de longitud ~0
-                    if (distMeters < 5) continue;
-                    let distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(1) + ' metros';
-                    let timeText = '';
-                    if (p1.date && p2.date && !isNaN(p1.date) && !isNaN(p2.date)) {
-                        let diffMs = p2.date - p1.date;
-                        if (diffMs >= 0) {
-                            let totalMins = Math.floor(diffMs / 60000);
-                            let hrs = Math.floor(totalMins / 60);
-                            let mins = totalMins % 60;
-                            timeText = hrs > 0 ? `<br>Tiempo transcurrido: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo transcurrido: <b>${totalMins} min</b>`;
-                        }
-                    }
-                    let segmentLine = L.polyline([p1.latLng, p2.latLng], { color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5' });
-                    segmentLine.bindTooltip(`Seq #${p1.seqNum} &rarr; #${p2.seqNum}<br>Distancia: <b>${distText}</b>${timeText}`, { sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200' });
-                    routeLinesLayer.addLayer(segmentLine);
-                }
-
-                if (showRouteLines && routeLinesLayer) { if (!timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.addLayer(routeLinesLayer); }
-                else { if (routeLinesLayer && timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.removeLayer(routeLinesLayer); }
-                timelineMapInstance.invalidateSize();
-            }, 100);
-        }
-
-        const toggleLinesBtn = document.getElementById('toggle-lines-btn');
-        if (toggleLinesBtn) {
-            toggleLinesBtn.addEventListener('click', () => {
-                showRouteLines = !showRouteLines;
-                const linesIcon = document.getElementById('lines-icon');
-                const linesText = document.getElementById('lines-text');
-                if (linesIcon) linesIcon.className = showRouteLines ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
-                if (linesText) linesText.innerText = showRouteLines ? "Ocultar Líneas" : "Mostrar Líneas";
-                if (routeLinesLayer && timelineMapInstance) {
-                    if (showRouteLines) { if (!timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.addLayer(routeLinesLayer); }
-                    else { if (timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.removeLayer(routeLinesLayer); }
-                }
+                let rVal = String(row[routeKeyName] ?? 'N/D');
+                let matchRoute = activeRouteSelections.has(rVal);
+                let gVal = String(row[garantiaKeyName] ?? 'N/D');
+                let matchGarantia = activeGarantiaSelections.has(gVal);
+                let matchSearch = searchVal === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(searchVal));
+                return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchSearch;
             });
+            renderCards(filteredData);
         }
 
-        const toggleFullscreenBtn = document.getElementById('toggle-fullscreen-btn');
-        const mapCard = document.getElementById('map-card');
-        if (toggleFullscreenBtn && mapCard) {
-            toggleFullscreenBtn.addEventListener('click', () => {
-                mapCard.classList.toggle('fullscreen');
-                const isFullscreen = mapCard.classList.contains('fullscreen');
-                const fullscreenIcon = document.getElementById('fullscreen-icon');
-                const fullscreenText = document.getElementById('fullscreen-text');
-                if (fullscreenIcon) fullscreenIcon.className = isFullscreen ? "fa-solid fa-compress" : "fa-solid fa-expand";
-                if (fullscreenText) fullscreenText.innerText = isFullscreen ? "Restaurar" : "Pantalla Completa";
-                setTimeout(() => { if (timelineMapInstance) timelineMapInstance.invalidateSize(); }, 150);
+        function updateDashboard() {
+            applyFilters();
+            prepareDeadTimes();
+            prepareTimelineEvents();
+            prepareGpsMapEvents();
+            toggleFloatingResetButton();
+        }
+
+        /* =====================================================================
+           PLAZAS
+           ===================================================================== */
+        function renderPlazaFilterList() {
+            const container = document.getElementById('plaza-list-container');
+            if (!container) return;
+            if (!rawData || rawData.length === 0) return;
+            const plazaCounts = {};
+            rawData.forEach(r => {
+                const p = String(r[plazaKeyName] || 'N/D');
+                plazaCounts[p] = (plazaCounts[p] || 0) + 1;
             });
+            const plazas = Object.keys(plazaCounts).sort();
+            const btnText = document.getElementById('btn-text');
+            if (btnText) {
+                btnText.innerText = activePlazaFilter.size === 0
+                    ? `Plazas (${plazas.length})`
+                    : `Plazas (${activePlazaFilter.size}/${plazas.length})`;
+            }
+            container.innerHTML = plazas.map(p => `
+                <label class="flex items-center justify-between gap-2 text-xs cursor-pointer p-2 rounded-lg border transition select-none">
+                    <div class="flex items-center gap-2 truncate">
+                        <input type="checkbox" value="${esc(p)}" ${activePlazaFilter.size === 0 || activePlazaFilter.has(p) ? 'checked' : ''} class="plaza-cb text-red-600 accent-red-600 rounded w-3.5 h-3.5">
+                        <span class="font-medium truncate">${esc(p)}</span>
+                    </div>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold flex-shrink-0">${plazaCounts[p]} reg.</span>
+                </label>`).join('');
+        }
+        function openPlazaModal() { renderPlazaFilterList(); document.getElementById('plaza-modal').classList.remove('hidden'); }
+        function closePlazaModal() { document.getElementById('plaza-modal').classList.add('hidden'); }
+        function applyPlazaFilters() {
+            const checked = Array.from(document.querySelectorAll('.plaza-cb:checked')).map(cb => cb.value);
+            const all = Array.from(document.querySelectorAll('.plaza-cb')).map(cb => cb.value);
+            activePlazaFilter = checked.length === all.length ? new Set() : new Set(checked);
+            closePlazaModal();
+            currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
+            updateDashboard();
         }
 
+        /* =====================================================================
+           RESET / TOGGLE RESET BUTTON
+           ===================================================================== */
+        function hasActiveFilters() {
+            if (!rawData || rawData.length === 0) return false;
+            if (activePlazaFilter.size > 0) return true;
+            if (activeRouteSelections.size !== initialRouteCount) return true;
+            if (activeGarantiaSelections.size !== initialGarantiaCount) return true;
+            if (activeCronoRouteSelections.size !== initialRouteCount) return true;
+            if (activeCronoGarantiaSelections.size !== initialGarantiaCount) return true;
+            if (activeTimelineRouteSelections.size !== initialRouteCount) return true;
+            if (activeTimelineGarantiaSelections.size !== initialGarantiaCount) return true;
+            if (activeMapRouteSelections.size !== initialRouteCount) return true;
+            if (activeMapGarantiaSelections.size !== initialGarantiaCount) return true;
+            const ids = ['table-advanced-search','crono-advanced-search','timeline-advanced-search','sequence-search-input','map-advanced-search','timeline-route-query','timeline-waybill-query'];
+            for (let id of ids) {
+                const el = document.getElementById(id);
+                if (el && el.value.trim() !== '') return true;
+            }
+            if (activeStatusFilter !== 'ALL') return true;
+            if (activeCronoStatusFilter !== 'ALL') return true;
+            if (activeTimelineStatusFilter !== 'ALL') return true;
+            if (activeMapStatusFilter !== 'ALL') return true;
+            if (!showProgData || !showCronoProgData || !showTimelineProgData || !showMapProgData) return true;
+            return false;
+        }
+
+        function toggleFloatingResetButton() {
+            const btn = document.getElementById('floating-reset-btn');
+            if (!btn) return;
+            if (hasActiveFilters()) {
+                btn.classList.remove('float-btn-hidden');
+                btn.classList.add('float-btn-visible');
+            } else {
+                btn.classList.remove('float-btn-visible');
+                btn.classList.add('float-btn-hidden');
+            }
+        }
+
+        function resetFilters() {
+            if (!rawData || rawData.length === 0) return;
+            activePlazaFilter = new Set();
+            renderPlazaFilterList();
+
+            activeRouteSelections.clear(); activeGarantiaSelections.clear();
+            activeCronoRouteSelections.clear(); activeCronoGarantiaSelections.clear();
+            activeTimelineRouteSelections.clear(); activeTimelineGarantiaSelections.clear();
+            activeMapRouteSelections.clear(); activeMapGarantiaSelections.clear();
+            rawData.forEach(row => {
+                let r = String(row[routeKeyName] ?? 'N/D');
+                let g = String(row[garantiaKeyName] ?? 'N/D');
+                activeRouteSelections.add(r); activeGarantiaSelections.add(g);
+                activeCronoRouteSelections.add(r); activeCronoGarantiaSelections.add(g);
+                activeTimelineRouteSelections.add(r); activeTimelineGarantiaSelections.add(g);
+                activeMapRouteSelections.add(r); activeMapGarantiaSelections.add(g);
+            });
+
+            activeStatusFilter = 'ALL';
+            activeCronoStatusFilter = 'ALL';
+            activeTimelineStatusFilter = 'ALL';
+            activeMapStatusFilter = 'ALL';
+            _applyStatusBtn('status', 'ALL');
+            _applyStatusBtn('crono-status', 'ALL');
+            _applyStatusBtn('timeline-status', 'ALL');
+            _applyStatusBtn('map-status', 'ALL');
+
+            showProgData = true; showCronoProgData = true; showTimelineProgData = true; showMapProgData = true;
+            [['prog-toggle','prog-toggle'],['crono-prog-toggle','crono-prog-toggle'],['timeline-prog-toggle','timeline-prog-toggle'],['map-prog-toggle','map-prog-toggle']].forEach(([txtId, icoId]) => {
+                const t = document.getElementById(`${txtId}-text`);
+                if (t) t.innerText = 'Ocultar Programadas';
+                const i = document.getElementById(`${icoId}-icon`);
+                if (i) i.className = 'fa-solid fa-calendar-check text-[11px]';
+            });
+
+            ['table-advanced-search','crono-advanced-search','timeline-advanced-search','sequence-search-input','map-advanced-search','timeline-route-query','timeline-waybill-query'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            timelineRouteQuery = '';
+            timelineWaybillQuery = '';
+
+            currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
+            updateDashboard();
+            if (typeof addNotification === 'function') addNotification('Filtros restablecidos', 'Todos los filtros han sido limpiados.', 'success');
+        }
+
+        /* =====================================================================
+           CLEAR SEARCH INPUT
+           ===================================================================== */
+        function clearSearchInput(inputId, btnId) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = '';
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            const btn = document.getElementById(btnId);
+            if (btn) { btn.classList.add('filter-btn-hidden'); btn.classList.remove('filter-btn-visible'); }
+        }
+
+        /* =====================================================================
+           TOGGLES MAPAS / FULLSCREEN
+           ===================================================================== */
         function toggleTimelineFullscreen(event) {
             event.stopPropagation();
             const card = document.getElementById('timeline-section-card');
@@ -2151,595 +2267,142 @@
             if (gpsMapInstance) setTimeout(() => gpsMapInstance.invalidateSize(), 200);
         }
 
-        function initOrUpdateCronoMap(item) {
-            let prevCoords = coordKeyName && item.prevRow ? parseCoordinates(item.prevRow[coordKeyName]) : null;
-            let currCoords = coordKeyName && item.currRow ? parseCoordinates(item.currRow[coordKeyName]) : null;
+        /* =====================================================================
+           TEMA
+           ===================================================================== */
+        function initTheme() {
+            const saved = localStorage.getItem('estafeta-theme');
+            if (saved === 'dark') { document.body.classList.add('dark-mode'); const i = document.getElementById('theme-icon'); if (i) i.className = 'fa-solid fa-sun'; }
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const isDark = document.body.classList.contains('dark-mode');
+                document.getElementById('theme-icon').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+                localStorage.setItem('estafeta-theme', isDark ? 'dark' : 'light');
+            });
+        }
 
-            if (!cronoMapInstance) {
-                const el = document.getElementById('crono-map');
+        /* =====================================================================
+           LISTENERS DE FILTROS / BÚSQUEDAS
+           ===================================================================== */
+        function initFilterListeners() {
+            const searchInputs = [
+                { id: 'table-advanced-search', reset: 'btn-table-search-reset', handler: () => { currentPage = 1; applyFilters(); toggleFloatingResetButton(); } },
+                { id: 'crono-advanced-search', reset: 'btn-crono-search-reset', handler: () => { deadTimesCurrentPage = 1; cronoCurrentPage = 1; applyCronoDetailFilter(); toggleFloatingResetButton(); } },
+                { id: 'timeline-advanced-search', reset: 'btn-timeline-search-reset', handler: () => { timelineCurrentPage = 1; prepareTimelineEvents(); toggleFloatingResetButton(); } },
+                { id: 'sequence-search-input', reset: 'btn-sequence-search-reset', handler: () => { timelineCurrentPage = 1; prepareTimelineEvents(); toggleFloatingResetButton(); } },
+                { id: 'map-advanced-search', reset: 'btn-map-search-reset', handler: () => { prepareGpsMapEvents(); toggleFloatingResetButton(); } }
+            ];
+            searchInputs.forEach(({id, reset, handler}) => {
+                const el = document.getElementById(id);
                 if (!el) return;
-                cronoMapInstance = L.map('crono-map').setView([19.4326, -99.1332], 6);
-                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(cronoMapInstance);
-            }
-            if (cronoClusterGroup) cronoMapInstance.removeLayer(cronoClusterGroup);
-            if (cronoPolyline) { cronoMapInstance.removeLayer(cronoPolyline); cronoPolyline = null; }
-
-            cronoClusterGroup = L.markerClusterGroup();
-            let latLngs = [];
-
-            if (prevCoords) {
-                const prevIcon = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: `<div style="background-color:#4B5563;color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">1</div>`,
-                    iconSize: [28, 28], iconAnchor: [14, 14]
-                });
-                let markerPrev = L.marker(prevCoords, { icon: prevIcon });
-                markerPrev.bindPopup(`<b>Guía Anterior:</b> ${esc(item.prevGuide)}<br><b>Hora:</b> ${esc(item.prevTime)}`);
-                if (item.prevRow) markerPrev.on('click', () => openCardModal(item.prevRow));
-                cronoClusterGroup.addLayer(markerPrev);
-                latLngs.push(prevCoords);
-            }
-
-            if (currCoords) {
-                const currIcon = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: `<div style="background-color:#DA291C;color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">2</div>`,
-                    iconSize: [28, 28], iconAnchor: [14, 14]
-                });
-                let markerCurr = L.marker(currCoords, { icon: currIcon });
-                markerCurr.bindPopup(`<b>Guía Actual:</b> ${esc(item.currGuide)}<br><b>Hora:</b> ${esc(item.currTime)}`);
-                if (item.currRow) markerCurr.on('click', () => openCardModal(item.currRow));
-                cronoClusterGroup.addLayer(markerCurr);
-                latLngs.push(currCoords);
-            }
-            
-            cronoMapInstance.addLayer(cronoClusterGroup);
-
-            if (prevCoords && currCoords) {
-                const p1 = L.latLng(prevCoords[0], prevCoords[1]);
-                const p2 = L.latLng(currCoords[0], currCoords[1]);
-                let diffMeters = p1.distanceTo(p2);
-                // Falla 8: no dibujar línea si es el mismo punto (< 5 m)
-                if (diffMeters >= 5) {
-                    let distText = diffMeters >= 1000 ? (diffMeters / 1000).toFixed(2) + ' km' : diffMeters.toFixed(1) + ' metros';
-                    let timeText = '';
-                    if (item.diff !== undefined && item.diff !== null && item.diff >= 0) {
-                        let totalMins = Math.floor(item.diff / 60000);
-                        let hrs = Math.floor(totalMins / 60);
-                        let mins = totalMins % 60;
-                        timeText = hrs > 0 ? `<br>Tiempo transcurrido: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo transcurrido: <b>${totalMins} min</b>`;
+                el.addEventListener('input', debounce(() => {
+                    if (reset) {
+                        const btn = document.getElementById(reset);
+                        if (btn) {
+                            if (el.value.trim() !== '') { btn.classList.remove('filter-btn-hidden'); btn.classList.add('filter-btn-visible'); }
+                            else { btn.classList.remove('filter-btn-visible'); btn.classList.add('filter-btn-hidden'); }
+                        }
                     }
-                    cronoPolyline = L.polyline([prevCoords, currCoords], { color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5' }).addTo(cronoMapInstance);
-                    cronoPolyline.bindTooltip(`Distancia: <b>${distText}</b>${timeText}`, { sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200' });
-                }
-            }
-            
-            if (latLngs.length > 0) cronoMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15 });
-            cronoMapInstance.invalidateSize();
-        }
-
-        function handleSearchInput(input, resetBtnId) {
-            const btn = document.getElementById(resetBtnId);
-            if (!btn) return;
-            if (input.value.trim() !== "") {
-                btn.classList.remove('filter-btn-hidden');
-                btn.classList.add('filter-btn-visible');
-            } else {
-                btn.classList.remove('filter-btn-visible');
-                btn.classList.add('filter-btn-hidden');
-            }
-        }
-
-        function clearSearchInput(inputId, resetBtnId) {
-            const input = document.getElementById(inputId);
-            if (input) {
-                input.value = "";
-                handleSearchInput(input, resetBtnId);
-                input.dispatchEvent(new Event('input'));
-            }
-        }
-
-        function bindEnterTrigger(inputId) {
-            const el = document.getElementById(inputId);
-            if (!el) return;
-            el.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); el.dispatchEvent(new Event('input')); }
+                    handler();
+                }));
             });
-        }
 
-        if (document.getElementById('timeline-advanced-search')) {
-            document.getElementById('timeline-advanced-search').addEventListener('input', debounce(() => {
-                handleSearchInput(document.getElementById('timeline-advanced-search'), 'btn-timeline-search-reset');
-                timelineCurrentPage = 1; prepareTimelineEvents(); toggleFloatingResetButton();
-            }));
-        }
-        if (document.getElementById('sequence-search-input')) {
-            document.getElementById('sequence-search-input').addEventListener('input', debounce(() => {
-                handleSearchInput(document.getElementById('sequence-search-input'), 'btn-sequence-search-reset');
-                timelineCurrentPage = 1; prepareTimelineEvents(); toggleFloatingResetButton();
-            }));
-        }
-        if (document.getElementById('map-advanced-search')) {
-            document.getElementById('map-advanced-search').addEventListener('input', debounce(() => {
-                handleSearchInput(document.getElementById('map-advanced-search'), 'btn-map-search-reset');
-                prepareGpsMapEvents(); toggleFloatingResetButton();
-            }));
-        }
-        if (document.getElementById('table-advanced-search')) {
-            document.getElementById('table-advanced-search').addEventListener('input', debounce(() => {
-                handleSearchInput(document.getElementById('table-advanced-search'), 'btn-table-search-reset');
-                currentPage = 1; applyFilters(); toggleFloatingResetButton();
-            }));
-        }
-        if (document.getElementById('crono-advanced-search')) {
-            document.getElementById('crono-advanced-search').addEventListener('input', debounce(() => {
-                handleSearchInput(document.getElementById('crono-advanced-search'), 'btn-crono-search-reset');
-                deadTimesCurrentPage = 1; cronoCurrentPage = 1; applyCronoDetailFilter(); toggleFloatingResetButton();
-            }));
-        }
-        bindEnterTrigger('timeline-advanced-search');
-        bindEnterTrigger('sequence-search-input');
-        bindEnterTrigger('map-advanced-search');
-        bindEnterTrigger('table-advanced-search');
-        bindEnterTrigger('crono-advanced-search');
-
-        function renderTimelineTablePage() {
-            const container = document.getElementById('timeline-grid-container');
-            if (!container) return;
-            container.innerHTML = '';
-            document.getElementById('timeline-row-count').innerText = cachedTimelineList.length.toLocaleString();
-
-            let totalPages = Math.ceil(cachedTimelineList.length / timelinePerPage) || 1;
-            if (timelineCurrentPage > totalPages) timelineCurrentPage = totalPages;
-            if (timelineCurrentPage < 1) timelineCurrentPage = 1;
-            document.getElementById('timeline-current-page-num').innerText = timelineCurrentPage;
-            document.getElementById('timeline-total-pages-num').innerText = totalPages;
-
-            if (cachedTimelineList.length === 0) {
-                container.innerHTML = `<div class="py-8 text-center text-gray-400 italic text-xs w-full">No hay eventos registrados en la línea de tiempo con los filtros seleccionados.</div>`;
-                document.getElementById('timeline-pagination-container').style.display = 'none';
-                return;
+            // NUEVO: Query by Route + Waybill con control de botones Reset
+            const routeQEl = document.getElementById('timeline-route-query');
+            if (routeQEl) {
+                routeQEl.addEventListener('input', debounce((e) => {
+                    timelineRouteQuery = String(e.target.value || '').toLowerCase().trim();
+                    const btn = document.getElementById('btn-route-query-reset');
+                    if (btn) {
+                        if (timelineRouteQuery !== '') { btn.classList.remove('filter-btn-hidden'); btn.classList.add('filter-btn-visible'); }
+                        else { btn.classList.remove('filter-btn-visible'); btn.classList.add('filter-btn-hidden'); }
+                    }
+                    timelineCurrentPage = 1;
+                    prepareTimelineEvents();
+                    toggleFloatingResetButton();
+                }));
             }
-            document.getElementById('timeline-pagination-container').style.display = 'flex';
+            const waybillQEl = document.getElementById('timeline-waybill-query');
+            if (waybillQEl) {
+                waybillQEl.addEventListener('input', debounce((e) => {
+                    timelineWaybillQuery = String(e.target.value || '').toLowerCase().trim();
+                    const btn = document.getElementById('btn-waybill-query-reset');
+                    if (btn) {
+                        if (timelineWaybillQuery !== '') { btn.classList.remove('filter-btn-hidden'); btn.classList.add('filter-btn-visible'); }
+                        else { btn.classList.remove('filter-btn-visible'); btn.classList.add('filter-btn-hidden'); }
+                    }
+                    timelineCurrentPage = 1;
+                    prepareTimelineEvents();
+                    toggleFloatingResetButton();
+                }));
+            }
 
-            const startIndex = (timelineCurrentPage - 1) * timelinePerPage;
-            const pageRows = cachedTimelineList.slice(startIndex, startIndex + timelinePerPage);
-            let fragment = document.createDocumentFragment();
-
-            pageRows.forEach((item) => {
-                let statusBadge = getStatusBadge(item.status);
-                let card = document.createElement('div');
-                card.className = 'bg-white border border-gray-200/90 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-red-400 transition-all flex flex-col justify-between space-y-2 border-l-4 estafeta-border cursor-pointer min-w-[280px] max-w-[280px] flex-shrink-0';
-                card.onclick = () => openCardModal(item.rowObj);
-                let timeStr = item.rowObj[eventTimeKeyName] ? String(item.rowObj[eventTimeKeyName]) : '—';
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-                        <span class="bg-gray-900 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm">#${item.sequenceNumber}</span>
-                        <div>${statusBadge}</div>
-                    </div>
-                    <div class="space-y-1.5 text-xs py-1">
-                        <div class="estafeta-red-text font-semibold flex items-center"><i class="fa-solid fa-clock mr-1.5"></i><span class="truncate" title="${esc(timeStr)}">${esc(timeStr)}</span></div>
-                        <div class="truncate"><span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Guía:</span><span class="font-bold text-gray-900 ml-1 truncate" title="${esc(item.guide)}"><i class="fa-solid fa-barcode estafeta-red-text mr-1"></i>${esc(item.guide)}</span></div>
-                        <div class="truncate"><span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Ruta:</span><span class="font-medium text-gray-700 ml-1 truncate" title="${esc(item.ruta)}"><i class="fa-solid fa-route text-gray-400 mr-1"></i>${esc(item.ruta)}</span></div>
-                    </div>
-                    <div class="pt-1.5 border-t border-gray-100 flex justify-end"><span class="text-[10px] estafeta-red-text font-semibold hover:underline"><i class="fa-solid fa-arrow-pointer mr-1"></i>Ver Detalle</span></div>
-                `;
-                fragment.appendChild(card);
-            });
-            container.appendChild(fragment);
-        }
-
-        function updateStatusBoard(rows) {
-            let total = rows.length;
-            document.getElementById('status-board-total').innerText = total.toLocaleString();
-
-            let confirmadosCount = 0, excepcionadosCount = 0, orCount = 0, pendientesCount = 0, otrosCount = 0;
-
-            rows.forEach(r => {
-                const st = String(r[statusKeyName] || '').trim().toUpperCase();
-                const guideVal = String(r[guideKeyName] || '').trim().toUpperCase();
-                const isOR = guideVal.startsWith('OR');
-                if (isOR) orCount++;
-                if (!isOR) {
-                    if (st.includes('CONFIRMAD')) confirmadosCount++;
-                    else if (st.includes('EXCEPCION')) excepcionadosCount++;
-                    else if (st.includes('PENDIENT')) pendientesCount++;
-                    else otrosCount++;
+            const linesBtn = document.getElementById('toggle-lines-btn');
+            if (linesBtn) linesBtn.addEventListener('click', () => {
+                showRouteLines = !showRouteLines;
+                const i = document.getElementById('lines-icon');
+                const t = document.getElementById('lines-text');
+                if (i) i.className = showRouteLines ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
+                if (t) t.innerText = showRouteLines ? "Ocultar Líneas" : "Mostrar Líneas";
+                if (routeLinesLayer && timelineMapInstance) {
+                    if (showRouteLines) { if (!timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.addLayer(routeLinesLayer); }
+                    else { if (timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.removeLayer(routeLinesLayer); }
                 }
             });
 
-            const pct = c => total > 0 ? ((c / total) * 100).toFixed(1) : 0;
-
-            document.getElementById('badge-total-confirmados').innerText = confirmadosCount.toLocaleString();
-            document.getElementById('percent-confirmados').innerText = pct(confirmadosCount) + '%';
-            document.getElementById('badge-total-excepcionados').innerText = excepcionadosCount.toLocaleString();
-            document.getElementById('percent-excepcionados').innerText = pct(excepcionadosCount) + '%';
-            document.getElementById('badge-total-or').innerText = orCount.toLocaleString();
-            document.getElementById('percent-or').innerText = pct(orCount) + '%';
-            document.getElementById('badge-total-pendientes').innerText = pendientesCount.toLocaleString();
-            document.getElementById('percent-pendientes').innerText = pct(pendientesCount) + '%';
-
-            const tbody = document.getElementById('status-board-tbody');
-            tbody.innerHTML = `
-                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-green-800"><i class="fa-solid fa-circle-check text-green-600 mr-1.5"></i> Confirmados</td><td class="p-3 text-center font-semibold text-gray-800">${confirmadosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(confirmadosCount)}%</td></tr>
-                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-red-800"><i class="fa-solid fa-circle-exclamation estafeta-red-text mr-1.5"></i> Excepcionados</td><td class="p-3 text-center font-semibold text-gray-800">${excepcionadosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(excepcionadosCount)}%</td></tr>
-                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-blue-800"><i class="fa-solid fa-barcode text-blue-600 mr-1.5"></i> Órdenes de Recolección (OR)</td><td class="p-3 text-center font-semibold text-gray-800">${orCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(orCount)}%</td></tr>
-                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-yellow-800"><i class="fa-solid fa-clock-rotate-left text-yellow-600 mr-1.5"></i> Pendientes</td><td class="p-3 text-center font-semibold text-gray-800">${pendientesCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(pendientesCount)}%</td></tr>
-                ${otrosCount > 0 ? `<tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-gray-700"><i class="fa-solid fa-circle-question text-gray-400 mr-1.5"></i> Otros</td><td class="p-3 text-center font-semibold text-gray-800">${otrosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(otrosCount)}%</td></tr>` : ''}
-            `;
-        }
-
-        function applyCronoDetailFilter() {
-            const searchVal = document.getElementById('crono-advanced-search').value.toLowerCase().trim();
-            if (searchVal === '') {
-                cachedCronoList = [...rawCachedCronoList];
-            } else {
-                cachedCronoList = rawCachedCronoList.filter(item => {
-                    let matchCurr = item.currGuide.toLowerCase().includes(searchVal);
-                    let matchPrev = item.prevGuide.toLowerCase().includes(searchVal);
-                    let matchRuta = item.ruta.toLowerCase().includes(searchVal);
-                    let matchCurrRow = item.currRow && Object.values(item.currRow).some(v => v !== null && String(v).toLowerCase().includes(searchVal));
-                    let matchPrevRow = item.prevRow && Object.values(item.prevRow).some(v => v !== null && String(v).toLowerCase().includes(searchVal));
-                    return matchCurr || matchPrev || matchRuta || matchCurrRow || matchPrevRow;
-                });
-            }
-            const sortOrder = document.getElementById('crono-sort-select').value;
-            cachedCronoList.sort((a, b) => sortOrder === 'asc' ? a.diff - b.diff : b.diff - a.diff);
-            cronoCurrentPage = 1;
-            renderCronoTablePage();
-            renderCronoSearchKPIs(searchVal);
-        }
-
-        function renderCronoSearchKPIs(searchVal) {
-            const containerKPIs = document.getElementById('crono-search-kpis-container');
-            const gridKPIs = document.getElementById('crono-kpis-grid');
-            const mapWrapper = document.getElementById('crono-map-wrapper');
-            gridKPIs.innerHTML = '';
-
-            if (searchVal === '' || cachedCronoList.length === 0) {
-                containerKPIs.classList.add('hidden');
-                mapWrapper.classList.add('hidden');
-                if (cronoMapInstance) { cronoMapInstance.remove(); cronoMapInstance = null; cronoPolyline = null; }
-                return;
-            }
-            let matchItem = cachedCronoList.find(item =>
-                item.currGuide.toLowerCase().includes(searchVal) ||
-                item.prevGuide.toLowerCase().includes(searchVal) ||
-                (item.currRow && Object.values(item.currRow).some(v => v !== null && String(v).toLowerCase().includes(searchVal)))
-            ) || cachedCronoList[0];
-
-            containerKPIs.classList.remove('hidden');
-            mapWrapper.classList.remove('hidden');
-
-            gridKPIs.appendChild(createMiniKPI("Guía Anterior (Previa)", matchItem.prevGuide, matchItem.prevRow, "fa-history"));
-            gridKPIs.appendChild(createMiniKPI("Guía Actual (Buscada)", matchItem.currGuide, matchItem.currRow, "fa-barcode"));
-            setTimeout(() => { initOrUpdateCronoMap(matchItem); }, 100);
-        }
-
-        function createMiniKPI(titleLabel, guideVal, rowObj, iconClass) {
-            let card = document.createElement('div');
-            card.className = 'bg-white border border-gray-200/90 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-red-400 transition-all flex flex-col justify-between space-y-2 border-l-4 estafeta-border cursor-pointer';
-            if (rowObj) card.onclick = () => openCardModal(rowObj);
-            let statusBadgeHtml = getStatusBadge(rowObj ? rowObj[statusKeyName] : 'N/D');
-            card.innerHTML = `
-                <div class="flex justify-between items-center pb-1.5 border-b border-gray-100">
-                    <span class="bg-gray-900 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">${esc(titleLabel)}</span>
-                    <div>${statusBadgeHtml}</div>
-                </div>
-                <div class="flex items-center justify-between py-0.5">
-                    <div class="truncate pr-2">
-                        <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Guía / OR</div>
-                        <div class="font-bold text-gray-900 text-xs truncate mt-0.5" title="${esc(guideVal)}"><i class="fa-solid ${iconClass} estafeta-red-text mr-1"></i>${esc(guideVal)}</div>
-                    </div>
-                    <div class="text-right flex-shrink-0 pl-2"><span class="text-[10px] estafeta-red-text font-semibold hover:underline"><i class="fa-solid fa-arrow-pointer mr-1"></i>Detalle</span></div>
-                </div>
-            `;
-            return card;
-        }
-
-        function onCronoSortChange() {
-            const sortOrder = document.getElementById('crono-sort-select').value;
-            cachedCronoList.sort((a, b) => sortOrder === 'asc' ? a.diff - b.diff : b.diff - a.diff);
-            cronoCurrentPage = 1;
-            renderCronoTablePage();
-        }
-
-        function renderDeadTimesTablePage() {
-            const tbody = document.getElementById('dead-times-tbody');
-            tbody.innerHTML = '';
-            let totalPages = Math.ceil(cachedDeadTimesList.length / deadTimesPerPage) || 1;
-            if (deadTimesCurrentPage > totalPages) deadTimesCurrentPage = totalPages;
-            if (deadTimesCurrentPage < 1) deadTimesCurrentPage = 1;
-            document.getElementById('dt-current-page-num').innerText = deadTimesCurrentPage;
-            document.getElementById('dt-total-pages-num').innerText = totalPages;
-
-            if (cachedDeadTimesList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-gray-400 italic">No hay datos suficientes para calcular tiempos muertos.</td></tr>`;
-                document.getElementById('dead-times-pagination-container').style.display = 'none';
-                return;
-            }
-            document.getElementById('dead-times-pagination-container').style.display = 'flex';
-
-            const startIndex = (deadTimesCurrentPage - 1) * deadTimesPerPage;
-            const pageRows = cachedDeadTimesList.slice(startIndex, startIndex + deadTimesPerPage);
-            let fragment = document.createDocumentFragment();
-            pageRows.forEach((item, idx) => {
-                let absoluteIndex = startIndex + idx + 1;
-                let tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 transition-all';
-                tr.innerHTML = `
-                    <td class="p-3 font-semibold text-gray-500">#${absoluteIndex}</td>
-                    <td class="p-3 font-bold text-gray-800"><i class="fa-solid fa-route estafeta-red-text mr-1.5"></i>${esc(item.ruta)}</td>
-                    <td class="p-3 text-center font-medium">${item.count}</td>
-                    <td class="p-3 text-center font-medium text-gray-600">${formatDuration(item.avg)}</td>
-                    <td class="p-3 text-center font-semibold text-gray-700">${formatDuration(item.max)}</td>
-                    <td class="p-3 text-center font-bold text-red-600">${formatDuration(item.total)}</td>
-                `;
-                fragment.appendChild(tr);
-            });
-            tbody.appendChild(fragment);
-        }
-
-        function renderCronoTablePage() {
-            const tbody = document.getElementById('crono-dead-times-tbody');
-            tbody.innerHTML = '';
-            document.getElementById('crono-row-count').innerText = cachedCronoList.length.toLocaleString();
-
-            let totalPages = Math.ceil(cachedCronoList.length / cronoPerPage) || 1;
-            if (cronoCurrentPage > totalPages) cronoCurrentPage = totalPages;
-            if (cronoCurrentPage < 1) cronoCurrentPage = 1;
-            document.getElementById('crono-current-page-num').innerText = cronoCurrentPage;
-            document.getElementById('crono-total-pages-num').innerText = totalPages;
-
-            if (cachedCronoList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-gray-400 italic">No hay registros cronológicos con los filtros seleccionados.</td></tr>`;
-                document.getElementById('crono-pagination-container').style.display = 'none';
-                return;
-            }
-            document.getElementById('crono-pagination-container').style.display = 'flex';
-
-            const startIndex = (cronoCurrentPage - 1) * cronoPerPage;
-            const pageRows = cachedCronoList.slice(startIndex, startIndex + cronoPerPage);
-            let fragment = document.createDocumentFragment();
-            pageRows.forEach((item, idx) => {
-                let absoluteIndex = startIndex + idx + 1;
-                let tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 transition-all';
-                const diffCell = item.isSimultaneous || item.diff === 0
-                    ? `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 text-slate-600 border border-slate-300" title="Mismo segundo (batch)">Simultáneo</span>`
-                    : `<span class="font-bold text-red-600">${formatDuration(item.diff)}</span>`;
-                tr.innerHTML = `
-                    <td class="p-3 font-semibold text-gray-500">#${absoluteIndex}</td>
-                    <td class="p-3 font-bold text-gray-800"><i class="fa-solid fa-route estafeta-red-text mr-1.5"></i>${esc(item.ruta)}</td>
-                    <td class="p-3 text-center font-mono text-gray-600">${esc(item.prevTime)}</td>
-                    <td class="p-3 font-medium text-gray-700">${esc(item.currGuide)}</td>
-                    <td class="p-3 text-center font-mono text-gray-600">${esc(item.currTime)}</td>
-                    <td class="p-3 text-center">${diffCell}</td>
-                `;
-                fragment.appendChild(tr);
-            });
-            tbody.appendChild(fragment);
-        }
-
-        function openCardModal(row) {
-            const modal = document.getElementById('card-modal');
-            const modalBody = document.getElementById('modal-body');
-            const modalTitle = document.getElementById('modal-title');
-            const guideVal = row[guideKeyName] || 'Sin Guía';
-            modalTitle.innerText = `Guía/OR: ${guideVal}`;
-
-            let html = '<div class="space-y-1.5 divide-y divide-gray-100">';
-            allKeysFull.forEach(k => {
-                const upperK = k.trim().toUpperCase().replace(':', '');
-                if (!hiddenColumns.includes(upperK)) {
-                    let val = row[k] !== undefined && row[k] !== null ? row[k] : '—';
-                    html += `<div class="flex justify-between items-center pt-1.5"><span class="font-semibold text-gray-500 pr-2">${esc(k)}:</span><span class="text-gray-800 font-medium text-right" title="${esc(val)}">${esc(val)}</span></div>`;
+            const gpsLinesBtn = document.getElementById('toggle-gps-lines-btn');
+            if (gpsLinesBtn) gpsLinesBtn.addEventListener('click', () => {
+                showGpsRouteLines = !showGpsRouteLines;
+                const i = document.getElementById('gps-lines-icon');
+                const t = document.getElementById('gps-lines-text');
+                if (i) i.className = showGpsRouteLines ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
+                if (t) t.innerText = showGpsRouteLines ? "Ocultar Líneas" : "Mostrar Líneas";
+                if (gpsRouteLinesLayer && gpsMapInstance) {
+                    if (showGpsRouteLines) { if (!gpsMapInstance.hasLayer(gpsRouteLinesLayer)) gpsMapInstance.addLayer(gpsRouteLinesLayer); }
+                    else { if (gpsMapInstance.hasLayer(gpsRouteLinesLayer)) gpsMapInstance.removeLayer(gpsRouteLinesLayer); }
                 }
             });
-            html += '</div>';
-            modalBody.innerHTML = html;
-            modal.classList.remove('hidden');
-        }
 
-        function closeModal() { document.getElementById('card-modal').classList.add('hidden'); }
-
-        function openPlazaModal() {
-            document.getElementById('plaza-modal').classList.remove('hidden');
-        }
-
-        function closePlazaModal() {
-            document.getElementById('plaza-modal').classList.add('hidden');
-        }
-
-        function renderPlazaFilterList() {
-            const container = document.getElementById('plaza-list-container');
-            container.innerHTML = '';
-            const plazasMap = {};
-            rawData.forEach(row => {
-                let p = row[plazaKeyName] || 'N/D';
-                plazasMap[p] = (plazasMap[p] || 0) + 1;
-            });
-            const sortedPlazas = Object.keys(plazasMap).sort();
-
-            sortedPlazas.forEach(plaza => {
-                let isChecked = !activePlazaFilter || activePlazaFilter.has(plaza);
-                let label = document.createElement('label');
-                label.className = 'flex items-center justify-between gap-2 text-xs cursor-pointer p-2 rounded-lg border transition select-none';
-                label.innerHTML = `
-                    <div class="flex items-center gap-2 truncate">
-                        <input type="checkbox" value="${esc(plaza)}" ${isChecked ? 'checked' : ''} class="plaza-cb text-red-600 accent-red-600 rounded w-3.5 h-3.5">
-                        <span class="font-medium truncate" title="${esc(plaza)}">${esc(plaza)}</span>
-                    </div>
-                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold flex-shrink-0">${plazasMap[plaza]} reg.</span>
-                `;
-                container.appendChild(label);
-            });
-            updatePlazaButtonCount();
-        }
-
-        function applyPlazaFilters() {
-            const checkboxes = document.querySelectorAll('.plaza-cb');
-            const selected = new Set();
-            checkboxes.forEach(cb => {
-                if (cb.checked) selected.add(cb.value);
+            const fsBtn = document.getElementById('toggle-fullscreen-btn');
+            const mapCard = document.getElementById('map-card');
+            if (fsBtn && mapCard) fsBtn.addEventListener('click', () => {
+                mapCard.classList.toggle('fullscreen');
+                const isF = mapCard.classList.contains('fullscreen');
+                const i = document.getElementById('fullscreen-icon');
+                const t = document.getElementById('fullscreen-text');
+                if (i) i.className = isF ? "fa-solid fa-compress" : "fa-solid fa-expand";
+                if (t) t.innerText = isF ? "Restaurar" : "Pantalla Completa";
+                setTimeout(() => { if (timelineMapInstance) timelineMapInstance.invalidateSize(); }, 100);
             });
 
-            if (selected.size === checkboxes.length || selected.size === 0) {
-                activePlazaFilter = null;
-            } else {
-                activePlazaFilter = selected;
+            const gpsFsBtn = document.getElementById('toggle-gps-fullscreen-btn');
+            const gpsCard = document.getElementById('gps-map-section-card');
+            if (gpsFsBtn && gpsCard) gpsFsBtn.addEventListener('click', () => {
+                gpsCard.classList.toggle('fullscreen');
+                const isF = gpsCard.classList.contains('fullscreen');
+                const i = document.getElementById('gps-fullscreen-icon');
+                const t = document.getElementById('gps-fullscreen-text');
+                if (i) i.className = isF ? "fa-solid fa-compress" : "fa-solid fa-expand";
+                if (t) t.innerText = isF ? "Restaurar" : "Pantalla Completa";
+                setTimeout(() => { if (gpsMapInstance) gpsMapInstance.invalidateSize(); }, 100);
+            });
+        }
+
+        /* =====================================================================
+           INICIALIZACIÓN
+           ===================================================================== */
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initFilterListeners();
+            const bg = document.getElementById('segmentedBg');
+            if (bg) {
+                const firstBtn = document.querySelector('.main-tab-btn');
+                if (firstBtn) setTimeout(() => updateTabIndicator(firstBtn), 50);
             }
-
-            closePlazaModal();
-            renderPlazaFilterList();
-            initSelections();
-            currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
-            updateDashboard();
-        }
-
-        function updatePlazaButtonCount() {
-            const checkboxes = document.querySelectorAll('.plaza-cb');
-            let count = 0;
-            checkboxes.forEach(cb => {
-                if (cb.checked) count++;
-            });
-            const total = checkboxes.length > 0 ? checkboxes.length : count;
-            document.getElementById('btn-text').textContent = `Plazas (${count}/${total})`;
-        }
-
-        function updateDashboard() {
-            applyFilters();
-            prepareTimelineEvents();
-            prepareGpsMapEvents();
-            toggleFloatingResetButton();
-        }
-
-        function applyFilters() {
-            let tableVal = document.getElementById('table-advanced-search').value.toLowerCase();
-            filteredData = rawData.filter(row => {
-                let matchPlaza = (!activePlazaFilter || activePlazaFilter.size === 0) ? true : activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
-                let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
-                let matchStatus = matchRowStatus(rowStatus, activeStatusFilter);
-
-                let matchProg = true;
-                if (!showProgData) {
-                    const guideVal = String(row[guideKeyName] || '').trim();
-                    if (isProgramada(guideVal)) matchProg = false;
-                }
-
-                let rVal = String(row[routeKeyName] !== undefined && row[routeKeyName] !== null ? row[routeKeyName] : 'N/D');
-                let matchRoute = activeRouteSelections.has(rVal);
-                let gVal = String(row[garantiaKeyName] !== undefined && row[garantiaKeyName] !== null ? row[garantiaKeyName] : 'N/D');
-                let matchGarantia = activeGarantiaSelections.has(gVal);
-                let matchTable = tableVal === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(tableVal));
-                return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchTable;
-            });
-            renderCards(filteredData);
-            prepareDeadTimes();
-        }
-
-        function toggleFloatingResetButton() {
-            const resetBtn = document.getElementById('floating-reset-btn');
-            const tableVal = document.getElementById('table-advanced-search').value;
-            const cronoTableVal = document.getElementById('crono-advanced-search').value;
-            const timelineVal = document.getElementById('timeline-advanced-search').value;
-            const seqVal = document.getElementById('sequence-search-input') ? document.getElementById('sequence-search-input').value : '';
-            const mapVal = document.getElementById('map-advanced-search') ? document.getElementById('map-advanced-search').value : '';
-
-            const hasFilters = activePlazaFilter !== null ||
-                activeStatusFilter !== 'ALL' || activeCronoStatusFilter !== 'ALL' || activeTimelineStatusFilter !== 'ALL' || activeMapStatusFilter !== 'ALL' ||
-                tableVal.trim() !== '' || cronoTableVal.trim() !== '' || timelineVal.trim() !== '' || seqVal.trim() !== '' || mapVal.trim() !== '' ||
-                !showProgData || !showCronoProgData || !showTimelineProgData || !showMapProgData ||
-                activeRouteSelections.size < initialRouteCount ||
-                activeGarantiaSelections.size < initialGarantiaCount ||
-                activeCronoRouteSelections.size < initialRouteCount ||
-                activeCronoGarantiaSelections.size < initialGarantiaCount ||
-                activeTimelineRouteSelections.size < initialRouteCount ||
-                activeTimelineGarantiaSelections.size < initialGarantiaCount ||
-                activeMapRouteSelections.size < initialRouteCount ||
-                activeMapGarantiaSelections.size < initialGarantiaCount;
-
-            if (hasFilters) {
-                resetBtn.classList.remove('float-btn-hidden');
-                resetBtn.classList.add('float-btn-visible');
-            } else {
-                resetBtn.classList.remove('float-btn-visible');
-                resetBtn.classList.add('float-btn-hidden');
-            }
-        }
-
-        function resetFilters() {
-            activePlazaFilter = null;
-            document.querySelectorAll('.plaza-cb').forEach(cb => cb.checked = true);
-            updatePlazaButtonCount();
-            setStatusFilter('ALL');
-            setCronoStatusFilter('ALL');
-            setTimelineStatusFilter('ALL');
-            setMapStatusFilter('ALL');
-            if (!showProgData) toggleProgramadaVisibility();
-            if (!showCronoProgData) toggleCronoProgramadaVisibility();
-            if (!showTimelineProgData) toggleTimelineProgramadaVisibility();
-            if (!showMapProgData) toggleMapProgramadaVisibility();
-            initSelections();
-            
-            clearSearchInput('table-advanced-search', 'btn-table-search-reset');
-            clearSearchInput('crono-advanced-search', 'btn-crono-search-reset');
-            clearSearchInput('timeline-advanced-search', 'btn-timeline-search-reset');
-            if (document.getElementById('sequence-search-input')) clearSearchInput('sequence-search-input', 'btn-sequence-search-reset');
-            if (document.getElementById('map-advanced-search')) clearSearchInput('map-advanced-search', 'btn-map-search-reset');
-
-            currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
-            updateDashboard();
-        }
-
-        const btnTheme = document.getElementById('theme-toggle');
-        const iconTheme = document.getElementById('theme-icon');
-
-        function aplicarTema(dark) {
-            if (dark) {
-                document.body.classList.add('dark-mode');
-                iconTheme.className = 'fa-solid fa-sun text-amber-400';
-            } else {
-                document.body.classList.remove('dark-mode');
-                iconTheme.className = 'fa-solid fa-moon text-slate-200';
-            }
-            setTimeout(() => {
+            window.addEventListener('resize', () => {
                 const activeBtn = document.querySelector('.main-tab-btn.text-white');
                 if (activeBtn) updateTabIndicator(activeBtn);
-            }, 50);
-        }
-
-        btnTheme.addEventListener('click', () => {
-            const isDark = document.body.classList.toggle('dark-mode');
-            aplicarTema(isDark);
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        });
-
-        if (localStorage.getItem('theme') === 'dark') aplicarTema(true);
-
-        document.addEventListener('click', (e) => {
-            const panel = document.getElementById('notif-panel');
-            const bell = document.getElementById('notif-bell');
-            if (!panel || !panel.classList.contains('show')) return;
-            if (panel.contains(e.target)) return;
-            if (bell && bell.contains(e.target)) return;
-            panel.classList.remove('show');
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const firstBtn = document.querySelector('.main-tab-btn');
-            if (firstBtn) {
-                updateTabIndicator(firstBtn);
-            }
-            renderNotifications();
-        });
-
-        window.addEventListener('resize', () => {
-            const activeBtn = document.querySelector('.main-tab-btn.text-white');
-            if (activeBtn) {
-                updateTabIndicator(activeBtn);
-            }
+            });
         });
     </script>
 </body>
