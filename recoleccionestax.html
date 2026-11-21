@@ -123,7 +123,21 @@
         .upload-btn-wrapper input[type="file"] {
             position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
         }
-        .upload-btn-content { display: flex; flex-direction: column; text-align: left; transition: opacity 0.4s ease; }
+        .upload-btn-content {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            max-width: 240px;
+            overflow: hidden;
+            white-space: nowrap;
+            transition: max-width 0.35s ease, opacity 0.35s ease, margin-left 0.35s ease;
+        }
+        .upload-btn-content.labels-hidden {
+            max-width: 0;
+            opacity: 0;
+            margin-left: -10px;
+            pointer-events: none;
+        }
         .upload-btn-title { font-size: 0.8rem; font-weight: 700; color: var(--text-color); line-height: 1.2; }
         .upload-btn-subtitle { font-size: 0.65rem; color: var(--subtext-color); }
 
@@ -383,7 +397,7 @@
         </div>
 
         <div class="header-actions">
-            <div class="upload-btn-wrapper" id="dropZone">
+            <div class="upload-btn-wrapper" id="dropZone" title="Cargar Excel">
                 <input type="file" id="excelFile" accept=".xlsx, .xls">
                 <div class="relative flex items-center justify-center p-1">
                     <i class="fa-solid fa-cloud text-2xl text-white"></i>
@@ -691,6 +705,24 @@
         let rowsPerPage = 20;
         let activeModalType = null;
         let isRutaFullscreen = false;
+        let hideUploadLabelsTimer = null;
+
+        function scheduleHideUploadLabels(delayMs = 2000) {
+            if (hideUploadLabelsTimer) clearTimeout(hideUploadLabelsTimer);
+            hideUploadLabelsTimer = setTimeout(() => {
+                const contentDiv = document.getElementById('uploadBtnContent');
+                if (contentDiv) contentDiv.classList.add('labels-hidden');
+            }, delayMs);
+        }
+
+        function showUploadLabels() {
+            if (hideUploadLabelsTimer) {
+                clearTimeout(hideUploadLabelsTimer);
+                hideUploadLabelsTimer = null;
+            }
+            const contentDiv = document.getElementById('uploadBtnContent');
+            if (contentDiv) contentDiv.classList.remove('labels-hidden');
+        }
 
         let selectedFiltersState = {
             ruta: new Set(),
@@ -709,7 +741,6 @@
             const s = String(val).trim();
             const m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
             if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
-            // "13 Nov 2026" / "13/11/2026"
             const m2 = s.match(/^(\d{1,2})[-\/\s]([A-Za-z]{3}|\d{1,2})[-\/\s](\d{4})/);
             if (m2) {
                 const d = new Date(s);
@@ -727,7 +758,6 @@
 
         const _norm = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
-        /** Match: exact first, then startsWith, then includes. Optional exclude fragments. */
         function findKey(keys, fragments, opts = {}) {
             const frags = Array.isArray(fragments) ? fragments : [fragments];
             const exclude = (opts.exclude || []).map(_norm);
@@ -737,7 +767,7 @@
                 if (exclude.some(ex => nk.includes(ex))) continue;
                 const allInclude = frags.every(f => nk.includes(_norm(f)));
                 if (!allInclude) continue;
-                if (frags.length === 1 && nk === _norm(frags[0])) return k; // exact
+                if (frags.length === 1 && nk === _norm(frags[0])) return k;
                 const score = (frags.length === 1 && nk.startsWith(_norm(frags[0]))) ? 2 : 1;
                 scored.push({ k, score, len: nk.length });
             }
@@ -826,7 +856,10 @@
         }
 
         function processExcelFile(file) {
+            showUploadLabels();
             document.getElementById('file-name-display').textContent = file.name;
+            const dz = document.getElementById('dropZone');
+            if (dz) dz.title = `Archivo cargado: ${file.name} (clic para cambiar)`;
             const badge = document.getElementById('fileNameBadge');
             if (badge) { badge.textContent = file.name; badge.title = file.name; }
             document.getElementById('skeletonLoader').classList.remove('hidden');
@@ -854,7 +887,6 @@
                         return;
                     }
 
-                    // Tipo operativo (PAQUETERIA/MENSAJERIA): exacto "Tipo", excluir "Tipo de recolección..."
                     const keyTipo = findKey(headers, ['tipo'], { exclude: ['recoleccion', 'programada', 'adicional', 'orden'] })
                         || headers.find(h => _norm(h) === 'tipo') || '';
                     const keyOR = findKey(headers, ['orden', 'recoleccion']) || findKey(headers, ['# orden']);
@@ -919,15 +951,10 @@
                         }
                     }
 
-                    const contentDiv = document.getElementById('uploadBtnContent');
-                    if (contentDiv) {
-                        contentDiv.style.opacity = '1';
-                        contentDiv.style.display = 'flex';
-                    }
-
                     document.getElementById('skeletonLoader').classList.add('hidden');
                     document.getElementById('dashboardContent').classList.remove('hidden');
 
+                    scheduleHideUploadLabels(2000);
                     detectAndShowStaleBanner(file.name, globalData);
                     initDashboard(globalData);
                     addNotifications([{ type: 'success', title: '✅ Carga Exitosa', message: `Se procesaron ${globalData.length} registros correctamente.` }]);
@@ -1204,7 +1231,7 @@
                 totalCantidad += Number(d.Cantidad || 0);
                 const est = _norm(d.Estado || '');
                 if (est.includes('enrutado')) enrutados++;
-                else if (est.includes('excepcion')) excepcionados++; // Excepción / Excepcionado / EXCEPCIONADO
+                else if (est.includes('excepcion')) excepcionados++;
                 else if (est.includes('recolectado')) recolectados++;
                 else if (est.includes('cancelad')) canceladas++;
                 else if (est.includes('desasignad')) desasignados++;
@@ -1540,9 +1567,6 @@
             }
         }
 
-        /* ============================================================
-           FIX #1, #2, #3, #7, #9, #11: Sistema de notificaciones completo
-           ============================================================ */
         const NOTIF_ICONS = {
             danger: 'fa-solid fa-triangle-exclamation',
             warning: 'fa-solid fa-circle-exclamation',
@@ -1558,7 +1582,7 @@
             if (!badge) return;
             const unread = notifHistory.filter(n => !n.read).length;
             if (unread > 0) {
-                badge.textContent = unread > 99 ? '99+' : unread; // FIX #9
+                badge.textContent = unread > 99 ? '99+' : unread;
                 badge.classList.remove('hidden');
             } else {
                 badge.classList.add('hidden');
@@ -1569,7 +1593,6 @@
             const panel = document.getElementById('notif-panel');
             notifPanelOpen = !notifPanelOpen;
             if (notifPanelOpen) {
-                // FIX #2: marcar como leídas ANTES de renderizar
                 notifHistory = notifHistory.map(n => ({ ...n, read: true }));
                 updateNotifBadge();
                 renderNotifPanel();
@@ -1595,7 +1618,6 @@
             }
             body.innerHTML = notifHistory.map(n => {
                 const icon = NOTIF_ICONS[n.type] || NOTIF_ICONS.info;
-                // FIX #3: respetar n.read; FIX #7: usar clase notif-{type}
                 return `
                     <div class="notif-item notif-${n.type} ${n.read ? '' : 'unread'}">
                         <div class="notif-item-icon"><i class="${icon}"></i></div>
@@ -1636,7 +1658,6 @@
             }, duration);
         }
 
-        // FIX #1: mostrar el badge con classList.remove('hidden') + actualizar panel
         function addNotifications(notifs) {
             if (!notifs || notifs.length === 0) return;
             const enriched = notifs.map((n, i) => ({
@@ -1649,7 +1670,7 @@
             }));
 
             notifHistory = [...enriched, ...notifHistory].slice(0, 50);
-            updateNotifBadge(); // ← FIX #1: ahora sí muestra el badge
+            updateNotifBadge();
             enriched.slice(0, 3).forEach(n => showToast(n));
             if (notifPanelOpen) renderNotifPanel();
         }
@@ -1677,21 +1698,17 @@
 
         document.getElementById('notif-bell').onclick = toggleNotifPanel;
 
-        /* FIX #4, #5, #6: cerrar paneles/modal al hacer clic fuera */
         document.addEventListener('click', (e) => {
-            // Cerrar panel de notificaciones
             const notifPanel = document.getElementById('notif-panel');
             const notifBell = document.getElementById('notif-bell');
             if (notifPanelOpen && notifPanel && !notifPanel.contains(e.target) && notifBell && !notifBell.contains(e.target)) {
                 closeNotifPanel();
             }
-            // Cerrar date picker
             const datePopup = document.getElementById('datePickerPopup');
             const dateBtn = document.getElementById('dateFilterButton');
             if (datePopup && !datePopup.classList.contains('hidden') && !datePopup.contains(e.target) && dateBtn && !dateBtn.contains(e.target)) {
                 datePopup.classList.add('hidden');
             }
-            // Cerrar filter modal
             const filterModal = document.getElementById('filter-modal');
             if (filterModal && !filterModal.classList.contains('hidden') && e.target === filterModal) {
                 closeModal();
