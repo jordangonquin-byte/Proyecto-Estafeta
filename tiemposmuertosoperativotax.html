@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -170,16 +171,20 @@
         button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid #DA291C; outline-offset: 2px; border-radius: 4px; }
 
         #notif-toast-container {
-            position: fixed; top: 90px; right: 20px; z-index: 100000;
-            display: flex; flex-direction: column; gap: 10px;
-            max-width: 380px; width: calc(100vw - 40px); pointer-events: none;
+            position: fixed; top: 88px; right: 20px; z-index: 100000;
+            display: flex; flex-direction: column; gap: 8px;
+            max-width: 390px; width: calc(100vw - 40px); pointer-events: none;
+            max-height: calc(100vh - 110px); overflow-y: auto; padding-right: 4px;
         }
+        #notif-toast-container::-webkit-scrollbar { width: 4px; }
+        #notif-toast-container::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.5); border-radius: 4px; }
+
         .notif-toast {
-            background: white; border-radius: 12px; padding: 14px 16px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2), 0 4px 10px -4px rgba(0,0,0,0.1);
-            border-left: 4px solid #3b82f6; display: flex; gap: 12px; align-items: flex-start;
+            background: white; border-radius: 12px; padding: 11px 14px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.22), 0 4px 10px -4px rgba(0,0,0,0.12);
+            border-left: 4px solid #3b82f6; display: flex; gap: 10px; align-items: flex-start;
             pointer-events: auto; animation: notifToastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative; overflow: hidden;
+            position: relative; overflow: hidden; flex-shrink: 0;
         }
         @keyframes notifToastIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
         .notif-toast.removing { animation: notifToastOut 0.3s ease forwards; }
@@ -188,22 +193,22 @@
         .notif-toast.notif-warning { border-left-color: #f59e0b; }
         .notif-toast.notif-info { border-left-color: #3b82f6; }
         .notif-toast.notif-success { border-left-color: #10b981; }
-        .notif-toast-icon { font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+        .notif-toast-icon { font-size: 17px; line-height: 1.2; flex-shrink: 0; margin-top: 1px; }
         .notif-toast.notif-danger .notif-toast-icon { color: #dc2626; }
         .notif-toast.notif-warning .notif-toast-icon { color: #f59e0b; }
         .notif-toast.notif-info .notif-toast-icon { color: #3b82f6; }
         .notif-toast.notif-success .notif-toast-icon { color: #10b981; }
         .notif-toast-content { flex: 1; min-width: 0; }
-        .notif-toast-title { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 3px; line-height: 1.3; }
-        .notif-toast-msg { font-size: 12px; color: #6b7280; line-height: 1.4; word-break: break-word; white-space: pre-line; }
-        .notif-toast-close { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 14px; padding: 0 2px; flex-shrink: 0; }
+        .notif-toast-title { font-size: 12.5px; font-weight: 700; color: #1f2937; margin-bottom: 2px; line-height: 1.25; }
+        .notif-toast-msg { font-size: 11.5px; color: #4b5563; line-height: 1.35; word-break: break-word; white-space: pre-line; }
+        .notif-toast-close { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 13px; padding: 0 2px; flex-shrink: 0; }
         .notif-toast-close:hover { color: #4b5563; }
-        .notif-toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: currentColor; opacity: 0.4; animation: notifProgress linear forwards; }
+        .notif-toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: currentColor; opacity: 0.45; animation: notifProgress linear forwards; }
         @keyframes notifProgress { from { width: 100%; } to { width: 0%; } }
 
         #notif-panel {
-            position: fixed; top: 80px; right: 20px; width: 400px; max-width: calc(100vw - 40px);
-            max-height: 70vh; background: white; border-radius: 16px;
+            position: fixed; top: 80px; right: 20px; width: 420px; max-width: calc(100vw - 40px);
+            max-height: 75vh; background: white; border-radius: 16px;
             box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3), 0 10px 20px -5px rgba(0,0,0,0.15);
             z-index: 100001; display: none; flex-direction: column; overflow: hidden;
             animation: notifPanelIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -214,7 +219,7 @@
         .notif-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid #e5e7eb; font-weight: 700; font-size: 14px; color: #1f2937; }
         .notif-panel-header button { background: none; border: none; cursor: pointer; color: #6b7280; font-size: 16px; padding: 4px; border-radius: 6px; }
         .notif-panel-header button:hover { background: #f3f4f6; color: #1f2937; }
-        .notif-panel-body { flex: 1; overflow-y: auto; max-height: calc(70vh - 110px); }
+        .notif-panel-body { flex: 1; overflow-y: auto; max-height: calc(75vh - 110px); }
         .notif-empty { padding: 40px 20px; text-align: center; color: #9ca3af; font-size: 13px; }
         .notif-empty i { font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5; }
         .notif-item { padding: 12px 18px; border-bottom: 1px solid #f3f4f6; display: flex; gap: 12px; align-items: flex-start; border-left: 3px solid transparent; cursor: default; transition: background 0.15s; }
@@ -310,7 +315,7 @@
         body.dark-mode .main-tab-btn.text-white { color: #ffffff !important; }
 
         @media (max-width: 640px) {
-            #notif-toast-container { top: auto; bottom: 20px; right: 10px; left: 10px; width: auto; max-width: none; }
+            #notif-toast-container { top: auto; bottom: 20px; right: 10px; left: 10px; width: auto; max-width: none; max-height: 55vh; }
             #notif-panel { top: auto; bottom: 10px; right: 10px; left: 10px; width: auto; max-width: none; max-height: 75vh; }
         }
 
@@ -333,6 +338,161 @@
         .float-btn-visible { opacity: 1; pointer-events: auto; transform: scale(1); }
         .filter-btn-hidden { opacity: 0; pointer-events: none; }
         .filter-btn-visible { opacity: 1; pointer-events: auto; }
+    
+        .extra-info-box {
+            background-color: #e6dad9;
+            border-color: #f3c6c4;
+            color: #1e293b;
+        }
+        body.dark-mode .extra-info-box {
+            background-color: rgba(127, 29, 29, 0.35) !important;
+            border-color: rgba(248, 113, 113, 0.35) !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .extra-info-box .text-gray-800 {
+            color: #f1f5f9 !important;
+        }
+
+        body.dark-mode #card-modal #modal-body > div {
+            border-color: #334155 !important;
+        }
+        body.dark-mode #card-modal #modal-body .text-gray-800 {
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode #card-modal #modal-body .text-gray-500 {
+            color: #94a3b8 !important;
+        }
+
+
+        .dt-fullscreen-overlay {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 99990 !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            overflow-y: auto !important;
+            padding: 1.5rem !important;
+            background: #ffffff !important;
+        }
+        body.dark-mode .dt-fullscreen-overlay {
+            background: #0f172a !important;
+        }
+        .avance-fullscreen-overlay {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 99990 !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            overflow-y: auto !important;
+            padding: 1.5rem !important;
+            background: #ffffff !important;
+        }
+        body.dark-mode .avance-fullscreen-overlay {
+            background: #0f172a !important;
+        }
+
+        /* Estilos de la gráfica en Tiempos Muertos */
+        .dead-times-chart-box {
+            background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,250,252,0.92));
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            box-shadow: 0 6px 20px -6px rgba(15, 23, 42, 0.08);
+        }
+        body.dark-mode .dead-times-chart-box {
+            background: linear-gradient(145deg, rgba(30,41,59,0.95), rgba(15,23,42,0.92)) !important;
+            border-color: #334155 !important;
+        }
+    
+        /* Contraste mejorado Modo Claro y Modo Oscuro */
+        :root {
+            --surface-card: #ffffff;
+            --surface-subtle: #f8fafc;
+            --surface-muted: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #475569;
+            --border-hairline: #cbd5e1;
+        }
+        body:not(.dark-mode) {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+        body:not(.dark-mode) .bg-white {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+        body:not(.dark-mode) .bg-gray-50 {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+        body:not(.dark-mode) .bg-gray-100 {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+        body:not(.dark-mode) .text-gray-400 { color: #475569 !important; }
+        body:not(.dark-mode) .text-gray-500 { color: #334155 !important; }
+        body:not(.dark-mode) .text-gray-600 { color: #1e293b !important; }
+        body:not(.dark-mode) .text-gray-700 { color: #0f172a !important; }
+        body:not(.dark-mode) .text-gray-800 { color: #0f172a !important; }
+        body:not(.dark-mode) table thead tr { background-color: #e2e8f0 !important; color: #0f172a !important; }
+        body:not(.dark-mode) table tbody tr:hover { background-color: #f1f5f9 !important; }
+
+        body.dark-mode {
+            background-color: #090d16 !important;
+            color: #f8fafc !important;
+        }
+        body.dark-mode .bg-white,
+        body.dark-mode .bg-gray-50,
+        body.dark-mode .bg-gray-100,
+        body.dark-mode main > div > div {
+            background-color: #111827 !important;
+            color: #f8fafc !important;
+        }
+        body.dark-mode .border-gray-100,
+        body.dark-mode .border-gray-200,
+        body.dark-mode .border-gray-200\/60,
+        body.dark-mode .border-gray-200\/70,
+        body.dark-mode .border-gray-200\/80,
+        body.dark-mode .border-gray-200\/90,
+        body.dark-mode .border-gray-300 {
+            border-color: #263248 !important;
+        }
+        body.dark-mode .text-gray-900,
+        body.dark-mode .text-gray-800,
+        body.dark-mode .text-gray-700 {
+            color: #f8fafc !important;
+        }
+        body.dark-mode .text-gray-600,
+        body.dark-mode .text-gray-500 {
+            color: #cbd5e1 !important;
+        }
+        body.dark-mode .text-gray-400 {
+            color: #94a3b8 !important;
+        }
+        body.dark-mode table thead tr {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+        }
+        body.dark-mode table tbody tr:nth-child(even) {
+            background-color: rgba(30, 41, 59, 0.35) !important;
+        }
+        body.dark-mode table tbody tr:hover {
+            background-color: #1e293b !important;
+        }
+        body.dark-mode .bg-green-50\/60 { background-color: rgba(20, 83, 45, 0.42) !important; }
+        body.dark-mode .text-green-700, body.dark-mode .text-green-800 { color: #86efac !important; }
+        body.dark-mode .bg-red-50\/60, body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.45) !important; }
+        body.dark-mode .text-red-600, body.dark-mode .text-red-700, body.dark-mode .text-red-800 { color: #fca5a5 !important; }
+        body.dark-mode .bg-blue-50\/60 { background-color: rgba(30, 58, 138, 0.45) !important; }
+        body.dark-mode .text-blue-600, body.dark-mode .text-blue-700, body.dark-mode .text-blue-800 { color: #93c5fd !important; }
+        body.dark-mode .bg-yellow-50\/60 { background-color: rgba(120, 53, 15, 0.45) !important; }
+        body.dark-mode .text-yellow-700, body.dark-mode .text-yellow-800, body.dark-mode .text-amber-600, body.dark-mode .text-amber-700 { color: #fde047 !important; }
+
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased min-h-screen flex flex-col relative pb-20">
@@ -395,6 +555,59 @@
                     <div class="bg-blue-50/60 border border-blue-200 rounded-xl p-4 space-y-3 shadow-xs"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-blue-800 flex items-center"><i class="fa-solid fa-barcode text-blue-600 mr-1.5"></i> Órdenes de Recolección (OR)</span><span id="badge-total-or" class="bg-blue-200 text-blue-900 text-xs font-bold px-2.5 py-1 rounded-lg">0</span></div><div class="text-xs text-blue-700">Proporción: <span id="percent-or" class="font-bold">0%</span></div></div>
                     <div class="bg-yellow-50/60 border border-yellow-200 rounded-xl p-4 space-y-3 shadow-xs"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-yellow-800 flex items-center"><i class="fa-solid fa-clock-rotate-left text-yellow-600 mr-1.5"></i> Pendientes</span><span id="badge-total-pendientes" class="bg-yellow-200 text-yellow-900 text-xs font-bold px-2.5 py-1 rounded-lg">0</span></div><div class="text-xs text-yellow-700">Proporción: <span id="percent-pendientes" class="font-bold">0%</span></div></div>
                 </div>
+                <!-- Gráfica y Tabla de Seguimiento por Ruta (Entregados, Pendientes y Recolecciones) -->
+                <div id="avance-route-tracking-card" class="pt-3 border-t border-gray-100 space-y-3">
+                    <div class="bg-gray-50/70 dark:bg-slate-800/60 border border-gray-200 rounded-xl p-4 space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-gray-200/80">
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-column estafeta-red-text"></i>
+                                    Seguimiento Operativo por Ruta (Entregados, Pendientes y Recolecciones)
+                                </h4>
+                                <p class="text-[11px] text-gray-500">Comparativa de entregas confirmadas, paquetes pendientes y órdenes de recolección enlistadas por ruta</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select id="avance-route-page-size" onchange="changeAvanceRoutePageSize(this.value)" title="Cantidad de rutas por pestaña" class="bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs font-bold text-gray-700 shadow-xs cursor-pointer">
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="30">30</option>
+                                    <option value="40">40</option>
+                                </select>
+                                <span id="avance-route-count-badge" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-red-50 estafeta-red-text border border-red-200">0 rutas</span>
+                                <button type="button" onclick="toggleAvanceRouteFullscreen()" id="btn-avance-route-fs" title="Pantalla completa" aria-label="Pantalla completa" class="w-8 h-8 rounded-lg bg-white hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-200 shadow-xs text-xs font-bold flex items-center justify-center transition">
+                                    <i id="icon-avance-route-fs" class="fa-solid fa-expand"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="avance-route-chart-wrapper" class="relative w-full" style="height: 240px;">
+                            <canvas id="avanceRouteBarChart"></canvas>
+                        </div>
+
+                        <div class="overflow-x-auto max-h-64 overflow-y-auto border border-gray-200/80 rounded-lg" id="avance-route-table-scroll">
+                            <table class="w-full text-left text-xs text-gray-600 border-collapse">
+                                <thead class="sticky top-0 z-10">
+                                    <tr class="bg-gray-100 border-b border-gray-200 text-gray-700 uppercase text-[11px]">
+                                        <th class="p-2.5">#</th>
+                                        <th class="p-2.5">Ruta</th>
+                                        <th class="p-2.5 text-center text-green-700">Entregados (Confirmados)</th>
+                                        <th class="p-2.5 text-center text-amber-700">Pendientes</th>
+                                        <th class="p-2.5 text-center text-blue-700">Recolecciones (OR)</th>
+                                        <th class="p-2.5 text-center text-red-700">Excepcionados</th>
+                                        <th class="p-2.5 text-center">Total Ruta</th>
+                                        <th class="p-2.5 text-center">% Avance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="avance-route-tbody" class="divide-y divide-gray-100 bg-white"></tbody>
+                            </table>
+                        </div>
+                        <div id="avance-route-tabs-bar" class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-200/70 text-xs">
+                            <span id="avance-route-tabs-info" class="text-[11px] font-semibold text-gray-500"></span>
+                            <div id="avance-route-tabs-list" class="flex flex-wrap items-center gap-1.5"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="pt-3 border-t border-gray-100">
                     <div class="flex justify-between items-center cursor-pointer select-none bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all" onclick="toggleStatusTableSection()">
                         <div class="flex items-center space-x-2.5"><i id="status-table-collapse-icon" class="fa-solid fa-chevron-down text-xs text-gray-500 transition-transform duration-300" style="transform: rotate(0deg);"></i><span class="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-table-list estafeta-red-text mr-1.5"></i> Tabla Detallada: Categoría / Estatus Detallado</span></div>
@@ -433,8 +646,8 @@
                             <button onclick="toggleProgramadaVisibility()" id="btn-toggle-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="prog-toggle-icon"></i><span id="prog-toggle-text">Ocultar Programadas</span></button>
                             <div class="relative w-full sm:w-56">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span>
-                                <input type="text" id="table-advanced-search" placeholder="Buscador avanzado..." class="w-full pl-9 pr-14 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
-                                <button id="btn-table-search-reset" onclick="clearSearchInput('table-advanced-search', 'btn-table-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
+                                <input type="text" id="table-advanced-search" placeholder="Buscador avanzado..." class="w-full pl-9 pr-7 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
+                                <button id="btn-table-search-reset" onclick="clearSearchInput('table-advanced-search', 'btn-table-search-reset')" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-500/15 hover:bg-red-500/20 text-gray-500 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center text-[11px] backdrop-blur-xs transition-all duration-200"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         </div>
                         <div><span class="font-semibold text-gray-700" id="table-row-count">0</span> tarjetas visibles</div>
@@ -447,26 +660,106 @@
                             <button onclick="changePage(1)" class="px-3 py-1.5 estafeta-red text-white rounded-lg hover:bg-red-700 font-semibold shadow-sm transition-all flex items-center space-x-1"><span>Siguiente</span><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
                         </div>
                     </div>
+
                 </div>
             </div>
 
             <!-- =================== TIEMPOS MUERTOS =================== -->
-            <div id="section-tiempos" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up" style="display: none;">
-                <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
-                    <div class="flex items-center space-x-2.5"><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-clock estafeta-red-text mr-1.5"></i> Tiempos Muertos entre Entregas</h3></div>
-                </div>
-                <div id="dead-times-section-body" class="space-y-4 pt-2">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs text-gray-600 border-collapse">
-                            <thead><tr class="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase"><th class="p-3">#</th><th class="p-3">Ruta</th><th class="p-3 text-center">Total Eventos</th><th class="p-3 text-center">Tiempo Muerto Promedio</th><th class="p-3 text-center">Tiempo Muerto Máximo</th><th class="p-3 text-center">Tiempo Muerto Total (Suma)</th></tr></thead>
-                            <tbody id="dead-times-tbody" class="divide-y divide-gray-100"></tbody>
-                        </table>
+            <div id="section-tiempos" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-6 animate-slide-up" style="display: none;">
+                <!-- 1. ARRIBA: Actividad y Tiempos Muertos por Ruta -->
+                <div id="dt-chart-card-container" class="dead-times-chart-box space-y-3">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-2.5 border-b border-gray-200/70">
+                        <div>
+                            <h4 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line estafeta-red-text"></i>
+                                Actividad y Tiempos Muertos por Ruta
+                            </h4>
+                            </div>
+                        <div class="flex flex-wrap items-center gap-2 text-[11px]">
+                            <div class="inline-flex rounded-lg bg-gray-100 p-0.5 border border-gray-200" id="dt-layout-toggle-group">
+                                <button type="button" id="btn-dt-layout-overlay" onclick="setDeadTimesChartLayout('overlay')" class="px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition">Superpuesto</button>
+                                <button type="button" id="btn-dt-layout-side" onclick="setDeadTimesChartLayout('side')" class="px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition">Lado a lado</button>
+                            </div>
+                            <div class="inline-flex rounded-lg bg-gray-100 p-0.5 border border-gray-200" id="dt-overlay-type-group">
+                                <button type="button" id="btn-dt-type-bar" onclick="setDeadTimesOverlayChartType('bar')" class="px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition flex items-center gap-1"><i class="fa-solid fa-chart-column text-[10px]"></i> Barras</button>
+                                <button type="button" id="btn-dt-type-line" onclick="setDeadTimesOverlayChartType('line')" class="px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition flex items-center gap-1"><i class="fa-solid fa-chart-line text-[10px]"></i> Líneas</button>
+                            </div>
+                            <select id="dt-chart-metric-select" onchange="onDeadTimesMetricChange()" class="bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-xs cursor-pointer">
+                                <option value="all">Máximo + Promedio + Total (hrs)</option>
+                                <option value="max">Solo Tiempo Máximo (hrs)</option>
+                                <option value="avg">Solo Tiempo Promedio (hrs)</option>
+                                <option value="total">Solo Tiempo Total (hrs)</option>
+                                <option value="events">Solo Eventos (cantidad)</option>
+                            </select>
+
+                            <!-- Filtro de Ruta con Checkboxes para comparar -->
+                            <div class="relative" id="dt-route-checklist-wrapper">
+                                <button type="button" onclick="toggleDtRouteDropdown(event)" id="btn-dt-route-dropdown" class="flex items-center gap-1.5 bg-white border border-gray-200 hover:border-red-300 rounded-lg px-2.5 py-1 shadow-xs font-bold text-gray-800 cursor-pointer transition">
+                                    <i class="fa-solid fa-list-check estafeta-red-text"></i>
+                                    <span id="dt-route-dropdown-label">Rutas: Todas</span>
+                                    <i class="fa-solid fa-chevron-down text-[10px] text-gray-400"></i>
+                                </button>
+                                <div id="dt-route-dropdown-panel" class="hidden absolute right-0 mt-1.5 w-72 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl shadow-2xl p-3 z-50 space-y-2">
+                                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-1.5">
+                                        <span class="text-[11px] font-bold text-gray-700 dark:text-slate-200">Comparar Rutas (Checks)</span>
+                                        <div class="flex items-center gap-2 text-[10px] font-bold">
+                                            <button type="button" onclick="setAllDtChartRoutes(true)" class="text-red-600 hover:underline">Todas</button>
+                                            <span class="text-gray-300">|</span>
+                                            <button type="button" onclick="setAllDtChartRoutes(false)" class="text-gray-500 hover:underline">Ninguna</button>
+                                        </div>
+                                    </div>
+                                    <input type="text" id="dt-route-check-search" oninput="renderDtRouteChecklist()" placeholder="Buscar ruta..." class="w-full px-2.5 py-1 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500">
+                                    <div id="dt-route-checklist-items" class="max-h-52 overflow-y-auto space-y-1 pr-1"></div>
+                                </div>
+                            </div>
+
+                            <button type="button" onclick="toggleDtChartFullscreen()" id="btn-dt-chart-fullscreen" title="Pantalla completa" class="px-2.5 py-1 rounded-lg bg-white hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-200 shadow-xs font-bold flex items-center gap-1.5 transition">
+                                <i id="icon-dt-chart-fullscreen" class="fa-solid fa-expand"></i>
+                                
+                            </button>
+
+                            <button type="button" onclick="resetDeadTimesChartControls()" title="Restablecer vista de gráfica" class="px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200 transition">
+                                <i class="fa-solid fa-rotate-right"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div id="dead-times-pagination-container" class="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-600 gap-3">
-                        <div id="dead-times-pagination-info" class="font-medium">Mostrando página <span id="dt-current-page-num" class="font-bold text-gray-800">1</span> de <span id="dt-total-pages-num" class="font-bold text-gray-800">1</span></div>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="changeDeadTimesPage(-1)" class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 font-semibold text-gray-700 shadow-sm transition-all flex items-center space-x-1"><i class="fa-solid fa-chevron-left text-[10px]"></i><span>Anterior</span></button>
-                            <button onclick="changeDeadTimesPage(1)" class="px-3 py-1.5 estafeta-red text-white rounded-lg hover:bg-red-700 font-semibold shadow-sm transition-all flex items-center space-x-1"><span>Siguiente</span><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+
+                    <!-- Pestañas para ver todas las rutas en pantalla completa / lado a lado -->
+                    <div id="dt-side-tabs-bar" class="hidden flex-wrap items-center justify-between gap-2 bg-gray-50 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-1.5">
+                        <div id="dt-side-tabs-buttons" class="flex flex-wrap items-center gap-1.5"></div>
+                        <span id="dt-side-tabs-info" class="text-[11px] font-semibold text-gray-500"></span>
+                    </div>
+
+                    <div id="dt-chart-overlay-wrapper" class="relative w-full" style="height: 330px;">
+                        <canvas id="deadTimesChartCanvas"></canvas>
+                    </div>
+                    <div id="dt-chart-side-grid" class="hidden grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 pt-1"></div>
+                </div>
+
+                <!-- 2. ABAJO: Tabla Tiempos Muertos entre Entregas -->
+                <div class="space-y-4">
+                    <div class="flex flex-wrap justify-between items-center gap-2 pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
+                        <div class="flex items-center space-x-2.5"><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-clock estafeta-red-text mr-1.5"></i> Tiempos Muertos entre Entregas</h3></div>
+                        <div class="flex items-center gap-2">
+                            <label for="dt-table-page-size" class="text-[11px] font-bold text-gray-600">Ver:</label>
+                            <select id="dt-table-page-size" onchange="changeDeadTimesPageSize(this.value)" class="bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs font-bold text-gray-700 shadow-xs cursor-pointer">
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="40">40</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="dead-times-section-body" class="space-y-5 pt-1">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-gray-600 border-collapse">
+                                <thead><tr class="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase"><th class="p-3">#</th><th class="p-3">Ruta</th><th class="p-3 text-center">Total Eventos</th><th class="p-3 text-center">Tiempo Muerto Promedio</th><th class="p-3 text-center">Tiempo Muerto Máximo</th><th class="p-3 text-center">Tiempo Muerto Total (Suma)</th></tr></thead>
+                                <tbody id="dead-times-tbody" class="divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+                        <div id="dead-times-pagination-container" class="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-600 gap-3">
+                            <div id="dead-times-pagination-info" class="font-medium">Pestaña <span id="dt-current-page-num" class="font-bold text-gray-800">1</span> de <span id="dt-total-pages-num" class="font-bold text-gray-800">1</span></div>
+                            <div id="dt-tabs-container" class="flex flex-wrap items-center gap-1.5"></div>
                         </div>
                     </div>
                 </div>
@@ -497,8 +790,8 @@
                             <button onclick="toggleCronoProgramadaVisibility()" id="btn-toggle-crono-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="crono-prog-toggle-icon"></i><span id="crono-prog-toggle-text">Ocultar Programadas</span></button>
                             <div class="relative w-full sm:w-56">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span>
-                                <input type="text" id="crono-advanced-search" placeholder="Buscador cronológico (ej. guía, OR)..." class="w-full pl-9 pr-14 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
-                                <button id="btn-crono-search-reset" onclick="clearSearchInput('crono-advanced-search', 'btn-crono-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
+                                <input type="text" id="crono-advanced-search" placeholder="Buscador cronológico (ej. guía, OR)..." class="w-full pl-9 pr-7 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
+                                <button id="btn-crono-search-reset" onclick="clearSearchInput('crono-advanced-search', 'btn-crono-search-reset')" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-500/15 hover:bg-red-500/20 text-gray-500 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center text-[11px] backdrop-blur-xs transition-all duration-200"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                             <div class="flex items-center space-x-2 bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs shadow-sm"><label for="crono-sort-select" class="font-semibold text-gray-600 flex items-center"><i class="fa-solid fa-arrow-down-wide-short estafeta-red-text mr-1.5"></i>Ordenar:</label><select id="crono-sort-select" onchange="onCronoSortChange()" class="bg-transparent font-medium text-gray-800 focus:outline-none cursor-pointer"><option value="desc">Mayor a Menor</option><option value="asc">Menor a Mayor</option></select></div>
                         </div>
@@ -527,7 +820,7 @@
                 </div>
             </div>
 
-            <!-- =================== TIMELINE (con Query by Route + Waybill) =================== -->
+            <!-- =================== TIMELINE =================== -->
             <div id="section-timeline" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up" style="display: none;">
                 <div id="timeline-section-card" class="bg-white p-6 rounded-xl shadow-sm space-y-4 border border-gray-200/90">
                     <div class="flex justify-between items-center pb-3 border-b border-gray-100 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200">
@@ -538,41 +831,35 @@
                         </div>
                     </div>
                     <div id="timeline-section-body" class="space-y-4 pt-2">
-                        <div class="bg-gray-50 border border-gray-200/60 rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-500">
-                            <div class="flex flex-wrap items-center gap-3">
-                                <span class="text-gray-600 font-medium">Filtros:</span>
-                                <div class="flex items-center space-x-2">
-                                    <button onclick="openCustomFilterModal('timeline-ruta')" title="Filtrar Ruta" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
-                                    <button onclick="openCustomFilterModal('timeline-garantia')" title="Filtrar Garantía" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
-                                </div>
-                                <div id="timeline-status-filters-container" class="flex flex-wrap items-center gap-1.5 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
-                                    <button onclick="setTimelineStatusFilter('ALL')" id="btn-timeline-status-all" class="px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm">Todos</button>
-                                    <button onclick="setTimelineStatusFilter('CONFIRMADO')" id="btn-timeline-status-confirmado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Confirmados</button>
-                                    <button onclick="setTimelineStatusFilter('EXCEPCIONADO')" id="btn-timeline-status-excepcionado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Excepcionados</button>
-                                    <button onclick="setTimelineStatusFilter('PENDIENTE')" id="btn-timeline-status-pendiente" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Pendientes</button>
-                                    <button onclick="setTimelineStatusFilter('ENRUTADO')" id="btn-timeline-status-enrutado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Enrutados</button>
-                                    <button onclick="setTimelineStatusFilter('RECOLECTADO')" id="btn-timeline-status-recolectado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Recolectados</button>
-                                </div>
-                                <button onclick="toggleTimelineProgramadaVisibility()" id="btn-toggle-timeline-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="timeline-prog-toggle-icon"></i><span id="timeline-prog-toggle-text">Ocultar Programadas</span></button>
-
-                                <!-- NUEVO: Query by Route + Waybill con botones Reset -->
-                                <div class="relative w-full sm:w-40">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-route text-xs"></i></span>
-                                    <input type="text" id="timeline-route-query" placeholder="Ruta..." class="w-full pl-9 pr-14 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
-                                    <button id="btn-route-query-reset" onclick="clearSearchInput('timeline-route-query', 'btn-route-query-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
-                                </div>
-                                <div class="relative w-full sm:w-48">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-barcode text-xs"></i></span>
-                                    <input type="text" id="timeline-waybill-query" placeholder="Guía / OR..." class="w-full pl-9 pr-14 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
-                                    <button id="btn-waybill-query-reset" onclick="clearSearchInput('timeline-waybill-query', 'btn-waybill-query-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
-                                </div>
-                                <!-- FIN NUEVO -->
-
-                                <div class="relative w-full sm:w-48">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span>
-                                    <input type="text" id="timeline-advanced-search" placeholder="Buscar texto..." class="w-full pl-9 pr-14 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
-                                    <button id="btn-timeline-search-reset" onclick="clearSearchInput('timeline-advanced-search', 'btn-timeline-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
-                                </div>
+                        <div class="bg-gray-50 border border-gray-200/60 rounded-lg px-3 py-2 flex items-center gap-1.5 text-xs text-gray-500 overflow-x-auto horizontal-scroll-container">
+                            <span class="text-gray-600 font-medium whitespace-nowrap flex-shrink-0">Filtros:</span>
+                            <div class="flex items-center space-x-1 flex-shrink-0">
+                                <button onclick="openCustomFilterModal('timeline-ruta')" title="Filtrar Ruta" class="w-7 h-7 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-[11px]"></i></button>
+                                <button onclick="openCustomFilterModal('timeline-garantia')" title="Filtrar Garantía" class="w-7 h-7 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-[11px]"></i></button>
+                            </div>
+                            <div id="timeline-status-filters-container" class="flex items-center gap-1 bg-white p-0.5 rounded-xl border border-gray-200 shadow-sm flex-shrink-0">
+                                <button onclick="setTimelineStatusFilter('ALL')" id="btn-timeline-status-all" class="px-2 py-1 text-[11px] font-bold rounded-lg estafeta-red text-white transition-all shadow-sm whitespace-nowrap">Todos</button>
+                                <button onclick="setTimelineStatusFilter('CONFIRMADO')" id="btn-timeline-status-confirmado" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all whitespace-nowrap">Confirmados</button>
+                                <button onclick="setTimelineStatusFilter('EXCEPCIONADO')" id="btn-timeline-status-excepcionado" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all whitespace-nowrap">Excepcionados</button>
+                                <button onclick="setTimelineStatusFilter('PENDIENTE')" id="btn-timeline-status-pendiente" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all whitespace-nowrap">Pendientes</button>
+                                <button onclick="setTimelineStatusFilter('ENRUTADO')" id="btn-timeline-status-enrutado" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all whitespace-nowrap">Enrutados</button>
+                                <button onclick="setTimelineStatusFilter('RECOLECTADO')" id="btn-timeline-status-recolectado" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all whitespace-nowrap">Recolectados</button>
+                            </div>
+                            <button onclick="toggleTimelineProgramadaVisibility()" id="btn-toggle-timeline-prog" class="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1 shadow-sm whitespace-nowrap flex-shrink-0"><i class="fa-solid fa-calendar-check text-[10px]" id="timeline-prog-toggle-icon"></i><span id="timeline-prog-toggle-text">Ocultar Programadas</span></button>
+                            <div class="relative w-24 xl:w-28 flex-shrink-0">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-gray-400"><i class="fa-solid fa-route text-[11px]"></i></span>
+                                <input type="text" id="timeline-route-query" placeholder="Ruta..." class="w-full pl-7 pr-6 py-1 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-[11px] shadow-sm">
+                                <button id="btn-route-query-reset" onclick="clearSearchInput('timeline-route-query', 'btn-route-query-reset')" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-gray-500/15 hover:bg-red-500/20 text-gray-500 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center text-[10px] backdrop-blur-xs transition-all duration-200"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <div class="relative w-28 xl:w-32 flex-shrink-0">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-gray-400"><i class="fa-solid fa-barcode text-[11px]"></i></span>
+                                <input type="text" id="timeline-waybill-query" placeholder="Guía / OR..." class="w-full pl-7 pr-6 py-1 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-[11px] shadow-sm">
+                                <button id="btn-waybill-query-reset" onclick="clearSearchInput('timeline-waybill-query', 'btn-waybill-query-reset')" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-gray-500/15 hover:bg-red-500/20 text-gray-500 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center text-[10px] backdrop-blur-xs transition-all duration-200"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <div class="relative w-28 xl:w-32 flex-shrink-0">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-[11px]"></i></span>
+                                <input type="text" id="timeline-advanced-search" placeholder="Buscar texto..." class="w-full pl-7 pr-6 py-1 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-[11px] shadow-sm">
+                                <button id="btn-timeline-search-reset" onclick="clearSearchInput('timeline-advanced-search', 'btn-timeline-search-reset')" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-gray-500/15 hover:bg-red-500/20 text-gray-500 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center text-[10px] backdrop-blur-xs transition-all duration-200"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         </div>
                         <div id="timeline-grid-container" class="horizontal-scroll-container flex space-x-4 overflow-x-auto pb-4 pt-1 w-full"></div>
@@ -589,11 +876,11 @@
                                 <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                                     <div class="relative w-full sm:w-64">
                                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-red-500"><i class="fa-solid fa-filter text-sm"></i></span>
-                                        <input type="text" id="sequence-search-input" placeholder="Filtrar secuencia Ej: 1, 3, 5" class="w-full pl-9 pr-14 py-1.5 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium transition-all">
-                                        <button id="btn-sequence-search-reset" onclick="clearSearchInput('sequence-search-input', 'btn-sequence-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
+                                        <input type="text" id="sequence-search-input" placeholder="Filtrar secuencia Ej: 1, 3, 5" class="w-full pl-9 pr-7 py-1.5 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium transition-all">
+                                        <button id="btn-sequence-search-reset" onclick="clearSearchInput('sequence-search-input', 'btn-sequence-search-reset')" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-500/15 hover:bg-red-500/20 text-gray-500 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center text-[11px] backdrop-blur-xs transition-all duration-200"><i class="fa-solid fa-xmark"></i></button>
                                     </div>
                                     <button id="toggle-lines-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm"><i id="lines-icon" class="fa-solid fa-eye-slash"></i><span id="lines-text">Mostrar Líneas</span></button>
-                                    <button id="toggle-fullscreen-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm"><i id="fullscreen-icon" class="fa-solid fa-expand"></i><span id="fullscreen-text">Pantalla Completa</span></button>
+                                    <button id="toggle-fullscreen-btn" title="Pantalla completa" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 w-9 h-9 rounded-lg text-sm font-medium transition-all flex items-center justify-center shadow-sm"><i id="fullscreen-icon" class="fa-solid fa-expand"></i></button>
                                 </div>
                             </div>
                             <div id="map" class="h-96 rounded-lg w-full z-10"></div>
@@ -609,26 +896,38 @@
                         <div class="flex items-center space-x-2.5 flex-grow"><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center"><i class="fa-solid fa-map-location-dot estafeta-red-text mr-1.5"></i> Mapa GPS</h3></div>
                         <div class="flex items-center space-x-3">
                             <span class="font-semibold text-gray-700 text-xs bg-red-50 estafeta-red-text px-3 py-1 rounded-full"><span id="gps-map-row-count">0</span> ubicaciones</span>
-                            <button onclick="toggleGpsMapFullscreen(event)" id="gps-map-fullscreen-btn" title="Pantalla completa" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i id="gps-map-fullscreen-icon" class="fa-solid fa-expand text-xs"></i></button>
                         </div>
                     </div>
                     <div id="gps-map-section-body" class="space-y-4 pt-2">
-                        <div class="bg-gray-50 border border-gray-200/60 rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-500">
-                            <div class="flex flex-wrap items-center gap-3">
-                                <span class="text-gray-600 font-medium">Filtros:</span>
-                                <div class="flex items-center space-x-2">
-                                    <button onclick="openCustomFilterModal('map-ruta')" title="Filtrar Ruta" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
-                                    <button onclick="openCustomFilterModal('map-garantia')" title="Filtrar Garantía" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
-                                </div>
-                                <div id="map-status-filters-container" class="flex flex-wrap items-center gap-1.5 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
-                                    <button onclick="setMapStatusFilter('ALL')" id="btn-map-status-all" class="px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm">Todos</button>
-                                    <button onclick="setMapStatusFilter('CONFIRMADO')" id="btn-map-status-confirmado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Confirmados</button>
-                                    <button onclick="setMapStatusFilter('EXCEPCIONADO')" id="btn-map-status-excepcionado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Excepcionados</button>
-                                    <button onclick="setMapStatusFilter('PENDIENTE')" id="btn-map-status-pendiente" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Pendientes</button>
-                                    <button onclick="setMapStatusFilter('ENRUTADO')" id="btn-map-status-enrutado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Enrutados</button>
-                                    <button onclick="setMapStatusFilter('RECOLECTADO')" id="btn-map-status-recolectado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Recolectados</button>
-                                </div>
-                                <button onclick="toggleMapProgramadaVisibility()" id="btn-toggle-map-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="map-prog-toggle-icon"></i><span id="map-prog-toggle-text">Ocultar Programadas</span></button>
+                        <div class="bg-gray-50 border border-gray-200/60 rounded-lg px-3 py-2 flex items-center gap-1.5 text-xs text-gray-500 overflow-x-auto horizontal-scroll-container">
+                            <span class="text-gray-600 font-medium whitespace-nowrap flex-shrink-0">Filtros:</span>
+                            <div class="flex items-center space-x-1 flex-shrink-0">
+                                <button onclick="openCustomFilterModal('map-ruta')" title="Filtrar Ruta" class="w-7 h-7 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-[11px]"></i></button>
+                                <button onclick="openCustomFilterModal('map-garantia')" title="Filtrar Garantía" class="w-7 h-7 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-[11px]"></i></button>
+                            </div>
+                            <div id="map-status-filters-container" class="flex items-center gap-1 bg-white p-0.5 rounded-xl border border-gray-200 shadow-sm flex-shrink-0">
+                                <button onclick="setMapStatusFilter('ALL')" id="btn-map-status-all" class="px-2 py-1 text-[11px] font-bold rounded-lg estafeta-red text-white transition-all shadow-sm whitespace-nowrap">Todos</button>
+                                <button onclick="setMapStatusFilter('CONFIRMADO')" id="btn-map-status-confirmado" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all whitespace-nowrap">Confirmados</button>
+                                <button onclick="setMapStatusFilter('EXCEPCIONADO')" id="btn-map-status-excepcionado" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all whitespace-nowrap">Excepcionados</button>
+                                <button onclick="setMapStatusFilter('PENDIENTE')" id="btn-map-status-pendiente" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all whitespace-nowrap">Pendientes</button>
+                                <button onclick="setMapStatusFilter('ENRUTADO')" id="btn-map-status-enrutado" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all whitespace-nowrap">Enrutados</button>
+                                <button onclick="setMapStatusFilter('RECOLECTADO')" id="btn-map-status-recolectado" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all whitespace-nowrap">Recolectados</button>
+                            </div>
+                            <button onclick="toggleMapProgramadaVisibility()" id="btn-toggle-map-prog" class="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1 shadow-sm whitespace-nowrap flex-shrink-0"><i class="fa-solid fa-calendar-check text-[10px]" id="map-prog-toggle-icon"></i><span id="map-prog-toggle-text">Ocultar Programadas</span></button>
+                            <div class="relative w-24 xl:w-28 flex-shrink-0">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-gray-400"><i class="fa-solid fa-route text-[11px]"></i></span>
+                                <input type="text" id="map-route-query" placeholder="Ruta..." class="w-full pl-7 pr-6 py-1 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-[11px] shadow-sm">
+                                <button id="btn-map-route-query-reset" onclick="clearSearchInput('map-route-query', 'btn-map-route-query-reset')" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-gray-500/15 hover:bg-red-500/20 text-gray-500 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center text-[10px] backdrop-blur-xs transition-all duration-200"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <div class="relative w-28 xl:w-32 flex-shrink-0">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-gray-400"><i class="fa-solid fa-barcode text-[11px]"></i></span>
+                                <input type="text" id="map-waybill-query" placeholder="Guía / OR..." class="w-full pl-7 pr-6 py-1 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-[11px] shadow-sm">
+                                <button id="btn-map-waybill-query-reset" onclick="clearSearchInput('map-waybill-query', 'btn-map-waybill-query-reset')" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-gray-500/15 hover:bg-red-500/20 text-gray-500 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center text-[10px] backdrop-blur-xs transition-all duration-200"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <div class="relative w-28 xl:w-32 flex-shrink-0">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-[11px]"></i></span>
+                                <input type="text" id="map-text-search" placeholder="Buscar texto..." class="w-full pl-7 pr-6 py-1 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-[11px] shadow-sm">
+                                <button id="btn-map-text-search-reset" onclick="clearSearchInput('map-text-search', 'btn-map-text-search-reset')" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-gray-500/15 hover:bg-red-500/20 text-gray-500 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center text-[10px] backdrop-blur-xs transition-all duration-200"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         </div>
 
@@ -636,13 +935,7 @@
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                                 <h3 class="text-base font-bold text-gray-800 flex items-center"><i class="fa-solid fa-map-location-dot estafeta-red-text mr-2"></i> Secuencia Cronológica y Ubicaciones en Mapa GPS</h3>
                                 <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                                    <div class="relative w-full sm:w-64">
-                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-red-500"><i class="fa-solid fa-filter text-sm"></i></span>
-                                        <input type="text" id="map-advanced-search" placeholder="Filtrar secuencia Ej: 1, 3, 5" class="w-full pl-9 pr-14 py-1.5 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium transition-all">
-                                        <button id="btn-map-search-reset" onclick="clearSearchInput('map-advanced-search', 'btn-map-search-reset')" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">Reset</button>
-                                    </div>
                                     <button id="toggle-gps-lines-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm"><i id="gps-lines-icon" class="fa-solid fa-eye-slash"></i><span id="gps-lines-text">Mostrar Líneas</span></button>
-                                    <button id="toggle-gps-fullscreen-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm"><i id="gps-fullscreen-icon" class="fa-solid fa-expand"></i><span id="gps-fullscreen-text">Pantalla Completa</span></button>
                                 </div>
                             </div>
                             <div id="gps-map" class="h-96 rounded-lg w-full z-10"></div>
@@ -653,18 +946,24 @@
         </div>
     </main>
 
-    <div id="card-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+    <div id="card-modal" style="z-index: 100005;" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 relative animate-in fade-in zoom-in duration-200">
             <div class="flex justify-between items-center pb-3 border-b border-gray-100">
                 <div class="flex items-center space-x-2"><i class="fa-solid fa-barcode estafeta-red-text text-lg"></i><h3 id="modal-title" class="text-sm font-bold text-gray-800">Guía</h3></div>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 p-1.5 rounded-full transition-all"><i class="fa-solid fa-xmark text-xs"></i></button>
             </div>
             <div id="modal-body" class="space-y-2 max-h-[70vh] overflow-y-auto pr-2 text-xs"></div>
-            <div class="pt-2 border-t border-gray-100 flex justify-end"><button onclick="closeModal()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold rounded-lg text-xs transition-all">Cerrar</button></div>
+            <div id="modal-footer-actions" class="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                <button id="modal-qr-btn" onclick="openModalRecordQR()" class="px-4 py-2 estafeta-red hover:bg-red-700 text-white font-bold rounded-lg text-xs shadow-sm transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <span>QR</span>
+                </button>
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold rounded-lg text-xs transition-all">Cerrar</button>
+            </div>
         </div>
     </div>
 
-    <div id="qr-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+    <div id="qr-modal" style="z-index: 100005;" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-xs rounded-2xl p-5 shadow-2xl space-y-4 text-center relative animate-in fade-in zoom-in duration-200">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h3 id="qr-modal-title" class="font-bold text-sm flex items-center gap-2">Código QR</h3>
@@ -706,7 +1005,7 @@
     <div class="fixed bottom-6 left-6 z-30 hidden" id="floating-plaza-container">
         <button onclick="openPlazaModal()" class="bg-red-600 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-sm font-semibold hover:bg-red-700 transition">
             <i class="fas fa-map-marked-alt"></i>
-            <span id="btn-text">Plazas (0)</span>
+            <span id="btn-text">Plazas</span>
         </button>
     </div>
 
@@ -733,7 +1032,7 @@
             <span id="notif-panel-title">Notificaciones del Sistema</span>
             <button onclick="togglePanel()"><i class="fas fa-times"></i></button>
         </div>
-        <div class="p-3 text-xs space-y-2 max-h-60 overflow-y-auto" id="notif-list">
+        <div class="p-3 text-xs space-y-2 max-h-60 overflow-y-auto notif-panel-body" id="notif-list">
             <div class="notif-empty"><i class="fa-solid fa-bell-slash"></i><span>Sin notificaciones recientes</span></div>
         </div>
         <div class="notif-panel-footer">
@@ -814,7 +1113,6 @@
         let routeLinesLayer = null;
         let showRouteLines = false;
 
-        // NUEVO: Query by Route + Waybill
         let timelineRouteQuery = '';
         let timelineWaybillQuery = '';
 
@@ -831,8 +1129,13 @@
         let currentPage = 1;
         const itemsPerPage = 20;
         let deadTimesCurrentPage = 1;
-        const deadTimesPerPage = 10;
+        let deadTimesPerPage = 10;
+        let avanceRouteCurrentPage = 1;
+        let avanceRoutePerPage = 10;
+        let cachedAvanceRouteList = [];
         let cachedDeadTimesList = [];
+        let deadTimesChartInstance = null;
+
         let cronoCurrentPage = 1;
         const cronoPerPage = 10;
         let cachedCronoList = [];
@@ -859,16 +1162,16 @@
         ];
 
         /* =====================================================================
-           NOTIFICACIONES
+           NOTIFICACIONES (TOASTS DE 3 SEGUNDOS + HISTORIAL EN CAMPANA)
            ===================================================================== */
-        function addNotification(title, message, type = 'info') {
+        function addNotification(title, message, type = 'info', durationMs = 3000) {
             notificationsList.unshift({
                 title, message, type,
-                time: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'}),
+                time: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit', second:'2-digit'}),
                 unread: true
             });
             renderNotifications();
-            showToast(title, message, type);
+            showToast(title, message, type, durationMs);
         }
 
         function renderNotifications() {
@@ -907,7 +1210,7 @@
             listContainer.innerHTML = html;
         }
 
-        function showToast(title, message, type = 'info') {
+        function showToast(title, message, type = 'info', durationMs = 3000) {
             const toastContainer = document.getElementById('notif-toast-container');
             if (!toastContainer) return;
             let iconClass = 'fa-circle-info';
@@ -923,19 +1226,149 @@
                     <div class="notif-toast-msg">${esc(message)}</div>
                 </div>
                 <button class="notif-toast-close" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
-                <div class="notif-toast-progress" style="animation-duration: 3s;"></div>`;
+                <div class="notif-toast-progress" style="animation-duration: ${durationMs}ms;"></div>`;
             toastContainer.appendChild(toast);
             setTimeout(() => {
                 if (toast.parentElement) {
                     toast.classList.add('removing');
-                    setTimeout(() => toast.remove(), 300);
+                    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 300);
                 }
-            }, 3000);
+            }, durationMs);
         }
 
         function markAllAsRead() { notificationsList.forEach(n => n.unread = false); renderNotifications(); }
         function clearNotifHistory() { notificationsList = []; renderNotifications(); }
-        function togglePanel() { document.getElementById('notif-panel').classList.toggle('show'); }
+        function togglePanel() {
+            const panel = document.getElementById('notif-panel');
+            panel.classList.toggle('show');
+            if (panel.classList.contains('show')) {
+                markAllAsRead();
+            }
+        }
+
+        function generateUploadSummaryToasts(data) {
+            if (!data || !data.length) return;
+
+            const routeDeadTimeMap = {};
+            const routeExceptionMap = {};
+            let pendingCount = 0;
+            let pickupCount = 0;
+            let confirmedCount = 0;
+            let exceptionTotalCount = 0;
+            let validCoordsCount = 0;
+            const plazasSet = new Set();
+
+            const groupedByRoute = {};
+            data.forEach(r => {
+                const ruta = String(r[routeKeyName] ?? 'N/D').trim() || 'N/D';
+                const st = String(r[statusKeyName] ?? '').trim().toUpperCase();
+                const gVal = String(r[guideKeyName] ?? '').trim().toUpperCase();
+                const progVal = progKeyName ? String(r[progKeyName] ?? '').trim().toUpperCase() : '';
+
+                if (plazaKeyName && r[plazaKeyName]) plazasSet.add(String(r[plazaKeyName]).trim());
+                if (coordKeyName && parseCoordinates(r[coordKeyName])) validCoordsCount++;
+
+                const isPickup = gVal.startsWith('OR') ||
+                                 st.includes('RECOLECT') ||
+                                 st.includes('RECOLECCION') ||
+                                 st.includes('RECOLECCIÓN') ||
+                                 progVal.includes('RECOLECT') ||
+                                 progVal.includes('RECOLECCION') ||
+                                 progVal.includes('RECOLECCIÓN');
+                if (isPickup) pickupCount++;
+
+                if (st.includes('PENDIENT')) {
+                    pendingCount++;
+                } else if (st.includes('CONFIRMAD')) {
+                    confirmedCount++;
+                } else if (st.includes('EXCEPCION')) {
+                    exceptionTotalCount++;
+                    routeExceptionMap[ruta] = (routeExceptionMap[ruta] || 0) + 1;
+                }
+
+                if (eventTimeKeyName && r[eventTimeKeyName]) {
+                    const dt = new Date(r[eventTimeKeyName]);
+                    if (!isNaN(dt.getTime()) && !isMidnightEvent(dt)) {
+                        if (!groupedByRoute[ruta]) groupedByRoute[ruta] = [];
+                        groupedByRoute[ruta].push(dt.getTime());
+                    }
+                }
+            });
+
+            for (const ruta in groupedByRoute) {
+                const times = groupedByRoute[ruta].sort((a, b) => a - b);
+                let totalDiff = 0;
+                let maxDiff = 0;
+                for (let i = 1; i < times.length; i++) {
+                    const diff = times[i] - times[i - 1];
+                    if (diff >= 0) {
+                        totalDiff += diff;
+                        if (diff > maxDiff) maxDiff = diff;
+                    }
+                }
+                routeDeadTimeMap[ruta] = {
+                    totalMs: totalDiff,
+                    maxMs: maxDiff
+                };
+            }
+
+            const top3DeadRoutes = Object.entries(routeDeadTimeMap)
+                .filter(([, obj]) => obj.totalMs > 0)
+                .sort((a, b) => b[1].totalMs - a[1].totalMs)
+                .slice(0, 3);
+
+            const top3ExceptionRoutes = Object.entries(routeExceptionMap)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3);
+
+            // Toast 1: Resumen General del Excel
+            addNotification(
+                "1. Resumen de Carga Excel",
+                `Total: ${data.length.toLocaleString()} registros · ${plazasSet.size} plazas · ${validCoordsCount.toLocaleString()} GPS\nConfirmados: ${confirmedCount.toLocaleString()} · Excepciones: ${exceptionTotalCount.toLocaleString()}`,
+                "success",
+                3000
+            );
+
+            // Toast 2: Top 3 Rutas con Mayor Tiempo Muerto
+            const top3DeadMsg = top3DeadRoutes.length > 0
+                ? top3DeadRoutes.map(([ruta, info], i) => `${i + 1}. ${ruta} — Total: ${formatDuration(info.totalMs)} (Máx: ${formatDuration(info.maxMs)})`).join('\n')
+                : "Sin intervalos de tiempo muerto calculables en las rutas.";
+            addNotification(
+                "2. Top 3 Rutas Mayor Tiempo Muerto",
+                top3DeadMsg,
+                "warning",
+                3000
+            );
+
+            // Toast 3: Top 3 Rutas con Mayor Excepción
+            const top3ExcMsg = top3ExceptionRoutes.length > 0
+                ? top3ExceptionRoutes.map(([ruta, cnt], i) => `${i + 1}. ${ruta} — ${cnt.toLocaleString()} excepciones`).join('\n')
+                : "No se registraron rutas con excepciones.";
+            addNotification(
+                "3. Top 3 Rutas Mayor Excepción",
+                top3ExcMsg,
+                "danger",
+                3000
+            );
+
+            // Toast 4: Paquetes Pendientes / Faltantes
+            const pctPend = data.length > 0 ? ((pendingCount / data.length) * 100).toFixed(1) : '0.0';
+            addNotification(
+                "4. Paquetes en Pendientes",
+                `Faltan / Pendientes por entregar: ${pendingCount.toLocaleString()} paquetes (${pctPend}% del total).`,
+                "warning",
+                3000
+            );
+
+            // Toast 5: Total de Recolecciones
+            const pctPick = data.length > 0 ? ((pickupCount / data.length) * 100).toFixed(1) : '0.0';
+            addNotification(
+                "5. Total de Recolecciones",
+                `Recolecciones / Órdenes (OR) detectadas: ${pickupCount.toLocaleString()} (${pctPick}% del total).`,
+                "info",
+                3000
+            );
+        }
 
         /* =====================================================================
            CARGA DE ARCHIVO
@@ -1109,6 +1542,7 @@
                 });
             }
 
+            dtChartRoutesInitialized = false;
             initSelections();
 
             document.getElementById('file-status').innerText = fileName;
@@ -1119,44 +1553,7 @@
             renderPlazaFilterList();
             updateDashboard();
 
-            let totalRegs = rawData.length;
-            let confCount = 0, excCount = 0, pendCount = 0, orCount = 0;
-            rawData.forEach(r => {
-                const st = String(r[statusKeyName] || '').trim().toUpperCase();
-                const gVal = String(r[guideKeyName] || '').trim().toUpperCase();
-                if (gVal.startsWith('OR')) orCount++;
-                if (st.includes('CONFIRMAD')) confCount++;
-                else if (st.includes('EXCEPCION')) excCount++;
-                else if (st.includes('PENDIENT')) pendCount++;
-            });
-            const pConf = totalRegs > 0 ? ((confCount / totalRegs) * 100).toFixed(1) : 0;
-            const pExc = totalRegs > 0 ? ((excCount / totalRegs) * 100).toFixed(1) : 0;
-            const pPend = totalRegs > 0 ? ((pendCount / totalRegs) * 100).toFixed(1) : 0;
-            addNotification(
-                "Archivo procesado con éxito",
-                `Se cargaron ${totalRegs.toLocaleString()} registros.\n• Confirmados: ${pConf}% (${confCount.toLocaleString()})\n• Excepcionados: ${pExc}% (${excCount.toLocaleString()})\n• Pendientes: ${pPend}% (${pendCount.toLocaleString()})\n• OR: ${orCount.toLocaleString()}`,
-                "success"
-            );
-
-            if (cachedDeadTimesList && cachedDeadTimesList.length > 0) {
-                const topRoute = cachedDeadTimesList[0];
-                let allDiffsSum = 0, allDiffsCount = 0;
-                cachedDeadTimesList.forEach(item => { allDiffsSum += item.total; allDiffsCount += item.count; });
-                const generalAvg = allDiffsCount > 0 ? allDiffsSum / allDiffsCount : 0;
-                addNotification(
-                    "Alerta de tiempos muertos",
-                    `Ruta con mayor tiempo muerto: ${topRoute.ruta}\nTiempo máximo: ${formatDuration(topRoute.max)}\nPromedio general: ${formatDuration(generalAvg)}`,
-                    "warning"
-                );
-            }
-
-            let validCoordsCount = 0;
-            let plazasSet = new Set();
-            rawData.forEach(r => {
-                if (coordKeyName && parseCoordinates(r[coordKeyName])) validCoordsCount++;
-                if (plazaKeyName && r[plazaKeyName]) plazasSet.add(String(r[plazaKeyName]));
-            });
-            addNotification("Sincronización GPS", `Se mapearon ${validCoordsCount.toLocaleString()} ubicaciones en ${plazasSet.size} plazas.`, "info");
+            generateUploadSummaryToasts(rawData);
 
             setTimeout(() => {
                 const firstBtn = document.querySelector('.main-tab-btn');
@@ -1193,6 +1590,9 @@
             const activeSection = document.getElementById(`section-${sectionKey}`);
             if (activeSection) {
                 activeSection.style.display = 'block';
+                if (sectionKey === 'tiempos') {
+                    setTimeout(() => updateDeadTimesChart(), 50);
+                }
                 if (sectionKey === 'crono' && cronoMapInstance) setTimeout(() => cronoMapInstance.invalidateSize(), 100);
                 if (sectionKey === 'timeline' && timelineMapInstance) setTimeout(() => timelineMapInstance.invalidateSize(), 100);
                 if (sectionKey === 'gpsmap') { prepareGpsMapEvents(); if (gpsMapInstance) setTimeout(() => gpsMapInstance.invalidateSize(), 100); }
@@ -1350,12 +1750,26 @@
             else if (currentPage < 1) currentPage = totalPages;
             renderCards(filteredData);
         }
-        function changeDeadTimesPage(direction) {
-            let totalPages = Math.ceil(cachedDeadTimesList.length / deadTimesPerPage) || 1;
-            deadTimesCurrentPage += direction;
-            if (deadTimesCurrentPage > totalPages) deadTimesCurrentPage = 1;
-            else if (deadTimesCurrentPage < 1) deadTimesCurrentPage = totalPages;
+        function changeDeadTimesPageSize(val) {
+            deadTimesPerPage = parseInt(val, 10) || 10;
+            deadTimesCurrentPage = 1;
             renderDeadTimesTablePage();
+        }
+
+        function setDeadTimesTab(pageNum) {
+            deadTimesCurrentPage = pageNum;
+            renderDeadTimesTablePage();
+        }
+
+        function changeAvanceRoutePageSize(val) {
+            avanceRoutePerPage = parseInt(val, 10) || 10;
+            avanceRouteCurrentPage = 1;
+            renderAvanceRouteTablePage();
+        }
+
+        function setAvanceRouteTab(pageNum) {
+            avanceRouteCurrentPage = pageNum;
+            renderAvanceRouteTablePage();
         }
         function changeCronoPage(direction) {
             let totalPages = Math.ceil(cachedCronoList.length / cronoPerPage) || 1;
@@ -1469,7 +1883,7 @@
                         <span class="bg-gray-900 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm">#${absoluteIndex}</span>
                         <div>${statusBadgeHtml}</div>
                     </div>
-                    <div class="py-1 cursor-pointer" onclick='openCardModalByIndex(${startIndex + idx})'>
+                    <div class="py-1 cursor-pointer" onclick='openKpiCardModal(${startIndex + idx}, ${absoluteIndex})'>
                         <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wider flex justify-between items-center"><span>Guía / OR</span><span class="text-[10px] estafeta-red-text font-semibold opacity-80"><i class="fa-solid fa-arrow-pointer mr-1"></i>Ver detalle</span></div>
                         <div class="font-bold text-gray-900 text-sm truncate mt-0.5" title="${esc(guideVal)}"><i class="fa-solid fa-barcode estafeta-red-text mr-1.5"></i>${esc(guideVal)}</div>
                         <div class="text-[11px] text-gray-500 mt-1 truncate" title="Tel: ${esc(activeRawContact || 'Sin número')}"><i class="fa-solid fa-phone text-gray-400 mr-1"></i>${esc(activeRawContact || 'Sin número de contacto')}</div>
@@ -1525,13 +1939,35 @@
         /* =====================================================================
            MODAL DE TARJETA
            ===================================================================== */
-        function openCardModal(row) {
+        function openCardModal(row, extraInfo = null) {
             if (!row) return;
             const modal = document.getElementById('card-modal');
             const title = document.getElementById('modal-title');
             const body = document.getElementById('modal-body');
-            title.innerText = `Guía / OR: ${row[guideKeyName] || '—'}`;
+            const guideText = row[guideKeyName] || '—';
+            title.innerText = `Guía / OR: ${guideText}`;
+
             let html = '';
+            if (extraInfo && (extraInfo.sequenceNumber || extraInfo.timeOnly || extraInfo.mapName || extraInfo.guideOr || extraInfo.detectedPhone)) {
+                html += `<div class="extra-info-box mb-3 p-3 rounded-xl border space-y-1">`;
+                if (extraInfo.mapName) {
+                    html += `<div class="text-[11px] font-extrabold uppercase tracking-wider text-red-700 dark:text-red-400"><i class="fa-solid fa-map-pin mr-1"></i>${esc(extraInfo.mapName)}</div>`;
+                }
+                if (extraInfo.guideOr) {
+                    html += `<div class="text-xs font-semibold text-gray-800">Guía / OR: <span class="font-extrabold text-red-700 dark:text-red-400">${esc(extraInfo.guideOr)}</span></div>`;
+                }
+                if (extraInfo.detectedPhone) {
+                    html += `<div class="text-xs font-semibold text-gray-800">Número detectado: <span class="font-bold">${esc(extraInfo.detectedPhone)}</span></div>`;
+                }
+                if (extraInfo.sequenceNumber) {
+                    html += `<div class="text-xs font-semibold text-gray-800">Secuencia: <span class="font-extrabold text-red-600 dark:text-red-400">#${esc(extraInfo.sequenceNumber)}</span></div>`;
+                }
+                if (extraInfo.timeOnly) {
+                    html += `<div class="text-xs font-semibold text-gray-800">Hora del evento: <span class="font-bold">${esc(extraInfo.timeOnly)}</span></div>`;
+                }
+                html += `</div>`;
+            }
+
             allKeysFull.forEach(k => {
                 if (hiddenColumns.some(h => _norm(k).includes(_norm(h)) && _norm(h) === _norm(k))) return;
                 let val = row[k] !== undefined && row[k] !== null ? row[k] : '';
@@ -1544,7 +1980,95 @@
             body.innerHTML = html;
             modal.classList.remove('hidden');
         }
-        function closeModal() { document.getElementById('card-modal').classList.add('hidden'); }
+        let currentModalRow = null;
+        let currentModalPhone = '';
+
+        function extractPhoneFromRow(row) {
+            if (!row) return '';
+            const candidates = [];
+            if (cellPhoneKeyName && row[cellPhoneKeyName]) candidates.push(String(row[cellPhoneKeyName]));
+            if (phoneKeyName && row[phoneKeyName]) candidates.push(String(row[phoneKeyName]));
+            for (const [k, v] of Object.entries(row)) {
+                if (!v) continue;
+                const nk = _norm(k);
+                if (nk.includes('tel') || nk.includes('cel') || nk.includes('movil') || nk.includes('wa') || nk.includes('whatsapp') || nk.includes('contacto')) {
+                    candidates.push(String(v));
+                }
+            }
+            for (const cand of candidates) {
+                const digits = cand.replace(/\D/g, '');
+                if (digits.length >= 7) return digits;
+            }
+            return '';
+        }
+
+        function openKpiCardModal(idx, seqNum = null) {
+            const row = filteredData[idx];
+            if (!row) return;
+            currentModalRow = row;
+            currentModalPhone = extractPhoneFromRow(row);
+
+            let timeOnly = '';
+            if (eventTimeKeyName && row[eventTimeKeyName]) {
+                const d = new Date(row[eventTimeKeyName]);
+                if (!isNaN(d)) {
+                    timeOnly = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} hrs`;
+                } else {
+                    const parts = String(row[eventTimeKeyName]).trim().split(' ');
+                    timeOnly = parts.length > 1 ? parts[1] : String(row[eventTimeKeyName]).trim();
+                }
+            }
+
+            openCardModal(row, {
+                mapName: 'TARJETA DE REGISTRO',
+                sequenceNumber: seqNum || (idx + 1),
+                timeOnly: timeOnly,
+                guideOr: row[guideKeyName] || '—',
+                detectedPhone: currentModalPhone || 'No detectado'
+            });
+        }
+
+        function openModalRecordQR() {
+            if (!currentModalRow) return;
+            const guideVal = String(currentModalRow[guideKeyName] || '').trim();
+            const phoneDigits = currentModalPhone || extractPhoneFromRow(currentModalRow);
+            const modal = document.getElementById('qr-modal');
+            const titleEl = document.getElementById('qr-modal-title');
+            const descEl = document.getElementById('qr-modal-desc');
+            const container = document.getElementById('qrcode-container');
+            container.innerHTML = '';
+
+            let qrPayload = '';
+            if (phoneDigits) {
+                const msg = encodeURIComponent(`Hola, nos comunicamos de Estafeta respecto a tu envío${guideVal ? ' ' + guideVal : ''}.`);
+                qrPayload = `https://wa.me/${phoneDigits}?text=${msg}`;
+                titleEl.innerHTML = `<i class="fa-solid fa-qrcode text-red-500 mr-1"></i> QR automático (${esc(guideVal || 'Registro')})`;
+                descEl.innerText = `Guía/OR: ${guideVal || '—'} · Número detectado: ${phoneDigits}`;
+            } else if (guideVal) {
+                qrPayload = guideVal;
+                titleEl.innerHTML = `<i class="fa-solid fa-qrcode text-red-500 mr-1"></i> QR de Guía / OR`;
+                descEl.innerText = `Guía/OR: ${guideVal} (sin número telefónico detectado)`;
+            } else {
+                addNotification('Aviso QR', 'No se encontró Guía/OR ni número telefónico en este registro.', 'warning');
+                return;
+            }
+
+            modal.classList.remove('hidden');
+            new QRCode(container, {
+                text: qrPayload,
+                width: 170,
+                height: 170,
+                colorDark: '#0f172a',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        function closeModal() {
+            currentModalRow = null;
+            currentModalPhone = '';
+            document.getElementById('card-modal').classList.add('hidden');
+        }
 
         /* =====================================================================
            HELPERS DE FORMATO
@@ -1578,6 +2102,653 @@
                 if (!isNaN(lat) && !isNaN(lng)) return [lat, lng];
             }
             return null;
+        }
+
+        /* =====================================================================
+           GRÁFICA DE TIEMPOS MUERTOS (SUPERPUESTO EN COLORES / LADO A LADO 3 / PANTALLA COMPLETA CON PESTAÑAS / CHECKBOXES)
+           ===================================================================== */
+        let deadTimesChartLayout = 'overlay';
+        let deadTimesOverlayChartType = 'bar';
+        let deadTimesSideCharts = [];
+        let dtSelectedChartRoutes = new Set();
+
+        function setDeadTimesOverlayChartType(chartType) {
+            deadTimesOverlayChartType = chartType === 'line' ? 'line' : 'bar';
+            const btnBar = document.getElementById('btn-dt-type-bar');
+            const btnLine = document.getElementById('btn-dt-type-line');
+            if (btnBar && btnLine) {
+                if (deadTimesOverlayChartType === 'bar') {
+                    btnBar.className = 'px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition flex items-center gap-1';
+                    btnLine.className = 'px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition flex items-center gap-1';
+                } else {
+                    btnLine.className = 'px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition flex items-center gap-1';
+                    btnBar.className = 'px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition flex items-center gap-1';
+                }
+            }
+            updateDeadTimesChart();
+        }
+        let dtChartRoutesInitialized = false;
+        let dtChartIsFullscreen = false;
+        let dtSideActiveTab = 0;
+
+        const DT_ROUTE_COLORS = [
+            '#DA291C', '#2563EB', '#10B981', '#F59E0B', '#8B5CF6',
+            '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1',
+            '#84CC16', '#E11D48', '#0EA5E9', '#D97706', '#7C3AED',
+            '#059669', '#DB2777', '#0284C7', '#EA580C', '#4F46E5'
+        ];
+
+        function getRouteColor(idx) {
+            return DT_ROUTE_COLORS[idx % DT_ROUTE_COLORS.length];
+        }
+
+        function syncDeadTimesRouteChecklist() {
+            const allRoutes = (cachedDeadTimesList || []).map(r => r.ruta);
+            if (!dtChartRoutesInitialized && allRoutes.length > 0) {
+                dtSelectedChartRoutes = new Set(allRoutes);
+                dtChartRoutesInitialized = true;
+            } else {
+                const valid = new Set([...dtSelectedChartRoutes].filter(r => allRoutes.includes(r)));
+                if (valid.size === 0 && allRoutes.length > 0 && dtSelectedChartRoutes.size > 0) {
+                    dtSelectedChartRoutes = new Set(allRoutes);
+                } else {
+                    dtSelectedChartRoutes = valid;
+                }
+            }
+            updateDtRouteDropdownLabel(allRoutes.length);
+            renderDtRouteChecklist();
+        }
+
+        function updateDtRouteDropdownLabel(totalCount) {
+            const lbl = document.getElementById('dt-route-dropdown-label');
+            if (!lbl) return;
+            const selCount = dtSelectedChartRoutes.size;
+            if (totalCount === 0 || selCount === totalCount) {
+                lbl.innerText = `Rutas: Todas (${totalCount})`;
+            } else if (selCount === 0) {
+                lbl.innerText = 'Rutas: Ninguna';
+            } else if (selCount === 1) {
+                lbl.innerText = `Ruta: ${[...dtSelectedChartRoutes][0]}`;
+            } else {
+                lbl.innerText = `Rutas: ${selCount} de ${totalCount}`;
+            }
+        }
+
+        function toggleDtRouteDropdown(e) {
+            if (e) e.stopPropagation();
+            const panel = document.getElementById('dt-route-dropdown-panel');
+            if (panel) panel.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const wrapper = document.getElementById('dt-route-checklist-wrapper');
+            const panel = document.getElementById('dt-route-dropdown-panel');
+            if (wrapper && panel && !wrapper.contains(e.target)) {
+                panel.classList.add('hidden');
+            }
+        });
+
+        function renderDtRouteChecklist() {
+            const container = document.getElementById('dt-route-checklist-items');
+            if (!container) return;
+            const searchEl = document.getElementById('dt-route-check-search');
+            const q = searchEl ? searchEl.value.toLowerCase().trim() : '';
+            const allRoutes = cachedDeadTimesList || [];
+            container.innerHTML = allRoutes
+                .map((item, idx) => ({ item, idx }))
+                .filter(({ item }) => !q || item.ruta.toLowerCase().includes(q))
+                .map(({ item, idx }) => {
+                    const checked = dtSelectedChartRoutes.has(item.ruta);
+                    const color = getRouteColor(idx);
+                    return `
+                        <label class="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg border border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer text-xs select-none">
+                            <span class="flex items-center gap-2 truncate">
+                                <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleSingleDtChartRoute(${esc(JSON.stringify(item.ruta))}, this.checked)" class="accent-red-600 rounded w-3.5 h-3.5">
+                                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${color};"></span>
+                                <span class="font-semibold text-gray-800 dark:text-slate-100 truncate" title="${esc(item.ruta)}">${esc(item.ruta)}</span>
+                            </span>
+                            <span class="text-[10px] font-bold text-gray-500 flex-shrink-0">Máx ${formatDuration(item.max)}</span>
+                        </label>
+                    `;
+                }).join('') || `<div class="text-center text-gray-400 text-[11px] py-2">Sin rutas coincidentes</div>`;
+        }
+
+        function toggleSingleDtChartRoute(ruta, isChecked) {
+            if (isChecked) dtSelectedChartRoutes.add(ruta);
+            else dtSelectedChartRoutes.delete(ruta);
+            dtSideActiveTab = 0;
+            updateDtRouteDropdownLabel((cachedDeadTimesList || []).length);
+            updateDeadTimesChart();
+        }
+
+        function setAllDtChartRoutes(selectAll) {
+            const allRoutes = (cachedDeadTimesList || []).map(r => r.ruta);
+            if (selectAll) dtSelectedChartRoutes = new Set(allRoutes);
+            else dtSelectedChartRoutes.clear();
+            dtSideActiveTab = 0;
+            updateDtRouteDropdownLabel(allRoutes.length);
+            renderDtRouteChecklist();
+            updateDeadTimesChart();
+        }
+
+        function toggleDtChartFullscreen() {
+            const card = document.getElementById('dt-chart-card-container');
+            const icon = document.getElementById('icon-dt-chart-fullscreen');
+            const text = document.getElementById('text-dt-chart-fullscreen');
+            if (!card) return;
+            dtChartIsFullscreen = !dtChartIsFullscreen;
+            if (dtChartIsFullscreen) {
+                card.classList.add('dt-fullscreen-overlay');
+                if (icon) icon.className = 'fa-solid fa-compress';
+                if (text) text.innerText = 'Salir pantalla completa';
+                deadTimesChartLayout = 'side';
+                const btnOverlay = document.getElementById('btn-dt-layout-overlay');
+                const btnSide = document.getElementById('btn-dt-layout-side');
+                if (btnOverlay && btnSide) {
+                    btnOverlay.className = 'px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition';
+                    btnSide.className = 'px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition';
+                }
+                const typeGrpFs = document.getElementById('dt-overlay-type-group');
+                if (typeGrpFs) typeGrpFs.classList.add('hidden');
+            } else {
+                card.classList.remove('dt-fullscreen-overlay');
+                if (icon) icon.className = 'fa-solid fa-expand';
+                if (text) text.innerText = 'Pantalla completa';
+            }
+            dtSideActiveTab = 0;
+            updateDeadTimesChart();
+        }
+
+        function setDeadTimesChartLayout(mode) {
+            deadTimesChartLayout = mode === 'side' ? 'side' : 'overlay';
+            dtSideActiveTab = 0;
+            const btnOverlay = document.getElementById('btn-dt-layout-overlay');
+            const btnSide = document.getElementById('btn-dt-layout-side');
+            const typeGrp = document.getElementById('dt-overlay-type-group');
+            if (btnOverlay && btnSide) {
+                if (deadTimesChartLayout === 'overlay') {
+                    btnOverlay.className = 'px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition';
+                    btnSide.className = 'px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition';
+                    if (typeGrp) typeGrp.classList.remove('hidden');
+                } else {
+                    btnSide.className = 'px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition';
+                    btnOverlay.className = 'px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition';
+                    if (typeGrp) typeGrp.classList.add('hidden');
+                }
+            }
+            updateDeadTimesChart();
+        }
+
+        function resetDeadTimesChartControls() {
+            deadTimesChartLayout = 'overlay';
+            dtSideActiveTab = 0;
+            const metricSel = document.getElementById('dt-chart-metric-select');
+            if (metricSel) metricSel.value = 'all';
+            const allRoutes = (cachedDeadTimesList || []).map(r => r.ruta);
+            dtSelectedChartRoutes = new Set(allRoutes);
+            updateDtRouteDropdownLabel(allRoutes.length);
+            renderDtRouteChecklist();
+            setDeadTimesOverlayChartType('bar');
+            setDeadTimesChartLayout('overlay');
+        }
+
+        function setDtSideTab(tabIdx) {
+            dtSideActiveTab = tabIdx;
+            updateDeadTimesChart();
+        }
+
+        function buildDeadTimesDatasetsForRoute(routeObj, metricMode, paletteIdx = 0) {
+            const mainColor = getRouteColor(paletteIdx);
+            const toHours = ms => Number(((ms || 0) / 3600000).toFixed(3));
+            const maxH = toHours(routeObj.max);
+            const avgH = toHours(routeObj.avg);
+            const totH = toHours(routeObj.total);
+
+            const ds = [];
+            if (metricMode === 'all' || metricMode === 'max') {
+                ds.push({
+                    label: 'Máximo (hrs)',
+                    data: [avgH, maxH, totH],
+                    borderColor: mainColor,
+                    backgroundColor: mainColor + '26',
+                    borderWidth: 2.5,
+                    tension: 0.35,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                });
+            }
+            if (metricMode === 'all' || metricMode === 'avg') {
+                ds.push({
+                    label: 'Promedio (hrs)',
+                    data: [avgH, avgH, avgH],
+                    borderColor: '#0ea5e9',
+                    backgroundColor: 'rgba(14, 165, 233, 0.12)',
+                    borderWidth: 2,
+                    borderDash: [5, 4],
+                    tension: 0.35,
+                    fill: false,
+                    pointRadius: 3
+                });
+            }
+            if (metricMode === 'all' || metricMode === 'total') {
+                ds.push({
+                    label: 'Total Suma (hrs)',
+                    data: [totH * 0.35, totH * 0.7, totH],
+                    borderColor: '#10b981',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    tension: 0.35,
+                    fill: false,
+                    pointRadius: 3
+                });
+            }
+            if (metricMode === 'events') {
+                const ev = routeObj.count || 0;
+                ds.push({
+                    label: 'Eventos (cantidad)',
+                    data: [Math.round(ev * 0.35), Math.round(ev * 0.7), ev],
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.16)',
+                    borderWidth: 2.5,
+                    tension: 0.35,
+                    fill: true,
+                    pointRadius: 4
+                });
+            }
+            return ds;
+        }
+
+        function updateDeadTimesChart() {
+            syncDeadTimesRouteChecklist();
+            const canvas = document.getElementById('deadTimesChartCanvas');
+            const overlayWrapper = document.getElementById('dt-chart-overlay-wrapper');
+            const sideGrid = document.getElementById('dt-chart-side-grid');
+            const sideTabsBar = document.getElementById('dt-side-tabs-bar');
+            const sideTabsButtons = document.getElementById('dt-side-tabs-buttons');
+            const sideTabsInfo = document.getElementById('dt-side-tabs-info');
+            if (!canvas || typeof Chart === 'undefined') return;
+
+            const metricSelect = document.getElementById('dt-chart-metric-select');
+            const metricMode = metricSelect ? metricSelect.value : 'all';
+            const isDark = document.body.classList.contains('dark-mode');
+            const textColor = isDark ? '#f8fafc' : '#0f172a';
+            const gridColor = isDark ? 'rgba(148, 163, 184, 0.18)' : 'rgba(15, 23, 42, 0.12)';
+            const minTwentyMinsHours = 20 / 60;
+
+            const allRoutes = cachedDeadTimesList || [];
+            const selectedRoutesWithIdx = allRoutes
+                .map((r, originalIdx) => ({ ...r, originalIdx }))
+                .filter(r => dtSelectedChartRoutes.has(r.ruta));
+
+            if (deadTimesChartInstance) {
+                deadTimesChartInstance.destroy();
+                deadTimesChartInstance = null;
+            }
+            deadTimesSideCharts.forEach(ch => ch.destroy());
+            deadTimesSideCharts = [];
+
+            if (deadTimesChartLayout === 'side') {
+                if (overlayWrapper) overlayWrapper.classList.add('hidden');
+                if (sideGrid) {
+                    sideGrid.classList.remove('hidden');
+                    sideGrid.classList.add('grid');
+
+                    const perTab = dtChartIsFullscreen ? 12 : 3;
+                    const totalTabs = Math.max(1, Math.ceil(selectedRoutesWithIdx.length / perTab));
+                    if (dtSideActiveTab >= totalTabs) dtSideActiveTab = 0;
+
+                    if (sideTabsBar && sideTabsButtons && sideTabsInfo) {
+                        if (dtChartIsFullscreen && totalTabs > 1) {
+                            sideTabsBar.classList.remove('hidden');
+                            sideTabsBar.classList.add('flex');
+                            sideTabsButtons.innerHTML = Array.from({ length: totalTabs }, (_, tIdx) => {
+                                const startR = tIdx * perTab + 1;
+                                const endR = Math.min((tIdx + 1) * perTab, selectedRoutesWithIdx.length);
+                                const activeCls = tIdx === dtSideActiveTab
+                                    ? 'bg-red-600 text-white font-bold shadow-xs'
+                                    : 'bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-200 border border-gray-300 dark:border-slate-700 hover:bg-gray-100';
+                                return `<button type="button" onclick="setDtSideTab(${tIdx})" class="px-2.5 py-1 rounded-md text-[11px] transition ${activeCls}">Pestaña ${tIdx + 1} (Rutas ${startR}-${endR})</button>`;
+                            }).join('');
+                            sideTabsInfo.innerText = `Mostrando ${perTab} gráficas por pestaña de ${selectedRoutesWithIdx.length} rutas`;
+                        } else {
+                            sideTabsBar.classList.add('hidden');
+                            sideTabsBar.classList.remove('flex');
+                            sideTabsInfo.innerHTML = ``;
+                        }
+                    }
+
+                    const sliceStart = dtChartIsFullscreen ? dtSideActiveTab * perTab : 0;
+                    const visibleSideRoutes = selectedRoutesWithIdx.slice(sliceStart, sliceStart + perTab);
+
+                    sideGrid.className = dtChartIsFullscreen
+                        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1'
+                        : 'grid grid-cols-1 md:grid-cols-3 gap-3 pt-1';
+
+                    sideGrid.innerHTML = visibleSideRoutes.map((r, idx) => {
+                        const c = getRouteColor(r.originalIdx);
+                        return `
+                        <div class="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/80 p-3 space-y-2 shadow-xs" style="border-top: 3px solid ${c};">
+                            <div class="flex items-center justify-between text-xs font-bold border-b border-gray-100 dark:border-slate-800 pb-1.5">
+                                <span class="truncate text-gray-800 dark:text-slate-100 flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${c};"></span>
+                                    ${esc(r.ruta)}
+                                </span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full font-extrabold" style="background:${c}22; color:${isDark ? '#f8fafc' : c};">Máx ${formatDuration(r.max)}</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-1 text-[10px] text-center bg-gray-50 dark:bg-slate-800/80 rounded-lg py-1 px-1.5">
+                                <div><span class="text-gray-500 dark:text-slate-400 block">Eventos</span><b class="text-gray-900 dark:text-slate-100">${r.count}</b></div>
+                                <div><span class="text-gray-500 dark:text-slate-400 block">Promedio</span><b class="text-sky-600 dark:text-sky-400">${formatDuration(r.avg)}</b></div>
+                                <div><span class="text-gray-500 dark:text-slate-400 block">Total</span><b class="text-emerald-600 dark:text-emerald-400">${formatDuration(r.total)}</b></div>
+                            </div>
+                            <div class="relative w-full" style="height: ${dtChartIsFullscreen ? '145px' : '170px'};">
+                                <canvas id="dtSideCanvas_${idx}"></canvas>
+                            </div>
+                        </div>
+                    `}).join('');
+
+                    visibleSideRoutes.forEach((r, idx) => {
+                        const c = document.getElementById(`dtSideCanvas_${idx}`);
+                        if (!c) return;
+                        const ch = new Chart(c.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: ['Promedio', 'Pico Máximo', 'Total Acum.'],
+                                datasets: buildDeadTimesDatasetsForRoute(r, metricMode, r.originalIdx)
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        enabled: false
+                                    }
+                                },
+                                scales: {
+                                    x: { ticks: { color: textColor, font: { size: 9 } }, grid: { display: false } },
+                                    y: {
+                                        beginAtZero: true,
+                                        min: 0,
+                                        ticks: {
+                                            color: textColor,
+                                            font: { size: 9 },
+                                            callback: v => Math.round(Number(v) * 60) + 'm'
+                                        },
+                                        grid: { color: gridColor }
+                                    }
+                                }
+                            }
+                        });
+                        deadTimesSideCharts.push(ch);
+                    });
+                }
+                return;
+            }
+
+            if (sideTabsBar) {
+                sideTabsBar.classList.add('hidden');
+                sideTabsBar.classList.remove('flex');
+            }
+            if (sideGrid) {
+                sideGrid.classList.add('hidden');
+                sideGrid.classList.remove('grid');
+                sideGrid.innerHTML = '';
+            }
+            if (overlayWrapper) {
+                overlayWrapper.classList.remove('hidden');
+                overlayWrapper.style.height = dtChartIsFullscreen ? 'calc(100vh - 200px)' : '340px';
+            }
+
+            const toHours = ms => Number(((ms || 0) / 3600000).toFixed(3));
+            const isLineChart = deadTimesOverlayChartType === 'line';
+            let activeXLabels = ['Tiempo Promedio (hrs)', 'Tiempo Máximo (hrs)', 'Tiempo Total Suma (hrs)', 'Eventos (x0.1)'];
+            if (metricMode !== 'all') {
+                activeXLabels = selectedRoutesWithIdx.map(r => r.ruta);
+            }
+
+            let datasets = [];
+            if (metricMode === 'all') {
+                datasets = selectedRoutesWithIdx.map((r) => {
+                    const color = getRouteColor(r.originalIdx);
+                    const maxH = toHours(r.max);
+                    const avgH = toHours(r.avg);
+                    const totH = toHours(r.total);
+                    const evScaled = Number((r.count * 0.1).toFixed(2));
+
+                    return {
+                        label: r.ruta,
+                        routeName: r.ruta,
+                        routeStats: r,
+                        data: [avgH, maxH, totH, evScaled],
+                        backgroundColor: isLineChart ? color + '22' : color + 'CC',
+                        borderColor: color,
+                        borderWidth: isLineChart ? 2.5 : 1.5,
+                        borderRadius: isLineChart ? 0 : 5,
+                        maxBarThickness: 42,
+                        tension: 0.35,
+                        fill: false,
+                        pointRadius: isLineChart ? 4 : 0,
+                        pointHoverRadius: isLineChart ? 6 : 0,
+                        pointBackgroundColor: color
+                    };
+                });
+            } else {
+                const metricTitleMap = {
+                    max: 'Tiempo Máximo (hrs)',
+                    avg: 'Tiempo Promedio (hrs)',
+                    total: 'Tiempo Total Suma (hrs)',
+                    events: 'Total de Eventos'
+                };
+                const metricLabel = metricTitleMap[metricMode] || 'Tiempo (hrs)';
+                datasets = [{
+                    label: metricLabel,
+                    data: selectedRoutesWithIdx.map(r => {
+                        if (metricMode === 'max') return toHours(r.max);
+                        if (metricMode === 'avg') return toHours(r.avg);
+                        if (metricMode === 'events') return r.count;
+                        return toHours(r.total);
+                    }),
+                    backgroundColor: isLineChart
+                        ? 'rgba(218, 41, 28, 0.14)'
+                        : selectedRoutesWithIdx.map(r => getRouteColor(r.originalIdx) + 'CC'),
+                    borderColor: isLineChart
+                        ? '#DA291C'
+                        : selectedRoutesWithIdx.map(r => getRouteColor(r.originalIdx)),
+                    borderWidth: isLineChart ? 2.5 : 1.5,
+                    borderRadius: isLineChart ? 0 : 5,
+                    maxBarThickness: 48,
+                    tension: 0.35,
+                    fill: isLineChart,
+                    pointRadius: isLineChart ? 4 : 0,
+                    pointHoverRadius: isLineChart ? 6 : 0,
+                    pointBackgroundColor: selectedRoutesWithIdx.map(r => getRouteColor(r.originalIdx))
+                }];
+            }
+
+            deadTimesChartInstance = new Chart(canvas.getContext('2d'), {
+                type: isLineChart ? 'line' : 'bar',
+                data: { labels: activeXLabels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    events: [],
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: textColor,
+                                font: { size: 11, weight: 'bold' },
+                                maxRotation: metricMode === 'all' ? 0 : 35,
+                                minRotation: 0
+                            },
+                            grid: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            min: 0,
+                            ticks: {
+                                color: textColor,
+                                font: { size: 10 },
+                                callback: v => {
+                                    if (metricMode === 'events') {
+                                        return Math.round(Number(v)) + ' ev';
+                                    }
+                                    const mins = Math.round(Number(v) * 60);
+                                    return mins >= 60 ? (mins / 60).toFixed(1) + ' h' : mins + ' min';
+                                }
+                            },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
+        }
+
+        /* =====================================================================
+           GRÁFICA Y TABLA EN AVANCE GENERAL (SEGUIMIENTO POR RUTA)
+           ===================================================================== */
+        let avanceRouteBarChartInstance = null;
+        let avanceRouteIsFullscreen = false;
+
+        function toggleAvanceRouteFullscreen() {
+            const card = document.getElementById('avance-route-tracking-card');
+            const icon = document.getElementById('icon-avance-route-fs');
+            const text = document.getElementById('text-avance-route-fs');
+            const chartWrap = document.getElementById('avance-route-chart-wrapper');
+            const tableScroll = document.getElementById('avance-route-table-scroll');
+            if (!card) return;
+            avanceRouteIsFullscreen = !avanceRouteIsFullscreen;
+            if (avanceRouteIsFullscreen) {
+                card.classList.add('avance-fullscreen-overlay');
+                if (icon) icon.className = 'fa-solid fa-compress';
+                if (text) text.innerText = 'Salir pantalla completa';
+                if (chartWrap) chartWrap.style.height = '340px';
+                if (tableScroll) tableScroll.classList.remove('max-h-64');
+            } else {
+                card.classList.remove('avance-fullscreen-overlay');
+                if (icon) icon.className = 'fa-solid fa-expand';
+                if (text) text.innerText = 'Pantalla completa';
+                if (chartWrap) chartWrap.style.height = '240px';
+                if (tableScroll) tableScroll.classList.add('max-h-64');
+            }
+            if (avanceRouteBarChartInstance) {
+                setTimeout(() => avanceRouteBarChartInstance.resize(), 60);
+            }
+        }
+
+        function updateAvanceRouteChartAndTable(rows) {
+            const tbody = document.getElementById('avance-route-tbody');
+            const badge = document.getElementById('avance-route-count-badge');
+            const canvas = document.getElementById('avanceRouteBarChart');
+            if (!tbody || !canvas || typeof Chart === 'undefined') return;
+
+            const routeStatsMap = {};
+            (rows || []).forEach(r => {
+                const ruta = String(r[routeKeyName] ?? 'N/D').trim() || 'N/D';
+                if (!routeStatsMap[ruta]) {
+                    routeStatsMap[ruta] = {
+                        ruta,
+                        entregados: 0,
+                        pendientes: 0,
+                        recolecciones: 0,
+                        excepcionados: 0,
+                        total: 0
+                    };
+                }
+                const st = String(r[statusKeyName] || '').trim().toUpperCase();
+                const guideVal = String(r[guideKeyName] || '').trim().toUpperCase();
+                const progVal = progKeyName ? String(r[progKeyName] || '').trim().toUpperCase() : '';
+                const isOR = guideVal.startsWith('OR') || st.includes('RECOLECT') || progVal.includes('RECOLECT');
+
+                routeStatsMap[ruta].total++;
+                if (isOR) {
+                    routeStatsMap[ruta].recolecciones++;
+                } else if (st.includes('CONFIRMAD')) {
+                    routeStatsMap[ruta].entregados++;
+                } else if (st.includes('PENDIENT')) {
+                    routeStatsMap[ruta].pendientes++;
+                } else if (st.includes('EXCEPCION')) {
+                    routeStatsMap[ruta].excepcionados++;
+                }
+            });
+
+            const routeList = Object.values(routeStatsMap).sort((a, b) => b.total - a.total);
+            cachedAvanceRouteList = routeList;
+            if (badge) badge.innerText = `${routeList.length} rutas`;
+            renderAvanceRouteTablePage();
+
+            if (avanceRouteBarChartInstance) {
+                avanceRouteBarChartInstance.destroy();
+                avanceRouteBarChartInstance = null;
+            }
+
+            const isDark = document.body.classList.contains('dark-mode');
+            const textColor = isDark ? '#e2e8f0' : '#334155';
+            const gridColor = isDark ? 'rgba(148, 163, 184, 0.15)' : 'rgba(100, 116, 139, 0.15)';
+
+            avanceRouteBarChartInstance = new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: routeList.map(r => r.ruta),
+                    datasets: [
+                        {
+                            label: 'Entregados (Confirmados)',
+                            data: routeList.map(r => r.entregados),
+                            backgroundColor: '#16a34a',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Pendientes',
+                            data: routeList.map(r => r.pendientes),
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Recolecciones (OR)',
+                            data: routeList.map(r => r.recolecciones),
+                            backgroundColor: '#2563eb',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    events: [],
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: textColor,
+                                font: { size: 11, weight: 'bold' },
+                                usePointStyle: true,
+                                boxWidth: 10
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: textColor, font: { size: 10, weight: '600' }, maxRotation: 35, minRotation: 0 },
+                            grid: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: textColor, font: { size: 10 }, precision: 0 },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
         }
 
         /* =====================================================================
@@ -1645,9 +2816,80 @@
                 let maxDiff = diffs.length > 0 ? Math.max(...diffs) : 0;
                 cachedDeadTimesList.push({ ruta, count: totalEvents, avg: avgDiff, max: maxDiff, total: totalDiff });
             }
-            cachedDeadTimesList.sort((a, b) => b.max - a.max);
+            sortDeadTimesListByMetric();
             renderDeadTimesTablePage();
+            updateDeadTimesChart();
             applyCronoDetailFilter();
+        }
+
+
+        function renderAvanceRouteTablePage() {
+            const tbody = document.getElementById('avance-route-tbody');
+            const tabsList = document.getElementById('avance-route-tabs-list');
+            const tabsInfo = document.getElementById('avance-route-tabs-info');
+            if (!tbody) return;
+            const routeList = cachedAvanceRouteList || [];
+            const totalPages = Math.max(1, Math.ceil(routeList.length / avanceRoutePerPage));
+            if (avanceRouteCurrentPage > totalPages) avanceRouteCurrentPage = totalPages;
+            if (avanceRouteCurrentPage < 1) avanceRouteCurrentPage = 1;
+
+            const startIdx = (avanceRouteCurrentPage - 1) * avanceRoutePerPage;
+            const pageRows = routeList.slice(startIdx, startIdx + avanceRoutePerPage);
+
+            if (pageRows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-400 italic">Sin datos de rutas disponibles.</td></tr>`;
+            } else {
+                tbody.innerHTML = pageRows.map((item, idx) => {
+                    const absIdx = startIdx + idx;
+                    const pctAvance = item.total > 0 ? (((item.entregados + item.recolecciones) / item.total) * 100).toFixed(1) : '0.0';
+                    return `
+                        <tr class="hover:bg-gray-50 transition-all">
+                            <td class="p-2.5 font-bold text-gray-500">${absIdx + 1}</td>
+                            <td class="p-2.5 font-bold text-gray-800">${esc(item.ruta)}</td>
+                            <td class="p-2.5 text-center font-bold text-green-700">${item.entregados.toLocaleString()}</td>
+                            <td class="p-2.5 text-center font-bold text-amber-600">${item.pendientes.toLocaleString()}</td>
+                            <td class="p-2.5 text-center font-bold text-blue-600">${item.recolecciones.toLocaleString()}</td>
+                            <td class="p-2.5 text-center font-semibold text-red-600">${item.excepcionados.toLocaleString()}</td>
+                            <td class="p-2.5 text-center font-extrabold text-gray-800">${item.total.toLocaleString()}</td>
+                            <td class="p-2.5 text-center font-bold text-gray-700">${pctAvance}%</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            if (tabsInfo) {
+                const showStart = routeList.length === 0 ? 0 : startIdx + 1;
+                const showEnd = Math.min(routeList.length, startIdx + pageRows.length);
+                tabsInfo.innerText = `Mostrando ${showStart}-${showEnd} de ${routeList.length} rutas (Pestaña ${avanceRouteCurrentPage} de ${totalPages})`;
+            }
+            if (tabsList) {
+                tabsList.innerHTML = Array.from({ length: totalPages }, (_, i) => i + 1).map(p => {
+                    const active = p === avanceRouteCurrentPage;
+                    return `<button type="button" onclick="setAvanceRouteTab(${p})" class="px-2.5 py-1 rounded-md text-xs font-bold transition ${active ? 'bg-red-600 text-white shadow-xs' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">Pestaña ${p}</button>`;
+                }).join('');
+            }
+        }
+
+
+        function sortDeadTimesListByMetric() {
+            const metricSel = document.getElementById('dt-chart-metric-select');
+            const mode = metricSel ? metricSel.value : 'all';
+            if (mode === 'avg') {
+                cachedDeadTimesList.sort((a, b) => b.avg - a.avg);
+            } else if (mode === 'total') {
+                cachedDeadTimesList.sort((a, b) => b.total - a.total);
+            } else if (mode === 'events') {
+                cachedDeadTimesList.sort((a, b) => b.count - a.count);
+            } else {
+                cachedDeadTimesList.sort((a, b) => b.max - a.max);
+            }
+        }
+
+        function onDeadTimesMetricChange() {
+            deadTimesCurrentPage = 1;
+            sortDeadTimesListByMetric();
+            renderDeadTimesTablePage();
+            updateDeadTimesChart();
         }
 
         function renderDeadTimesTablePage() {
@@ -1664,16 +2906,30 @@
             }
             const startIndex = (deadTimesCurrentPage - 1) * deadTimesPerPage;
             const pageRows = cachedDeadTimesList.slice(startIndex, startIndex + deadTimesPerPage);
+            const dtTabsEl = document.getElementById('dt-tabs-container');
+            if (dtTabsEl) {
+                dtTabsEl.innerHTML = Array.from({ length: totalPages }, (_, i) => i + 1).map(p => {
+                    const active = p === deadTimesCurrentPage;
+                    return `<button type="button" onclick="setDeadTimesTab(${p})" class="px-2.5 py-1 rounded-md text-xs font-bold transition ${active ? 'bg-red-600 text-white shadow-xs' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'}">Pestaña ${p}</button>`;
+                }).join('');
+            }
             let html = '';
             pageRows.forEach((item, idx) => {
+                const absIdx = startIndex + idx;
+                const color = getRouteColor(absIdx);
                 html += `
                     <tr class="hover:bg-gray-50 transition-all">
-                        <td class="p-3 font-bold text-gray-500">${startIndex + idx + 1}</td>
-                        <td class="p-3 font-semibold text-gray-800">${esc(item.ruta)}</td>
-                        <td class="p-3 text-center font-semibold text-gray-700">${item.count}</td>
-                        <td class="p-3 text-center font-medium text-gray-700">${formatDuration(item.avg)}</td>
-                        <td class="p-3 text-center font-bold text-red-600">${formatDuration(item.max)}</td>
-                        <td class="p-3 text-center font-medium text-gray-700">${formatDuration(item.total)}</td>
+                        <td class="p-3 font-bold text-gray-500">${absIdx + 1}</td>
+                        <td class="p-3 font-bold text-gray-800">
+                            <span class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-xs" style="border-color:${color}66; background:${color}18;">
+                                <span class="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0" style="background:${color};"></span>
+                                <span>${esc(item.ruta)}</span>
+                            </span>
+                        </td>
+                        <td class="p-3 text-center font-bold text-gray-700">${item.count}</td>
+                        <td class="p-3 text-center font-semibold text-sky-700 dark:text-sky-400">${formatDuration(item.avg)}</td>
+                        <td class="p-3 text-center font-extrabold text-red-600 dark:text-red-400">${formatDuration(item.max)}</td>
+                        <td class="p-3 text-center font-bold text-emerald-700 dark:text-emerald-400">${formatDuration(item.total)}</td>
                     </tr>`;
             });
             tbody.innerHTML = html;
@@ -1717,17 +2973,55 @@
             }
             containerKPIs.classList.remove('hidden');
             const first = cachedCronoList[0];
+            let prevCoords = coordKeyName && first.prevRow ? parseCoordinates(first.prevRow[coordKeyName]) : null;
+            let currCoords = coordKeyName && first.currRow ? parseCoordinates(first.currRow[coordKeyName]) : null;
+            let distBadge = '';
+            if (prevCoords && currCoords) {
+                const distM = L.latLng(prevCoords[0], prevCoords[1]).distanceTo(L.latLng(currCoords[0], currCoords[1]));
+                const distStr = distM >= 1000 ? (distM / 1000).toFixed(2) + ' km' : Math.round(distM) + ' m';
+                distBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs font-bold"><i class="fa-solid fa-route text-[10px]"></i> ${distStr}</span>`;
+            }
             gridKPIs.innerHTML = `
-                <div class="bg-white border border-gray-200 rounded-xl p-3 space-y-1.5 shadow-sm">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Guía Anterior</div>
-                    <div class="font-bold text-gray-900 text-sm">${esc(first.prevGuide)}</div>
-                    <div class="text-xs text-gray-500">${esc(first.prevTime)}</div>
+                <div class="relative overflow-hidden rounded-2xl border border-slate-300/80 dark:border-slate-700 bg-gradient-to-br from-slate-50 via-white to-slate-100/90 dark:from-slate-800/95 dark:via-slate-900 dark:to-slate-800/80 p-4 shadow-md transition-all hover:shadow-lg border-l-4 border-l-slate-500">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="space-y-1.5 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-lg bg-slate-500/15 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Guía Anterior</span>
+                            </div>
+                            <div class="font-extrabold text-gray-900 dark:text-white text-base tracking-tight truncate" title="${esc(first.prevGuide)}">${esc(first.prevGuide)}</div>
+                            <div class="flex flex-wrap items-center gap-2 pt-1">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-500/10 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+                                    <i class="fa-regular fa-clock text-[11px] text-slate-500"></i> ${esc(first.prevTime)}
+                                </span>
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400 text-[11px] font-semibold">
+                                    <i class="fa-solid fa-truck-fast text-[10px]"></i> ${esc(first.ruta)}
+                                </span>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-200/80 text-slate-700 dark:bg-slate-700 dark:text-slate-200 flex-shrink-0">Origen</span>
+                    </div>
                 </div>
-                <div class="bg-white border border-gray-200 rounded-xl p-3 space-y-1.5 shadow-sm">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Guía Actual</div>
-                    <div class="font-bold text-gray-900 text-sm">${esc(first.currGuide)}</div>
-                    <div class="text-xs text-gray-500">${esc(first.currTime)}</div>
-                    <div class="text-xs font-bold text-red-600">Δ ${formatDuration(first.diff)}</div>
+                <div class="relative overflow-hidden rounded-2xl border border-red-300/80 dark:border-red-900/60 bg-gradient-to-br from-red-50/80 via-white to-rose-50/70 dark:from-red-950/40 dark:via-slate-900 dark:to-rose-950/30 p-4 shadow-md transition-all hover:shadow-lg border-l-4 border-l-[#DA291C]">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="space-y-1.5 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-lg bg-red-500/15 text-[#DA291C] dark:text-red-400 flex items-center justify-center text-xs"><i class="fa-solid fa-location-crosshairs"></i></span>
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-[#DA291C] dark:text-red-400">Guía Actual</span>
+                            </div>
+                            <div class="font-extrabold text-gray-900 dark:text-white text-base tracking-tight truncate" title="${esc(first.currGuide)}">${esc(first.currGuide)}</div>
+                            <div class="flex flex-wrap items-center gap-2 pt-1">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 text-gray-800 dark:text-slate-200 text-xs font-semibold">
+                                    <i class="fa-regular fa-clock text-[11px] text-[#DA291C]"></i> ${esc(first.currTime)}
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#DA291C] text-white text-xs font-extrabold shadow-xs">
+                                    <i class="fa-solid fa-hourglass-half text-[10px]"></i> Δ ${formatDuration(first.diff)}
+                                </span>
+                                ${distBadge}
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-100 text-[#DA291C] dark:bg-red-900/50 dark:text-red-300 flex-shrink-0">Destino</span>
+                    </div>
                 </div>`;
             mapWrapper.classList.remove('hidden');
             renderCronoMap(first);
@@ -1779,22 +3073,54 @@
             let latLngs = [];
             if (prevCoords) {
                 let m = L.circleMarker(prevCoords, { radius: 8, color: '#4B5563', fillColor: '#6B7280', fillOpacity: 0.9 });
-                m.bindPopup(`<b>Guía Anterior:</b> ${esc(item.prevGuide)}<br><b>Hora:</b> ${esc(item.prevTime)}`);
+                m.on('click', (ev) => {
+                    if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
+                    if (item.prevRow) {
+                        openCardModal(item.prevRow, {
+                            mapName: 'Mapa Cronológico (Guía Anterior)',
+                            timeOnly: item.prevTime
+                        });
+                    }
+                });
                 cronoClusterGroup.addLayer(m); latLngs.push(prevCoords);
             }
             if (currCoords) {
                 let m = L.circleMarker(currCoords, { radius: 9, color: '#991B1B', fillColor: '#DA291C', fillOpacity: 1 });
-                m.bindPopup(`<b>Guía Actual:</b> ${esc(item.currGuide)}<br><b>Hora:</b> ${esc(item.currTime)}`);
+                m.on('click', (ev) => {
+                    if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
+                    if (item.currRow) {
+                        openCardModal(item.currRow, {
+                            mapName: 'Mapa Cronológico (Guía Actual)',
+                            timeOnly: item.currTime
+                        });
+                    }
+                });
                 cronoClusterGroup.addLayer(m); latLngs.push(currCoords);
             }
             cronoMapInstance.addLayer(cronoClusterGroup);
-            if (prevCoords && currCoords) cronoPolyline = L.polyline([prevCoords, currCoords], { color: '#DA291C', weight: 3, dashArray: '5, 5' }).addTo(cronoMapInstance);
+            if (prevCoords && currCoords) {
+                const distMeters = L.latLng(prevCoords[0], prevCoords[1]).distanceTo(L.latLng(currCoords[0], currCoords[1]));
+                const distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : Math.round(distMeters) + ' metros';
+                const timeText = formatDuration(item.diff);
+                cronoPolyline = L.polyline([prevCoords, currCoords], { color: '#DA291C', weight: 5, opacity: 0.9, dashArray: '6, 6' }).addTo(cronoMapInstance);
+                cronoPolyline.bindPopup(`
+                    <div style="min-width:190px;font-family:sans-serif;line-height:1.45;">
+                        <div style="font-weight:800;color:#DA291C;font-size:12px;margin-bottom:4px;border-bottom:1px solid #e5e7eb;padding-bottom:3px;">
+                            <i class="fa-solid fa-route"></i> Traslado entre Puntos
+                        </div>
+                        <div style="font-size:12px;color:#1f2937;"><b>Tiempo transcurrido:</b> ${esc(timeText)}</div>
+                        <div style="font-size:12px;color:#1f2937;"><b>Distancia aprox.:</b> ${esc(distText)}</div>
+                        <div style="font-size:10px;color:#6b7280;margin-top:4px;">${esc(item.prevGuide)} &rarr; ${esc(item.currGuide)}</div>
+                    </div>
+                `);
+                cronoPolyline.bindTooltip(`Tiempo: ${timeText} · Distancia: ${distText}`, { sticky: true });
+            }
             if (latLngs.length > 0) cronoMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15 });
             cronoMapInstance.invalidateSize();
         }
 
         /* =====================================================================
-           LÍNEA DE TIEMPO (con Query by Route + Waybill)
+           LÍNEA DE TIEMPO
            ===================================================================== */
         function getTargetSequences() {
             const seqInput = document.getElementById('sequence-search-input');
@@ -1829,7 +3155,6 @@
                 let matchGarantia = activeTimelineGarantiaSelections.has(gVal);
                 let matchSearch = timelineSearch === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(timelineSearch));
 
-                // NUEVO: Query by Route + Waybill
                 let matchRouteQuery = timelineRouteQuery === '' || String(row[routeKeyName] ?? '').toLowerCase().includes(timelineRouteQuery);
                 let matchWaybillQuery = timelineWaybillQuery === '' || String(row[guideKeyName] ?? '').toLowerCase().includes(timelineWaybillQuery);
 
@@ -1925,7 +3250,14 @@
                         iconSize: [28, 28], iconAnchor: [14, 14]
                     });
                     let marker = L.marker(coords, { icon: numberedIcon });
-                    marker.bindPopup(`<b>Secuencia #${item.sequenceNumber}</b><br>Hora: <b>${esc(timeOnly)}</b><br><b>Guía:</b> ${esc(item.guide)}`);
+                    marker.on('click', (ev) => {
+                        if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
+                        openCardModal(item.rowObj, {
+                            mapName: 'Mapa de Secuencia Cronológica',
+                            sequenceNumber: item.sequenceNumber,
+                            timeOnly: timeOnly
+                        });
+                    });
                     timelineClusterGroup.addLayer(marker);
                     latLngs.push(coords);
                     let rowDate = eventTimeKeyName ? new Date(item.rowObj[eventTimeKeyName]) : null;
@@ -1960,10 +3292,13 @@
         /* =====================================================================
            MAPA GPS
            ===================================================================== */
+        let mapRouteQuery = '';
+        let mapWaybillQuery = '';
+
         function prepareGpsMapEvents() {
-            let mapSearchEl = document.getElementById('map-advanced-search');
-            let mapSearch = mapSearchEl ? mapSearchEl.value.toLowerCase().trim() : '';
-            cachedGpsMapList = [];
+            let mapTextEl = document.getElementById('map-text-search');
+            let mapTextSearch = mapTextEl ? mapTextEl.value.toLowerCase().trim() : '';
+            let allMappedRows = [];
             rawData.forEach(row => {
                 let matchPlaza = activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
                 let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
@@ -1977,14 +3312,34 @@
                 let matchRoute = activeMapRouteSelections.has(rVal);
                 let gVal = String(row[garantiaKeyName] ?? 'N/D');
                 let matchGarantia = activeMapGarantiaSelections.has(gVal);
-                let matchSearch = mapSearch === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(mapSearch));
-                if (matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchSearch) {
+                let matchText = mapTextSearch === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(mapTextSearch));
+                let matchRouteQ = mapRouteQuery === '' || String(row[routeKeyName] ?? '').toLowerCase().includes(mapRouteQuery);
+                let matchWaybillQ = mapWaybillQuery === '' || String(row[guideKeyName] ?? '').toLowerCase().includes(mapWaybillQuery);
+
+                if (matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchText && matchRouteQ && matchWaybillQ) {
+                    let timeVal = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
+                    let timeStamp = timeVal && !isNaN(timeVal) ? timeVal.getTime() : 0;
                     let coords = coordKeyName ? parseCoordinates(row[coordKeyName]) : null;
-                    if (coords) {
-                        cachedGpsMapList.push({ coords, rowObj: row, guide: row[guideKeyName] || '—', ruta: rVal, status: row[statusKeyName] || 'N/D' });
-                    }
+                    allMappedRows.push({
+                        timestamp: timeStamp,
+                        coords,
+                        rowObj: row,
+                        guide: String(row[guideKeyName] ?? '—'),
+                        ruta: rVal,
+                        status: String(row[statusKeyName] ?? 'N/D')
+                    });
                 }
             });
+
+            allMappedRows.sort((a, b) => a.timestamp - b.timestamp);
+            cachedGpsMapList = [];
+            allMappedRows.forEach((item, index) => {
+                item.sequenceNumber = index + 1;
+                if (item.coords) {
+                    cachedGpsMapList.push(item);
+                }
+            });
+
             document.getElementById('gps-map-row-count').innerText = cachedGpsMapList.length.toLocaleString();
             renderGpsMap();
         }
@@ -2001,25 +3356,54 @@
                 gpsClusterGroup = L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false, zoomToBoundsOnClick: true });
                 if (gpsRouteLinesLayer) gpsRouteLinesLayer.clearLayers();
                 let latLngs = [];
-                let pointsForLines = [];
+                let validPointsForLines = [];
                 cachedGpsMapList.forEach(item => {
-                    let marker = L.circleMarker(item.coords, { radius: 8, color: '#991B1B', fillColor: '#DA291C', fillOpacity: 1 });
-                    let timeStr = eventTimeKeyName && item.rowObj[eventTimeKeyName] ? item.rowObj[eventTimeKeyName] : '—';
-                    marker.bindPopup(`<b>Guía:</b> ${esc(item.guide)}<br><b>Ruta:</b> ${esc(item.ruta)}<br><b>Hora:</b> ${esc(timeStr)}`);
-                    marker.on('click', () => openCardModal(item.rowObj));
+                    if (!item.coords) return;
+                    let timeOnly = '—';
+                    if (eventTimeKeyName && item.rowObj[eventTimeKeyName]) {
+                        let d = new Date(item.rowObj[eventTimeKeyName]);
+                        if (!isNaN(d)) timeOnly = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} hrs`;
+                        else { let parts = String(item.rowObj[eventTimeKeyName]).split(' '); timeOnly = parts.length > 1 ? parts[1] : String(item.rowObj[eventTimeKeyName]); }
+                    }
+                    const pointColor = '#10B981';
+                    const numberedIcon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color:${pointColor};color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">${item.sequenceNumber}</div>`,
+                        iconSize: [28, 28], iconAnchor: [14, 14]
+                    });
+                    let marker = L.marker(item.coords, { icon: numberedIcon });
+                    marker.on('click', (ev) => {
+                        if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
+                        openCardModal(item.rowObj, {
+                            mapName: 'Mapa GPS',
+                            sequenceNumber: item.sequenceNumber,
+                            timeOnly: timeOnly
+                        });
+                    });
                     gpsClusterGroup.addLayer(marker);
                     latLngs.push(item.coords);
-                    let d = eventTimeKeyName ? new Date(item.rowObj[eventTimeKeyName]) : null;
-                    pointsForLines.push({ latLng: L.latLng(item.coords[0], item.coords[1]), date: d });
+                    let rowDate = eventTimeKeyName ? new Date(item.rowObj[eventTimeKeyName]) : null;
+                    validPointsForLines.push({ latLng: L.latLng(item.coords[0], item.coords[1]), seqNum: item.sequenceNumber, date: rowDate });
                 });
                 gpsMapInstance.addLayer(gpsClusterGroup);
-                for (let i = 0; i < pointsForLines.length - 1; i++) {
-                    let p1 = pointsForLines[i], p2 = pointsForLines[i + 1];
+                for (let i = 0; i < validPointsForLines.length - 1; i++) {
+                    let p1 = validPointsForLines[i];
+                    let p2 = validPointsForLines[i + 1];
                     let distMeters = p1.latLng.distanceTo(p2.latLng);
                     let distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(1) + ' metros';
-                    let line = L.polyline([p1.latLng, p2.latLng], { color: '#DA291C', weight: 3, opacity: 0.7, dashArray: '5, 5' });
-                    line.bindTooltip(`Distancia: <b>${distText}</b>`, { sticky: true, className: 'bg-white px-3 py-1 rounded-lg shadow text-xs' });
-                    gpsRouteLinesLayer.addLayer(line);
+                    let timeText = '';
+                    if (p1.date && p2.date && !isNaN(p1.date) && !isNaN(p2.date)) {
+                        let diffMs = p2.date - p1.date;
+                        if (diffMs >= 0) {
+                            let totalMins = Math.floor(diffMs / 60000);
+                            let hrs = Math.floor(totalMins / 60);
+                            let mins = totalMins % 60;
+                            timeText = hrs > 0 ? `<br>Tiempo: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo: <b>${totalMins} min</b>`;
+                        }
+                    }
+                    let segmentLine = L.polyline([p1.latLng, p2.latLng], { color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5' });
+                    segmentLine.bindTooltip(`Seq #${p1.seqNum} &rarr; #${p2.seqNum}<br>Distancia: <b>${distText}</b>${timeText}`, { sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200' });
+                    gpsRouteLinesLayer.addLayer(segmentLine);
                 }
                 if (showGpsRouteLines && gpsRouteLinesLayer) { if (!gpsMapInstance.hasLayer(gpsRouteLinesLayer)) gpsMapInstance.addLayer(gpsRouteLinesLayer); }
                 else { if (gpsRouteLinesLayer && gpsMapInstance.hasLayer(gpsRouteLinesLayer)) gpsMapInstance.removeLayer(gpsRouteLinesLayer); }
@@ -2063,6 +3447,7 @@
                 <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-blue-800"><i class="fa-solid fa-barcode text-blue-600 mr-1.5"></i> Órdenes de Recolección (OR)</td><td class="p-3 text-center font-semibold text-gray-800">${orCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(orCount)}%</td></tr>
                 <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-yellow-800"><i class="fa-solid fa-clock-rotate-left text-yellow-600 mr-1.5"></i> Pendientes</td><td class="p-3 text-center font-semibold text-gray-800">${pendientesCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(pendientesCount)}%</td></tr>
                 ${otrosCount > 0 ? `<tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-gray-700"><i class="fa-solid fa-circle-question text-gray-400 mr-1.5"></i> Otros</td><td class="p-3 text-center font-semibold text-gray-800">${otrosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(otrosCount)}%</td></tr>` : ''}`;
+            updateAvanceRouteChartAndTable(rows);
         }
 
         function applyFilters() {
@@ -2110,9 +3495,7 @@
             const plazas = Object.keys(plazaCounts).sort();
             const btnText = document.getElementById('btn-text');
             if (btnText) {
-                btnText.innerText = activePlazaFilter.size === 0
-                    ? `Plazas (${plazas.length})`
-                    : `Plazas (${activePlazaFilter.size}/${plazas.length})`;
+                btnText.innerText = 'Plazas';
             }
             container.innerHTML = plazas.map(p => `
                 <label class="flex items-center justify-between gap-2 text-xs cursor-pointer p-2 rounded-lg border transition select-none">
@@ -2148,7 +3531,7 @@
             if (activeTimelineGarantiaSelections.size !== initialGarantiaCount) return true;
             if (activeMapRouteSelections.size !== initialRouteCount) return true;
             if (activeMapGarantiaSelections.size !== initialGarantiaCount) return true;
-            const ids = ['table-advanced-search','crono-advanced-search','timeline-advanced-search','sequence-search-input','map-advanced-search','timeline-route-query','timeline-waybill-query'];
+            const ids = ['table-advanced-search','crono-advanced-search','timeline-advanced-search','sequence-search-input','timeline-route-query','timeline-waybill-query','map-route-query','map-waybill-query','map-text-search'];
             for (let id of ids) {
                 const el = document.getElementById(id);
                 if (el && el.value.trim() !== '') return true;
@@ -2208,12 +3591,17 @@
                 if (i) i.className = 'fa-solid fa-calendar-check text-[11px]';
             });
 
-            ['table-advanced-search','crono-advanced-search','timeline-advanced-search','sequence-search-input','map-advanced-search','timeline-route-query','timeline-waybill-query'].forEach(id => {
+            ['table-advanced-search','crono-advanced-search','timeline-advanced-search','sequence-search-input','timeline-route-query','timeline-waybill-query','map-route-query','map-waybill-query','map-text-search'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) el.value = '';
+                if (el) {
+                    el.value = '';
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                }
             });
             timelineRouteQuery = '';
             timelineWaybillQuery = '';
+            mapRouteQuery = '';
+            mapWaybillQuery = '';
 
             currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
             updateDashboard();
@@ -2278,6 +3666,9 @@
                 const isDark = document.body.classList.contains('dark-mode');
                 document.getElementById('theme-icon').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
                 localStorage.setItem('estafeta-theme', isDark ? 'dark' : 'light');
+                updateDeadTimesChart();
+                let plazaRowsTheme = rawData.filter(row => activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D')));
+                updateAvanceRouteChartAndTable(plazaRowsTheme);
             });
         }
 
@@ -2290,7 +3681,7 @@
                 { id: 'crono-advanced-search', reset: 'btn-crono-search-reset', handler: () => { deadTimesCurrentPage = 1; cronoCurrentPage = 1; applyCronoDetailFilter(); toggleFloatingResetButton(); } },
                 { id: 'timeline-advanced-search', reset: 'btn-timeline-search-reset', handler: () => { timelineCurrentPage = 1; prepareTimelineEvents(); toggleFloatingResetButton(); } },
                 { id: 'sequence-search-input', reset: 'btn-sequence-search-reset', handler: () => { timelineCurrentPage = 1; prepareTimelineEvents(); toggleFloatingResetButton(); } },
-                { id: 'map-advanced-search', reset: 'btn-map-search-reset', handler: () => { prepareGpsMapEvents(); toggleFloatingResetButton(); } }
+                { id: 'map-text-search', reset: 'btn-map-text-search-reset', handler: () => { prepareGpsMapEvents(); toggleFloatingResetButton(); } }
             ];
             searchInputs.forEach(({id, reset, handler}) => {
                 const el = document.getElementById(id);
@@ -2307,7 +3698,6 @@
                 }));
             });
 
-            // NUEVO: Query by Route + Waybill con control de botones Reset
             const routeQEl = document.getElementById('timeline-route-query');
             if (routeQEl) {
                 routeQEl.addEventListener('input', debounce((e) => {
@@ -2333,6 +3723,33 @@
                     }
                     timelineCurrentPage = 1;
                     prepareTimelineEvents();
+                    toggleFloatingResetButton();
+                }));
+            }
+
+            const mapRouteQEl = document.getElementById('map-route-query');
+            if (mapRouteQEl) {
+                mapRouteQEl.addEventListener('input', debounce((e) => {
+                    mapRouteQuery = String(e.target.value || '').toLowerCase().trim();
+                    const btn = document.getElementById('btn-map-route-query-reset');
+                    if (btn) {
+                        if (mapRouteQuery !== '') { btn.classList.remove('filter-btn-hidden'); btn.classList.add('filter-btn-visible'); }
+                        else { btn.classList.remove('filter-btn-visible'); btn.classList.add('filter-btn-hidden'); }
+                    }
+                    prepareGpsMapEvents();
+                    toggleFloatingResetButton();
+                }));
+            }
+            const mapWaybillQEl = document.getElementById('map-waybill-query');
+            if (mapWaybillQEl) {
+                mapWaybillQEl.addEventListener('input', debounce((e) => {
+                    mapWaybillQuery = String(e.target.value || '').toLowerCase().trim();
+                    const btn = document.getElementById('btn-map-waybill-query-reset');
+                    if (btn) {
+                        if (mapWaybillQuery !== '') { btn.classList.remove('filter-btn-hidden'); btn.classList.add('filter-btn-visible'); }
+                        else { btn.classList.remove('filter-btn-visible'); btn.classList.add('filter-btn-hidden'); }
+                    }
+                    prepareGpsMapEvents();
                     toggleFloatingResetButton();
                 }));
             }
@@ -2369,9 +3786,8 @@
                 mapCard.classList.toggle('fullscreen');
                 const isF = mapCard.classList.contains('fullscreen');
                 const i = document.getElementById('fullscreen-icon');
-                const t = document.getElementById('fullscreen-text');
                 if (i) i.className = isF ? "fa-solid fa-compress" : "fa-solid fa-expand";
-                if (t) t.innerText = isF ? "Restaurar" : "Pantalla Completa";
+                fsBtn.title = isF ? "Restaurar tamaño" : "Pantalla completa";
                 setTimeout(() => { if (timelineMapInstance) timelineMapInstance.invalidateSize(); }, 100);
             });
 
@@ -2381,9 +3797,8 @@
                 gpsCard.classList.toggle('fullscreen');
                 const isF = gpsCard.classList.contains('fullscreen');
                 const i = document.getElementById('gps-fullscreen-icon');
-                const t = document.getElementById('gps-fullscreen-text');
                 if (i) i.className = isF ? "fa-solid fa-compress" : "fa-solid fa-expand";
-                if (t) t.innerText = isF ? "Restaurar" : "Pantalla Completa";
+                gpsFsBtn.title = isF ? "Restaurar tamaño" : "Pantalla completa";
                 setTimeout(() => { if (gpsMapInstance) gpsMapInstance.invalidateSize(); }, 100);
             });
         }
@@ -2402,6 +3817,8 @@
             window.addEventListener('resize', () => {
                 const activeBtn = document.querySelector('.main-tab-btn.text-white');
                 if (activeBtn) updateTabIndicator(activeBtn);
+                if (deadTimesChartInstance) deadTimesChartInstance.resize();
+                if (avanceRouteBarChartInstance) avanceRouteBarChartInstance.resize();
             });
         });
     </script>
