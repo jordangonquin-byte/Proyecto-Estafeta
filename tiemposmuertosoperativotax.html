@@ -967,13 +967,13 @@
     </div>
 
     <div id="qr-modal" style="z-index: 100005;" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-4 text-center relative animate-in fade-in zoom-in duration-200">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div id="qr-modal-card" class="bg-slate-900 border border-slate-800 text-white w-fit max-w-[95vw] min-w-[320px] rounded-2xl p-5 shadow-2xl space-y-4 text-center relative animate-in fade-in zoom-in duration-200">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3 gap-4">
                 <h3 id="qr-modal-title" class="font-bold text-sm flex items-center gap-2">Código</h3>
                 <button onclick="closeQRModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="flex justify-center py-2 overflow-x-auto">
-                <div id="qrcode-container" class="bg-white p-3 rounded-xl border border-slate-700 shadow-inner inline-flex items-center justify-center"></div>
+            <div class="flex justify-center py-2">
+                <div id="qrcode-container" class="bg-white p-5 rounded-xl border border-slate-700 shadow-inner flex items-center justify-center max-w-full"></div>
             </div>
             <p id="qr-modal-desc" class="text-xs text-slate-400">Escanea el código.</p>
             <button onclick="closeQRModal()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl text-xs font-bold transition">Cerrar</button>
@@ -1924,6 +1924,8 @@
             const descEl = document.getElementById('qr-modal-desc');
             const container = document.getElementById('qrcode-container');
             container.innerHTML = "";
+            container.style.backgroundColor = "#ffffff";
+            container.style.padding = "20px";
             let cleanPhone = String(phone || '').replace(/\D/g, '');
             if (!cleanPhone) { addNotification("Aviso QR", "Este registro no cuenta con un número válido.", "warning"); return; }
             let qrText = "";
@@ -1934,11 +1936,31 @@
             } else if (type === 'whatsapp') {
                 titleEl.innerHTML = `<i class="fa-brands fa-whatsapp text-green-400 mr-2"></i> QR para WhatsApp`;
                 descEl.innerText = `Escanea para iniciar chat directo con: ${cleanPhone}`;
+                const waPhone = cleanPhone.length === 10 ? `52${cleanPhone}` : cleanPhone;
                 const message = encodeURIComponent("Hola, nos comunicamos de Estafeta respecto a tu envío.");
-                qrText = `https://wa.me/${cleanPhone}?text=${message}`;
+                qrText = `https://wa.me/${waPhone}?text=${message}`;
             }
             modal.classList.remove('hidden');
-            new QRCode(container, { text: qrText, width: 160, height: 160, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+            new QRCode(container, {
+                text: qrText,
+                width: 240,
+                height: 240,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
+            const qrImg = container.querySelector('img');
+            const qrCanvas = container.querySelector('canvas');
+            if (qrCanvas) {
+                qrCanvas.style.imageRendering = 'pixelated';
+                qrCanvas.style.display = 'block';
+            }
+            if (qrImg) {
+                qrImg.style.imageRendering = 'pixelated';
+                qrImg.style.display = 'block';
+                qrImg.style.width = '240px';
+                qrImg.style.height = '240px';
+            }
         }
         function closeQRModal() { document.getElementById('qr-modal').classList.add('hidden'); }
 
@@ -2046,21 +2068,29 @@
             const titleEl = document.getElementById('qr-modal-title');
             const descEl = document.getElementById('qr-modal-desc');
             const container = document.getElementById('qrcode-container');
-            container.innerHTML = '<svg id="modal-barcode-svg"></svg>';
+            container.innerHTML = '<svg id="modal-barcode-svg" style="max-width: 100%; height: auto; display: block;"></svg>';
+            container.style.backgroundColor = "#ffffff";
+            container.style.padding = "16px 20px";
             titleEl.innerHTML = `<i class="fa-solid fa-barcode text-red-500 mr-1"></i> Código de Barras Guía / OR`;
             descEl.innerText = `Guía / OR: ${cleanGuide}`;
             modal.classList.remove('hidden');
             if (typeof JsBarcode !== 'undefined') {
                 JsBarcode('#modal-barcode-svg', cleanGuide, {
                     format: 'CODE128',
-                    width: 2,
-                    height: 75,
+                    width: 2.2,
+                    height: 90,
                     displayValue: true,
-                    fontSize: 15,
-                    margin: 6,
+                    fontSize: 16,
+                    margin: 10,
                     background: '#ffffff',
-                    lineColor: '#0f172a'
+                    lineColor: '#000000'
                 });
+                const svgEl = document.getElementById('modal-barcode-svg');
+                if (svgEl) {
+                    svgEl.style.width = '100%';
+                    svgEl.style.maxWidth = '420px';
+                    svgEl.style.height = 'auto';
+                }
             }
         }
 
