@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     
     <style>
         html, body { margin: 0 !important; padding: 0 !important; width: 100%; min-height: 100vh; overflow-x: hidden; }
@@ -680,16 +681,16 @@
                                 <button type="button" id="btn-dt-layout-overlay" onclick="setDeadTimesChartLayout('overlay')" class="px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition">Superpuesto</button>
                                 <button type="button" id="btn-dt-layout-side" onclick="setDeadTimesChartLayout('side')" class="px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition">Lado a lado</button>
                             </div>
-                            <div class="inline-flex rounded-lg bg-gray-100 p-0.5 border border-gray-200" id="dt-overlay-type-group">
-                                <button type="button" id="btn-dt-type-bar" onclick="setDeadTimesOverlayChartType('bar')" class="px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition flex items-center gap-1"><i class="fa-solid fa-chart-column text-[10px]"></i> Barras</button>
-                                <button type="button" id="btn-dt-type-line" onclick="setDeadTimesOverlayChartType('line')" class="px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition flex items-center gap-1"><i class="fa-solid fa-chart-line text-[10px]"></i> Líneas</button>
+                            <div class="inline-flex rounded-lg bg-gray-100 p-0.5 border border-gray-200" id="dt-overlay-chart-type-group">
+                                <button type="button" id="btn-dt-type-bar" onclick="setDeadTimesOverlayChartType('bar')" class="px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition"><i class="fa-solid fa-chart-column mr-1"></i>Barras</button>
+                                <button type="button" id="btn-dt-type-line" onclick="setDeadTimesOverlayChartType('line')" class="px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition"><i class="fa-solid fa-chart-line mr-1"></i>Líneas</button>
                             </div>
                             <select id="dt-chart-metric-select" onchange="onDeadTimesMetricChange()" class="bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-xs cursor-pointer">
                                 <option value="all">Máximo + Promedio + Total (hrs)</option>
                                 <option value="max">Solo Tiempo Máximo (hrs)</option>
                                 <option value="avg">Solo Tiempo Promedio (hrs)</option>
                                 <option value="total">Solo Tiempo Total (hrs)</option>
-                                <option value="events">Solo Eventos (cantidad)</option>
+                                <option value="events">Solo Total Eventos</option>
                             </select>
 
                             <!-- Filtro de Ruta con Checkboxes para comparar -->
@@ -954,25 +955,27 @@
             </div>
             <div id="modal-body" class="space-y-2 max-h-[70vh] overflow-y-auto pr-2 text-xs"></div>
             <div id="modal-footer-actions" class="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
-                <button id="modal-qr-btn" onclick="openModalRecordQR()" class="px-4 py-2 estafeta-red hover:bg-red-700 text-white font-bold rounded-lg text-xs shadow-sm transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-qrcode"></i>
-                    <span>QR</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button id="modal-barcode-btn" onclick="openModalRecordBarcode()" class="px-4 py-2 estafeta-red hover:bg-red-700 text-white font-bold rounded-lg text-xs shadow-sm transition-all flex items-center gap-1.5" title="Ver código de barras de Guía / OR">
+                        <i class="fa-solid fa-barcode"></i>
+                        <span>Código de Barras</span>
+                    </button>
+                </div>
                 <button onclick="closeModal()" class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold rounded-lg text-xs transition-all">Cerrar</button>
             </div>
         </div>
     </div>
 
     <div id="qr-modal" style="z-index: 100005;" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-xs rounded-2xl p-5 shadow-2xl space-y-4 text-center relative animate-in fade-in zoom-in duration-200">
+        <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-4 text-center relative animate-in fade-in zoom-in duration-200">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 id="qr-modal-title" class="font-bold text-sm flex items-center gap-2">Código QR</h3>
+                <h3 id="qr-modal-title" class="font-bold text-sm flex items-center gap-2">Código</h3>
                 <button onclick="closeQRModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="flex justify-center py-2">
-                <div id="qrcode-container" class="bg-white p-3 rounded-xl border border-slate-700 shadow-inner inline-block"></div>
+            <div class="flex justify-center py-2 overflow-x-auto">
+                <div id="qrcode-container" class="bg-white p-3 rounded-xl border border-slate-700 shadow-inner inline-flex items-center justify-center"></div>
             </div>
-            <p id="qr-modal-desc" class="text-xs text-slate-400">Escanea el código con tu celular.</p>
+            <p id="qr-modal-desc" class="text-xs text-slate-400">Escanea el código.</p>
             <button onclick="closeQRModal()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl text-xs font-bold transition">Cerrar</button>
         </div>
     </div>
@@ -1886,11 +1889,14 @@
                     <div class="py-1 cursor-pointer" onclick='openKpiCardModal(${startIndex + idx}, ${absoluteIndex})'>
                         <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wider flex justify-between items-center"><span>Guía / OR</span><span class="text-[10px] estafeta-red-text font-semibold opacity-80"><i class="fa-solid fa-arrow-pointer mr-1"></i>Ver detalle</span></div>
                         <div class="font-bold text-gray-900 text-sm truncate mt-0.5" title="${esc(guideVal)}"><i class="fa-solid fa-barcode estafeta-red-text mr-1.5"></i>${esc(guideVal)}</div>
-                        <div class="text-[11px] text-gray-500 mt-1 truncate" title="Tel: ${esc(activeRawContact || 'Sin número')}"><i class="fa-solid fa-phone text-gray-400 mr-1"></i>${esc(activeRawContact || 'Sin número de contacto')}</div>
+                        <div class="text-[11px] text-gray-500 mt-1.5 truncate" title="Tel: ${esc(activeRawContact || 'Sin número')}"><i class="fa-solid fa-phone text-gray-400 mr-1"></i>${esc(activeRawContact || 'Sin número de contacto')}</div>
                     </div>
                     <div class="pt-2 border-t border-gray-100 flex items-center justify-between">
-                        <span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">QR de Contacto</span>
+                        <span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Acciones Rápidas</span>
                         <div class="flex items-center space-x-2">
+                            <button onclick="openBarcodeModal(${esc(JSON.stringify(String(guideVal)))})" title="Ampliar Código de Barras de Guía / OR" class="w-8 h-8 rounded-xl bg-red-500/15 text-red-600 hover:bg-red-600 hover:text-white border-red-500/30 flex items-center justify-center transition-all shadow-sm border">
+                                <i class="fa-solid fa-barcode text-xs"></i>
+                            </button>
                             <button onclick="openQRModal('call', '${esc(phoneParam)}')" ${!hasValidPhone ? 'disabled title="Sin número disponible"' : 'title="Ver código QR para Llamada"'} class="w-8 h-8 rounded-xl ${hasValidPhone ? 'bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500 hover:text-white border-emerald-500/30' : 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300'} flex items-center justify-center transition-all shadow-sm border">
                                 <i class="fa-solid fa-phone text-xs"></i>
                             </button>
@@ -1941,6 +1947,8 @@
            ===================================================================== */
         function openCardModal(row, extraInfo = null) {
             if (!row) return;
+            currentModalRow = row;
+            currentModalPhone = extractPhoneFromRow(row);
             const modal = document.getElementById('card-modal');
             const title = document.getElementById('modal-title');
             const body = document.getElementById('modal-body');
@@ -2028,40 +2036,38 @@
             });
         }
 
-        function openModalRecordQR() {
-            if (!currentModalRow) return;
-            const guideVal = String(currentModalRow[guideKeyName] || '').trim();
-            const phoneDigits = currentModalPhone || extractPhoneFromRow(currentModalRow);
+        function openBarcodeModal(guideVal) {
+            const cleanGuide = String(guideVal || '').trim();
+            if (!cleanGuide || cleanGuide === '—') {
+                addNotification('Aviso Código de Barras', 'Este registro no cuenta con una Guía / OR válida.', 'warning');
+                return;
+            }
             const modal = document.getElementById('qr-modal');
             const titleEl = document.getElementById('qr-modal-title');
             const descEl = document.getElementById('qr-modal-desc');
             const container = document.getElementById('qrcode-container');
-            container.innerHTML = '';
-
-            let qrPayload = '';
-            if (phoneDigits) {
-                const msg = encodeURIComponent(`Hola, nos comunicamos de Estafeta respecto a tu envío${guideVal ? ' ' + guideVal : ''}.`);
-                qrPayload = `https://wa.me/${phoneDigits}?text=${msg}`;
-                titleEl.innerHTML = `<i class="fa-solid fa-qrcode text-red-500 mr-1"></i> QR automático (${esc(guideVal || 'Registro')})`;
-                descEl.innerText = `Guía/OR: ${guideVal || '—'} · Número detectado: ${phoneDigits}`;
-            } else if (guideVal) {
-                qrPayload = guideVal;
-                titleEl.innerHTML = `<i class="fa-solid fa-qrcode text-red-500 mr-1"></i> QR de Guía / OR`;
-                descEl.innerText = `Guía/OR: ${guideVal} (sin número telefónico detectado)`;
-            } else {
-                addNotification('Aviso QR', 'No se encontró Guía/OR ni número telefónico en este registro.', 'warning');
-                return;
-            }
-
+            container.innerHTML = '<svg id="modal-barcode-svg"></svg>';
+            titleEl.innerHTML = `<i class="fa-solid fa-barcode text-red-500 mr-1"></i> Código de Barras Guía / OR`;
+            descEl.innerText = `Guía / OR: ${cleanGuide}`;
             modal.classList.remove('hidden');
-            new QRCode(container, {
-                text: qrPayload,
-                width: 170,
-                height: 170,
-                colorDark: '#0f172a',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.M
-            });
+            if (typeof JsBarcode !== 'undefined') {
+                JsBarcode('#modal-barcode-svg', cleanGuide, {
+                    format: 'CODE128',
+                    width: 2,
+                    height: 75,
+                    displayValue: true,
+                    fontSize: 15,
+                    margin: 6,
+                    background: '#ffffff',
+                    lineColor: '#0f172a'
+                });
+            }
+        }
+
+        function openModalRecordBarcode() {
+            if (!currentModalRow) return;
+            const guideVal = String(currentModalRow[guideKeyName] || '').trim();
+            openBarcodeModal(guideVal);
         }
 
         function closeModal() {
@@ -2110,23 +2116,36 @@
         let deadTimesChartLayout = 'overlay';
         let deadTimesOverlayChartType = 'bar';
         let deadTimesSideCharts = [];
-        let dtSelectedChartRoutes = new Set();
+
+        function syncOverlayChartTypeButtons() {
+            const typeGroup = document.getElementById('dt-overlay-chart-type-group');
+            const btnBar = document.getElementById('btn-dt-type-bar');
+            const btnLine = document.getElementById('btn-dt-type-line');
+            if (!typeGroup) return;
+            if (deadTimesChartLayout === 'overlay') {
+                typeGroup.classList.remove('hidden');
+                typeGroup.classList.add('inline-flex');
+            } else {
+                typeGroup.classList.add('hidden');
+                typeGroup.classList.remove('inline-flex');
+            }
+            if (btnBar && btnLine) {
+                if (deadTimesOverlayChartType === 'line') {
+                    btnLine.className = 'px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition';
+                    btnBar.className = 'px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition';
+                } else {
+                    btnBar.className = 'px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition';
+                    btnLine.className = 'px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition';
+                }
+            }
+        }
 
         function setDeadTimesOverlayChartType(chartType) {
             deadTimesOverlayChartType = chartType === 'line' ? 'line' : 'bar';
-            const btnBar = document.getElementById('btn-dt-type-bar');
-            const btnLine = document.getElementById('btn-dt-type-line');
-            if (btnBar && btnLine) {
-                if (deadTimesOverlayChartType === 'bar') {
-                    btnBar.className = 'px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition flex items-center gap-1';
-                    btnLine.className = 'px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition flex items-center gap-1';
-                } else {
-                    btnLine.className = 'px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition flex items-center gap-1';
-                    btnBar.className = 'px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition flex items-center gap-1';
-                }
-            }
+            syncOverlayChartTypeButtons();
             updateDeadTimesChart();
         }
+        let dtSelectedChartRoutes = new Set();
         let dtChartRoutesInitialized = false;
         let dtChartIsFullscreen = false;
         let dtSideActiveTab = 0;
@@ -2248,8 +2267,6 @@
                     btnOverlay.className = 'px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition';
                     btnSide.className = 'px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition';
                 }
-                const typeGrpFs = document.getElementById('dt-overlay-type-group');
-                if (typeGrpFs) typeGrpFs.classList.add('hidden');
             } else {
                 card.classList.remove('dt-fullscreen-overlay');
                 if (icon) icon.className = 'fa-solid fa-expand';
@@ -2264,16 +2281,13 @@
             dtSideActiveTab = 0;
             const btnOverlay = document.getElementById('btn-dt-layout-overlay');
             const btnSide = document.getElementById('btn-dt-layout-side');
-            const typeGrp = document.getElementById('dt-overlay-type-group');
             if (btnOverlay && btnSide) {
                 if (deadTimesChartLayout === 'overlay') {
                     btnOverlay.className = 'px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition';
                     btnSide.className = 'px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition';
-                    if (typeGrp) typeGrp.classList.remove('hidden');
                 } else {
                     btnSide.className = 'px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition';
                     btnOverlay.className = 'px-2.5 py-1 rounded-md font-semibold text-gray-600 hover:text-gray-900 transition';
-                    if (typeGrp) typeGrp.classList.add('hidden');
                 }
             }
             updateDeadTimesChart();
@@ -2281,6 +2295,7 @@
 
         function resetDeadTimesChartControls() {
             deadTimesChartLayout = 'overlay';
+            deadTimesOverlayChartType = 'bar';
             dtSideActiveTab = 0;
             const metricSel = document.getElementById('dt-chart-metric-select');
             if (metricSel) metricSel.value = 'all';
@@ -2288,7 +2303,7 @@
             dtSelectedChartRoutes = new Set(allRoutes);
             updateDtRouteDropdownLabel(allRoutes.length);
             renderDtRouteChecklist();
-            setDeadTimesOverlayChartType('bar');
+            syncOverlayChartTypeButtons();
             setDeadTimesChartLayout('overlay');
         }
 
@@ -2297,240 +2312,37 @@
             updateDeadTimesChart();
         }
 
-        function buildDeadTimesDatasetsForRoute(routeObj, metricMode, paletteIdx = 0) {
+        function buildDeadTimesDatasetsForRoute(routeObj, metricMode, paletteIdx = 0, routesList = null) {
+            const listToUse = Array.isArray(routesList) && routesList.length > 0 ? routesList : [routeObj];
             const mainColor = getRouteColor(paletteIdx);
+            syncOverlayChartTypeButtons();
+
+            const isLineMode = deadTimesOverlayChartType === 'line';
             const toHours = ms => Number(((ms || 0) / 3600000).toFixed(3));
-            const maxH = toHours(routeObj.max);
-            const avgH = toHours(routeObj.avg);
-            const totH = toHours(routeObj.total);
 
-            const ds = [];
-            if (metricMode === 'all' || metricMode === 'max') {
-                ds.push({
-                    label: 'Máximo (hrs)',
-                    data: [avgH, maxH, totH],
-                    borderColor: mainColor,
-                    backgroundColor: mainColor + '26',
-                    borderWidth: 2.5,
-                    tension: 0.35,
-                    fill: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                });
-            }
-            if (metricMode === 'all' || metricMode === 'avg') {
-                ds.push({
-                    label: 'Promedio (hrs)',
-                    data: [avgH, avgH, avgH],
-                    borderColor: '#0ea5e9',
-                    backgroundColor: 'rgba(14, 165, 233, 0.12)',
-                    borderWidth: 2,
-                    borderDash: [5, 4],
-                    tension: 0.35,
-                    fill: false,
-                    pointRadius: 3
-                });
-            }
-            if (metricMode === 'all' || metricMode === 'total') {
-                ds.push({
-                    label: 'Total Suma (hrs)',
-                    data: [totH * 0.35, totH * 0.7, totH],
-                    borderColor: '#10b981',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    tension: 0.35,
-                    fill: false,
-                    pointRadius: 3
-                });
-            }
-            if (metricMode === 'events') {
-                const ev = routeObj.count || 0;
-                ds.push({
-                    label: 'Eventos (cantidad)',
-                    data: [Math.round(ev * 0.35), Math.round(ev * 0.7), ev],
-                    borderColor: '#8b5cf6',
-                    backgroundColor: 'rgba(139, 92, 246, 0.16)',
-                    borderWidth: 2.5,
-                    tension: 0.35,
-                    fill: true,
-                    pointRadius: 4
-                });
-            }
-            return ds;
-        }
-
-        function updateDeadTimesChart() {
-            syncDeadTimesRouteChecklist();
-            const canvas = document.getElementById('deadTimesChartCanvas');
-            const overlayWrapper = document.getElementById('dt-chart-overlay-wrapper');
-            const sideGrid = document.getElementById('dt-chart-side-grid');
-            const sideTabsBar = document.getElementById('dt-side-tabs-bar');
-            const sideTabsButtons = document.getElementById('dt-side-tabs-buttons');
-            const sideTabsInfo = document.getElementById('dt-side-tabs-info');
-            if (!canvas || typeof Chart === 'undefined') return;
-
-            const metricSelect = document.getElementById('dt-chart-metric-select');
-            const metricMode = metricSelect ? metricSelect.value : 'all';
-            const isDark = document.body.classList.contains('dark-mode');
-            const textColor = isDark ? '#f8fafc' : '#0f172a';
-            const gridColor = isDark ? 'rgba(148, 163, 184, 0.18)' : 'rgba(15, 23, 42, 0.12)';
-            const minTwentyMinsHours = 20 / 60;
-
-            const allRoutes = cachedDeadTimesList || [];
-            const selectedRoutesWithIdx = allRoutes
-                .map((r, originalIdx) => ({ ...r, originalIdx }))
-                .filter(r => dtSelectedChartRoutes.has(r.ruta));
-
-            if (deadTimesChartInstance) {
-                deadTimesChartInstance.destroy();
-                deadTimesChartInstance = null;
-            }
-            deadTimesSideCharts.forEach(ch => ch.destroy());
-            deadTimesSideCharts = [];
-
-            if (deadTimesChartLayout === 'side') {
-                if (overlayWrapper) overlayWrapper.classList.add('hidden');
-                if (sideGrid) {
-                    sideGrid.classList.remove('hidden');
-                    sideGrid.classList.add('grid');
-
-                    const perTab = dtChartIsFullscreen ? 12 : 3;
-                    const totalTabs = Math.max(1, Math.ceil(selectedRoutesWithIdx.length / perTab));
-                    if (dtSideActiveTab >= totalTabs) dtSideActiveTab = 0;
-
-                    if (sideTabsBar && sideTabsButtons && sideTabsInfo) {
-                        if (dtChartIsFullscreen && totalTabs > 1) {
-                            sideTabsBar.classList.remove('hidden');
-                            sideTabsBar.classList.add('flex');
-                            sideTabsButtons.innerHTML = Array.from({ length: totalTabs }, (_, tIdx) => {
-                                const startR = tIdx * perTab + 1;
-                                const endR = Math.min((tIdx + 1) * perTab, selectedRoutesWithIdx.length);
-                                const activeCls = tIdx === dtSideActiveTab
-                                    ? 'bg-red-600 text-white font-bold shadow-xs'
-                                    : 'bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-200 border border-gray-300 dark:border-slate-700 hover:bg-gray-100';
-                                return `<button type="button" onclick="setDtSideTab(${tIdx})" class="px-2.5 py-1 rounded-md text-[11px] transition ${activeCls}">Pestaña ${tIdx + 1} (Rutas ${startR}-${endR})</button>`;
-                            }).join('');
-                            sideTabsInfo.innerText = `Mostrando ${perTab} gráficas por pestaña de ${selectedRoutesWithIdx.length} rutas`;
-                        } else {
-                            sideTabsBar.classList.add('hidden');
-                            sideTabsBar.classList.remove('flex');
-                            sideTabsInfo.innerHTML = ``;
-                        }
-                    }
-
-                    const sliceStart = dtChartIsFullscreen ? dtSideActiveTab * perTab : 0;
-                    const visibleSideRoutes = selectedRoutesWithIdx.slice(sliceStart, sliceStart + perTab);
-
-                    sideGrid.className = dtChartIsFullscreen
-                        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1'
-                        : 'grid grid-cols-1 md:grid-cols-3 gap-3 pt-1';
-
-                    sideGrid.innerHTML = visibleSideRoutes.map((r, idx) => {
-                        const c = getRouteColor(r.originalIdx);
-                        return `
-                        <div class="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/80 p-3 space-y-2 shadow-xs" style="border-top: 3px solid ${c};">
-                            <div class="flex items-center justify-between text-xs font-bold border-b border-gray-100 dark:border-slate-800 pb-1.5">
-                                <span class="truncate text-gray-800 dark:text-slate-100 flex items-center gap-1.5">
-                                    <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${c};"></span>
-                                    ${esc(r.ruta)}
-                                </span>
-                                <span class="text-[10px] px-2 py-0.5 rounded-full font-extrabold" style="background:${c}22; color:${isDark ? '#f8fafc' : c};">Máx ${formatDuration(r.max)}</span>
-                            </div>
-                            <div class="grid grid-cols-3 gap-1 text-[10px] text-center bg-gray-50 dark:bg-slate-800/80 rounded-lg py-1 px-1.5">
-                                <div><span class="text-gray-500 dark:text-slate-400 block">Eventos</span><b class="text-gray-900 dark:text-slate-100">${r.count}</b></div>
-                                <div><span class="text-gray-500 dark:text-slate-400 block">Promedio</span><b class="text-sky-600 dark:text-sky-400">${formatDuration(r.avg)}</b></div>
-                                <div><span class="text-gray-500 dark:text-slate-400 block">Total</span><b class="text-emerald-600 dark:text-emerald-400">${formatDuration(r.total)}</b></div>
-                            </div>
-                            <div class="relative w-full" style="height: ${dtChartIsFullscreen ? '145px' : '170px'};">
-                                <canvas id="dtSideCanvas_${idx}"></canvas>
-                            </div>
-                        </div>
-                    `}).join('');
-
-                    visibleSideRoutes.forEach((r, idx) => {
-                        const c = document.getElementById(`dtSideCanvas_${idx}`);
-                        if (!c) return;
-                        const ch = new Chart(c.getContext('2d'), {
-                            type: 'line',
-                            data: {
-                                labels: ['Promedio', 'Pico Máximo', 'Total Acum.'],
-                                datasets: buildDeadTimesDatasetsForRoute(r, metricMode, r.originalIdx)
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: { display: false },
-                                    tooltip: {
-                                        enabled: false
-                                    }
-                                },
-                                scales: {
-                                    x: { ticks: { color: textColor, font: { size: 9 } }, grid: { display: false } },
-                                    y: {
-                                        beginAtZero: true,
-                                        min: 0,
-                                        ticks: {
-                                            color: textColor,
-                                            font: { size: 9 },
-                                            callback: v => Math.round(Number(v) * 60) + 'm'
-                                        },
-                                        grid: { color: gridColor }
-                                    }
-                                }
-                            }
-                        });
-                        deadTimesSideCharts.push(ch);
-                    });
-                }
-                return;
-            }
-
-            if (sideTabsBar) {
-                sideTabsBar.classList.add('hidden');
-                sideTabsBar.classList.remove('flex');
-            }
-            if (sideGrid) {
-                sideGrid.classList.add('hidden');
-                sideGrid.classList.remove('grid');
-                sideGrid.innerHTML = '';
-            }
-            if (overlayWrapper) {
-                overlayWrapper.classList.remove('hidden');
-                overlayWrapper.style.height = dtChartIsFullscreen ? 'calc(100vh - 200px)' : '340px';
-            }
-
-            const toHours = ms => Number(((ms || 0) / 3600000).toFixed(3));
-            const isLineChart = deadTimesOverlayChartType === 'line';
-            let activeXLabels = ['Tiempo Promedio (hrs)', 'Tiempo Máximo (hrs)', 'Tiempo Total Suma (hrs)', 'Eventos (x0.1)'];
-            if (metricMode !== 'all') {
-                activeXLabels = selectedRoutesWithIdx.map(r => r.ruta);
-            }
-
-            let datasets = [];
             if (metricMode === 'all') {
-                datasets = selectedRoutesWithIdx.map((r) => {
-                    const color = getRouteColor(r.originalIdx);
+                return listToUse.map((r, i) => {
+                    const idxColor = typeof r.originalIdx === 'number' ? r.originalIdx : (paletteIdx + i);
+                    const color = getRouteColor(idxColor);
                     const maxH = toHours(r.max);
                     const avgH = toHours(r.avg);
                     const totH = toHours(r.total);
-                    const evScaled = Number((r.count * 0.1).toFixed(2));
+                    const evScaled = Number(((r.count || 0) * 0.1).toFixed(2));
 
                     return {
                         label: r.ruta,
                         routeName: r.ruta,
                         routeStats: r,
                         data: [avgH, maxH, totH, evScaled],
-                        backgroundColor: isLineChart ? color + '22' : color + 'CC',
+                        backgroundColor: isLineMode ? color + '22' : color + 'CC',
                         borderColor: color,
-                        borderWidth: isLineChart ? 2.5 : 1.5,
-                        borderRadius: isLineChart ? 0 : 5,
+                        borderWidth: isLineMode ? 2.5 : 1.5,
+                        borderRadius: isLineMode ? 0 : 5,
                         maxBarThickness: 42,
-                        tension: 0.35,
+                        tension: isLineMode ? 0.35 : 0,
                         fill: false,
-                        pointRadius: isLineChart ? 4 : 0,
-                        pointHoverRadius: isLineChart ? 6 : 0,
-                        pointBackgroundColor: color
+                        pointRadius: isLineMode ? 4 : 3,
+                        pointHoverRadius: isLineMode ? 6 : 4
                     };
                 });
             } else {
@@ -2538,36 +2350,206 @@
                     max: 'Tiempo Máximo (hrs)',
                     avg: 'Tiempo Promedio (hrs)',
                     total: 'Tiempo Total Suma (hrs)',
-                    events: 'Total de Eventos'
+                    events: 'Total Eventos'
                 };
                 const metricLabel = metricTitleMap[metricMode] || 'Tiempo (hrs)';
-                datasets = [{
+                return [{
                     label: metricLabel,
-                    data: selectedRoutesWithIdx.map(r => {
+                    data: listToUse.map(r => {
                         if (metricMode === 'max') return toHours(r.max);
                         if (metricMode === 'avg') return toHours(r.avg);
-                        if (metricMode === 'events') return r.count;
-                        return toHours(r.total);
+                        if (metricMode === 'total') return toHours(r.total);
+                        return r.count || 0;
                     }),
-                    backgroundColor: isLineChart
+                    backgroundColor: isLineMode
                         ? 'rgba(218, 41, 28, 0.14)'
-                        : selectedRoutesWithIdx.map(r => getRouteColor(r.originalIdx) + 'CC'),
-                    borderColor: isLineChart
-                        ? '#DA291C'
-                        : selectedRoutesWithIdx.map(r => getRouteColor(r.originalIdx)),
-                    borderWidth: isLineChart ? 2.5 : 1.5,
-                    borderRadius: isLineChart ? 0 : 5,
+                        : listToUse.map((r, i) => getRouteColor(typeof r.originalIdx === 'number' ? r.originalIdx : (paletteIdx + i)) + 'CC'),
+                    borderColor: isLineMode
+                        ? mainColor
+                        : listToUse.map((r, i) => getRouteColor(typeof r.originalIdx === 'number' ? r.originalIdx : (paletteIdx + i))),
+                    borderWidth: isLineMode ? 2.5 : 1.5,
+                    borderRadius: isLineMode ? 0 : 5,
                     maxBarThickness: 48,
-                    tension: 0.35,
-                    fill: isLineChart,
-                    pointRadius: isLineChart ? 4 : 0,
-                    pointHoverRadius: isLineChart ? 6 : 0,
-                    pointBackgroundColor: selectedRoutesWithIdx.map(r => getRouteColor(r.originalIdx))
+                    tension: isLineMode ? 0.35 : 0,
+                    fill: false,
+                    pointBackgroundColor: listToUse.map((r, i) => getRouteColor(typeof r.originalIdx === 'number' ? r.originalIdx : (paletteIdx + i))),
+                    pointBorderColor: listToUse.map((r, i) => getRouteColor(typeof r.originalIdx === 'number' ? r.originalIdx : (paletteIdx + i))),
+                    pointRadius: isLineMode ? 4.5 : 3
                 }];
             }
+        }
+
+        function destroyDeadTimesSideCharts() {
+            if (Array.isArray(deadTimesSideCharts) && deadTimesSideCharts.length > 0) {
+                deadTimesSideCharts.forEach(ch => {
+                    try { ch.destroy(); } catch (e) {}
+                });
+            }
+            deadTimesSideCharts = [];
+        }
+
+        function updateDeadTimesChart() {
+            if (typeof Chart === 'undefined') return;
+            syncDeadTimesRouteChecklist();
+            syncOverlayChartTypeButtons();
+
+            const canvas = document.getElementById('deadTimesChartCanvas');
+            const overlayWrapper = document.getElementById('dt-chart-overlay-wrapper');
+            const sideGrid = document.getElementById('dt-chart-side-grid');
+            const sideTabsBar = document.getElementById('dt-side-tabs-bar');
+            const sideTabsButtons = document.getElementById('dt-side-tabs-buttons');
+            const sideTabsInfo = document.getElementById('dt-side-tabs-info');
+            if (!canvas || !overlayWrapper || !sideGrid) return;
+
+            const metricSel = document.getElementById('dt-chart-metric-select');
+            const metricMode = metricSel ? metricSel.value : 'all';
+
+            const allIndexed = (cachedDeadTimesList || []).map((r, idx) => ({ ...r, originalIdx: idx }));
+            const selectedRoutesWithIdx = allIndexed.filter(r => dtSelectedChartRoutes.has(r.ruta));
+
+            const isDark = document.body.classList.contains('dark-mode');
+            const textColor = isDark ? '#e2e8f0' : '#334155';
+            const gridColor = isDark ? 'rgba(148, 163, 184, 0.15)' : 'rgba(100, 116, 139, 0.15)';
+
+            if (deadTimesChartInstance) {
+                deadTimesChartInstance.destroy();
+                deadTimesChartInstance = null;
+            }
+            destroyDeadTimesSideCharts();
+
+            if (deadTimesChartLayout === 'side') {
+                overlayWrapper.classList.add('hidden');
+                sideGrid.classList.remove('hidden');
+                sideGrid.classList.add('grid');
+                sideGrid.innerHTML = '';
+
+                if (selectedRoutesWithIdx.length === 0) {
+                    if (sideTabsBar) sideTabsBar.classList.add('hidden');
+                    sideGrid.innerHTML = `<div class="col-span-full py-8 text-center text-xs text-gray-400 italic">Selecciona al menos una ruta en el filtro para ver las gráficas lado a lado.</div>`;
+                    return;
+                }
+
+                const groupSize = 3;
+                const totalSideTabs = Math.max(1, Math.ceil(selectedRoutesWithIdx.length / groupSize));
+                if (dtSideActiveTab >= totalSideTabs) dtSideActiveTab = 0;
+                if (dtSideActiveTab < 0) dtSideActiveTab = 0;
+
+                if (sideTabsBar && sideTabsButtons) {
+                    if (totalSideTabs > 1) {
+                        sideTabsBar.classList.remove('hidden');
+                        sideTabsBar.classList.add('flex');
+                        sideTabsButtons.innerHTML = Array.from({ length: totalSideTabs }, (_, tIdx) => {
+                            const active = tIdx === dtSideActiveTab;
+                            return `<button type="button" onclick="setDtSideTab(${tIdx})" class="px-2.5 py-1 rounded-md text-[11px] font-bold transition ${active ? 'bg-red-600 text-white shadow-xs' : 'bg-white dark:bg-slate-900 text-gray-700 dark:text-slate-200 border border-gray-200 dark:border-slate-700 hover:bg-gray-100'}">Grupo ${tIdx + 1}</button>`;
+                        }).join('');
+                    } else {
+                        sideTabsBar.classList.add('hidden');
+                        sideTabsBar.classList.remove('flex');
+                    }
+                    if (sideTabsInfo) {
+                        const startI = dtSideActiveTab * groupSize + 1;
+                        const endI = Math.min(selectedRoutesWithIdx.length, (dtSideActiveTab + 1) * groupSize);
+                        sideTabsInfo.innerText = `Mostrando ${startI}-${endI} de ${selectedRoutesWithIdx.length} rutas`;
+                    }
+                }
+
+                const sliceRoutes = selectedRoutesWithIdx.slice(dtSideActiveTab * groupSize, (dtSideActiveTab + 1) * groupSize);
+                const subLabels = ['Promedio (hrs)', 'Máximo (hrs)', 'Total (hrs)', 'Eventos'];
+
+                sliceRoutes.forEach((routeObj) => {
+                    const color = getRouteColor(routeObj.originalIdx);
+                    const box = document.createElement('div');
+                    box.className = 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl p-3 shadow-xs flex flex-col space-y-2';
+                    box.innerHTML = `
+                        <div class="flex items-center justify-between gap-2 pb-1.5 border-b border-gray-100 dark:border-slate-800">
+                            <span class="font-bold text-xs text-gray-800 dark:text-slate-100 truncate flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${color};"></span>
+                                ${esc(routeObj.ruta)}
+                            </span>
+                            <span class="text-[10px] font-bold text-red-600 dark:text-red-400 flex-shrink-0">Máx ${formatDuration(routeObj.max)}</span>
+                        </div>
+                        <div class="relative w-full" style="height: 220px;">
+                            <canvas></canvas>
+                        </div>
+                    `;
+                    sideGrid.appendChild(box);
+                    const subCanvas = box.querySelector('canvas');
+                    const toHours = ms => Number(((ms || 0) / 3600000).toFixed(3));
+                    const vals = [toHours(routeObj.avg), toHours(routeObj.max), toHours(routeObj.total), routeObj.count || 0];
+
+                    const subChart = new Chart(subCanvas.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: subLabels,
+                            datasets: [{
+                                label: routeObj.ruta,
+                                data: vals,
+                                backgroundColor: [color + 'CC', '#DA291CBB', '#10B981BB', '#3B82F6BB'],
+                                borderColor: [color, '#DA291C', '#10B981', '#3B82F6'],
+                                borderWidth: 1.5,
+                                borderRadius: 5,
+                                maxBarThickness: 38
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            events: [],
+                            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                            scales: {
+                                x: {
+                                    ticks: { color: textColor, font: { size: 10, weight: 'bold' } },
+                                    grid: { display: false }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { color: textColor, font: { size: 9 } },
+                                    grid: { color: gridColor }
+                                }
+                            }
+                        }
+                    });
+                    deadTimesSideCharts.push(subChart);
+                });
+                return;
+            }
+
+            overlayWrapper.classList.remove('hidden');
+            sideGrid.classList.add('hidden');
+            sideGrid.classList.remove('grid');
+            if (sideTabsBar) {
+                sideTabsBar.classList.add('hidden');
+                sideTabsBar.classList.remove('flex');
+            }
+
+            if (selectedRoutesWithIdx.length === 0) {
+                deadTimesChartInstance = new Chart(canvas.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: ['Sin rutas seleccionadas'], datasets: [{ label: 'Sin datos', data: [0], backgroundColor: 'rgba(148,163,184,0.3)' }] },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        events: [],
+                        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                        scales: {
+                            x: { ticks: { color: textColor }, grid: { display: false } },
+                            y: { beginAtZero: true, ticks: { color: textColor }, grid: { color: gridColor } }
+                        }
+                    }
+                });
+                return;
+            }
+
+            const isLineMode = deadTimesOverlayChartType === 'line';
+            let activeXLabels = ['Tiempo Promedio (hrs)', 'Tiempo Máximo (hrs)', 'Tiempo Total Suma (hrs)', 'Eventos (x0.1)'];
+            if (metricMode === 'max' || metricMode === 'avg' || metricMode === 'total' || metricMode === 'events') {
+                activeXLabels = selectedRoutesWithIdx.map(r => r.ruta);
+            }
+
+            const datasets = buildDeadTimesDatasetsForRoute(selectedRoutesWithIdx[0], metricMode, 0, selectedRoutesWithIdx);
 
             deadTimesChartInstance = new Chart(canvas.getContext('2d'), {
-                type: isLineChart ? 'line' : 'bar',
+                type: isLineMode ? 'line' : 'bar',
                 data: { labels: activeXLabels, datasets },
                 options: {
                     responsive: true,
@@ -2576,7 +2558,14 @@
                     interaction: { mode: 'index', intersect: false },
                     plugins: {
                         legend: {
-                            display: false
+                            display: metricMode === 'all',
+                            position: 'top',
+                            labels: {
+                                color: textColor,
+                                font: { size: 10, weight: 'bold' },
+                                usePointStyle: true,
+                                boxWidth: 10
+                            }
                         },
                         tooltip: {
                             enabled: false
@@ -2599,9 +2588,7 @@
                                 color: textColor,
                                 font: { size: 10 },
                                 callback: v => {
-                                    if (metricMode === 'events') {
-                                        return Math.round(Number(v)) + ' ev';
-                                    }
+                                    if (metricMode === 'events') return Math.round(Number(v));
                                     const mins = Math.round(Number(v) * 60);
                                     return mins >= 60 ? (mins / 60).toFixed(1) + ' h' : mins + ' min';
                                 }
