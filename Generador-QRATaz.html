@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de QR - 12 zonas</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px 16px 60px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+
+    .btn-small {
+      padding: 8px 14px;
+      font-size: 0.85rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-header span {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--primary);
+    }
+
+    .card input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .card input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .card input::placeholder {
+      color: #94a3b8;
+      font-family: system-ui, sans-serif;
+    }
+
+    .qr-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 180px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px dashed var(--border);
+    }
+
+    .qr-container img,
+    .qr-container canvas {
+      max-width: 160px;
+      height: auto;
+    }
+
+    .qr-placeholder {
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .actions button {
+      flex: 1;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.4rem;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Generador de Códigos QR</h1>
+      <p>Introduce números largos en las 12 zonas y genera el QR de cada uno</p>
+    </header>
+
+    <div class="controls">
+      <button class="btn-primary" onclick="generarTodos()">Generar todos los QR</button>
+      <button class="btn-secondary" onclick="limpiarTodos()">Limpiar todo</button>
+    </div>
+
+    <div class="grid" id="zonas"></div>
+
+    <footer>
+      Los datos se procesan solo en tu navegador. No se envían a ningún servidor.
+    </footer>
+  </div>
+
+  <script>
+    const TOTAL_ZONAS = 12;
+    const zonasContainer = document.getElementById('zonas');
+
+    // Crear las 10 zonas
+    for (let i = 1; i <= TOTAL_ZONAS; i++) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-header">
+          <span>Zona ${i}</span>
+        </div>
+        <input 
+          type="text" 
+          id="input-${i}" 
+          placeholder="Ej: 1355889431653700028792"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <div class="actions">
+          <button class="btn-primary btn-small" onclick="generarQR(${i})">Generar QR</button>
+          <button class="btn-secondary btn-small" onclick="limpiarZona(${i})">Limpiar</button>
+        </div>
+        <div class="qr-container" id="qr-${i}">
+          <div class="qr-placeholder">El QR aparecerá aquí</div>
+        </div>
+      `;
+      zonasContainer.appendChild(card);
+
+      // Generar automáticamente al presionar Enter
+      document.getElementById(`input-${i}`).addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          generarQR(i);
+        }
+      });
+    }
+
+    function generarQR(num) {
+      const input = document.getElementById(`input-${num}`);
+      const contenedor = document.getElementById(`qr-${num}`);
+      const valor = input.value.trim();
+
+      if (!valor) {
+        contenedor.innerHTML = '<div class="qr-placeholder">Escribe un número primero</div>';
+        return;
+      }
+
+      // Limpiar contenedor
+      contenedor.innerHTML = '';
+
+      // Crear el QR
+      new QRCode(contenedor, {
+        text: valor,
+        width: 160,
+        height: 160,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+
+    function limpiarZona(num) {
+      document.getElementById(`input-${num}`).value = '';
+      document.getElementById(`qr-${num}`).innerHTML = '<div class="qr-placeholder">El QR aparecerá aquí</div>';
+    }
+
+    function generarTodos() {
+      for (let i = 1; i <= TOTAL_ZONAS; i++) {
+        const valor = document.getElementById(`input-${i}`).value.trim();
+        if (valor) {
+          generarQR(i);
+        }
+      }
+    }
+
+    function limpiarTodos() {
+      for (let i = 1; i <= TOTAL_ZONAS; i++) {
+        limpiarZona(i);
+      }
+    }
+  </script>
+</body>
+</html>

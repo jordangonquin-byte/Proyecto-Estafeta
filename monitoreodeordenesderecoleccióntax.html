@@ -46,7 +46,20 @@
         .upload-btn-wrapper:hover { background-color: var(--btn-upload-hover); transform: translateY(-1px); }
         .upload-btn-wrapper.drag-over { border: 2px dashed #10b981 !important; background-color: rgba(16, 185, 129, 0.2) !important; }
         .upload-btn-wrapper input[type="file"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-        .upload-btn-content { display: flex; flex-direction: column; text-align: left; }
+        .upload-btn-content {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            max-width: 240px;
+            overflow: hidden;
+            white-space: nowrap;
+            transition: max-width 0.35s ease, opacity 0.35s ease;
+        }
+        .upload-btn-content.labels-hidden {
+            max-width: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
         .upload-btn-title { font-size: 0.85rem; font-weight: 700; color: var(--text-color); }
         .upload-btn-subtitle { font-size: 0.65rem; color: var(--subtext-color); }
         #theme-toggle { background: var(--btn-upload-bg); border: 1px solid var(--btn-upload-border); color: var(--text-color); width: 42px; height: 42px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: all 0.2s ease; backdrop-filter: blur(4px); flex-shrink: 0; }
@@ -123,13 +136,9 @@
             #notif-toast-container { top: auto; bottom: 20px; right: 12px; left: 12px; max-width: none; }
             #notif-panel { top: 76px; right: 12px; left: 12px; width: auto; }
         }
-        /* ============================================================
-           BOTÓN FLOTANTE "RESTABLECER FILTROS"
-           ============================================================ */
         .float-btn-hidden { opacity: 0; pointer-events: none; transform: scale(0.85); }
         .float-btn-visible { opacity: 1; pointer-events: auto; transform: scale(1); }
 
-        /* Banner archivo histórico */
         #stale-file-banner {
             display: none;
             background: linear-gradient(90deg, #7c2d12, #9a3412, #c2410c, #9a3412, #7c2d12);
@@ -164,7 +173,6 @@
             background-size: 300% 100%;
         }
 
-        /* Overlay mapa sin GPS */
         #map-empty-overlay {
             display: none;
             position: absolute;
@@ -203,13 +211,13 @@
             </div>
         </div>
         <div class="header-actions" id="header-actions-container">
-            <div class="upload-btn-wrapper" id="banner-drop-zone">
+            <div class="upload-btn-wrapper" id="banner-drop-zone" title="Cargar Excel / CSV">
                 <input type="file" id="file-input" accept=".csv, .xlsx, .xls">
                 <div class="relative flex items-center justify-center p-1 mr-2">
                     <i class="fa-solid fa-cloud text-2xl text-slate-200"></i>
                     <i class="fa-solid fa-file-excel text-xs text-emerald-400 absolute animate-bounce"></i>
                 </div>
-                <div class="upload-btn-content">
+                <div class="upload-btn-content" id="upload-btn-content">
                     <span class="upload-btn-title" id="file-status">Cargar Excel / CSV</span>
                     <span class="upload-btn-subtitle">Arrastra tu archivo o clic</span>
                 </div>
@@ -242,12 +250,10 @@
         </div>
     </div>
 
-    <!-- Botón flotante de Plazas (oculto hasta cargar archivo) -->
     <button id="plaza-floating-btn" onclick="openPlazaMenuModal()" style="display: none;" class="fixed bottom-6 left-6 bg-red-600 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-sm font-semibold hover:bg-red-700 transition z-40">
         <i class="fas fa-map-marked-alt"></i><span>Plazas</span>
     </button>
 
-    <!-- Botón flotante "Restablecer Filtros" (aparece solo cuando hay filtros activos) -->
     <button id="floating-reset-btn" onclick="resetAllFilters()" title="Restablecer Filtros" aria-label="Restablecer Filtros"
             class="float-btn-hidden fixed bottom-6 right-6 w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl hover:bg-red-700 transition-all duration-300 z-40">
         <i class="fa-solid fa-rotate-left"></i>
@@ -578,6 +584,25 @@
         let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
     }
 
+    let hideUploadLabelsTimer = null;
+
+    function scheduleHideUploadLabels(delayMs = 2000) {
+        if (hideUploadLabelsTimer) clearTimeout(hideUploadLabelsTimer);
+        hideUploadLabelsTimer = setTimeout(() => {
+            const contentDiv = document.getElementById('upload-btn-content');
+            if (contentDiv) contentDiv.classList.add('labels-hidden');
+        }, delayMs);
+    }
+
+    function showUploadLabels() {
+        if (hideUploadLabelsTimer) {
+            clearTimeout(hideUploadLabelsTimer);
+            hideUploadLabelsTimer = null;
+        }
+        const contentDiv = document.getElementById('upload-btn-content');
+        if (contentDiv) contentDiv.classList.remove('labels-hidden');
+    }
+
     /* ============================================================
        MODO OSCURO Y CLARO
        ============================================================ */
@@ -747,7 +772,10 @@
        CARGA DE ARCHIVO
        ============================================================ */
     function handleFile(file) {
+        showUploadLabels();
         document.getElementById('file-status').innerText = `Procesando...`;
+        const dz = document.getElementById('banner-drop-zone');
+        if (dz) dz.title = `Archivo: ${file.name}`;
         const ext = file.name.split('.').pop().toLowerCase();
 
         if (ext === 'csv') {
@@ -802,13 +830,11 @@
     }
 
     function initDashboard(data, fileName, headers = []) {
-        // Filtro robusto de filas totales / vacías
         rawData = data.filter(r => {
             const vals = Object.values(r || {});
             const firstVal = String(vals[0] || '').trim().toLowerCase();
             if (!firstVal) return false;
             if (firstVal === 'total' || firstVal.startsWith('total ') || firstVal.startsWith('total general') || firstVal === 'suma' || firstVal.startsWith('grand total')) return false;
-            // fila completamente vacía
             if (vals.every(v => v === '' || v === null || v === undefined)) return false;
             return true;
         });
@@ -822,12 +848,10 @@
         const sample = rawData[0];
         fileHeaders = (headers && headers.length) ? headers.filter(h => h) : Object.keys(sample);
 
-        // Mapeo por nombre (no por índice) — más robusto ante reorden de columnas
         plazaKey        = findColumn(sample, ['plaza'], { exclude: ['origen', 'destino', 'incumplimiento'] }) || null;
         dateKey         = findColumn(sample, ['fecha evento']) || findColumn(sample, ['fecha'], { exclude: ['excepcion', 'excepción', 'limite'] });
         routeKey        = findColumn(sample, ['ruta local']) || findColumn(sample, ['ruta'], { exclude: ['reasign', 'desasign', 'otra'] });
         operatorKey     = findColumn(sample, ['operador', 'atendio']);
-        // Estatus de OR (no el de visita)
         statusKey       = findColumn(sample, ['estatus or']) || findColumn(sample, ['estatus de ordenes']) || findColumn(sample, ['estatus'], { exclude: ['visita'] });
         visitaKey       = findColumn(sample, ['visita or']) || findColumn(sample, ['estatus de visita']) || findColumn(sample, ['visita'], { exclude: ['otra ruta'] });
         reasonKey       = findColumn(sample, ['calc cód razón', 'calc cod razon', 'calc. código de razón']) || findColumn(sample, ['motivo de no recolección', 'codigo de razon']);
@@ -840,10 +864,8 @@
 
         columnKKey      = statusKey || findColumn(sample, ['estatus de recolección']);
 
-        // GPS ejecución (Latitud / Longitud reales) — evitar latitudplan
         latKey  = findColumn(sample, ['latitud'], { exclude: ['plan', 's'] }) || findColumn(sample, ['lat'], { exclude: ['plan', 'plate', 'relat'] });
         lngKey  = findColumn(sample, ['longitud'], { exclude: ['plan', 't'] }) || findColumn(sample, ['lng', 'lon'], { exclude: ['plan'] });
-        // GPS planeado (latitudplan / longitudplan)
         latSKey = findColumn(sample, ['latitudplan', 'latitud plan']) || findColumn(sample, ['latitud s']);
         lngTKey = findColumn(sample, ['longitudplan', 'longitud plan']) || findColumn(sample, ['longitud t']);
 
@@ -858,11 +880,14 @@
         currentClientPage = 0;
 
         document.getElementById('file-status').innerText = fileName;
+        const dz = document.getElementById('banner-drop-zone');
+        if (dz) dz.title = `Archivo cargado: ${fileName} (clic para cambiar)`;
         document.getElementById('dashboard-content').classList.remove('hidden');
 
         const plazaBtn = document.getElementById('plaza-floating-btn');
         if (plazaBtn) plazaBtn.style.display = 'flex';
 
+        scheduleHideUploadLabels(2000);
         detectAndShowStaleBanner(fileName, rawData);
         initMap();
         updateDashboard();
@@ -871,7 +896,6 @@
         document.getElementById('file-input').value = '';
     }
 
-    /** Match de columna: exacto > startsWith > includes, con exclusiones */
     function findColumn(row, keywords, opts = {}) {
         const keys = Object.keys(row || {});
         const exclude = (opts.exclude || []).map(_norm);
@@ -984,21 +1008,14 @@
        ============================================================ */
     function hasActiveFilters() {
         if (!rawData || rawData.length === 0) return false;
-        // Filtro de Plazas
         if (allPlazasList.length > 0 && selectedPlazasSet.size !== allPlazasList.length) return true;
-        // Filtro de Fechas
         if (allDatesList.length > 0 && selectedDatesSet.size !== allDatesList.length) return true;
-        // Filtro de Rutas
         if (allRoutesList.length > 0 && selectedRoutesSet.size !== allRoutesList.length) return true;
-        // Filtro de Operadores
         if (allOperatorList.length > 0 && selectedOperatorsSet.size !== allOperatorList.length) return true;
-        // Buscador global
         const gs = document.getElementById('global-search-input');
         if (gs && gs.value.trim() !== '') return true;
-        // Buscador del mapa
         const ms = document.getElementById('map-location-search');
         if (ms && ms.value.trim() !== '') return true;
-        // Filtro "Ocultar Recolectados"
         if (hideRecolectadosOnMap) return true;
         return false;
     }
@@ -1018,13 +1035,11 @@
     function resetAllFilters() {
         if (!rawData || rawData.length === 0) return;
 
-        // 1. Restaurar todas las selecciones a "todos"
         selectedPlazasSet = new Set(allPlazasList);
         selectedDatesSet = new Set(allDatesList);
         selectedRoutesSet = new Set(allRoutesList);
         selectedOperatorsSet = new Set(allOperatorList);
 
-        // 2. Limpiar buscador global (sin disparar el debounce)
         const gsInput = document.getElementById('global-search-input');
         if (gsInput) {
             gsInput.value = '';
@@ -1035,7 +1050,6 @@
             }
         }
 
-        // 3. Limpiar buscador del mapa
         const msInput = document.getElementById('map-location-search');
         if (msInput) {
             msInput.value = '';
@@ -1047,22 +1061,18 @@
         }
         if (searchResultClusterGroup) searchResultClusterGroup.clearLayers();
 
-        // 4. Restaurar toggle "Ocultar Recolectados" (solo si está activo)
         if (hideRecolectadosOnMap) toggleHideRecolectados();
 
-        // 5. Re-renderizar las UIs de los filtros
         renderFloatingPlazasModal();
         renderCalendar();
         updateDateTriggerLabel();
         renderRouteModalList();
         renderOperatorModalList();
 
-        // 6. Aplicar filtros (limpia todo) y actualizar visibilidad del botón
         currentClientPage = 0;
         currentTablePage = 0;
         applyCombinedFilters();
 
-        // 7. Notificar al usuario
         if (typeof addNotification === 'function') {
             addNotification('Filtros restablecidos', 'Todos los filtros han sido restablecidos a su estado inicial.', 'success');
         }
@@ -1388,7 +1398,7 @@
         currentClientPage = 0;
         currentTablePage = 0;
         updateDashboard();
-        updateResetButtonVisibility();  // Mostrar/ocultar botón flotante
+        updateResetButtonVisibility();
     }
 
     function updateDashboard() {
@@ -1417,7 +1427,6 @@
         let isNoShow = st.includes('no show') || st.includes('no exitosa') || (st.includes('excepcion') && !isReco);
         let isNoVisit = st.includes('no visitado') || vis.includes('no visitado');
         let isVisitadoOtra = st.includes('otra ruta');
-        // Visita: columna Visita OR si existe; si no, inferir del estatus de orden
         let isVisitado = false;
         if (visitaKey && vis) {
             isVisitado = vis.includes('visitado') && !vis.includes('no visitado');
@@ -1441,7 +1450,6 @@
             if (c.isReco) {
                 recolectados++;
                 visitados++;
-                // Fallo 10: recolectado con ítems reales en 0 y pactados > 0
                 const pact = parseFloat(row[itemsKey]) || 0;
                 const real = itemsRealKey ? (parseFloat(row[itemsRealKey]) || 0) : null;
                 if (real !== null && real === 0 && pact > 0) recoZeroItems++;
@@ -1502,7 +1510,6 @@
         renderMiniBarChart('miniChartReco', [recolectados, noreco], ['Reco', 'NoReco'], ['#10B981', '#EF4444']);
         renderMiniBarChart('miniChartNoShow', [noshow, total - noshow], ['NoShow', 'Ok'], ['#EF4444', '#3B82F6']);
 
-        // Guardar para alertas consistentes
         window.__lastKpiSnapshot = { total, prog, adic, visitados, novisitados, recolectados, noreco, noshow, effVisita, effReco, pctNoShow, recoZeroItems };
     }
 
@@ -2037,7 +2044,6 @@
 
     function renderMap() {
         if (!mapInstance) return;
-        // Debounce para no saturar al filtrar rápido
         if (mapRenderTimer) clearTimeout(mapRenderTimer);
         mapRenderTimer = setTimeout(() => renderMapCore(), 80);
     }
@@ -2055,7 +2061,6 @@
         let latLngPointsOrange = [], latLngPointsRed = [];
         let gpsOkUV = 0, gpsOkST = 0, gpsMissing = 0;
 
-        // Solo ordenar si se van a dibujar líneas (más barato en filtros)
         let sortedData = filteredData;
         if (showMapLines && (showGeoExcepcion || showGeoDir)) {
             sortedData = [...filteredData].sort((a, b) => {
@@ -2067,7 +2072,6 @@
 
         const needOrange = showGeoExcepcion && latKey && lngKey;
         const needRed = showGeoDir && latSKey && lngTKey;
-        // Limitar markers en pantalla si hay demasiados (clustering sigue activo)
         const MAX_MARKERS = 2500;
         let seqCounter = 0;
 
@@ -2149,7 +2153,6 @@
         if (markersToAdd.length) markersClusterGroup.addLayers(markersToAdd);
         if (redMarkersToAdd.length) redMarkersClusterGroup.addLayers(redMarkersToAdd);
 
-        // Stats GPS + overlay vacío
         const statsEl = document.getElementById('map-gps-stats');
         if (statsEl) {
             statsEl.textContent = `GPS ejecución: ${gpsOkUV.toLocaleString()} · GPS planeado: ${gpsOkST.toLocaleString()} · Sin GPS: ${gpsMissing.toLocaleString()} de ${filteredData.length.toLocaleString()} filtrados`;
@@ -2407,7 +2410,6 @@
     function analyzeAndAlert(fileName) {
         if (!filteredData || filteredData.length === 0) return;
 
-        // Usar la misma lógica que renderKPIs (snapshot o recálculo)
         let snap = window.__lastKpiSnapshot;
         if (!snap) {
             let noshow = 0, recolectados = 0, noVisitados = 0, recoZeroItems = 0;
@@ -2450,7 +2452,6 @@
         if (noVisitados > 0) {
             addNotification('Órdenes sin visitar', `Se detectaron ${noVisitados} órdenes sin visitar en el archivo.`, 'info');
         }
-        // Fallo 10: recolectados con 0 ítems reales y pactados > 0
         if (recoZeroItems > 0) {
             addNotification(
                 'Recolectado con 0 ítems',
