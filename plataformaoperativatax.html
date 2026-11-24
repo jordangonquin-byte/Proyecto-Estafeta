@@ -413,10 +413,10 @@
         .pulse-hover:hover { animation: pulseHover 1s infinite; }
 
         /* Estilos generales adaptativos para modo oscuro / claro */
-        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0 !important; }
+        body.dark-mode { background-color: #000000 !important; color: #e2e8f0 !important; }
         body.dark-mode .bg-white { background-color: #1e293b !important; color: #e2e8f0 !important; }
         body.dark-mode .bg-slate-50,
-        body.dark-mode .bg-slate-100 { background-color: #0f172a !important; color: #e2e8f0 !important; }
+        body.dark-mode .bg-slate-100 { background-color: #000000 !important; color: #e2e8f0 !important; }
         body.dark-mode .text-slate-800,
         body.dark-mode .text-slate-700,
         body.dark-mode .text-slate-600 { color: #e2e8f0 !important; }
@@ -627,7 +627,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col m-0 p-0">
+<body style="background-color: #000000;" class="bg-black text-slate-800 font-sans antialiased min-h-screen flex flex-col m-0 p-0">
 
     <header class="master-header">
         <div class="header-brand">
@@ -793,9 +793,9 @@
                     <div class="flex items-center gap-3 w-full sm:w-auto flex-wrap">
                         <div class="relative w-full sm:w-64">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 z-10"><i class="fas fa-search"></i></span>
-                            <input type="text" id="table-search" placeholder="Buscar guía, cliente, C.P., plaza..." oninput="handleTableSearchInput(this)" class="w-full pl-9 pr-14 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-estafeta-red transition">
-                            <button id="btn-table-reset" onclick="clearTableSearch()" class="filter-btn-hidden absolute right-2.5 top-1/2 px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-md text-[10px] font-bold uppercase tracking-wider shadow-md transition-all duration-300 z-10 cursor-pointer">
-                                Reset
+                            <input type="text" id="table-search" placeholder="Buscar guía, cliente, C.P., plaza..." oninput="handleTableSearchInput(this)" class="w-full pl-9 pr-10 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-estafeta-red transition">
+                            <button id="btn-table-reset" onclick="clearTableSearch()" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-2 top-1/2 w-6 h-6 rounded-full bg-slate-700/60 hover:bg-slate-600/80 flex items-center justify-center transition-all duration-200 z-10 cursor-pointer border-0 p-0">
+                                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABaUlEQVR4nO2asQ7CMBBDDQsDA///mQwMTDBVQqiV0pztK8JvgoEEP7Vp7hoghBBCCCGEEP6QU+XH98fztXy+XS+lsbrmPzMmX/uuhjX/lICtyVwSmPNPXwFbqCWwx6cLAHQSFONOCRhZcNh/dmS8mYVw+gpwSlCFB4q3gEOCMjxAWAOUEtThAdIiqJDgCA8QnwJMCa7wAPkxyJDgDA8I9gEVCe7wgGgjNCOhIzwgEgDsk9AVHiiWwyMwNkPKUlt2BSxU/7y6zyAXAMyHcDRZLAKA/WFcHSabAGA8lLO9ZhXA3AmysAlQ1AIMLAKU1WAVuQBHP6CCVABrh6eUIBOwJ3ynhLau8HfoLgkt7wW2wnZIoApg3PNuCTQBzJLWKYEiQFHPuySUBSibGQ4JJQGOTo5aAu18wBqsqk4pgXo+4BN2SauS0NYVPsq4Le8FjjQ+9XyAq5PDnJ92PsB9Sqx7/hBCCCGEEMJv8waV3QQ6952hJgAAAABJRU5ErkJggg==" alt="X" class="w-3.5 h-3.5 object-contain pointer-events-none select-none" />
                             </button>
                         </div>
 
