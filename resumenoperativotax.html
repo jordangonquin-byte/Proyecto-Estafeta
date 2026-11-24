@@ -37,7 +37,7 @@
             --badge-bg: #ffffff; --badge-text: #DA291C;
         }
         body.dark-mode {
-            --bg-main: #0f172a; --bg-card: #1e293b;
+            --bg-main: #000000; --bg-card: #1e293b;
             --text-main: #f1f5f9; --text-muted: #94a3b8;
             --border-card: #334155; --table-header-bg: #0f172a;
             --table-header-text: #94a3b8; --table-row-hover: #334155;
@@ -249,9 +249,11 @@
         /* --- BUSCADOR ADAPTADO --- */
         .search-box-wrapper { position: relative; display: inline-block; }
         .search-box-wrapper .search-icon-left { position: absolute; inset-y: 0; left: 0; display: flex; align-items: center; padding-left: 12px; color: var(--text-muted); pointer-events: none; }
-        .search-input-custom { width: 100%; padding-left: 36px; padding-right: 56px; padding-top: 6px; padding-bottom: 6px; font-size: 13px; background: var(--input-bg); color: var(--input-text); border: 1px solid var(--border-card); border-radius: 8px; outline: none; transition: all 0.2s; }
+        .search-input-custom { width: 100%; padding-left: 36px; padding-right: 34px; padding-top: 6px; padding-bottom: 6px; font-size: 13px; background: var(--input-bg); color: var(--input-text); border: 1px solid var(--border-card); border-radius: 8px; outline: none; transition: all 0.2s; }
         .search-input-custom:focus { border-color: var(--estafeta-red); box-shadow: 0 0 0 2px rgba(218,41,28,0.15); }
-        .search-reset-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); padding: 2px 6px; background: var(--estafeta-red); color: white; border: none; border-radius: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: opacity 0.2s, transform 0.2s; }
+        .search-reset-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; padding: 0; background: rgba(148, 163, 184, 0.2); border: none; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.2s, transform 0.2s, background-color 0.2s; }
+        .search-reset-btn:hover { background: rgba(148, 163, 184, 0.35); }
+        body:not(.dark-mode) .search-reset-btn img { filter: invert(0.65); }
         .search-reset-btn.hidden-reset { opacity: 0; pointer-events: none; transform: translateY(-50%) scale(0.8); }
         
         /* --- NOTIFICACIONES (TOASTS Y PANEL) --- */
@@ -320,7 +322,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-plaza" placeholder="Buscar plaza..." oninput="handleSearchInput(this, 'btn-plaza-reset'); filterMultiselectOptions('plaza-multiselect-options-container', 'search-plaza')">
-            <button id="btn-plaza-reset" onclick="clearSpecificSearch('search-plaza', 'btn-plaza-reset', () => filterMultiselectOptions('plaza-multiselect-options-container', 'search-plaza'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-plaza-reset" onclick="clearSpecificSearch('search-plaza', 'btn-plaza-reset', () => filterMultiselectOptions('plaza-multiselect-options-container', 'search-plaza'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllPlazas(true)">Seleccionar todas</span><span onclick="selectAllPlazas(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="plaza-multiselect-options-container"></div>
@@ -333,7 +335,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-chart-tipo" placeholder="Buscar tipo..." oninput="handleSearchInput(this, 'btn-chart-tipo-reset'); filterMultiselectOptions('chart-tipo-multiselect-options-container', 'search-chart-tipo')">
-            <button id="btn-chart-tipo-reset" onclick="clearSpecificSearch('search-chart-tipo', 'btn-chart-tipo-reset', () => filterMultiselectOptions('chart-tipo-multiselect-options-container', 'search-chart-tipo'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-chart-tipo-reset" onclick="clearSpecificSearch('search-chart-tipo', 'btn-chart-tipo-reset', () => filterMultiselectOptions('chart-tipo-multiselect-options-container', 'search-chart-tipo'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllChartTipos(true)">Seleccionar todos</span><span onclick="selectAllChartTipos(false)">Ninguno</span></div>
         <div class="multiselect-options-list" id="chart-tipo-multiselect-options-container"></div>
@@ -346,7 +348,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-chart-colores-tipo" placeholder="Buscar tipo..." oninput="handleSearchInput(this, 'btn-chart-colores-tipo-reset'); filterMultiselectOptions('chart-colores-tipo-multiselect-options-container', 'search-chart-colores-tipo')">
-            <button id="btn-chart-colores-tipo-reset" onclick="clearSpecificSearch('search-chart-colores-tipo', 'btn-chart-colores-tipo-reset', () => filterMultiselectOptions('chart-colores-tipo-multiselect-options-container', 'search-chart-colores-tipo'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-chart-colores-tipo-reset" onclick="clearSpecificSearch('search-chart-colores-tipo', 'btn-chart-colores-tipo-reset', () => filterMultiselectOptions('chart-colores-tipo-multiselect-options-container', 'search-chart-colores-tipo'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllChartColoresTipos(true)">Seleccionar todos</span><span onclick="selectAllChartColoresTipos(false)">Ninguno</span></div>
         <div class="multiselect-options-list" id="chart-colores-tipo-multiselect-options-container"></div>
@@ -359,7 +361,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-table-tipo" placeholder="Buscar tipo..." oninput="handleSearchInput(this, 'btn-table-tipo-reset'); filterMultiselectOptions('table-tipo-multiselect-options-container', 'search-table-tipo')">
-            <button id="btn-table-tipo-reset" onclick="clearSpecificSearch('search-table-tipo', 'btn-table-tipo-reset', () => filterMultiselectOptions('table-tipo-multiselect-options-container', 'search-table-tipo'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-table-tipo-reset" onclick="clearSpecificSearch('search-table-tipo', 'btn-table-tipo-reset', () => filterMultiselectOptions('table-tipo-multiselect-options-container', 'search-table-tipo'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllTableTipos(true)">Seleccionar todos</span><span onclick="selectAllTableTipos(false)">Ninguno</span></div>
         <div class="multiselect-options-list" id="table-tipo-multiselect-options-container"></div>
@@ -372,7 +374,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-table-horarios-tipo" placeholder="Buscar tipo..." oninput="handleSearchInput(this, 'btn-table-horarios-tipo-reset'); filterMultiselectOptions('table-horarios-tipo-multiselect-options-container', 'search-table-horarios-tipo')">
-            <button id="btn-table-horarios-tipo-reset" onclick="clearSpecificSearch('search-table-horarios-tipo', 'btn-table-horarios-tipo-reset', () => filterMultiselectOptions('table-horarios-tipo-multiselect-options-container', 'search-table-horarios-tipo'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-table-horarios-tipo-reset" onclick="clearSpecificSearch('search-table-horarios-tipo', 'btn-table-horarios-tipo-reset', () => filterMultiselectOptions('table-horarios-tipo-multiselect-options-container', 'search-table-horarios-tipo'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllTableHorariosTipos(true)">Seleccionar todos</span><span onclick="selectAllTableHorariosTipos(false)">Ninguno</span></div>
         <div class="multiselect-options-list" id="table-horarios-tipo-multiselect-options-container"></div>
@@ -385,7 +387,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-table-colores-tipo" placeholder="Buscar tipo..." oninput="handleSearchInput(this, 'btn-table-colores-tipo-reset'); filterMultiselectOptions('table-colores-tipo-multiselect-options-container', 'search-table-colores-tipo')">
-            <button id="btn-table-colores-tipo-reset" onclick="clearSpecificSearch('search-table-colores-tipo', 'btn-table-colores-tipo-reset', () => filterMultiselectOptions('table-colores-tipo-multiselect-options-container', 'search-table-colores-tipo'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-table-colores-tipo-reset" onclick="clearSpecificSearch('search-table-colores-tipo', 'btn-table-colores-tipo-reset', () => filterMultiselectOptions('table-colores-tipo-multiselect-options-container', 'search-table-colores-tipo'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllTableColoresTipos(true)">Seleccionar todos</span><span onclick="selectAllTableColoresTipos(false)">Ninguno</span></div>
         <div class="multiselect-options-list" id="table-colores-tipo-multiselect-options-container"></div>
@@ -398,7 +400,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-pivot-tipo" placeholder="Buscar tipo..." oninput="handleSearchInput(this, 'btn-pivot-tipo-reset'); filterMultiselectOptions('pivot-tipo-multiselect-options-container', 'search-pivot-tipo')">
-            <button id="btn-pivot-tipo-reset" onclick="clearSpecificSearch('search-pivot-tipo', 'btn-pivot-tipo-reset', () => filterMultiselectOptions('pivot-tipo-multiselect-options-container', 'search-pivot-tipo'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-pivot-tipo-reset" onclick="clearSpecificSearch('search-pivot-tipo', 'btn-pivot-tipo-reset', () => filterMultiselectOptions('pivot-tipo-multiselect-options-container', 'search-pivot-tipo'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllPivotTipos(true)">Seleccionar todos</span><span onclick="selectAllPivotTipos(false)">Ninguno</span></div>
         <div class="multiselect-options-list" id="pivot-tipo-multiselect-options-container"></div>
@@ -411,7 +413,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-chart-ruta" placeholder="Buscar ruta..." oninput="handleSearchInput(this, 'btn-chart-ruta-reset'); filterMultiselectOptions('multiselect-options-container', 'search-chart-ruta')">
-            <button id="btn-chart-ruta-reset" onclick="clearSpecificSearch('search-chart-ruta', 'btn-chart-ruta-reset', () => filterMultiselectOptions('multiselect-options-container', 'search-chart-ruta'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-chart-ruta-reset" onclick="clearSpecificSearch('search-chart-ruta', 'btn-chart-ruta-reset', () => filterMultiselectOptions('multiselect-options-container', 'search-chart-ruta'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllRoutes(true)">Seleccionar todas</span><span onclick="selectAllRoutes(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="multiselect-options-container"></div>
@@ -423,7 +425,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-colores-ruta" placeholder="Buscar ruta..." oninput="handleSearchInput(this, 'btn-colores-ruta-reset'); filterMultiselectOptions('colores-multiselect-options-container', 'search-colores-ruta')">
-            <button id="btn-colores-ruta-reset" onclick="clearSpecificSearch('search-colores-ruta', 'btn-colores-ruta-reset', () => filterMultiselectOptions('colores-multiselect-options-container', 'search-colores-ruta'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-colores-ruta-reset" onclick="clearSpecificSearch('search-colores-ruta', 'btn-colores-ruta-reset', () => filterMultiselectOptions('colores-multiselect-options-container', 'search-colores-ruta'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllColoresRoutes(true)">Seleccionar todas</span><span onclick="selectAllColoresRoutes(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="colores-multiselect-options-container"></div>
@@ -435,7 +437,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-table-resumen-ruta" placeholder="Buscar ruta..." oninput="handleSearchInput(this, 'btn-resumen-ruta-reset'); filterMultiselectOptions('table-resumen-multiselect-options-container', 'search-table-resumen-ruta')">
-            <button id="btn-resumen-ruta-reset" onclick="clearSpecificSearch('search-table-resumen-ruta', 'btn-resumen-ruta-reset', () => filterMultiselectOptions('table-resumen-multiselect-options-container', 'search-table-resumen-ruta'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-resumen-ruta-reset" onclick="clearSpecificSearch('search-table-resumen-ruta', 'btn-resumen-ruta-reset', () => filterMultiselectOptions('table-resumen-multiselect-options-container', 'search-table-resumen-ruta'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllTableResumenRoutes(true)">Seleccionar todas</span><span onclick="selectAllTableResumenRoutes(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="table-resumen-multiselect-options-container"></div>
@@ -447,7 +449,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-table-horarios-ruta" placeholder="Buscar ruta..." oninput="handleSearchInput(this, 'btn-horarios-ruta-reset'); filterMultiselectOptions('table-horarios-multiselect-options-container', 'search-table-horarios-ruta')">
-            <button id="btn-horarios-ruta-reset" onclick="clearSpecificSearch('search-table-horarios-ruta', 'btn-horarios-ruta-reset', () => filterMultiselectOptions('table-horarios-multiselect-options-container', 'search-table-horarios-ruta'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-horarios-ruta-reset" onclick="clearSpecificSearch('search-table-horarios-ruta', 'btn-horarios-ruta-reset', () => filterMultiselectOptions('table-horarios-multiselect-options-container', 'search-table-horarios-ruta'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllTableHorariosRoutes(true)">Seleccionar todas</span><span onclick="selectAllTableHorariosRoutes(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="table-horarios-multiselect-options-container"></div>
@@ -459,7 +461,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-table-colores-ruta" placeholder="Buscar ruta..." oninput="handleSearchInput(this, 'btn-table-colores-reset'); filterMultiselectOptions('table-colores-multiselect-options-container', 'search-table-colores-ruta')">
-            <button id="btn-table-colores-reset" onclick="clearSpecificSearch('search-table-colores-ruta', 'btn-table-colores-reset', () => filterMultiselectOptions('table-colores-multiselect-options-container', 'search-table-colores-ruta'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-table-colores-reset" onclick="clearSpecificSearch('search-table-colores-ruta', 'btn-table-colores-reset', () => filterMultiselectOptions('table-colores-multiselect-options-container', 'search-table-colores-ruta'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllTableColoresRoutes(true)">Seleccionar todas</span><span onclick="selectAllTableColoresRoutes(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="table-colores-multiselect-options-container"></div>
@@ -471,7 +473,7 @@
         <div class="search-box-wrapper" style="width: 100%; margin-bottom: 12px;">
             <span class="search-icon-left"><i class="fas fa-search"></i></span>
             <input type="text" class="search-input-custom" id="search-pivot-ruta" placeholder="Buscar ruta..." oninput="handleSearchInput(this, 'btn-pivot-ruta-reset'); filterMultiselectOptions('pivot-multiselect-options-container', 'search-pivot-ruta')">
-            <button id="btn-pivot-ruta-reset" onclick="clearSpecificSearch('search-pivot-ruta', 'btn-pivot-ruta-reset', () => filterMultiselectOptions('pivot-multiselect-options-container', 'search-pivot-ruta'))" class="search-reset-btn hidden-reset">Reset</button>
+            <button id="btn-pivot-ruta-reset" onclick="clearSpecificSearch('search-pivot-ruta', 'btn-pivot-ruta-reset', () => filterMultiselectOptions('pivot-multiselect-options-container', 'search-pivot-ruta'))" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
         </div>
         <div class="multiselect-actions"><span onclick="selectAllPivotRoutes(true)">Seleccionar todas</span><span onclick="selectAllPivotRoutes(false)">Ninguna</span></div>
         <div class="multiselect-options-list" id="pivot-multiselect-options-container"></div>
@@ -658,7 +660,7 @@
                             <div class="search-box-wrapper">
                                 <span class="search-icon-left"><i class="fas fa-search"></i></span>
                                 <input type="text" id="filter-ruta-text" class="search-input-custom" placeholder="Ej. R-01..." oninput="handleSearchInput(this, 'btn-main-search-reset'); applyTableFiltersAndSorting()">
-                                <button id="btn-main-search-reset" onclick="clearSpecificSearch('filter-ruta-text', 'btn-main-search-reset', () => applyTableFiltersAndSorting())" class="search-reset-btn hidden-reset">Reset</button>
+                                <button id="btn-main-search-reset" onclick="clearSpecificSearch('filter-ruta-text', 'btn-main-search-reset', () => applyTableFiltersAndSorting())" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
                             </div>
                         </div>
                         <div class="table-filter-group">
@@ -722,7 +724,7 @@
                             <div class="search-box-wrapper">
                                 <span class="search-icon-left"><i class="fas fa-search"></i></span>
                                 <input type="text" id="filter-horarios-text" class="search-input-custom" placeholder="Ej. R-01..." oninput="handleSearchInput(this, 'btn-horarios-search-reset'); applyHorariosFiltersAndSorting()">
-                                <button id="btn-horarios-search-reset" onclick="clearSpecificSearch('filter-horarios-text', 'btn-horarios-search-reset', () => applyHorariosFiltersAndSorting())" class="search-reset-btn hidden-reset">Reset</button>
+                                <button id="btn-horarios-search-reset" onclick="clearSpecificSearch('filter-horarios-text', 'btn-horarios-search-reset', () => applyHorariosFiltersAndSorting())" class="search-reset-btn hidden-reset" title="Limpiar búsqueda"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2WwQ2AMAwDHcZg/9lYo/yrNLFDKz7xDxR8J0RbgE6n0yEzxnhOzF9KGVuqzKcCc0lWqs6nAmZ2Z5Dovve8JMBKVOC0QCZRhQOAsQIzNCwl4YDwBthyBV4SiCAqvCygrILtAuo+sFWA/doVCVoggn+RkM4CD766ZiXks2AFq0rIZ4G6D1SWpptT/wOdTuf3vKeiexm/654lAAAAAElFTkSuQmCC" alt="Limpiar" style="width: 12px; height: 12px; pointer-events: none; display: block;"></button>
                             </div>
                         </div>
                         <div class="table-filter-group">
