@@ -37,6 +37,8 @@
             --record-badge-bg: #fee2e2;
             --modal-item-bg: #f8fafc;
             --modal-input-bg: #f1f5f9;
+            --reset-x-bg: rgba(30, 41, 59, 0.14);
+            --reset-x-hover: rgba(30, 41, 59, 0.25);
         }
 
         body.dark-mode {
@@ -45,7 +47,7 @@
             --subtext-color: #fca5a5;
             --badge-bg: #f8fafc;
             --badge-text: #b91c1c;
-            --bg-main: #0f172a;
+            --bg-main: #000000;
             --bg-card: #1e293b;
             --text-main: #f1f5f9;
             --text-muted: #94a3b8;
@@ -55,9 +57,11 @@
             --record-badge-bg: rgba(218, 41, 28, 0.25);
             --modal-item-bg: #151e2e;
             --modal-input-bg: #111827;
+            --reset-x-bg: rgba(148, 163, 184, 0.22);
+            --reset-x-hover: rgba(148, 163, 184, 0.35);
         }
 
-        body {
+        body, main {
             background-color: var(--bg-main) !important;
             color: var(--text-main) !important;
         }
@@ -174,11 +178,11 @@
         #notif-badge.hidden { display: none !important; }
 
         #fullscreen-btn-ruta {
-            border-color: #000000;
-            color: #000000;
+            border-color: var(--border-color);
+            color: var(--text-main);
         }
         #fullscreen-btn-ruta:hover {
-            background-color: rgba(0, 0, 0, 0.05);
+            background-color: var(--table-hover);
         }
         body.dark-mode #fullscreen-btn-ruta {
             border-color: #DA291C;
@@ -269,6 +273,24 @@
             font-size: 11px;
         }
 
+        #btn-table-reset {
+            background-color: var(--reset-x-bg);
+        }
+        #btn-table-reset:hover {
+            background-color: var(--reset-x-hover);
+        }
+        #btn-table-reset .x-icon-light {
+            display: inline-block;
+        }
+        #btn-table-reset .x-icon-dark {
+            display: none;
+        }
+        body.dark-mode #btn-table-reset .x-icon-light {
+            display: none;
+        }
+        body.dark-mode #btn-table-reset .x-icon-dark {
+            display: inline-block;
+        }
         .filter-btn-hidden { opacity: 0; pointer-events: none; }
         .filter-btn-visible { opacity: 1; pointer-events: auto; }
         .float-btn-hidden { opacity: 0; pointer-events: none; transform: scale(0.85); }
@@ -582,9 +604,10 @@
                     <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
                         <div class="relative w-full sm:w-64">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search text-xs"></i></span>
-                            <input type="text" id="searchInput" placeholder="Buscar guía, cliente, C.P...." oninput="handleSearchInput(this)" class="w-full pl-8 pr-14 py-1.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-red-600 shadow-sm">
-                            <button id="btn-table-reset" onclick="clearSearch()" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300">
-                                Reset
+                            <input type="text" id="searchInput" placeholder="Buscar guía, cliente, C.P...." oninput="handleSearchInput(this)" class="w-full pl-8 pr-10 py-1.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-red-600 shadow-sm">
+                            <button type="button" id="btn-table-reset" onclick="clearSearch()" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer border-0 p-0">
+                                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABxUlEQVR4nO2awXECMQxFv1NIOIcWQldQRuiKtEDOpJHNyTN7YB0k/S+Tid4tzGLz3yhrr7xAURRFURRFURT/keb94uvb+7L++/vr0z3WzPlfGJP3z5Zl+fCMx5rfM5ZZwGii3f5wVEsYze+R4KqA31BJUIxLF7DbH44A/8eqpEoqgC2hj9PHZWIW8OjdliXBEt6zErgq4Ha9nB+5LirBEv52vZw987jXbuuPA4DW2ulZxu+47wF9skeqwVoJWeGB4E1QISEzPEBYBZgSssMDpGWQIWFGeIC4D4hImBUeCKwCW3jCWK9nhQcEO0FPJcwKDwgqoMPcvqrCA6JnAcBWCSOU4QGhACAuQR0eEAsA/BIywgMJAgC7hKzwQJIA6w1R1VS5h1yAdzXIkiAVEF0KMyTIBLD2AWoJ0q6wdTu8hVICXYAn/EwJVAGRp7pZEmgCIuFnSqAIYDzPz5IQFsBsZsyQEBKg6ORkS6C9HzBCfS7Q50g7F1CHX19vOYVKORnKCL/GWgnW80HZVpj1SMvqLG0hEUBvXQsl0AXIurfP0hMc/Y+pOzmttdOoCtLeD7g3Uf9M3cbakpD9ml5RFEVRFEVRFH+bH55wypiIhb+6AAAAAElFTkSuQmCC" alt="X" class="x-icon-light w-3.5 h-3.5 object-contain pointer-events-none select-none">
+                                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABz0lEQVR4nO2arXICQRCEO5iICCQOgYzjieDR4IlwSAQOeQKBImqrTnDLzWz3LFWZrwoR6rJDfzXc/hxAkiRJkiRJkiT/kS/vPw73x3P89/Ln2z1Wz/oLRvHy3nL1e/CMx6rvGcssoFboejnt1BJq9T0SXB3wDpUExbh0AdfLaQfwP6xKqqQD2BLKOGVcJmYBc++2LAmW8J6ZwNUB6832OOe6VgmW8OvN9uip4567rR8OAIbbef8p4xfc94BSbE43WDshKjzQeBNUSIgMDxBmAaaE6PAAaRpkSOgRHiCuA1ok9AoPNMwCU3jCWK9nhQcEK0FPJ/QKDwg6oMBcvqrCA6K9AGDrhBrK8IBQANAuQR0eEAsA/BIiwgMBAgC7hKjwQJAA6w1RdajyCrkA72wQJUEqoHUqjJAgE8BaB6glSE+FrcvhKZQS6AI84XtKoApo2dX1kkAT0BK+pwSKAMZ+vpeEZgHMw4weEpoEKE5yoiXQfh9QQ/1coNQIey6gDj++3vIUKuTJUET4MdZOsD4flC2FWVta1snSFBIB7P28UgJdgOow42POBGvfMfVJznA772tdEPpLteH+eI5fQMwJTqnzqn6SJEmSJEmSJMlc/gApLNhClkgcLQAAAABJRU5ErkJggg==" alt="X" class="x-icon-dark w-3.5 h-3.5 object-contain pointer-events-none select-none">
                             </button>
                         </div>
                         <div class="flex items-center space-x-2 text-xs">
@@ -641,7 +664,7 @@
                     <i class="fa-solid fa-bars-staggered text-[#DA291C]"></i>
                     <span>Filtrar Ruta (Tarjetas de Registro)</span>
                 </h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200 transition text-xl leading-none">&times;</button>
+                <button onclick="closeModal()" style="color: var(--text-muted);" class="hover:opacity-75 transition text-xl leading-none">&times;</button>
             </div>
 
             <div class="relative">
