@@ -26,7 +26,7 @@
             --badge-bg: #f8fafc;
             --badge-text: #b91c1c;
         }
-        body { background-color: #F4F6F9; color: #1e293b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
+        body { background-color: #000000; color: #1e293b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
         
         table *::selection { background: transparent; }
         table { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -200,8 +200,8 @@
         }
         .number-updated { animation: numberBounce 0.5s ease-out; }
 
-        body.dark-mode { background-color: #0f172a !important; color: #f1f5f9 !important; }
-        body.dark-mode main { background-color: #0f172a !important; }
+        body.dark-mode { background-color: #000000 !important; color: #f1f5f9 !important; }
+        body.dark-mode main { background-color: #000000 !important; }
         body.dark-mode section, body.dark-mode .bg-white { background-color: #1e293b !important; color: #f1f5f9 !important; border-color: #334155 !important; }
         body.dark-mode .bg-gray-50, body.dark-mode .bg-gray-100 { background-color: #0f172a !important; color: #f1f5f9 !important; }
         body.dark-mode .bg-gray-200 { background-color: #334155 !important; color: #f1f5f9 !important; }
@@ -225,8 +225,38 @@
         /* FIX #12: hover correcto en dark mode para labels de filtros */
         body.dark-mode .filter-dropdown-modal-content label:hover { background-color: #334155 !important; }
 
-        .filter-btn-hidden { opacity: 0; pointer-events: none; }
-        .filter-btn-visible { opacity: 1; pointer-events: auto; }
+        .filter-btn-hidden { opacity: 0; pointer-events: none; transform: translateY(-50%) scale(0.85); }
+        .filter-btn-visible { opacity: 1; pointer-events: auto; transform: translateY(-50%) scale(1); }
+        .search-clear-x-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 9999px;
+            background-color: rgba(148, 163, 184, 0.22);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            padding: 0;
+        }
+        .search-clear-x-btn:hover {
+            background-color: rgba(148, 163, 184, 0.38);
+        }
+        body.dark-mode .search-clear-x-btn {
+            background-color: rgba(255, 255, 255, 0.12);
+        }
+        body.dark-mode .search-clear-x-btn:hover {
+            background-color: rgba(255, 255, 255, 0.22);
+        }
+        .search-clear-x-btn img {
+            width: 11px;
+            height: 11px;
+            object-fit: contain;
+            filter: invert(0.35);
+            transition: filter 0.2s ease;
+        }
+        body.dark-mode .search-clear-x-btn img {
+            filter: none;
+        }
 
         .funnel-filter-btn {
             background-color: #ffffff; border: 1px solid #cbd5e1;
@@ -404,9 +434,9 @@
                         </label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search text-xs"></i></span>
-                            <input type="text" id="filter-search" placeholder="Ej. BARRADAS, guía..." oninput="handleSearchInput(this)" class="w-full pl-9 pr-16 py-2 text-sm bg-gray-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 shadow-sm">
-                            <button id="btn-table-reset" onclick="clearSearch()" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold uppercase transition-all duration-300 cursor-pointer">
-                                Reset
+                            <input type="text" id="filter-search" placeholder="Ej. BARRADAS, guía..." oninput="handleSearchInput(this)" class="w-full pl-9 pr-10 py-2 text-sm bg-gray-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 shadow-sm">
+                            <button type="button" id="btn-table-reset" onclick="clearSearch()" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden search-clear-x-btn absolute right-2 top-1/2 transition-all duration-200 cursor-pointer outline-none">
+                                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAsElEQVR4nO1WSRKAMAij/v/PeHM8sIRQe5HcHJakpWYQGQz+jhUFVVWfxLXCXLb+Qoqt7wp5VO8KOIWSAPQWKrflCvBmljX34l4/6GFZTa2GaN4b0AgQMoYcFpCJYMlFwBFYpGHTgmeUf8OsedWwKB9wXzThlpQAbwxVt6QEsD6wRUDHD9oCIvKOCEgAcnJWBLwPZGRsDbwPIORRfMs+ANvrl064G/A+UHW5bv1gcAw35NJ8IwLgqz8AAAAASUVORK5CYII=" alt="X">
                             </button>
                         </div>
                     </div>
@@ -493,9 +523,9 @@
                     <div class="p-5 pb-2">
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fas fa-search text-xs"></i></span>
-                            <input type="text" id="search-colA-input" placeholder="Escribe para filtrar la Columna A..." oninput="handleColASearchInput(this)" class="w-full pl-9 pr-16 py-2 text-sm bg-gray-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 shadow-sm">
-                            <button id="btn-colA-reset" onclick="clearColASearch()" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold uppercase transition-all duration-300 cursor-pointer">
-                                Reset
+                            <input type="text" id="search-colA-input" placeholder="Escribe para filtrar la Columna A..." oninput="handleColASearchInput(this)" class="w-full pl-9 pr-10 py-2 text-sm bg-gray-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 shadow-sm">
+                            <button type="button" id="btn-colA-reset" onclick="clearColASearch()" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden search-clear-x-btn absolute right-2 top-1/2 transition-all duration-200 cursor-pointer outline-none">
+                                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAsElEQVR4nO1WSRKAMAij/v/PeHM8sIRQe5HcHJakpWYQGQz+jhUFVVWfxLXCXLb+Qoqt7wp5VO8KOIWSAPQWKrflCvBmljX34l4/6GFZTa2GaN4b0AgQMoYcFpCJYMlFwBFYpGHTgmeUf8OsedWwKB9wXzThlpQAbwxVt6QEsD6wRUDHD9oCIvKOCEgAcnJWBLwPZGRsDbwPIORRfMs+ANvrl064G/A+UHW5bv1gcAw35NJ8IwLgqz8AAAAASUVORK5CYII=" alt="X">
                             </button>
                         </div>
                     </div>
