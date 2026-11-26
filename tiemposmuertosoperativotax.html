@@ -221,7 +221,7 @@
         .notif-panel-header button { background: none; border: none; cursor: pointer; color: #6b7280; font-size: 16px; padding: 4px; border-radius: 6px; }
         .notif-panel-header button:hover { background: #f3f4f6; color: #1f2937; }
         .notif-panel-body { flex: 1; overflow-y: auto; max-height: calc(75vh - 110px); }
-        .notif-empty { padding: 40px 20px; text-align: center; color: #9ca3af; font-size: 13px; }
+        .notif-empty { padding: 40px 20px; text-center; color: #9ca3af; font-size: 13px; }
         .notif-empty i { font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5; }
         .notif-item { padding: 12px 18px; border-bottom: 1px solid #f3f4f6; display: flex; gap: 12px; align-items: flex-start; border-left: 3px solid transparent; cursor: default; transition: background 0.15s; }
         .notif-item:hover { background: #f9fafb; }
@@ -454,6 +454,21 @@
             background-color: #111827 !important;
             color: #f8fafc !important;
         }
+        body.dark-mode .bg-gray-50\/70,
+        body.dark-mode #avance-route-tracking-card > div {
+            background-color: #0f172a !important;
+            border-color: #263248 !important;
+            color: #f8fafc !important;
+        }
+        body:not(.dark-mode) #avance-route-tracking-card > div {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+        body:not(.dark-mode) #avance-route-table-scroll {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
         body.dark-mode .border-gray-100,
         body.dark-mode .border-gray-200,
         body.dark-mode .border-gray-200\/60,
@@ -494,6 +509,38 @@
         body.dark-mode .bg-yellow-50\/60 { background-color: rgba(120, 53, 15, 0.45) !important; }
         body.dark-mode .text-yellow-700, body.dark-mode .text-yellow-800, body.dark-mode .text-amber-600, body.dark-mode .text-amber-700 { color: #fde047 !important; }
 
+        /* Estilo de modal estilo imagen para #plaza-modal */
+        #plaza-modal-card {
+            background-color: #111827 !important;
+            border: 1px solid #26354d !important;
+            color: #f8fafc !important;
+            border-radius: 1.25rem !important;
+            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.85) !important;
+        }
+        #plaza-modal-card #plaza-list-container {
+            background-color: #0b111e !important;
+            border: 1px solid #1e293b !important;
+            border-radius: 0.9rem !important;
+            padding: 0.65rem !important;
+        }
+        #plaza-modal-card #plaza-list-container label {
+            background-color: #131c2e !important;
+            border: 1px solid #24324a !important;
+            color: #f8fafc !important;
+            border-radius: 0.7rem !important;
+            padding: 0.7rem 0.9rem !important;
+        }
+        #plaza-modal-card #plaza-list-container label:hover {
+            background-color: #19243b !important;
+            border-color: #38bdf8 !important;
+        }
+        #plaza-modal-card .plaza-cb {
+            width: 1.05rem !important;
+            height: 1.05rem !important;
+            accent-color: #ffffff !important;
+            border-radius: 0.2rem !important;
+            cursor: pointer !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased min-h-screen flex flex-col relative pb-20">
@@ -550,6 +597,30 @@
             <!-- =================== AVANCE =================== -->
             <div id="section-avance" class="main-tab-section bg-white p-6 rounded-xl shadow-sm space-y-4 animate-slide-up">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100"><h3 class="text-lg font-bold text-gray-800 flex items-center"><i class="fa-solid fa-chart-pie estafeta-red-text mr-2"></i> Avance General</h3><div class="text-xs font-semibold text-gray-500">Total Registros: <span id="status-board-total" class="font-bold text-gray-800">0</span></div></div>
+                <div class="bg-gray-50 border border-gray-200/60 rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-500">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="text-gray-600 font-medium">Filtros:</span>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="openCustomFilterModal('avance-ruta')" title="Filtrar Ruta" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                            <button onclick="openCustomFilterModal('avance-garantia')" title="Filtrar Garantía" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                        </div>
+                        <div id="avance-status-filters-container" class="flex flex-wrap items-center gap-1.5 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
+                            <button onclick="setAvanceStatusFilter('ALL')" id="btn-avance-status-all" class="px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm">Todos</button>
+                            <button onclick="setAvanceStatusFilter('CONFIRMADO')" id="btn-avance-status-confirmado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Confirmados</button>
+                            <button onclick="setAvanceStatusFilter('EXCEPCIONADO')" id="btn-avance-status-excepcionado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Excepcionados</button>
+                            <button onclick="setAvanceStatusFilter('PENDIENTE')" id="btn-avance-status-pendiente" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Pendientes</button>
+                            <button onclick="setAvanceStatusFilter('ENRUTADO')" id="btn-avance-status-enrutado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Enrutados</button>
+                            <button onclick="setAvanceStatusFilter('RECOLECTADO')" id="btn-avance-status-recolectado" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all">Recolectados</button>
+                        </div>
+                        <button onclick="toggleAvanceProgramadaVisibility()" id="btn-toggle-avance-prog" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm"><i class="fa-solid fa-calendar-check text-[11px]" id="avance-prog-toggle-icon"></i><span id="avance-prog-toggle-text">Ocultar Programadas</span></button>
+                        <div class="relative w-full sm:w-56">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fa-solid fa-search text-xs"></i></span>
+                            <input type="text" id="avance-advanced-search" placeholder="Buscador avanzado..." class="w-full pl-9 pr-7 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs shadow-sm">
+                            <button id="btn-avance-search-reset" onclick="clearSearchInput('avance-advanced-search', 'btn-avance-search-reset')" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-500/15 hover:bg-red-500/20 text-gray-500 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center text-[11px] backdrop-blur-xs transition-all duration-200"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <div><span class="font-semibold text-gray-700" id="avance-row-count">0</span> registros visibles</div>
+                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-green-50/60 border border-green-200 rounded-xl p-4 space-y-3 shadow-xs"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-green-800 flex items-center"><i class="fa-solid fa-circle-check text-green-600 mr-1.5"></i> Confirmados</span><span id="badge-total-confirmados" class="bg-green-200 text-green-900 text-xs font-bold px-2.5 py-1 rounded-lg">0</span></div><div class="text-xs text-green-700">Proporción: <span id="percent-confirmados" class="font-bold">0%</span></div></div>
                     <div class="bg-red-50/60 border border-red-200 rounded-xl p-4 space-y-3 shadow-xs"><div class="flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-red-800 flex items-center"><i class="fa-solid fa-circle-exclamation estafeta-red-text mr-1.5"></i> Excepcionados</span><span id="badge-total-excepcionados" class="bg-red-200 text-red-900 text-xs font-bold px-2.5 py-1 rounded-lg">0</span></div><div class="text-xs text-red-700">Proporción: <span id="percent-excepcionados" class="font-bold">0%</span></div></div>
@@ -558,14 +629,14 @@
                 </div>
                 <!-- Gráfica y Tabla de Seguimiento por Ruta (Entregados, Pendientes y Recolecciones) -->
                 <div id="avance-route-tracking-card" class="pt-3 border-t border-gray-100 space-y-3">
-                    <div class="bg-gray-50/70 dark:bg-slate-800/60 border border-gray-200 rounded-xl p-4 space-y-3">
+                    <div class="bg-gray-50/70 dark:bg-slate-900/90 border border-gray-200 dark:border-slate-700/80 rounded-xl p-4 space-y-3">
                         <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-gray-200/80">
                             <div>
                                 <h4 class="text-sm font-bold text-gray-800 flex items-center gap-2">
                                     <i class="fa-solid fa-chart-column estafeta-red-text"></i>
                                     Seguimiento Operativo por Ruta (Entregados, Pendientes y Recolecciones)
                                 </h4>
-                                <p class="text-[11px] text-gray-500">Comparativa de entregas confirmadas, paquetes pendientes y órdenes de recolección enlistadas por ruta</p>
+                                <p class="text-[11px] text-gray-500">Comparativa de entregas confirmadas, paquetes pendientes, órdenes de recolección y excepcionados por ruta</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <select id="avance-route-page-size" onchange="changeAvanceRoutePageSize(this.value)" title="Cantidad de rutas por pestaña" class="bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs font-bold text-gray-700 shadow-xs cursor-pointer">
@@ -675,7 +746,7 @@
                                 <i class="fa-solid fa-chart-line estafeta-red-text"></i>
                                 Actividad y Tiempos Muertos por Ruta
                             </h4>
-                            </div>
+                        </div>
                         <div class="flex flex-wrap items-center gap-2 text-[11px]">
                             <div class="inline-flex rounded-lg bg-gray-100 p-0.5 border border-gray-200" id="dt-layout-toggle-group">
                                 <button type="button" id="btn-dt-layout-overlay" onclick="setDeadTimesChartLayout('overlay')" class="px-2.5 py-1 rounded-md font-bold bg-red-600 text-white shadow-xs transition">Superpuesto</button>
@@ -716,12 +787,37 @@
 
                             <button type="button" onclick="toggleDtChartFullscreen()" id="btn-dt-chart-fullscreen" title="Pantalla completa" class="px-2.5 py-1 rounded-lg bg-white hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-200 shadow-xs font-bold flex items-center gap-1.5 transition">
                                 <i id="icon-dt-chart-fullscreen" class="fa-solid fa-expand"></i>
-                                
                             </button>
 
                             <button type="button" onclick="resetDeadTimesChartControls()" title="Restablecer vista de gráfica" class="px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200 transition">
                                 <i class="fa-solid fa-rotate-right"></i>
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Barra de Filtros estilo Tarjetas de Registro para Actividad y Tiempos Muertos -->
+                    <div class="bg-gray-50 border border-gray-200/60 rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500">
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <span class="text-gray-600 font-medium">Filtros:</span>
+                            <div class="flex items-center space-x-1.5">
+                                <button onclick="openCustomFilterModal('crono-ruta')" title="Filtrar Ruta" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                                <button onclick="openCustomFilterModal('crono-garantia')" title="Filtrar Garantía" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
+                                <button type="button" onclick="setCronoStatusFilter('ALL')" class="dt-sync-status-btn px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm" data-status="ALL">Todos</button>
+                                <button type="button" onclick="setCronoStatusFilter('CONFIRMADO')" class="dt-sync-status-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all" data-status="CONFIRMADO">Confirmados</button>
+                                <button type="button" onclick="setCronoStatusFilter('EXCEPCIONADO')" class="dt-sync-status-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all" data-status="EXCEPCIONADO">Excepcionados</button>
+                                <button type="button" onclick="setCronoStatusFilter('PENDIENTE')" class="dt-sync-status-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all" data-status="PENDIENTE">Pendientes</button>
+                                <button type="button" onclick="setCronoStatusFilter('ENRUTADO')" class="dt-sync-status-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all" data-status="ENRUTADO">Enrutados</button>
+                                <button type="button" onclick="setCronoStatusFilter('RECOLECTADO')" class="dt-sync-status-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all" data-status="RECOLECTADO">Recolectados</button>
+                            </div>
+                            <button type="button" onclick="toggleCronoProgramadaVisibility()" class="dt-sync-prog-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm">
+                                <i class="fa-solid fa-calendar-check text-[11px] dt-sync-prog-icon"></i>
+                                <span class="dt-sync-prog-text">Ocultar Programadas</span>
+                            </button>
+                        </div>
+                        <div class="text-[11px] font-semibold text-gray-600">
+                            <span id="dt-chart-routes-count">0</span> rutas activas
                         </div>
                     </div>
 
@@ -751,6 +847,33 @@
                             </select>
                         </div>
                     </div>
+
+                    <!-- Barra de Filtros estilo Tarjetas de Registro para Tiempos Muertos entre Entregas -->
+                    <div class="bg-gray-50 border border-gray-200/60 rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500">
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <span class="text-gray-600 font-medium">Filtros:</span>
+                            <div class="flex items-center space-x-1.5">
+                                <button onclick="openCustomFilterModal('crono-ruta')" title="Filtrar Ruta" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                                <button onclick="openCustomFilterModal('crono-garantia')" title="Filtrar Garantía" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 shadow-sm flex items-center justify-center transition-all"><i class="fa-solid fa-filter text-xs"></i></button>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
+                                <button type="button" onclick="setCronoStatusFilter('ALL')" class="dt-sync-status-btn px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm" data-status="ALL">Todos</button>
+                                <button type="button" onclick="setCronoStatusFilter('CONFIRMADO')" class="dt-sync-status-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all" data-status="CONFIRMADO">Confirmados</button>
+                                <button type="button" onclick="setCronoStatusFilter('EXCEPCIONADO')" class="dt-sync-status-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all" data-status="EXCEPCIONADO">Excepcionados</button>
+                                <button type="button" onclick="setCronoStatusFilter('PENDIENTE')" class="dt-sync-status-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all" data-status="PENDIENTE">Pendientes</button>
+                                <button type="button" onclick="setCronoStatusFilter('ENRUTADO')" class="dt-sync-status-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all" data-status="ENRUTADO">Enrutados</button>
+                                <button type="button" onclick="setCronoStatusFilter('RECOLECTADO')" class="dt-sync-status-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all" data-status="RECOLECTADO">Recolectados</button>
+                            </div>
+                            <button type="button" onclick="toggleCronoProgramadaVisibility()" class="dt-sync-prog-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-white estafeta-red-text border border-gray-200 hover:bg-red-50 transition-all flex items-center space-x-1.5 shadow-sm">
+                                <i class="fa-solid fa-calendar-check text-[11px] dt-sync-prog-icon"></i>
+                                <span class="dt-sync-prog-text">Ocultar Programadas</span>
+                            </button>
+                        </div>
+                        <div class="text-[11px] font-semibold text-gray-600">
+                            <span id="dt-table-routes-count">0</span> rutas visibles
+                        </div>
+                    </div>
+
                     <div id="dead-times-section-body" class="space-y-5 pt-1">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs text-gray-600 border-collapse">
@@ -1012,14 +1135,50 @@
         </button>
     </div>
 
-    <div id="plaza-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
-        <div class="w-full max-w-md rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
-            <div class="flex justify-between items-center border-b pb-3 border-slate-700">
-                <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-stream text-red-500"></i> Filtrar por Plaza</h3>
-                <button onclick="closePlazaModal()" class="transition hover:opacity-75"><i class="fa-solid fa-xmark"></i></button>
+    <!-- Modal de Plazas con diseño estilo imagen -->
+    <div id="plaza-modal" class="fixed inset-0 bg-black/65 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+        <div id="plaza-modal-card" class="w-full max-w-md rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
+            <div class="flex justify-between items-center pb-2">
+                <h3 class="font-bold text-base text-white flex items-center gap-2.5">
+                    <i class="fa-solid fa-bars-staggered text-[#ef4444]"></i>
+                    <span>Filtrar por Plaza Destino</span>
+                </h3>
+                <button onclick="closePlazaModal()" aria-label="Cerrar modal" class="text-slate-400 hover:text-white transition p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
             </div>
-            <div id="plaza-list-container" class="space-y-2 max-h-56 overflow-y-auto pr-1 text-xs p-1 rounded-xl"></div>
-            <button onclick="applyPlazaFilters()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl text-xs font-bold transition">Aplicar Selección</button>
+
+            <div class="relative w-full">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" id="plaza-modal-search" oninput="renderPlazaFilterList()" placeholder="Buscar valor..." class="w-full pl-10 pr-3.5 py-2.5 bg-[#0b111e] border border-[#24324a] rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-xs text-slate-200 placeholder-slate-400">
+            </div>
+
+            <div class="flex justify-between items-center text-xs px-0.5">
+                <span class="text-slate-400 font-medium">Seleccionar valores:</span>
+                <div class="flex items-center gap-2.5 font-semibold">
+                    <button type="button" onclick="setAllPlazaOptions(true)" class="text-[#ef4444] hover:text-red-400 transition">Todos</button>
+                    <span class="text-slate-600">|</span>
+                    <button type="button" onclick="setAllPlazaOptions(false)" class="text-slate-300 hover:text-white transition">Ninguno</button>
+                </div>
+            </div>
+
+            <div id="plaza-list-container" class="space-y-2 max-h-56 overflow-y-auto text-xs"></div>
+
+            <div class="pt-2 flex items-center justify-between gap-3">
+                <div class="text-xs font-semibold text-slate-300">
+                    <span id="plaza-selected-count" class="text-[#ef4444] font-bold">0</span> seleccionadas
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <button type="button" onclick="closePlazaModal()" class="px-4 py-2 rounded-xl bg-[#182235] hover:bg-[#1f2c44] border border-[#2a3b58] text-slate-200 text-xs font-semibold transition">
+                        Cancelar
+                    </button>
+                    <button type="button" onclick="applyPlazaFilters()" class="px-5 py-2 rounded-xl bg-[#e02418] hover:bg-red-700 text-white text-xs font-bold shadow-md transition">
+                        Aplicar Filtro
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1096,8 +1255,14 @@
         let allKeysFull = [];
 
         let activePlazaFilter = new Set();
+        let draftPlazaSelections = new Set();
         let activeStatusFilter = 'ALL';
         let showProgData = true;
+
+        let activeAvanceStatusFilter = 'ALL';
+        let showAvanceProgData = true;
+        let activeAvanceRouteSelections = new Set();
+        let activeAvanceGarantiaSelections = new Set();
 
         let activeCronoStatusFilter = 'ALL';
         let showCronoProgData = true;
@@ -1324,7 +1489,6 @@
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 3);
 
-            // Toast 1: Resumen General del Excel
             addNotification(
                 "1. Resumen de Carga Excel",
                 `Total: ${data.length.toLocaleString()} registros · ${plazasSet.size} plazas · ${validCoordsCount.toLocaleString()} GPS\nConfirmados: ${confirmedCount.toLocaleString()} · Excepciones: ${exceptionTotalCount.toLocaleString()}`,
@@ -1332,7 +1496,6 @@
                 3000
             );
 
-            // Toast 2: Top 3 Rutas con Mayor Tiempo Muerto
             const top3DeadMsg = top3DeadRoutes.length > 0
                 ? top3DeadRoutes.map(([ruta, info], i) => `${i + 1}. ${ruta} — Total: ${formatDuration(info.totalMs)} (Máx: ${formatDuration(info.maxMs)})`).join('\n')
                 : "Sin intervalos de tiempo muerto calculables en las rutas.";
@@ -1343,7 +1506,6 @@
                 3000
             );
 
-            // Toast 3: Top 3 Rutas con Mayor Excepción
             const top3ExcMsg = top3ExceptionRoutes.length > 0
                 ? top3ExceptionRoutes.map(([ruta, cnt], i) => `${i + 1}. ${ruta} — ${cnt.toLocaleString()} excepciones`).join('\n')
                 : "No se registraron rutas con excepciones.";
@@ -1354,7 +1516,6 @@
                 3000
             );
 
-            // Toast 4: Paquetes Pendientes / Faltantes
             const pctPend = data.length > 0 ? ((pendingCount / data.length) * 100).toFixed(1) : '0.0';
             addNotification(
                 "4. Paquetes en Pendientes",
@@ -1363,7 +1524,6 @@
                 3000
             );
 
-            // Toast 5: Total de Recolecciones
             const pctPick = data.length > 0 ? ((pickupCount / data.length) * 100).toFixed(1) : '0.0';
             addNotification(
                 "5. Total de Recolecciones",
@@ -1594,6 +1754,7 @@
             if (activeSection) {
                 activeSection.style.display = 'block';
                 if (sectionKey === 'tiempos') {
+                    syncDeadTimesFilterUI();
                     setTimeout(() => updateDeadTimesChart(), 50);
                 }
                 if (sectionKey === 'crono' && cronoMapInstance) setTimeout(() => cronoMapInstance.invalidateSize(), 100);
@@ -1606,6 +1767,7 @@
            SELECCIONES INICIALES
            ===================================================================== */
         function initSelections() {
+            activeAvanceRouteSelections.clear(); activeAvanceGarantiaSelections.clear();
             activeRouteSelections.clear(); activeGarantiaSelections.clear();
             activeCronoRouteSelections.clear(); activeCronoGarantiaSelections.clear();
             activeTimelineRouteSelections.clear(); activeTimelineGarantiaSelections.clear();
@@ -1615,6 +1777,7 @@
             activeRows.forEach(row => {
                 let r = String(row[routeKeyName] ?? 'N/D');
                 let g = String(row[garantiaKeyName] ?? 'N/D');
+                activeAvanceRouteSelections.add(r); activeAvanceGarantiaSelections.add(g);
                 activeRouteSelections.add(r); activeGarantiaSelections.add(g);
                 activeCronoRouteSelections.add(r); activeCronoGarantiaSelections.add(g);
                 activeTimelineRouteSelections.add(r); activeTimelineGarantiaSelections.add(g);
@@ -1641,6 +1804,8 @@
            MODALES FILTRO CUSTOM (RUTA / GARANTÍA)
            ===================================================================== */
         function getActiveSetFor(type) {
+            if (type === 'avance-ruta') return activeAvanceRouteSelections;
+            if (type === 'avance-garantia') return activeAvanceGarantiaSelections;
             if (type === 'ruta') return activeRouteSelections;
             if (type === 'garantia') return activeGarantiaSelections;
             if (type === 'crono-ruta') return activeCronoRouteSelections;
@@ -1658,10 +1823,12 @@
             const title = document.getElementById('custom-modal-title');
             const subtitle = document.getElementById('custom-modal-subtitle');
             const titles = {
+                'avance-ruta': ['Filtrar Ruta (Avance General)', 'Seleccionar rutas:'],
+                'avance-garantia': ['Filtrar Garantía (Avance General)', 'Seleccionar garantías:'],
                 'ruta': ['Filtrar Ruta (Tarjetas de Registro)', 'Seleccionar rutas:'],
                 'garantia': ['Filtrar Garantía (Tarjetas de Registro)', 'Seleccionar garantías:'],
-                'crono-ruta': ['Filtrar Ruta (Detalle Cronológico)', 'Seleccionar rutas:'],
-                'crono-garantia': ['Filtrar Garantía (Detalle Cronológico)', 'Seleccionar garantías:'],
+                'crono-ruta': ['Filtrar Ruta (Tiempos Muertos / Cronológico)', 'Seleccionar rutas:'],
+                'crono-garantia': ['Filtrar Garantía (Tiempos Muertos / Cronológico)', 'Seleccionar garantías:'],
                 'timeline-ruta': ['Filtrar Ruta (Línea de Tiempo)', 'Seleccionar rutas:'],
                 'timeline-garantia': ['Filtrar Garantía (Línea de Tiempo)', 'Seleccionar garantías:'],
                 'map-ruta': ['Filtrar Ruta (Mapa GPS)', 'Seleccionar rutas:'],
@@ -1792,6 +1959,34 @@
         /* =====================================================================
            TOGGLES PROGRAMADAS
            ===================================================================== */
+        function syncDeadTimesFilterUI() {
+            document.querySelectorAll('.dt-sync-status-btn').forEach(btn => {
+                const st = btn.getAttribute('data-status');
+                if (st === activeCronoStatusFilter) {
+                    btn.className = 'dt-sync-status-btn px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm';
+                } else {
+                    btn.className = 'dt-sync-status-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-gray-600 hover:bg-gray-100 transition-all';
+                }
+            });
+            document.querySelectorAll('.dt-sync-prog-text').forEach(span => {
+                span.innerText = showCronoProgData ? 'Ocultar Programadas' : 'Mostrar Programadas';
+            });
+            document.querySelectorAll('.dt-sync-prog-icon').forEach(ico => {
+                ico.className = showCronoProgData ? 'fa-solid fa-calendar-check text-[11px] dt-sync-prog-icon' : 'fa-solid fa-calendar-xmark text-[11px] dt-sync-prog-icon';
+            });
+            const chartCountEl = document.getElementById('dt-chart-routes-count');
+            const tableCountEl = document.getElementById('dt-table-routes-count');
+            const countVal = (cachedDeadTimesList || []).length;
+            if (chartCountEl) chartCountEl.innerText = countVal.toLocaleString();
+            if (tableCountEl) tableCountEl.innerText = countVal.toLocaleString();
+        }
+
+        function toggleAvanceProgramadaVisibility() {
+            showAvanceProgData = !showAvanceProgData;
+            document.getElementById('avance-prog-toggle-text').innerText = showAvanceProgData ? "Ocultar Programadas" : "Mostrar Programadas";
+            document.getElementById('avance-prog-toggle-icon').className = showAvanceProgData ? "fa-solid fa-calendar-check text-[11px]" : "fa-solid fa-calendar-xmark text-[11px]";
+            avanceRouteCurrentPage = 1; updateDashboard();
+        }
         function toggleProgramadaVisibility() {
             showProgData = !showProgData;
             document.getElementById('prog-toggle-text').innerText = showProgData ? "Ocultar Programadas" : "Mostrar Programadas";
@@ -1802,6 +1997,7 @@
             showCronoProgData = !showCronoProgData;
             document.getElementById('crono-prog-toggle-text').innerText = showCronoProgData ? "Ocultar Programadas" : "Mostrar Programadas";
             document.getElementById('crono-prog-toggle-icon').className = showCronoProgData ? "fa-solid fa-calendar-check text-[11px]" : "fa-solid fa-calendar-xmark text-[11px]";
+            syncDeadTimesFilterUI();
             deadTimesCurrentPage = 1; cronoCurrentPage = 1; updateDashboard();
         }
         function toggleTimelineProgramadaVisibility() {
@@ -1828,8 +2024,14 @@
             const activeBtn = document.getElementById(status === 'ALL' ? `btn-${prefix}-all` : `btn-${prefix}-${status.toLowerCase()}`);
             if (activeBtn) activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-lg estafeta-red text-white transition-all shadow-sm";
         }
+        function setAvanceStatusFilter(status) { activeAvanceStatusFilter = status; _applyStatusBtn('avance-status', status); avanceRouteCurrentPage = 1; updateDashboard(); }
         function setStatusFilter(status) { activeStatusFilter = status; _applyStatusBtn('status', status); currentPage = 1; updateDashboard(); }
-        function setCronoStatusFilter(status) { activeCronoStatusFilter = status; _applyStatusBtn('crono-status', status); deadTimesCurrentPage = 1; cronoCurrentPage = 1; updateDashboard(); }
+        function setCronoStatusFilter(status) {
+            activeCronoStatusFilter = status;
+            _applyStatusBtn('crono-status', status);
+            syncDeadTimesFilterUI();
+            deadTimesCurrentPage = 1; cronoCurrentPage = 1; updateDashboard();
+        }
         function setTimelineStatusFilter(status) { activeTimelineStatusFilter = status; _applyStatusBtn('timeline-status', status); timelineCurrentPage = 1; prepareTimelineEvents(); }
         function setMapStatusFilter(status) { activeMapStatusFilter = status; _applyStatusBtn('map-status', status); prepareGpsMapEvents(); }
 
@@ -2141,7 +2343,7 @@
         }
 
         /* =====================================================================
-           GRÁFICA DE TIEMPOS MUERTOS (SUPERPUESTO EN COLORES / LADO A LADO 3 / PANTALLA COMPLETA CON PESTAÑAS / CHECKBOXES)
+           GRÁFICA DE TIEMPOS MUERTOS
            ===================================================================== */
         let deadTimesChartLayout = 'overlay';
         let deadTimesOverlayChartType = 'bar';
@@ -2422,6 +2624,7 @@
             if (typeof Chart === 'undefined') return;
             syncDeadTimesRouteChecklist();
             syncOverlayChartTypeButtons();
+            syncDeadTimesFilterUI();
 
             const canvas = document.getElementById('deadTimesChartCanvas');
             const overlayWrapper = document.getElementById('dt-chart-overlay-wrapper');
@@ -2734,6 +2937,12 @@
                             data: routeList.map(r => r.recolecciones),
                             backgroundColor: '#2563eb',
                             borderRadius: 4
+                        },
+                        {
+                            label: 'Excepcionados',
+                            data: routeList.map(r => r.excepcionados),
+                            backgroundColor: '#DA291C',
+                            borderRadius: 4
                         }
                     ]
                 },
@@ -2788,8 +2997,8 @@
                 return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia;
             });
 
-            let plazaFilteredRowsForAvance = rawData.filter(row => activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D')));
-            updateStatusBoard(plazaFilteredRowsForAvance);
+            let avanceFilteredRows = getAvanceFilteredRows();
+            updateStatusBoard(avanceFilteredRows);
 
             const routeMap = {};
             cronoFilteredRows.forEach(row => {
@@ -2834,6 +3043,7 @@
                 cachedDeadTimesList.push({ ruta, count: totalEvents, avg: avgDiff, max: maxDiff, total: totalDiff });
             }
             sortDeadTimesListByMetric();
+            syncDeadTimesFilterUI();
             renderDeadTimesTablePage();
             updateDeadTimesChart();
             applyCronoDetailFilter();
@@ -3095,69 +3305,46 @@
                     if (item.prevRow) {
                         openCardModal(item.prevRow, {
                             mapName: 'Mapa Cronológico (Guía Anterior)',
-                            timeOnly: item.prevTime
+                            timeOnly: item.prevTime,
+                            guideOr: item.prevGuide,
+                            detectedPhone: extractPhoneFromRow(item.prevRow) || 'No detectado'
                         });
                     }
                 });
-                cronoClusterGroup.addLayer(m); latLngs.push(prevCoords);
+                cronoClusterGroup.addLayer(m);
+                latLngs.push(prevCoords);
             }
             if (currCoords) {
-                let m = L.circleMarker(currCoords, { radius: 9, color: '#991B1B', fillColor: '#DA291C', fillOpacity: 1 });
+                let m = L.circleMarker(currCoords, { radius: 8, color: '#B91C1C', fillColor: '#DA291C', fillOpacity: 0.9 });
                 m.on('click', (ev) => {
                     if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
                     if (item.currRow) {
                         openCardModal(item.currRow, {
                             mapName: 'Mapa Cronológico (Guía Actual)',
-                            timeOnly: item.currTime
+                            timeOnly: item.currTime,
+                            guideOr: item.currGuide,
+                            detectedPhone: extractPhoneFromRow(item.currRow) || 'No detectado'
                         });
                     }
                 });
-                cronoClusterGroup.addLayer(m); latLngs.push(currCoords);
+                cronoClusterGroup.addLayer(m);
+                latLngs.push(currCoords);
             }
             cronoMapInstance.addLayer(cronoClusterGroup);
-            if (prevCoords && currCoords) {
-                const distMeters = L.latLng(prevCoords[0], prevCoords[1]).distanceTo(L.latLng(currCoords[0], currCoords[1]));
-                const distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : Math.round(distMeters) + ' metros';
-                const timeText = formatDuration(item.diff);
-                cronoPolyline = L.polyline([prevCoords, currCoords], { color: '#DA291C', weight: 5, opacity: 0.9, dashArray: '6, 6' }).addTo(cronoMapInstance);
-                cronoPolyline.bindPopup(`
-                    <div style="min-width:190px;font-family:sans-serif;line-height:1.45;">
-                        <div style="font-weight:800;color:#DA291C;font-size:12px;margin-bottom:4px;border-bottom:1px solid #e5e7eb;padding-bottom:3px;">
-                            <i class="fa-solid fa-route"></i> Traslado entre Puntos
-                        </div>
-                        <div style="font-size:12px;color:#1f2937;"><b>Tiempo transcurrido:</b> ${esc(timeText)}</div>
-                        <div style="font-size:12px;color:#1f2937;"><b>Distancia aprox.:</b> ${esc(distText)}</div>
-                        <div style="font-size:10px;color:#6b7280;margin-top:4px;">${esc(item.prevGuide)} &rarr; ${esc(item.currGuide)}</div>
-                    </div>
-                `);
-                cronoPolyline.bindTooltip(`Tiempo: ${timeText} · Distancia: ${distText}`, { sticky: true });
+            if (latLngs.length === 2) {
+                cronoPolyline = L.polyline(latLngs, { color: '#DA291C', weight: 3, dashArray: '5, 5' }).addTo(cronoMapInstance);
+                cronoMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [30, 30] });
+            } else if (latLngs.length === 1) {
+                cronoMapInstance.setView(latLngs[0], 14);
             }
-            if (latLngs.length > 0) cronoMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15 });
-            cronoMapInstance.invalidateSize();
+            setTimeout(() => { if (cronoMapInstance) cronoMapInstance.invalidateSize(); }, 150);
         }
 
         /* =====================================================================
            LÍNEA DE TIEMPO
            ===================================================================== */
-        function getTargetSequences() {
-            const seqInput = document.getElementById('sequence-search-input');
-            const seqVal = seqInput ? seqInput.value.trim() : '';
-            if (seqVal === '') return null;
-            const numbers = [];
-            for (let p of seqVal.split(',')) {
-                let num = parseInt(p.trim(), 10);
-                if (!isNaN(num)) numbers.push(num);
-            }
-            return numbers.length > 0 ? numbers : null;
-        }
-
         function prepareTimelineEvents() {
-            let timelineSearchEl = document.getElementById('timeline-advanced-search');
-            let timelineSearch = timelineSearchEl ? timelineSearchEl.value.toLowerCase().trim() : '';
-            let targetSeqs = getTargetSequences();
-
-            let allMappedRows = [];
-            rawData.forEach(row => {
+            let timelineRows = rawData.filter(row => {
                 let matchPlaza = activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
                 let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
                 let matchStatus = matchRowStatus(rowStatus, activeTimelineStatusFilter);
@@ -3170,36 +3357,55 @@
                 let matchRoute = activeTimelineRouteSelections.has(rVal);
                 let gVal = String(row[garantiaKeyName] ?? 'N/D');
                 let matchGarantia = activeTimelineGarantiaSelections.has(gVal);
-                let matchSearch = timelineSearch === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(timelineSearch));
+                return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia;
+            });
 
-                let matchRouteQuery = timelineRouteQuery === '' || String(row[routeKeyName] ?? '').toLowerCase().includes(timelineRouteQuery);
-                let matchWaybillQuery = timelineWaybillQuery === '' || String(row[guideKeyName] ?? '').toLowerCase().includes(timelineWaybillQuery);
+            if (timelineRouteQuery) {
+                const rq = timelineRouteQuery.toLowerCase().trim();
+                timelineRows = timelineRows.filter(row => String(row[routeKeyName] ?? '').toLowerCase().includes(rq));
+            }
+            if (timelineWaybillQuery) {
+                const wq = timelineWaybillQuery.toLowerCase().trim();
+                timelineRows = timelineRows.filter(row => String(row[guideKeyName] ?? '').toLowerCase().includes(wq));
+            }
 
-                if (matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchSearch && matchRouteQuery && matchWaybillQuery) {
-                    let timeVal = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
-                    let timeStamp = timeVal && !isNaN(timeVal) ? timeVal.getTime() : 0;
-                    let guide = String(row[guideKeyName] ?? '—');
-                    let status = row[statusKeyName] ?? 'N/D';
-                    allMappedRows.push({ timestamp: timeStamp, ruta: rVal, guide, status: String(status), rowObj: row });
+            let searchEl = document.getElementById('timeline-advanced-search');
+            let searchVal = searchEl ? searchEl.value.toLowerCase().trim() : '';
+            if (searchVal) {
+                timelineRows = timelineRows.filter(row => Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(searchVal)));
+            }
+
+            let eventsWithTime = [];
+            timelineRows.forEach(row => {
+                let timeObj = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
+                if (timeObj && !isNaN(timeObj)) {
+                    if (isMidnightEvent(timeObj)) return;
+                    eventsWithTime.push({ time: timeObj.getTime(), dateObj: timeObj, guide: row[guideKeyName] ?? '—', status: row[statusKeyName] ?? '—', route: row[routeKeyName] ?? '—', originalRow: row });
                 }
             });
+            eventsWithTime.sort((a, b) => a.time - b.time);
 
-            allMappedRows.sort((a, b) => a.timestamp - b.timestamp);
             cachedTimelineList = [];
-            allMappedRows.forEach((item, index) => {
-                item.sequenceNumber = index + 1;
-                let matchSeq = targetSeqs === null || targetSeqs.includes(item.sequenceNumber);
-                if (matchSeq) cachedTimelineList.push(item);
-            });
-
+            for (let i = 0; i < eventsWithTime.length; i++) {
+                let curr = eventsWithTime[i];
+                let diff = i > 0 ? curr.time - eventsWithTime[i - 1].time : 0;
+                cachedTimelineList.push({
+                    seq: i + 1,
+                    timeStr: formatDateString(curr.dateObj),
+                    guide: curr.guide,
+                    status: curr.status,
+                    route: curr.route,
+                    diff: diff,
+                    originalRow: curr.originalRow
+                });
+            }
+            timelineCurrentPage = 1;
             renderTimelineTablePage();
-            renderTimelineMap();
         }
 
         function renderTimelineTablePage() {
             const container = document.getElementById('timeline-grid-container');
             if (!container) return;
-            container.innerHTML = '';
             document.getElementById('timeline-row-count').innerText = cachedTimelineList.length.toLocaleString();
             let totalPages = Math.ceil(cachedTimelineList.length / timelinePerPage) || 1;
             if (timelineCurrentPage > totalPages) timelineCurrentPage = totalPages;
@@ -3207,116 +3413,120 @@
             document.getElementById('timeline-current-page-num').innerText = timelineCurrentPage;
             document.getElementById('timeline-total-pages-num').innerText = totalPages;
             if (cachedTimelineList.length === 0) {
-                container.innerHTML = `<div class="py-8 text-center text-gray-400 italic text-xs w-full">No hay eventos con los filtros seleccionados.</div>`;
-                document.getElementById('timeline-pagination-container').style.display = 'none';
+                container.innerHTML = `<div class="w-full py-8 text-center text-gray-400 italic text-xs">No se encontraron eventos en línea de tiempo.</div>`;
+                renderTimelineMap([]);
                 return;
             }
-            document.getElementById('timeline-pagination-container').style.display = 'flex';
             const startIndex = (timelineCurrentPage - 1) * timelinePerPage;
-            const pageRows = cachedTimelineList.slice(startIndex, startIndex + timelinePerPage);
-            let fragment = document.createDocumentFragment();
-            pageRows.forEach((item) => {
-                let statusBadge = getStatusBadge(item.status);
-                let card = document.createElement('div');
-                card.className = 'bg-white border border-gray-200/90 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-red-400 transition-all flex flex-col justify-between space-y-2 border-l-4 estafeta-border cursor-pointer min-w-[280px] max-w-[280px] flex-shrink-0';
-                card.onclick = () => openCardModal(item.rowObj);
-                let timeStr = item.rowObj[eventTimeKeyName] ? String(item.rowObj[eventTimeKeyName]) : '—';
-                card.innerHTML = `
-                    <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-                        <span class="bg-gray-900 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm">#${item.sequenceNumber}</span>
-                        <div>${statusBadge}</div>
-                    </div>
-                    <div class="space-y-1.5 text-xs py-1">
-                        <div class="estafeta-red-text font-semibold flex items-center"><i class="fa-solid fa-clock mr-1.5"></i><span class="truncate" title="${esc(timeStr)}">${esc(timeStr)}</span></div>
-                        <div class="truncate"><span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Guía:</span><span class="font-bold text-gray-900 ml-1 truncate"><i class="fa-solid fa-barcode estafeta-red-text mr-1"></i>${esc(item.guide)}</span></div>
-                        <div class="truncate"><span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Ruta:</span><span class="font-medium text-gray-700 ml-1 truncate"><i class="fa-solid fa-route text-gray-400 mr-1"></i>${esc(item.ruta)}</span></div>
-                    </div>
-                    <div class="pt-1.5 border-t border-gray-100 flex justify-end"><span class="text-[10px] estafeta-red-text font-semibold hover:underline"><i class="fa-solid fa-arrow-pointer mr-1"></i>Ver Detalle</span></div>`;
-                fragment.appendChild(card);
+            const pageItems = cachedTimelineList.slice(startIndex, startIndex + timelinePerPage);
+            let html = '';
+            pageItems.forEach((item, idx) => {
+                let diffBadge = item.diff > 0 ? `<span class="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded font-bold border border-red-200">+${formatDuration(item.diff)}</span>` : '<span class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-semibold">Inicio</span>';
+                html += `
+                    <div class="flex-shrink-0 w-64 bg-white border border-gray-200/90 rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between border-t-4 estafeta-border" onclick='openTimelineCardModal(${startIndex + idx}, ${item.seq})'>
+                        <div>
+                            <div class="flex justify-between items-center pb-2 mb-2 border-b border-gray-100"><span class="bg-gray-900 text-white text-[10px] font-bold px-2 py-0.5 rounded">Sec. #${item.seq}</span>${diffBadge}</div>
+                            <div class="text-xs font-bold text-gray-800 truncate" title="${esc(item.guide)}"><i class="fa-solid fa-barcode estafeta-red-text mr-1.5"></i>${esc(item.guide)}</div>
+                            <div class="text-[11px] text-gray-500 mt-1"><i class="fa-regular fa-clock text-gray-400 mr-1"></i> ${esc(item.timeStr)}</div>
+                            <div class="text-[11px] text-gray-500 mt-0.5 truncate" title="${esc(item.route)}"><i class="fa-solid fa-route text-gray-400 mr-1"></i> ${esc(item.route)}</div>
+                        </div>
+                        <div class="pt-2 mt-2 border-t border-gray-100 flex justify-between items-center text-[10px]">${getStatusBadge(item.status)}<span class="text-gray-400 font-semibold"><i class="fa-solid fa-eye mr-1"></i>Detalle</span></div>
+                    </div>`;
             });
-            container.appendChild(fragment);
+            container.innerHTML = html;
+
+            let seqFilterStr = document.getElementById('sequence-search-input').value.trim();
+            let mapItems = cachedTimelineList;
+            if (seqFilterStr) {
+                let targetSeqs = new Set(seqFilterStr.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n)));
+                mapItems = cachedTimelineList.filter(it => targetSeqs.has(it.seq));
+            }
+            renderTimelineMap(mapItems);
         }
 
-        function renderTimelineMap() {
-            if (window._timelineTimer) clearTimeout(window._timelineTimer);
-            window._timelineTimer = setTimeout(() => {
-                if (!timelineMapInstance) {
-                    timelineMapInstance = L.map('map').setView([19.4326, -99.1332], 6);
-                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(timelineMapInstance);
-                    routeLinesLayer = L.layerGroup().addTo(timelineMapInstance);
-                }
-                if (timelineClusterGroup) timelineMapInstance.removeLayer(timelineClusterGroup);
-                timelineClusterGroup = L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false, zoomToBoundsOnClick: true });
-                if (routeLinesLayer) routeLinesLayer.clearLayers();
-                let latLngs = [];
-                let validPointsForLines = [];
-                const targetSeqs = getTargetSequences();
-                cachedTimelineList.forEach(item => {
-                    let coords = coordKeyName && item.rowObj ? parseCoordinates(item.rowObj[coordKeyName]) : null;
-                    if (!coords) return;
-                    let timeOnly = '—';
-                    if (eventTimeKeyName && item.rowObj[eventTimeKeyName]) {
-                        let d = new Date(item.rowObj[eventTimeKeyName]);
-                        if (!isNaN(d)) timeOnly = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} hrs`;
-                        else { let parts = String(item.rowObj[eventTimeKeyName]).split(' '); timeOnly = parts.length > 1 ? parts[1] : String(item.rowObj[eventTimeKeyName]); }
-                    }
-                    const pointColor = targetSeqs !== null ? '#DA291C' : '#10B981';
-                    const numberedIcon = L.divIcon({
-                        className: 'custom-div-icon',
-                        html: `<div style="background-color:${pointColor};color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">${item.sequenceNumber}</div>`,
-                        iconSize: [28, 28], iconAnchor: [14, 14]
-                    });
-                    let marker = L.marker(coords, { icon: numberedIcon });
-                    marker.on('click', (ev) => {
-                        if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
-                        openCardModal(item.rowObj, {
-                            mapName: 'Mapa de Secuencia Cronológica',
-                            sequenceNumber: item.sequenceNumber,
-                            timeOnly: timeOnly
+        function openTimelineCardModal(idx, seqNum = null) {
+            const item = cachedTimelineList[idx];
+            if (!item || !item.originalRow) return;
+            const timeOnly = item.timeStr && item.timeStr !== '—' ? `${String(item.timeStr).split(' ')[1] || item.timeStr} hrs` : '';
+            openCardModal(item.originalRow, {
+                mapName: 'Línea de Tiempo',
+                sequenceNumber: seqNum || item.seq,
+                timeOnly: timeOnly,
+                guideOr: item.guide || item.originalRow[guideKeyName] || '—',
+                detectedPhone: extractPhoneFromRow(item.originalRow) || 'No detectado'
+            });
+        }
+
+        function renderTimelineMap(items) {
+            if (!timelineMapInstance) {
+                timelineMapInstance = L.map('map').setView([19.4326, -99.1332], 6);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(timelineMapInstance);
+            }
+            if (timelineClusterGroup) timelineMapInstance.removeLayer(timelineClusterGroup);
+            if (routeLinesLayer) { timelineMapInstance.removeLayer(routeLinesLayer); routeLinesLayer = null; }
+            timelineClusterGroup = L.markerClusterGroup();
+            let latLngs = [];
+            items.forEach(item => {
+                if (coordKeyName && item.originalRow) {
+                    let coords = parseCoordinates(item.originalRow[coordKeyName]);
+                    if (coords) {
+                        let m = L.circleMarker(coords, { radius: 7, color: '#B91C1C', fillColor: '#DA291C', fillOpacity: 0.9 });
+                        m.on('click', (ev) => {
+                            if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
+                            const timeOnly = item.timeStr && item.timeStr !== '—' ? `${String(item.timeStr).split(' ')[1] || item.timeStr} hrs` : '';
+                            openCardModal(item.originalRow, {
+                                mapName: 'Línea de Tiempo',
+                                sequenceNumber: item.seq,
+                                timeOnly: timeOnly,
+                                guideOr: item.guide || item.originalRow[guideKeyName] || '—',
+                                detectedPhone: extractPhoneFromRow(item.originalRow) || 'No detectado'
+                            });
                         });
-                    });
-                    timelineClusterGroup.addLayer(marker);
-                    latLngs.push(coords);
-                    let rowDate = eventTimeKeyName ? new Date(item.rowObj[eventTimeKeyName]) : null;
-                    validPointsForLines.push({ latLng: L.latLng(coords[0], coords[1]), seqNum: item.sequenceNumber, date: rowDate });
-                });
-                timelineMapInstance.addLayer(timelineClusterGroup);
-                for (let i = 0; i < validPointsForLines.length - 1; i++) {
-                    let p1 = validPointsForLines[i];
-                    let p2 = validPointsForLines[i + 1];
-                    let distMeters = p1.latLng.distanceTo(p2.latLng);
-                    let distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(1) + ' metros';
-                    let timeText = '';
-                    if (p1.date && p2.date && !isNaN(p1.date) && !isNaN(p2.date)) {
-                        let diffMs = p2.date - p1.date;
-                        if (diffMs >= 0) {
-                            let totalMins = Math.floor(diffMs / 60000);
-                            let hrs = Math.floor(totalMins / 60);
-                            let mins = totalMins % 60;
-                            timeText = hrs > 0 ? `<br>Tiempo: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo: <b>${totalMins} min</b>`;
-                        }
+                        timelineClusterGroup.addLayer(m);
+                        latLngs.push(coords);
                     }
-                    let segmentLine = L.polyline([p1.latLng, p2.latLng], { color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5' });
-                    segmentLine.bindTooltip(`Seq #${p1.seqNum} &rarr; #${p2.seqNum}<br>Distancia: <b>${distText}</b>${timeText}`, { sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200' });
-                    routeLinesLayer.addLayer(segmentLine);
                 }
-                if (showRouteLines && routeLinesLayer) { if (!timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.addLayer(routeLinesLayer); }
-                else { if (routeLinesLayer && timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.removeLayer(routeLinesLayer); }
-                timelineMapInstance.invalidateSize();
-            }, 100);
+            });
+            timelineMapInstance.addLayer(timelineClusterGroup);
+            if (showRouteLines && latLngs.length > 1) {
+                routeLinesLayer = L.polyline(latLngs, { color: '#DA291C', weight: 2.5, opacity: 0.8 }).addTo(timelineMapInstance);
+            }
+            if (latLngs.length > 0) {
+                timelineMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [30, 30] });
+            }
+            setTimeout(() => { if (timelineMapInstance) timelineMapInstance.invalidateSize(); }, 150);
+        }
+
+        document.getElementById('toggle-lines-btn').addEventListener('click', () => {
+            showRouteLines = !showRouteLines;
+            document.getElementById('lines-icon').className = showRouteLines ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+            document.getElementById('lines-text').innerText = showRouteLines ? 'Ocultar Líneas' : 'Mostrar Líneas';
+            renderTimelineTablePage();
+        });
+
+        document.getElementById('toggle-fullscreen-btn').addEventListener('click', () => {
+            const card = document.getElementById('map-card');
+            card.classList.toggle('fullscreen');
+            const isFs = card.classList.contains('fullscreen');
+            document.getElementById('fullscreen-icon').className = isFs ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+            setTimeout(() => { if (timelineMapInstance) timelineMapInstance.invalidateSize(); }, 150);
+        });
+
+        function toggleTimelineFullscreen(e) {
+            if (e) e.stopPropagation();
+            const card = document.getElementById('timeline-section-card');
+            if (!card) return;
+            card.classList.toggle('fullscreen-section');
+            const isFs = card.classList.contains('fullscreen-section');
+            document.getElementById('timeline-fullscreen-icon').className = isFs ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+            setTimeout(() => { if (timelineMapInstance) timelineMapInstance.invalidateSize(); }, 150);
         }
 
         /* =====================================================================
-           MAPA GPS
+           GPS MAP
            ===================================================================== */
-        let mapRouteQuery = '';
-        let mapWaybillQuery = '';
-
         function prepareGpsMapEvents() {
-            let mapTextEl = document.getElementById('map-text-search');
-            let mapTextSearch = mapTextEl ? mapTextEl.value.toLowerCase().trim() : '';
-            let allMappedRows = [];
-            rawData.forEach(row => {
+            let mapRows = rawData.filter(row => {
                 let matchPlaza = activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
                 let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
                 let matchStatus = matchRowStatus(rowStatus, activeMapStatusFilter);
@@ -3329,147 +3539,171 @@
                 let matchRoute = activeMapRouteSelections.has(rVal);
                 let gVal = String(row[garantiaKeyName] ?? 'N/D');
                 let matchGarantia = activeMapGarantiaSelections.has(gVal);
-                let matchText = mapTextSearch === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(mapTextSearch));
-                let matchRouteQ = mapRouteQuery === '' || String(row[routeKeyName] ?? '').toLowerCase().includes(mapRouteQuery);
-                let matchWaybillQ = mapWaybillQuery === '' || String(row[guideKeyName] ?? '').toLowerCase().includes(mapWaybillQuery);
-
-                if (matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchText && matchRouteQ && matchWaybillQ) {
-                    let timeVal = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
-                    let timeStamp = timeVal && !isNaN(timeVal) ? timeVal.getTime() : 0;
-                    let coords = coordKeyName ? parseCoordinates(row[coordKeyName]) : null;
-                    allMappedRows.push({
-                        timestamp: timeStamp,
-                        coords,
-                        rowObj: row,
-                        guide: String(row[guideKeyName] ?? '—'),
-                        ruta: rVal,
-                        status: String(row[statusKeyName] ?? 'N/D')
-                    });
-                }
+                return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia;
             });
 
-            allMappedRows.sort((a, b) => a.timestamp - b.timestamp);
+            const rqEl = document.getElementById('map-route-query');
+            if (rqEl && rqEl.value.trim()) {
+                const rq = rqEl.value.toLowerCase().trim();
+                mapRows = mapRows.filter(row => String(row[routeKeyName] ?? '').toLowerCase().includes(rq));
+            }
+            const wqEl = document.getElementById('map-waybill-query');
+            if (wqEl && wqEl.value.trim()) {
+                const wq = wqEl.value.toLowerCase().trim();
+                mapRows = mapRows.filter(row => String(row[guideKeyName] ?? '').toLowerCase().includes(wq));
+            }
+            const tqEl = document.getElementById('map-text-search');
+            if (tqEl && tqEl.value.trim()) {
+                const tq = tqEl.value.toLowerCase().trim();
+                mapRows = mapRows.filter(row => Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(tq)));
+            }
+
             cachedGpsMapList = [];
-            allMappedRows.forEach((item, index) => {
-                item.sequenceNumber = index + 1;
-                if (item.coords) {
-                    cachedGpsMapList.push(item);
+            mapRows.forEach(row => {
+                if (coordKeyName) {
+                    let coords = parseCoordinates(row[coordKeyName]);
+                    if (coords) {
+                        let timeObj = eventTimeKeyName ? new Date(row[eventTimeKeyName]) : null;
+                        cachedGpsMapList.push({
+                            coords: coords,
+                            time: timeObj && !isNaN(timeObj) ? timeObj.getTime() : 0,
+                            timeStr: timeObj && !isNaN(timeObj) ? formatDateString(timeObj) : '—',
+                            guide: row[guideKeyName] ?? '—',
+                            status: row[statusKeyName] ?? '—',
+                            route: row[routeKeyName] ?? '—',
+                            originalRow: row
+                        });
+                    }
                 }
             });
-
+            cachedGpsMapList.sort((a, b) => a.time - b.time);
+            cachedGpsMapList.forEach((it, idx) => it.seq = idx + 1);
             document.getElementById('gps-map-row-count').innerText = cachedGpsMapList.length.toLocaleString();
-            renderGpsMap();
+            renderGpsMap(cachedGpsMapList);
         }
 
-        function renderGpsMap() {
-            if (window._gpsTimer) clearTimeout(window._gpsTimer);
-            window._gpsTimer = setTimeout(() => {
-                if (!gpsMapInstance) {
-                    gpsMapInstance = L.map('gps-map').setView([19.4326, -99.1332], 6);
-                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(gpsMapInstance);
-                    gpsRouteLinesLayer = L.layerGroup().addTo(gpsMapInstance);
-                }
-                if (gpsClusterGroup) gpsMapInstance.removeLayer(gpsClusterGroup);
-                gpsClusterGroup = L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false, zoomToBoundsOnClick: true });
-                if (gpsRouteLinesLayer) gpsRouteLinesLayer.clearLayers();
-                let latLngs = [];
-                let validPointsForLines = [];
-                cachedGpsMapList.forEach(item => {
-                    if (!item.coords) return;
-                    let timeOnly = '—';
-                    if (eventTimeKeyName && item.rowObj[eventTimeKeyName]) {
-                        let d = new Date(item.rowObj[eventTimeKeyName]);
-                        if (!isNaN(d)) timeOnly = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} hrs`;
-                        else { let parts = String(item.rowObj[eventTimeKeyName]).split(' '); timeOnly = parts.length > 1 ? parts[1] : String(item.rowObj[eventTimeKeyName]); }
-                    }
-                    const pointColor = '#10B981';
-                    const numberedIcon = L.divIcon({
-                        className: 'custom-div-icon',
-                        html: `<div style="background-color:${pointColor};color:white;font-weight:bold;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:scale(1.15);">${item.sequenceNumber}</div>`,
-                        iconSize: [28, 28], iconAnchor: [14, 14]
+        function renderGpsMap(items) {
+            if (!gpsMapInstance) {
+                gpsMapInstance = L.map('gps-map').setView([19.4326, -99.1332], 6);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(gpsMapInstance);
+            }
+            if (gpsClusterGroup) gpsMapInstance.removeLayer(gpsClusterGroup);
+            if (gpsRouteLinesLayer) { gpsMapInstance.removeLayer(gpsRouteLinesLayer); gpsRouteLinesLayer = null; }
+            gpsClusterGroup = L.markerClusterGroup();
+            let latLngs = [];
+            items.forEach(item => {
+                let m = L.circleMarker(item.coords, { radius: 7, color: '#B91C1C', fillColor: '#DA291C', fillOpacity: 0.9 });
+                m.on('click', (ev) => {
+                    if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
+                    const timeOnly = item.timeStr && item.timeStr !== '—' ? `${String(item.timeStr).split(' ')[1] || item.timeStr} hrs` : '';
+                    openCardModal(item.originalRow, {
+                        mapName: 'Mapa GPS',
+                        sequenceNumber: item.seq,
+                        timeOnly: timeOnly,
+                        guideOr: item.guide || item.originalRow[guideKeyName] || '—',
+                        detectedPhone: extractPhoneFromRow(item.originalRow) || 'No detectado'
                     });
-                    let marker = L.marker(item.coords, { icon: numberedIcon });
-                    marker.on('click', (ev) => {
-                        if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
-                        openCardModal(item.rowObj, {
-                            mapName: 'Mapa GPS',
-                            sequenceNumber: item.sequenceNumber,
-                            timeOnly: timeOnly
-                        });
-                    });
-                    gpsClusterGroup.addLayer(marker);
-                    latLngs.push(item.coords);
-                    let rowDate = eventTimeKeyName ? new Date(item.rowObj[eventTimeKeyName]) : null;
-                    validPointsForLines.push({ latLng: L.latLng(item.coords[0], item.coords[1]), seqNum: item.sequenceNumber, date: rowDate });
                 });
-                gpsMapInstance.addLayer(gpsClusterGroup);
-                for (let i = 0; i < validPointsForLines.length - 1; i++) {
-                    let p1 = validPointsForLines[i];
-                    let p2 = validPointsForLines[i + 1];
-                    let distMeters = p1.latLng.distanceTo(p2.latLng);
-                    let distText = distMeters >= 1000 ? (distMeters / 1000).toFixed(2) + ' km' : distMeters.toFixed(1) + ' metros';
-                    let timeText = '';
-                    if (p1.date && p2.date && !isNaN(p1.date) && !isNaN(p2.date)) {
-                        let diffMs = p2.date - p1.date;
-                        if (diffMs >= 0) {
-                            let totalMins = Math.floor(diffMs / 60000);
-                            let hrs = Math.floor(totalMins / 60);
-                            let mins = totalMins % 60;
-                            timeText = hrs > 0 ? `<br>Tiempo: <b>${hrs}h ${mins}m</b>` : `<br>Tiempo: <b>${totalMins} min</b>`;
-                        }
-                    }
-                    let segmentLine = L.polyline([p1.latLng, p2.latLng], { color: '#DA291C', weight: 3.5, opacity: 0.8, dashArray: '5, 5' });
-                    segmentLine.bindTooltip(`Seq #${p1.seqNum} &rarr; #${p2.seqNum}<br>Distancia: <b>${distText}</b>${timeText}`, { sticky: true, className: 'bg-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold text-gray-800 border border-gray-200' });
-                    gpsRouteLinesLayer.addLayer(segmentLine);
+                gpsClusterGroup.addLayer(m);
+                latLngs.push(item.coords);
+            });
+            gpsMapInstance.addLayer(gpsClusterGroup);
+            if (showGpsRouteLines && latLngs.length > 1) {
+                gpsRouteLinesLayer = L.polyline(latLngs, { color: '#DA291C', weight: 2.5, opacity: 0.8 }).addTo(gpsMapInstance);
+            }
+            if (latLngs.length > 0) {
+                gpsMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [30, 30] });
+            }
+            setTimeout(() => { if (gpsMapInstance) gpsMapInstance.invalidateSize(); }, 150);
+        }
+
+        document.getElementById('toggle-gps-lines-btn').addEventListener('click', () => {
+            showGpsRouteLines = !showGpsRouteLines;
+            document.getElementById('gps-lines-icon').className = showGpsRouteLines ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+            document.getElementById('gps-lines-text').innerText = showGpsRouteLines ? 'Ocultar Líneas' : 'Mostrar Líneas';
+            renderGpsMap(cachedGpsMapList);
+        });
+
+        /* =====================================================================
+           AVANCE & TABLA DE ESTATUS
+           ===================================================================== */
+        function getAvanceFilteredRows() {
+            let rows = rawData.filter(row => {
+                let matchPlaza = activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
+                let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
+                let matchStatus = matchRowStatus(rowStatus, activeAvanceStatusFilter);
+                let matchProg = true;
+                if (!showAvanceProgData) {
+                    const guideVal = String(row[guideKeyName] || '').trim();
+                    if (isProgramada(guideVal)) matchProg = false;
                 }
-                if (showGpsRouteLines && gpsRouteLinesLayer) { if (!gpsMapInstance.hasLayer(gpsRouteLinesLayer)) gpsMapInstance.addLayer(gpsRouteLinesLayer); }
-                else { if (gpsRouteLinesLayer && gpsMapInstance.hasLayer(gpsRouteLinesLayer)) gpsMapInstance.removeLayer(gpsRouteLinesLayer); }
-                if (latLngs.length > 0) gpsMapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15 });
-                gpsMapInstance.invalidateSize();
-            }, 100);
+                let rVal = String(row[routeKeyName] ?? 'N/D');
+                let matchRoute = activeAvanceRouteSelections.has(rVal);
+                let gVal = String(row[garantiaKeyName] ?? 'N/D');
+                let matchGarantia = activeAvanceGarantiaSelections.has(gVal);
+                return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia;
+            });
+            let searchEl = document.getElementById('avance-advanced-search');
+            let searchVal = searchEl ? searchEl.value.toLowerCase().trim() : '';
+            if (searchVal) {
+                rows = rows.filter(row => Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(searchVal)));
+            }
+            return rows;
+        }
+
+        function updateStatusBoard(rowsToCount) {
+            const tbody = document.getElementById('status-board-tbody');
+            const totalEl = document.getElementById('status-board-total');
+            const avanceCountEl = document.getElementById('avance-row-count');
+            const totalRecords = rowsToCount.length;
+            if (totalEl) totalEl.innerText = totalRecords.toLocaleString();
+            if (avanceCountEl) avanceCountEl.innerText = totalRecords.toLocaleString();
+            updateAvanceRouteChartAndTable(rowsToCount);
+
+            if (!tbody) return;
+            let countConfirmados = 0, countExcepcionados = 0, countOR = 0, countPendientes = 0;
+            const statusGroups = {};
+            rowsToCount.forEach(row => {
+                let rawSt = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim() : '';
+                let upperSt = rawSt.toUpperCase();
+                let guideVal = row[guideKeyName] !== undefined && row[guideKeyName] !== null ? String(row[guideKeyName]).trim().toUpperCase() : '';
+                let isOR = guideVal.startsWith('OR') || (progKeyName && String(row[progKeyName] || '').toUpperCase().includes('RECOLECT'));
+                if (isOR) countOR++;
+                if (upperSt.includes('CONFIRMAD')) countConfirmados++;
+                else if (upperSt.includes('EXCEPCION')) countExcepcionados++;
+                else if (upperSt.includes('PENDIENT')) countPendientes++;
+                let groupKey = rawSt !== '' ? rawSt : 'SIN ESTATUS';
+                statusGroups[groupKey] = (statusGroups[groupKey] || 0) + 1;
+            });
+
+            const pct = val => totalRecords > 0 ? ((val / totalRecords) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('badge-total-confirmados').innerText = countConfirmados.toLocaleString();
+            document.getElementById('percent-confirmados').innerText = pct(countConfirmados);
+            document.getElementById('badge-total-excepcionados').innerText = countExcepcionados.toLocaleString();
+            document.getElementById('percent-excepcionados').innerText = pct(countExcepcionados);
+            document.getElementById('badge-total-or').innerText = countOR.toLocaleString();
+            document.getElementById('percent-or').innerText = pct(countOR);
+            document.getElementById('badge-total-pendientes').innerText = countPendientes.toLocaleString();
+            document.getElementById('percent-pendientes').innerText = pct(countPendientes);
+
+            if (totalRecords === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-400 italic">No hay registros que coincidan con el filtro aplicado.</td></tr>`;
+                return;
+            }
+            const sortedKeys = Object.keys(statusGroups).sort((a, b) => statusGroups[b] - statusGroups[a]);
+            let html = '';
+            sortedKeys.forEach(k => {
+                let cnt = statusGroups[k];
+                let p = ((cnt / totalRecords) * 100).toFixed(1) + '%';
+                html += `<tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-semibold text-gray-800">${esc(k)}</td><td class="p-3 text-center font-bold text-gray-700">${cnt.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${p}</td></tr>`;
+            });
+            tbody.innerHTML = html;
         }
 
         /* =====================================================================
-           STATUS BOARD / DASHBOARD
+           ACTUALIZACIÓN GENERAL
            ===================================================================== */
-        function updateStatusBoard(rows) {
-            let total = rows.length;
-            document.getElementById('status-board-total').innerText = total.toLocaleString();
-            let confirmadosCount = 0, excepcionadosCount = 0, orCount = 0, pendientesCount = 0, otrosCount = 0;
-            rows.forEach(r => {
-                const st = String(r[statusKeyName] || '').trim().toUpperCase();
-                const guideVal = String(r[guideKeyName] || '').trim().toUpperCase();
-                const isOR = guideVal.startsWith('OR');
-                if (isOR) orCount++;
-                if (!isOR) {
-                    if (st.includes('CONFIRMAD')) confirmadosCount++;
-                    else if (st.includes('EXCEPCION')) excepcionadosCount++;
-                    else if (st.includes('PENDIENT')) pendientesCount++;
-                    else otrosCount++;
-                }
-            });
-            const pct = c => total > 0 ? ((c / total) * 100).toFixed(1) : 0;
-            document.getElementById('badge-total-confirmados').innerText = confirmadosCount.toLocaleString();
-            document.getElementById('percent-confirmados').innerText = pct(confirmadosCount) + '%';
-            document.getElementById('badge-total-excepcionados').innerText = excepcionadosCount.toLocaleString();
-            document.getElementById('percent-excepcionados').innerText = pct(excepcionadosCount) + '%';
-            document.getElementById('badge-total-or').innerText = orCount.toLocaleString();
-            document.getElementById('percent-or').innerText = pct(orCount) + '%';
-            document.getElementById('badge-total-pendientes').innerText = pendientesCount.toLocaleString();
-            document.getElementById('percent-pendientes').innerText = pct(pendientesCount) + '%';
-            const tbody = document.getElementById('status-board-tbody');
-            tbody.innerHTML = `
-                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-green-800"><i class="fa-solid fa-circle-check text-green-600 mr-1.5"></i> Confirmados</td><td class="p-3 text-center font-semibold text-gray-800">${confirmadosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(confirmadosCount)}%</td></tr>
-                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-red-800"><i class="fa-solid fa-circle-exclamation estafeta-red-text mr-1.5"></i> Excepcionados</td><td class="p-3 text-center font-semibold text-gray-800">${excepcionadosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(excepcionadosCount)}%</td></tr>
-                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-blue-800"><i class="fa-solid fa-barcode text-blue-600 mr-1.5"></i> Órdenes de Recolección (OR)</td><td class="p-3 text-center font-semibold text-gray-800">${orCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(orCount)}%</td></tr>
-                <tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-yellow-800"><i class="fa-solid fa-clock-rotate-left text-yellow-600 mr-1.5"></i> Pendientes</td><td class="p-3 text-center font-semibold text-gray-800">${pendientesCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(pendientesCount)}%</td></tr>
-                ${otrosCount > 0 ? `<tr class="hover:bg-gray-50 transition-all"><td class="p-3 font-bold text-gray-700"><i class="fa-solid fa-circle-question text-gray-400 mr-1.5"></i> Otros</td><td class="p-3 text-center font-semibold text-gray-800">${otrosCount.toLocaleString()}</td><td class="p-3 text-center font-medium text-gray-600">${pct(otrosCount)}%</td></tr>` : ''}`;
-            updateAvanceRouteChartAndTable(rows);
-        }
-
-        function applyFilters() {
-            let searchEl = document.getElementById('table-advanced-search');
-            let searchVal = searchEl ? searchEl.value.toLowerCase().trim() : '';
+        function updateDashboard() {
             filteredData = rawData.filter(row => {
                 let matchPlaza = activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D'));
                 let rowStatus = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim().toUpperCase() : '';
@@ -3483,360 +3717,262 @@
                 let matchRoute = activeRouteSelections.has(rVal);
                 let gVal = String(row[garantiaKeyName] ?? 'N/D');
                 let matchGarantia = activeGarantiaSelections.has(gVal);
-                let matchSearch = searchVal === '' || Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(searchVal));
-                return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia && matchSearch;
+                return matchPlaza && matchStatus && matchProg && matchRoute && matchGarantia;
             });
-            renderCards(filteredData);
-        }
 
-        function updateDashboard() {
-            applyFilters();
+            let searchEl = document.getElementById('table-advanced-search');
+            let searchVal = searchEl ? searchEl.value.toLowerCase().trim() : '';
+            if (searchVal) {
+                filteredData = filteredData.filter(row => Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(searchVal)));
+            }
+
+            renderCards(filteredData);
             prepareDeadTimes();
             prepareTimelineEvents();
             prepareGpsMapEvents();
-            toggleFloatingResetButton();
+            updateResetButtonVisibility();
+            updatePlazaButtonText();
         }
 
         /* =====================================================================
-           PLAZAS
+           PLAZAS Y RESET FILTROS
            ===================================================================== */
+        function updatePlazaButtonText() {
+            const btnText = document.getElementById('btn-text');
+            if (!btnText) return;
+            if (activePlazaFilter.size === 0) {
+                btnText.innerText = "Plazas";
+            } else if (activePlazaFilter.size === 1) {
+                btnText.innerText = [...activePlazaFilter][0];
+            } else {
+                btnText.innerText = `${activePlazaFilter.size} Plazas`;
+            }
+        }
+
+        function updateResetButtonVisibility() {
+            const resetBtn = document.getElementById('floating-reset-btn');
+            if (!resetBtn) return;
+            const searchTable = document.getElementById('table-advanced-search')?.value.trim() || '';
+            const searchCrono = document.getElementById('crono-advanced-search')?.value.trim() || '';
+            const searchAvance = document.getElementById('avance-advanced-search')?.value.trim() || '';
+            const searchTimeline = document.getElementById('timeline-advanced-search')?.value.trim() || '';
+            const searchMap = document.getElementById('map-text-search')?.value.trim() || '';
+            const searchSeq = document.getElementById('sequence-search-input')?.value.trim() || '';
+            const hasRouteQuery = (document.getElementById('timeline-route-query')?.value.trim() || '') !== '' || (document.getElementById('map-route-query')?.value.trim() || '') !== '';
+            const hasWaybillQuery = (document.getElementById('timeline-waybill-query')?.value.trim() || '') !== '' || (document.getElementById('map-waybill-query')?.value.trim() || '') !== '';
+
+            const isModified =
+                activePlazaFilter.size > 0 ||
+                activeStatusFilter !== 'ALL' || !showProgData ||
+                activeAvanceStatusFilter !== 'ALL' || !showAvanceProgData ||
+                activeCronoStatusFilter !== 'ALL' || !showCronoProgData ||
+                activeTimelineStatusFilter !== 'ALL' || !showTimelineProgData ||
+                activeMapStatusFilter !== 'ALL' || !showMapProgData ||
+                searchTable !== '' || searchCrono !== '' || searchAvance !== '' || searchTimeline !== '' || searchMap !== '' || searchSeq !== '' ||
+                hasRouteQuery || hasWaybillQuery ||
+                activeRouteSelections.size < initialRouteCount || activeGarantiaSelections.size < initialGarantiaCount ||
+                activeAvanceRouteSelections.size < initialRouteCount || activeAvanceGarantiaSelections.size < initialGarantiaCount ||
+                activeCronoRouteSelections.size < initialRouteCount || activeCronoGarantiaSelections.size < initialGarantiaCount ||
+                activeTimelineRouteSelections.size < initialRouteCount || activeTimelineGarantiaSelections.size < initialGarantiaCount ||
+                activeMapRouteSelections.size < initialRouteCount || activeMapGarantiaSelections.size < initialGarantiaCount;
+
+            if (isModified) {
+                resetBtn.classList.remove('float-btn-hidden');
+                resetBtn.classList.add('float-btn-visible');
+            } else {
+                resetBtn.classList.remove('float-btn-visible');
+                resetBtn.classList.add('float-btn-hidden');
+            }
+        }
+
+        function openPlazaModal() {
+            const searchEl = document.getElementById('plaza-modal-search');
+            if (searchEl) searchEl.value = '';
+            const allPlazas = [...new Set(rawData.map(r => String(r[plazaKeyName] || 'N/D')))].sort();
+            draftPlazaSelections = activePlazaFilter.size === 0 ? new Set(allPlazas) : new Set(activePlazaFilter);
+            renderPlazaFilterList();
+            document.getElementById('plaza-modal').classList.remove('hidden');
+        }
+
+        function closePlazaModal() {
+            document.getElementById('plaza-modal').classList.add('hidden');
+        }
+
+        function updatePlazaSelectedCount() {
+            const el = document.getElementById('plaza-selected-count');
+            if (el) el.innerText = draftPlazaSelections.size;
+        }
+
         function renderPlazaFilterList() {
             const container = document.getElementById('plaza-list-container');
-            if (!container) return;
-            if (!rawData || rawData.length === 0) return;
+            container.innerHTML = '';
+            if (!plazaKeyName) return;
+            const searchVal = (document.getElementById('plaza-modal-search')?.value || '').toLowerCase().trim();
             const plazaCounts = {};
-            rawData.forEach(r => {
-                const p = String(r[plazaKeyName] || 'N/D');
+            rawData.forEach(row => {
+                let p = String(row[plazaKeyName] || 'N/D');
                 plazaCounts[p] = (plazaCounts[p] || 0) + 1;
             });
             const plazas = Object.keys(plazaCounts).sort();
-            const btnText = document.getElementById('btn-text');
-            if (btnText) {
-                btnText.innerText = 'Plazas';
+            let shownCount = 0;
+            plazas.forEach(p => {
+                if (searchVal && !p.toLowerCase().includes(searchVal)) return;
+                shownCount++;
+                const isChecked = draftPlazaSelections.has(p);
+                const label = document.createElement('label');
+                label.className = 'flex items-center justify-between gap-2 text-xs cursor-pointer transition select-none';
+                label.innerHTML = `
+                    <span class="flex items-center gap-3 truncate">
+                        <input type="checkbox" class="plaza-cb" value="${esc(p)}" ${isChecked ? 'checked' : ''} onchange="togglePlazaDraft(${esc(JSON.stringify(p))}, this.checked)">
+                        <span class="font-semibold text-white truncate">${esc(p)}</span>
+                    </span>
+                    <span class="text-[11px] px-2.5 py-0.5 rounded-full font-bold bg-[#1e293b] text-slate-300 border border-[#334155] flex-shrink-0">${plazaCounts[p]} reg.</span>`;
+                container.appendChild(label);
+            });
+            if (shownCount === 0) {
+                container.innerHTML = `<div class="py-6 text-center text-slate-400 text-xs italic">No se encontraron plazas coincidentes.</div>`;
             }
-            container.innerHTML = plazas.map(p => `
-                <label class="flex items-center justify-between gap-2 text-xs cursor-pointer p-2 rounded-lg border transition select-none">
-                    <div class="flex items-center gap-2 truncate">
-                        <input type="checkbox" value="${esc(p)}" ${activePlazaFilter.size === 0 || activePlazaFilter.has(p) ? 'checked' : ''} class="plaza-cb text-red-600 accent-red-600 rounded w-3.5 h-3.5">
-                        <span class="font-medium truncate">${esc(p)}</span>
-                    </div>
-                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold flex-shrink-0">${plazaCounts[p]} reg.</span>
-                </label>`).join('');
+            updatePlazaSelectedCount();
         }
-        function openPlazaModal() { renderPlazaFilterList(); document.getElementById('plaza-modal').classList.remove('hidden'); }
-        function closePlazaModal() { document.getElementById('plaza-modal').classList.add('hidden'); }
+
+        function togglePlazaDraft(val, isChecked) {
+            if (isChecked) draftPlazaSelections.add(val);
+            else draftPlazaSelections.delete(val);
+            updatePlazaSelectedCount();
+        }
+
+        function setAllPlazaOptions(selectAll) {
+            draftPlazaSelections.clear();
+            if (selectAll) {
+                rawData.forEach(row => draftPlazaSelections.add(String(row[plazaKeyName] || 'N/D')));
+            }
+            renderPlazaFilterList();
+        }
+
         function applyPlazaFilters() {
-            const checked = Array.from(document.querySelectorAll('.plaza-cb:checked')).map(cb => cb.value);
-            const all = Array.from(document.querySelectorAll('.plaza-cb')).map(cb => cb.value);
-            activePlazaFilter = checked.length === all.length ? new Set() : new Set(checked);
+            const allPlazas = [...new Set(rawData.map(r => String(r[plazaKeyName] || 'N/D')))];
+            if (draftPlazaSelections.size === allPlazas.length || draftPlazaSelections.size === 0) {
+                activePlazaFilter.clear();
+            } else {
+                activePlazaFilter = new Set(draftPlazaSelections);
+            }
             closePlazaModal();
             currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
+            initSelections();
             updateDashboard();
-        }
-
-        /* =====================================================================
-           RESET / TOGGLE RESET BUTTON
-           ===================================================================== */
-        function hasActiveFilters() {
-            if (!rawData || rawData.length === 0) return false;
-            if (activePlazaFilter.size > 0) return true;
-            if (activeRouteSelections.size !== initialRouteCount) return true;
-            if (activeGarantiaSelections.size !== initialGarantiaCount) return true;
-            if (activeCronoRouteSelections.size !== initialRouteCount) return true;
-            if (activeCronoGarantiaSelections.size !== initialGarantiaCount) return true;
-            if (activeTimelineRouteSelections.size !== initialRouteCount) return true;
-            if (activeTimelineGarantiaSelections.size !== initialGarantiaCount) return true;
-            if (activeMapRouteSelections.size !== initialRouteCount) return true;
-            if (activeMapGarantiaSelections.size !== initialGarantiaCount) return true;
-            const ids = ['table-advanced-search','crono-advanced-search','timeline-advanced-search','sequence-search-input','timeline-route-query','timeline-waybill-query','map-route-query','map-waybill-query','map-text-search'];
-            for (let id of ids) {
-                const el = document.getElementById(id);
-                if (el && el.value.trim() !== '') return true;
-            }
-            if (activeStatusFilter !== 'ALL') return true;
-            if (activeCronoStatusFilter !== 'ALL') return true;
-            if (activeTimelineStatusFilter !== 'ALL') return true;
-            if (activeMapStatusFilter !== 'ALL') return true;
-            if (!showProgData || !showCronoProgData || !showTimelineProgData || !showMapProgData) return true;
-            return false;
-        }
-
-        function toggleFloatingResetButton() {
-            const btn = document.getElementById('floating-reset-btn');
-            if (!btn) return;
-            if (hasActiveFilters()) {
-                btn.classList.remove('float-btn-hidden');
-                btn.classList.add('float-btn-visible');
-            } else {
-                btn.classList.remove('float-btn-visible');
-                btn.classList.add('float-btn-hidden');
-            }
         }
 
         function resetFilters() {
-            if (!rawData || rawData.length === 0) return;
-            activePlazaFilter = new Set();
-            renderPlazaFilterList();
+            activePlazaFilter.clear();
+            activeStatusFilter = 'ALL'; showProgData = true;
+            activeAvanceStatusFilter = 'ALL'; showAvanceProgData = true;
+            activeCronoStatusFilter = 'ALL'; showCronoProgData = true;
+            activeTimelineStatusFilter = 'ALL'; showTimelineProgData = true;
+            activeMapStatusFilter = 'ALL'; showMapProgData = true;
 
-            activeRouteSelections.clear(); activeGarantiaSelections.clear();
-            activeCronoRouteSelections.clear(); activeCronoGarantiaSelections.clear();
-            activeTimelineRouteSelections.clear(); activeTimelineGarantiaSelections.clear();
-            activeMapRouteSelections.clear(); activeMapGarantiaSelections.clear();
-            rawData.forEach(row => {
-                let r = String(row[routeKeyName] ?? 'N/D');
-                let g = String(row[garantiaKeyName] ?? 'N/D');
-                activeRouteSelections.add(r); activeGarantiaSelections.add(g);
-                activeCronoRouteSelections.add(r); activeCronoGarantiaSelections.add(g);
-                activeTimelineRouteSelections.add(r); activeTimelineGarantiaSelections.add(g);
-                activeMapRouteSelections.add(r); activeMapGarantiaSelections.add(g);
-            });
-
-            activeStatusFilter = 'ALL';
-            activeCronoStatusFilter = 'ALL';
-            activeTimelineStatusFilter = 'ALL';
-            activeMapStatusFilter = 'ALL';
-            _applyStatusBtn('status', 'ALL');
-            _applyStatusBtn('crono-status', 'ALL');
-            _applyStatusBtn('timeline-status', 'ALL');
-            _applyStatusBtn('map-status', 'ALL');
-
-            showProgData = true; showCronoProgData = true; showTimelineProgData = true; showMapProgData = true;
-            [['prog-toggle','prog-toggle'],['crono-prog-toggle','crono-prog-toggle'],['timeline-prog-toggle','timeline-prog-toggle'],['map-prog-toggle','map-prog-toggle']].forEach(([txtId, icoId]) => {
-                const t = document.getElementById(`${txtId}-text`);
-                if (t) t.innerText = 'Ocultar Programadas';
-                const i = document.getElementById(`${icoId}-icon`);
-                if (i) i.className = 'fa-solid fa-calendar-check text-[11px]';
-            });
-
-            ['table-advanced-search','crono-advanced-search','timeline-advanced-search','sequence-search-input','timeline-route-query','timeline-waybill-query','map-route-query','map-waybill-query','map-text-search'].forEach(id => {
+            ['table-advanced-search', 'crono-advanced-search', 'avance-advanced-search', 'timeline-advanced-search', 'timeline-route-query', 'timeline-waybill-query', 'map-route-query', 'map-waybill-query', 'map-text-search', 'sequence-search-input'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) {
-                    el.value = '';
-                    el.dispatchEvent(new Event('input', { bubbles: true }));
-                }
+                if (el) { el.value = ''; el.dispatchEvent(new Event('input')); }
             });
-            timelineRouteQuery = '';
-            timelineWaybillQuery = '';
-            mapRouteQuery = '';
-            mapWaybillQuery = '';
+
+            _applyStatusBtn('avance-status', 'ALL'); _applyStatusBtn('status', 'ALL');
+            _applyStatusBtn('crono-status', 'ALL'); _applyStatusBtn('timeline-status', 'ALL');
+            _applyStatusBtn('map-status', 'ALL');
+            syncDeadTimesFilterUI();
+
+            document.getElementById('avance-prog-toggle-text').innerText = "Ocultar Programadas";
+            document.getElementById('prog-toggle-text').innerText = "Ocultar Programadas";
+            document.getElementById('crono-prog-toggle-text').innerText = "Ocultar Programadas";
+            document.getElementById('timeline-prog-toggle-text').innerText = "Ocultar Programadas";
+            document.getElementById('map-prog-toggle-text').innerText = "Ocultar Programadas";
 
             currentPage = 1; deadTimesCurrentPage = 1; cronoCurrentPage = 1; timelineCurrentPage = 1;
+            initSelections();
             updateDashboard();
-            if (typeof addNotification === 'function') addNotification('Filtros restablecidos', 'Todos los filtros han sido limpiados.', 'success');
+            addNotification("Filtros restablecidos", "Todos los filtros y búsquedas han vuelto a su estado inicial.", "info");
         }
 
         /* =====================================================================
-           CLEAR SEARCH INPUT
+           BUSCADORES
            ===================================================================== */
-        function clearSearchInput(inputId, btnId) {
-            const input = document.getElementById(inputId);
-            if (input) {
-                input.value = '';
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-            const btn = document.getElementById(btnId);
-            if (btn) { btn.classList.add('filter-btn-hidden'); btn.classList.remove('filter-btn-visible'); }
+        function clearSearchInput(inputId, resetBtnId) {
+            const inp = document.getElementById(inputId);
+            if (inp) { inp.value = ''; inp.dispatchEvent(new Event('input')); }
+            const btn = document.getElementById(resetBtnId);
+            if (btn) { btn.classList.remove('filter-btn-visible'); btn.classList.add('filter-btn-hidden'); }
         }
 
+        function attachSearchListener(inputId, resetBtnId, callback) {
+            const inp = document.getElementById(inputId);
+            const btn = document.getElementById(resetBtnId);
+            if (!inp) return;
+            const debounced = debounce(() => {
+                if (btn) {
+                    if (inp.value.trim() !== '') { btn.classList.remove('filter-btn-hidden'); btn.classList.add('filter-btn-visible'); }
+                    else { btn.classList.remove('filter-btn-visible'); btn.classList.add('filter-btn-hidden'); }
+                }
+                callback(inp.value);
+            }, 250);
+            inp.addEventListener('input', debounced);
+        }
+
+        attachSearchListener('table-advanced-search', 'btn-table-search-reset', () => { currentPage = 1; updateDashboard(); });
+        attachSearchListener('crono-advanced-search', 'btn-crono-search-reset', () => { applyCronoDetailFilter(); updateResetButtonVisibility(); });
+        attachSearchListener('avance-advanced-search', 'btn-avance-search-reset', () => { avanceRouteCurrentPage = 1; updateDashboard(); });
+        attachSearchListener('timeline-route-query', 'btn-route-query-reset', (val) => { timelineRouteQuery = val; prepareTimelineEvents(); updateResetButtonVisibility(); });
+        attachSearchListener('timeline-waybill-query', 'btn-waybill-query-reset', (val) => { timelineWaybillQuery = val; prepareTimelineEvents(); updateResetButtonVisibility(); });
+        attachSearchListener('timeline-advanced-search', 'btn-timeline-search-reset', () => { prepareTimelineEvents(); updateResetButtonVisibility(); });
+        attachSearchListener('map-route-query', 'btn-map-route-query-reset', () => { prepareGpsMapEvents(); updateResetButtonVisibility(); });
+        attachSearchListener('map-waybill-query', 'btn-map-waybill-query-reset', () => { prepareGpsMapEvents(); updateResetButtonVisibility(); });
+        attachSearchListener('map-text-search', 'btn-map-text-search-reset', () => { prepareGpsMapEvents(); updateResetButtonVisibility(); });
+        attachSearchListener('sequence-search-input', 'btn-sequence-search-reset', () => { renderTimelineTablePage(); updateResetButtonVisibility(); });
+
         /* =====================================================================
-           TOGGLES MAPAS / FULLSCREEN
+           TEMA OSCURO / CLARO
            ===================================================================== */
-        function toggleTimelineFullscreen(event) {
-            event.stopPropagation();
-            const card = document.getElementById('timeline-section-card');
-            const icon = document.getElementById('timeline-fullscreen-icon');
-            const btn = document.getElementById('timeline-fullscreen-btn');
-            card.classList.toggle('fullscreen-section');
-            if (card.classList.contains('fullscreen-section')) {
-                icon.className = "fa-solid fa-compress text-xs";
-                btn.title = "Restaurar tamaño";
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        function setTheme(isDark) {
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
             } else {
-                icon.className = "fa-solid fa-expand text-xs";
-                btn.title = "Pantalla completa";
+                document.body.classList.remove('dark-mode');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
             }
-            if (timelineMapInstance) setTimeout(() => timelineMapInstance.invalidateSize(), 200);
-        }
-        function toggleGpsMapFullscreen(event) {
-            event.stopPropagation();
-            const card = document.getElementById('gps-map-section-card');
-            const icon = document.getElementById('gps-map-fullscreen-icon');
-            const btn = document.getElementById('gps-map-fullscreen-btn');
-            card.classList.toggle('fullscreen-section');
-            if (card.classList.contains('fullscreen-section')) {
-                icon.className = "fa-solid fa-compress text-xs";
-                btn.title = "Restaurar tamaño";
-            } else {
-                icon.className = "fa-solid fa-expand text-xs";
-                btn.title = "Pantalla completa";
-            }
-            if (gpsMapInstance) setTimeout(() => gpsMapInstance.invalidateSize(), 200);
-        }
-
-        /* =====================================================================
-           TEMA
-           ===================================================================== */
-        function initTheme() {
-            const saved = localStorage.getItem('estafeta-theme');
-            if (saved === 'dark') { document.body.classList.add('dark-mode'); const i = document.getElementById('theme-icon'); if (i) i.className = 'fa-solid fa-sun'; }
-            document.getElementById('theme-toggle').addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                const isDark = document.body.classList.contains('dark-mode');
-                document.getElementById('theme-icon').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-                localStorage.setItem('estafeta-theme', isDark ? 'dark' : 'light');
+            localStorage.setItem('estafeta_theme', isDark ? 'dark' : 'light');
+            if (rawData.length > 0) {
                 updateDeadTimesChart();
-                let plazaRowsTheme = rawData.filter(row => activePlazaFilter.size === 0 || activePlazaFilter.has(String(row[plazaKeyName] || 'N/D')));
-                updateAvanceRouteChartAndTable(plazaRowsTheme);
-            });
+                updateAvanceRouteChartAndTable(getAvanceFilteredRows());
+            }
         }
+        const savedTheme = localStorage.getItem('estafeta_theme');
+        if (savedTheme === 'dark') setTheme(true);
+        themeToggle.addEventListener('click', () => setTheme(!document.body.classList.contains('dark-mode')));
 
         /* =====================================================================
-           LISTENERS DE FILTROS / BÚSQUEDAS
+           RESIZE & RIPPLE
            ===================================================================== */
-        function initFilterListeners() {
-            const searchInputs = [
-                { id: 'table-advanced-search', reset: 'btn-table-search-reset', handler: () => { currentPage = 1; applyFilters(); toggleFloatingResetButton(); } },
-                { id: 'crono-advanced-search', reset: 'btn-crono-search-reset', handler: () => { deadTimesCurrentPage = 1; cronoCurrentPage = 1; applyCronoDetailFilter(); toggleFloatingResetButton(); } },
-                { id: 'timeline-advanced-search', reset: 'btn-timeline-search-reset', handler: () => { timelineCurrentPage = 1; prepareTimelineEvents(); toggleFloatingResetButton(); } },
-                { id: 'sequence-search-input', reset: 'btn-sequence-search-reset', handler: () => { timelineCurrentPage = 1; prepareTimelineEvents(); toggleFloatingResetButton(); } },
-                { id: 'map-text-search', reset: 'btn-map-text-search-reset', handler: () => { prepareGpsMapEvents(); toggleFloatingResetButton(); } }
-            ];
-            searchInputs.forEach(({id, reset, handler}) => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.addEventListener('input', debounce(() => {
-                    if (reset) {
-                        const btn = document.getElementById(reset);
-                        if (btn) {
-                            if (el.value.trim() !== '') { btn.classList.remove('filter-btn-hidden'); btn.classList.add('filter-btn-visible'); }
-                            else { btn.classList.remove('filter-btn-visible'); btn.classList.add('filter-btn-hidden'); }
-                        }
-                    }
-                    handler();
-                }));
-            });
+        window.addEventListener('resize', () => {
+            const activeBtn = document.querySelector('#segmentedNavContainer .main-tab-btn.text-white');
+            if (activeBtn) updateTabIndicator(activeBtn);
+        });
 
-            const routeQEl = document.getElementById('timeline-route-query');
-            if (routeQEl) {
-                routeQEl.addEventListener('input', debounce((e) => {
-                    timelineRouteQuery = String(e.target.value || '').toLowerCase().trim();
-                    const btn = document.getElementById('btn-route-query-reset');
-                    if (btn) {
-                        if (timelineRouteQuery !== '') { btn.classList.remove('filter-btn-hidden'); btn.classList.add('filter-btn-visible'); }
-                        else { btn.classList.remove('filter-btn-visible'); btn.classList.add('filter-btn-hidden'); }
-                    }
-                    timelineCurrentPage = 1;
-                    prepareTimelineEvents();
-                    toggleFloatingResetButton();
-                }));
-            }
-            const waybillQEl = document.getElementById('timeline-waybill-query');
-            if (waybillQEl) {
-                waybillQEl.addEventListener('input', debounce((e) => {
-                    timelineWaybillQuery = String(e.target.value || '').toLowerCase().trim();
-                    const btn = document.getElementById('btn-waybill-query-reset');
-                    if (btn) {
-                        if (timelineWaybillQuery !== '') { btn.classList.remove('filter-btn-hidden'); btn.classList.add('filter-btn-visible'); }
-                        else { btn.classList.remove('filter-btn-visible'); btn.classList.add('filter-btn-hidden'); }
-                    }
-                    timelineCurrentPage = 1;
-                    prepareTimelineEvents();
-                    toggleFloatingResetButton();
-                }));
-            }
-
-            const mapRouteQEl = document.getElementById('map-route-query');
-            if (mapRouteQEl) {
-                mapRouteQEl.addEventListener('input', debounce((e) => {
-                    mapRouteQuery = String(e.target.value || '').toLowerCase().trim();
-                    const btn = document.getElementById('btn-map-route-query-reset');
-                    if (btn) {
-                        if (mapRouteQuery !== '') { btn.classList.remove('filter-btn-hidden'); btn.classList.add('filter-btn-visible'); }
-                        else { btn.classList.remove('filter-btn-visible'); btn.classList.add('filter-btn-hidden'); }
-                    }
-                    prepareGpsMapEvents();
-                    toggleFloatingResetButton();
-                }));
-            }
-            const mapWaybillQEl = document.getElementById('map-waybill-query');
-            if (mapWaybillQEl) {
-                mapWaybillQEl.addEventListener('input', debounce((e) => {
-                    mapWaybillQuery = String(e.target.value || '').toLowerCase().trim();
-                    const btn = document.getElementById('btn-map-waybill-query-reset');
-                    if (btn) {
-                        if (mapWaybillQuery !== '') { btn.classList.remove('filter-btn-hidden'); btn.classList.add('filter-btn-visible'); }
-                        else { btn.classList.remove('filter-btn-visible'); btn.classList.add('filter-btn-hidden'); }
-                    }
-                    prepareGpsMapEvents();
-                    toggleFloatingResetButton();
-                }));
-            }
-
-            const linesBtn = document.getElementById('toggle-lines-btn');
-            if (linesBtn) linesBtn.addEventListener('click', () => {
-                showRouteLines = !showRouteLines;
-                const i = document.getElementById('lines-icon');
-                const t = document.getElementById('lines-text');
-                if (i) i.className = showRouteLines ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
-                if (t) t.innerText = showRouteLines ? "Ocultar Líneas" : "Mostrar Líneas";
-                if (routeLinesLayer && timelineMapInstance) {
-                    if (showRouteLines) { if (!timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.addLayer(routeLinesLayer); }
-                    else { if (timelineMapInstance.hasLayer(routeLinesLayer)) timelineMapInstance.removeLayer(routeLinesLayer); }
-                }
-            });
-
-            const gpsLinesBtn = document.getElementById('toggle-gps-lines-btn');
-            if (gpsLinesBtn) gpsLinesBtn.addEventListener('click', () => {
-                showGpsRouteLines = !showGpsRouteLines;
-                const i = document.getElementById('gps-lines-icon');
-                const t = document.getElementById('gps-lines-text');
-                if (i) i.className = showGpsRouteLines ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
-                if (t) t.innerText = showGpsRouteLines ? "Ocultar Líneas" : "Mostrar Líneas";
-                if (gpsRouteLinesLayer && gpsMapInstance) {
-                    if (showGpsRouteLines) { if (!gpsMapInstance.hasLayer(gpsRouteLinesLayer)) gpsMapInstance.addLayer(gpsRouteLinesLayer); }
-                    else { if (gpsMapInstance.hasLayer(gpsRouteLinesLayer)) gpsMapInstance.removeLayer(gpsRouteLinesLayer); }
-                }
-            });
-
-            const fsBtn = document.getElementById('toggle-fullscreen-btn');
-            const mapCard = document.getElementById('map-card');
-            if (fsBtn && mapCard) fsBtn.addEventListener('click', () => {
-                mapCard.classList.toggle('fullscreen');
-                const isF = mapCard.classList.contains('fullscreen');
-                const i = document.getElementById('fullscreen-icon');
-                if (i) i.className = isF ? "fa-solid fa-compress" : "fa-solid fa-expand";
-                fsBtn.title = isF ? "Restaurar tamaño" : "Pantalla completa";
-                setTimeout(() => { if (timelineMapInstance) timelineMapInstance.invalidateSize(); }, 100);
-            });
-
-            const gpsFsBtn = document.getElementById('toggle-gps-fullscreen-btn');
-            const gpsCard = document.getElementById('gps-map-section-card');
-            if (gpsFsBtn && gpsCard) gpsFsBtn.addEventListener('click', () => {
-                gpsCard.classList.toggle('fullscreen');
-                const isF = gpsCard.classList.contains('fullscreen');
-                const i = document.getElementById('gps-fullscreen-icon');
-                if (i) i.className = isF ? "fa-solid fa-compress" : "fa-solid fa-expand";
-                gpsFsBtn.title = isF ? "Restaurar tamaño" : "Pantalla completa";
-                setTimeout(() => { if (gpsMapInstance) gpsMapInstance.invalidateSize(); }, 100);
-            });
-        }
-
-        /* =====================================================================
-           INICIALIZACIÓN
-           ===================================================================== */
-        window.addEventListener('DOMContentLoaded', () => {
-            initTheme();
-            initFilterListeners();
-            const bg = document.getElementById('segmentedBg');
-            if (bg) {
-                const firstBtn = document.querySelector('.main-tab-btn');
-                if (firstBtn) setTimeout(() => updateTabIndicator(firstBtn), 50);
-            }
-            window.addEventListener('resize', () => {
-                const activeBtn = document.querySelector('.main-tab-btn.text-white');
-                if (activeBtn) updateTabIndicator(activeBtn);
-                if (deadTimesChartInstance) deadTimesChartInstance.resize();
-                if (avanceRouteBarChartInstance) avanceRouteBarChartInstance.resize();
-            });
+        document.addEventListener('click', (e) => {
+            const target = e.target.closest('button, .btn');
+            if (!target) return;
+            target.classList.add('ripple-host');
+            const rect = target.getBoundingClientRect();
+            const ripple = document.createElement('span');
+            const diameter = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = `${diameter}px`;
+            ripple.style.left = `${e.clientX - rect.left - diameter / 2}px`;
+            ripple.style.top = `${e.clientY - rect.top - diameter / 2}px`;
+            ripple.classList.add('ripple-effect');
+            target.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
         });
     </script>
 </body>
