@@ -420,7 +420,7 @@
             --border-hairline: #cbd5e1;
         }
         body:not(.dark-mode) {
-            background-color: #f1f5f9 !important;
+            background-color: #ffffff !important;
             color: #0f172a !important;
         }
         body:not(.dark-mode) .bg-white {
@@ -541,9 +541,115 @@
             border-radius: 0.2rem !important;
             cursor: pointer !important;
         }
-    </style>
+    
+        /* Refuerzo de fondo blanco y contraste en ventanas flotantes y emergentes para Modo Claro */
+        body:not(.dark-mode) #plaza-modal-card {
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+            border-radius: 1.25rem !important;
+            box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.22) !important;
+        }
+        body:not(.dark-mode) #plaza-modal-card h3 {
+            color: #0f172a !important;
+        }
+        body:not(.dark-mode) #plaza-modal-card #plaza-modal-search {
+            background-color: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        body:not(.dark-mode) #plaza-modal-card #plaza-list-container {
+            background-color: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 0.9rem !important;
+            padding: 0.65rem !important;
+        }
+        body:not(.dark-mode) #plaza-modal-card #plaza-list-container label {
+            background-color: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            color: #0f172a !important;
+            border-radius: 0.7rem !important;
+            padding: 0.7rem 0.9rem !important;
+        }
+        body:not(.dark-mode) #plaza-modal-card #plaza-list-container label span.text-white,
+        body:not(.dark-mode) #plaza-modal-card #plaza-list-container label span {
+            color: #0f172a !important;
+        }
+        body:not(.dark-mode) #plaza-modal-card #plaza-list-container label span.rounded-full {
+            background-color: #f1f5f9 !important;
+            color: #334155 !important;
+            border-color: #cbd5e1 !important;
+        }
+        body:not(.dark-mode) #plaza-modal-card #plaza-list-container label:hover {
+            background-color: #fef2f2 !important;
+            border-color: #f87171 !important;
+        }
+        body:not(.dark-mode) #plaza-modal-card button.bg-\[\#182235\] {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        body:not(.dark-mode) #plaza-modal-card button.bg-\[\#182235\]:hover {
+            background-color: #e2e8f0 !important;
+        }
+        body:not(.dark-mode) #card-modal > div,
+        body:not(.dark-mode) #qr-modal-card,
+        body:not(.dark-mode) #custom-filter-modal > div,
+        body:not(.dark-mode) #dt-route-dropdown-panel {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.22) !important;
+        }
+        body:not(.dark-mode) #custom-filter-modal h3,
+        body:not(.dark-mode) #qr-modal-card h3,
+        body:not(.dark-mode) #dt-route-dropdown-panel span.text-gray-700 {
+            color: #0f172a !important;
+        }
+        body:not(.dark-mode) #custom-filter-modal input,
+        body:not(.dark-mode) #dt-route-dropdown-panel input {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+        body:not(.dark-mode) #custom-options-container {
+            background-color: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 0.75rem !important;
+            padding: 0.5rem !important;
+        }
+        body:not(.dark-mode) #custom-options-container label {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #e2e8f0 !important;
+        }
+        body:not(.dark-mode) #custom-options-container label:hover {
+            background-color: #fef2f2 !important;
+            border-color: #f87171 !important;
+        }
+        body:not(.dark-mode) #custom-options-container label span.rounded-full {
+            background-color: #f1f5f9 !important;
+            color: #334155 !important;
+        }
+        body:not(.dark-mode) #notif-panel {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.22) !important;
+        }
+        body:not(.dark-mode) #notif-list {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+        body:not(.dark-mode) .notif-toast {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 14px 30px -6px rgba(15, 23, 42, 0.18) !important;
+        }
+</style>
 </head>
-<body class="bg-gray-100 font-sans antialiased min-h-screen flex flex-col relative pb-20">
+<body class="bg-white font-sans antialiased min-h-screen flex flex-col relative pb-20">
 
     <header class="master-header">
         <div class="header-brand">
