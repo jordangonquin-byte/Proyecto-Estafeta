@@ -300,9 +300,18 @@
         .kpi-bar-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
 
         /* ============================================================
-           MODO OSCURO — CORRECCIONES GENERALES
+           MODO CLARO (POR DEFECTO) & MODO OSCURO
            ============================================================ */
-        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; transition: background-color 0.3s ease, color 0.3s ease; }
+        html, body {
+            background-color: #f3f4f6 !important;
+            color: #1f2937;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark-mode {
+            background-color: #000000 !important;
+            color: #e2e8f0;
+        }
 
         body.dark-mode main,
         body.dark-mode .bg-white,
@@ -566,7 +575,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800 min-h-screen flex flex-col m-0 p-0">
+<body class="bg-[#f3f4f6] font-sans text-gray-800 min-h-screen flex flex-col m-0 p-0" style="background-color: #f3f4f6;">
 
     <div class="modal-backdrop" id="modal-backdrop" onclick="closeAllModals()"></div>
 
@@ -578,7 +587,7 @@
         </div>
         <div class="relative mb-3">
             <input type="text" class="multiselect-search-box !mb-0 pr-14" id="search-plaza" placeholder="Buscar plaza destino..." oninput="handlePlazaSearchInput(this)">
-            <button type="button" id="btn-plaza-search-reset" onclick="clearPlazaSearch()" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300 cursor-pointer">Reset</button>
+            <button type="button" id="btn-plaza-search-reset" onclick="clearPlazaSearch()" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-700/80 hover:bg-slate-600 flex items-center justify-center transition-all duration-300 cursor-pointer"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABVklEQVR4nO2asXLCMBBEX2hSpMj/fyZFilRJxQzDkGBLuysz7KsZnfZhg09nKKWUUkoppZRShjl/ff88Y72TYpHLZlISlPWmBdxuwi1BXW9KwF/FXRIc9YYFPCqqluCqNyzg8+P97dFnVBK2rLNlP/eYugUSEpzhQfAj6JTgDg+iv0GHhER4EAkArYRUeBAKAI2EZHgQC4A5CenwYBAAYxJWhAeTANgnYVV4AMui1ygehlzhwXgFXJjdvDM8BATAeAh3eAgJgP1hEuEhKAC2h0qFh7AA5ZOgipgARy+gICLA2Q3OYheQOA+YwSpA9YTnlGATsCf8SgkWASPf/CoJcgEzl/0KCVIBins+LUEmQNnSJiVIZ4P/4egFDjkbvIezGzzkbPCaxHnAIWeDoOvqnBJss0F1S+uqZ5kNuvp5Rz35bNB9mJGut5lnfUeolFJKKaWUUl6SXwMACyNOWhLjAAAAAElFTkSuQmCC" alt="X" class="w-3.5 h-3.5 object-contain pointer-events-none"></button>
         </div>
         <div class="multiselect-actions">
             <span onclick="selectAllPlazas(true)">Seleccionar todas</span>
@@ -596,7 +605,7 @@
         </div>
         <div class="relative mb-3">
             <input type="text" class="multiselect-search-box !mb-0 pr-14" id="search-ut" placeholder="Buscar unidad de transporte..." oninput="handleUTSearchInput(this)">
-            <button type="button" id="btn-ut-search-reset" onclick="clearUTSearch()" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300 cursor-pointer">Reset</button>
+            <button type="button" id="btn-ut-search-reset" onclick="clearUTSearch()" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-700/80 hover:bg-slate-600 flex items-center justify-center transition-all duration-300 cursor-pointer"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABVklEQVR4nO2asXLCMBBEX2hSpMj/fyZFilRJxQzDkGBLuysz7KsZnfZhg09nKKWUUkoppZRShjl/ff88Y72TYpHLZlISlPWmBdxuwi1BXW9KwF/FXRIc9YYFPCqqluCqNyzg8+P97dFnVBK2rLNlP/eYugUSEpzhQfAj6JTgDg+iv0GHhER4EAkArYRUeBAKAI2EZHgQC4A5CenwYBAAYxJWhAeTANgnYVV4AMui1ygehlzhwXgFXJjdvDM8BATAeAh3eAgJgP1hEuEhKAC2h0qFh7AA5ZOgipgARy+gICLA2Q3OYheQOA+YwSpA9YTnlGATsCf8SgkWASPf/CoJcgEzl/0KCVIBins+LUEmQNnSJiVIZ4P/4egFDjkbvIezGzzkbPCaxHnAIWeDoOvqnBJss0F1S+uqZ5kNuvp5Rz35bNB9mJGut5lnfUeolFJKKaWUUl6SXwMACyNOWhLjAAAAAElFTkSuQmCC" alt="X" class="w-3.5 h-3.5 object-contain pointer-events-none"></button>
         </div>
         <div class="multiselect-actions">
             <span onclick="selectAllUTModal(true)">Seleccionar todas</span>
@@ -614,7 +623,7 @@
         </div>
         <div class="relative mb-3">
             <input type="text" class="multiselect-search-box !mb-0 pr-14" id="search-garantia" placeholder="Buscar garantía..." oninput="handleGarantiaSearchInput(this)">
-            <button type="button" id="btn-garantia-search-reset" onclick="clearGarantiaSearch()" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300 cursor-pointer">Reset</button>
+            <button type="button" id="btn-garantia-search-reset" onclick="clearGarantiaSearch()" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-700/80 hover:bg-slate-600 flex items-center justify-center transition-all duration-300 cursor-pointer"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABVklEQVR4nO2asXLCMBBEX2hSpMj/fyZFilRJxQzDkGBLuysz7KsZnfZhg09nKKWUUkoppZRShjl/ff88Y72TYpHLZlISlPWmBdxuwi1BXW9KwF/FXRIc9YYFPCqqluCqNyzg8+P97dFnVBK2rLNlP/eYugUSEpzhQfAj6JTgDg+iv0GHhER4EAkArYRUeBAKAI2EZHgQC4A5CenwYBAAYxJWhAeTANgnYVV4AMui1ygehlzhwXgFXJjdvDM8BATAeAh3eAgJgP1hEuEhKAC2h0qFh7AA5ZOgipgARy+gICLA2Q3OYheQOA+YwSpA9YTnlGATsCf8SgkWASPf/CoJcgEzl/0KCVIBins+LUEmQNnSJiVIZ4P/4egFDjkbvIezGzzkbPCaxHnAIWeDoOvqnBJss0F1S+uqZ5kNuvp5Rz35bNB9mJGut5lnfUeolFJKKaWUUl6SXwMACyNOWhLjAAAAAElFTkSuQmCC" alt="X" class="w-3.5 h-3.5 object-contain pointer-events-none"></button>
         </div>
         <div class="multiselect-actions">
             <span onclick="selectAllGarantiaModal(true)">Seleccionar todas</span>
@@ -684,7 +693,7 @@
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><i class="fas fa-search"></i></span>
                         <input type="text" id="search-general" placeholder="Guía, cliente, plaza..." oninput="handleSearchInput(this, 'btn-search-reset'); filterData();" class="w-full pl-9 pr-14 py-2 text-sm bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-600 shadow-sm">
-                        <button type="button" id="btn-search-reset" onclick="clearSearchInput('search-general', 'btn-search-reset', filterData)" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300 cursor-pointer">Reset</button>
+                        <button type="button" id="btn-search-reset" onclick="clearSearchInput('search-general', 'btn-search-reset', filterData)" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" class="filter-btn-hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-700/80 hover:bg-slate-600 flex items-center justify-center transition-all duration-300 cursor-pointer"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABVklEQVR4nO2asXLCMBBEX2hSpMj/fyZFilRJxQzDkGBLuysz7KsZnfZhg09nKKWUUkoppZRShjl/ff88Y72TYpHLZlISlPWmBdxuwi1BXW9KwF/FXRIc9YYFPCqqluCqNyzg8+P97dFnVBK2rLNlP/eYugUSEpzhQfAj6JTgDg+iv0GHhER4EAkArYRUeBAKAI2EZHgQC4A5CenwYBAAYxJWhAeTANgnYVV4AMui1ygehlzhwXgFXJjdvDM8BATAeAh3eAgJgP1hEuEhKAC2h0qFh7AA5ZOgipgARy+gICLA2Q3OYheQOA+YwSpA9YTnlGATsCf8SgkWASPf/CoJcgEzl/0KCVIBins+LUEmQNnSJiVIZ4P/4egFDjkbvIezGzzkbPCaxHnAIWeDoOvqnBJss0F1S+uqZ5kNuvp5Rz35bNB9mJGut5lnfUeolFJKKaWUUl6SXwMACyNOWhLjAAAAAElFTkSuQmCC" alt="X" class="w-3.5 h-3.5 object-contain pointer-events-none"></button>
                     </div>
                 </div>
             </div>
@@ -753,7 +762,7 @@
                 <div class="relative w-full md:w-80">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400"><i class="fas fa-search"></i></span>
                     <input type="text" id="reporte-search-input" placeholder="Buscar guía, cliente, C.P...." oninput="handleSearchInput(this, 'btn-reporte-reset'); filterReporteTableSearch();" class="w-full pl-9 pr-14 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-600 shadow-sm">
-                    <button type="button" id="btn-reporte-reset" onclick="clearSearchInput('reporte-search-input', 'btn-reporte-reset', filterReporteTableSearch)" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300 cursor-pointer">Reset</button>
+                    <button type="button" id="btn-reporte-reset" onclick="clearSearchInput('reporte-search-input', 'btn-reporte-reset', filterReporteTableSearch)" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-700/80 hover:bg-slate-600 flex items-center justify-center transition-all duration-300 cursor-pointer"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABVklEQVR4nO2asXLCMBBEX2hSpMj/fyZFilRJxQzDkGBLuysz7KsZnfZhg09nKKWUUkoppZRShjl/ff88Y72TYpHLZlISlPWmBdxuwi1BXW9KwF/FXRIc9YYFPCqqluCqNyzg8+P97dFnVBK2rLNlP/eYugUSEpzhQfAj6JTgDg+iv0GHhER4EAkArYRUeBAKAI2EZHgQC4A5CenwYBAAYxJWhAeTANgnYVV4AMui1ygehlzhwXgFXJjdvDM8BATAeAh3eAgJgP1hEuEhKAC2h0qFh7AA5ZOgipgARy+gICLA2Q3OYheQOA+YwSpA9YTnlGATsCf8SgkWASPf/CoJcgEzl/0KCVIBins+LUEmQNnSJiVIZ4P/4egFDjkbvIezGzzkbPCaxHnAIWeDoOvqnBJss0F1S+uqZ5kNuvp5Rz35bNB9mJGut5lnfUeolFJKKaWUUl6SXwMACyNOWhLjAAAAAElFTkSuQmCC" alt="X" class="w-3.5 h-3.5 object-contain pointer-events-none"></button>
                 </div>
                 <div class="flex items-center gap-3 w-full md:w-auto flex-wrap justify-end">
                     <span id="reporte-paquetes-table-count" class="text-xs bg-gray-200 text-gray-700 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">0 registros</span>
@@ -892,8 +901,8 @@
 
     <!-- Botón Flotante Reset -->
     <div id="floating-reset-wrapper" class="float-btn-hidden fixed bottom-6 right-6 z-40 transition-all duration-300">
-        <button type="button" id="floating-reset-btn" onclick="resetFilters()" class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl hover:bg-red-700 transition cursor-pointer" title="Restablecer Filtros">
-            <i class="fa-solid fa-rotate-left"></i>
+        <button type="button" id="floating-reset-btn" onclick="resetFilters()" class="w-12 h-12 rounded-full bg-slate-800/90 border border-slate-600 text-white flex items-center justify-center shadow-2xl hover:bg-slate-700 transition cursor-pointer" title="Restablecer Filtros">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABVklEQVR4nO2asXLCMBBEX2hSpMj/fyZFilRJxQzDkGBLuysz7KsZnfZhg09nKKWUUkoppZRShjl/ff88Y72TYpHLZlISlPWmBdxuwi1BXW9KwF/FXRIc9YYFPCqqluCqNyzg8+P97dFnVBK2rLNlP/eYugUSEpzhQfAj6JTgDg+iv0GHhER4EAkArYRUeBAKAI2EZHgQC4A5CenwYBAAYxJWhAeTANgnYVV4AMui1ygehlzhwXgFXJjdvDM8BATAeAh3eAgJgP1hEuEhKAC2h0qFh7AA5ZOgipgARy+gICLA2Q3OYheQOA+YwSpA9YTnlGATsCf8SgkWASPf/CoJcgEzl/0KCVIBins+LUEmQNnSJiVIZ4P/4egFDjkbvIezGzzkbPCaxHnAIWeDoOvqnBJss0F1S+uqZ5kNuvp5Rz35bNB9mJGut5lnfUeolFJKKaWUUl6SXwMACyNOWhLjAAAAAElFTkSuQmCC" alt="Restablecer" class="w-5 h-5 object-contain pointer-events-none">
         </button>
     </div>
 
@@ -921,7 +930,7 @@
             <div class="p-4 space-y-3">
                 <div class="relative">
                     <input type="text" id="column-filter-search" placeholder="Buscar valor..." oninput="handleSearchInput(this, 'btn-col-modal-reset'); filterColumnModalValues();" class="w-full bg-gray-50 border border-gray-300 rounded-xl pl-3 pr-14 py-1.5 text-xs focus:ring-2 focus:ring-[#DA291C] focus:outline-none">
-                    <button type="button" id="btn-col-modal-reset" onclick="clearSearchInput('column-filter-search', 'btn-col-modal-reset', filterColumnModalValues)" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300 cursor-pointer">Reset</button>
+                    <button type="button" id="btn-col-modal-reset" onclick="clearSearchInput('column-filter-search', 'btn-col-modal-reset', filterColumnModalValues)" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-700/80 hover:bg-slate-600 flex items-center justify-center transition-all duration-300 cursor-pointer"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABVklEQVR4nO2asXLCMBBEX2hSpMj/fyZFilRJxQzDkGBLuysz7KsZnfZhg09nKKWUUkoppZRShjl/ff88Y72TYpHLZlISlPWmBdxuwi1BXW9KwF/FXRIc9YYFPCqqluCqNyzg8+P97dFnVBK2rLNlP/eYugUSEpzhQfAj6JTgDg+iv0GHhER4EAkArYRUeBAKAI2EZHgQC4A5CenwYBAAYxJWhAeTANgnYVV4AMui1ygehlzhwXgFXJjdvDM8BATAeAh3eAgJgP1hEuEhKAC2h0qFh7AA5ZOgipgARy+gICLA2Q3OYheQOA+YwSpA9YTnlGATsCf8SgkWASPf/CoJcgEzl/0KCVIBins+LUEmQNnSJiVIZ4P/4egFDjkbvIezGzzkbPCaxHnAIWeDoOvqnBJss0F1S+uqZ5kNuvp5Rz35bNB9mJGut5lnfUeolFJKKaWUUl6SXwMACyNOWhLjAAAAAElFTkSuQmCC" alt="X" class="w-3.5 h-3.5 object-contain pointer-events-none"></button>
                 </div>
                 <div class="flex justify-between items-center text-xs font-medium text-gray-500 px-1">
                     <span>Seleccionar valores:</span>
@@ -949,7 +958,7 @@
             <div class="p-4 space-y-3">
                 <div class="relative">
                     <input type="text" id="reporte-column-filter-search" placeholder="Buscar valor..." oninput="handleSearchInput(this, 'btn-rep-modal-reset'); filterReporteColumnModalValues();" class="w-full bg-gray-50 border border-gray-300 rounded-xl pl-3 pr-14 py-1.5 text-xs focus:ring-2 focus:ring-[#DA291C] focus:outline-none">
-                    <button type="button" id="btn-rep-modal-reset" onclick="clearSearchInput('reporte-column-filter-search', 'btn-rep-modal-reset', filterReporteColumnModalValues)" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300 cursor-pointer">Reset</button>
+                    <button type="button" id="btn-rep-modal-reset" onclick="clearSearchInput('reporte-column-filter-search', 'btn-rep-modal-reset', filterReporteColumnModalValues)" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-700/80 hover:bg-slate-600 flex items-center justify-center transition-all duration-300 cursor-pointer"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABVklEQVR4nO2asXLCMBBEX2hSpMj/fyZFilRJxQzDkGBLuysz7KsZnfZhg09nKKWUUkoppZRShjl/ff88Y72TYpHLZlISlPWmBdxuwi1BXW9KwF/FXRIc9YYFPCqqluCqNyzg8+P97dFnVBK2rLNlP/eYugUSEpzhQfAj6JTgDg+iv0GHhER4EAkArYRUeBAKAI2EZHgQC4A5CenwYBAAYxJWhAeTANgnYVV4AMui1ygehlzhwXgFXJjdvDM8BATAeAh3eAgJgP1hEuEhKAC2h0qFh7AA5ZOgipgARy+gICLA2Q3OYheQOA+YwSpA9YTnlGATsCf8SgkWASPf/CoJcgEzl/0KCVIBins+LUEmQNnSJiVIZ4P/4egFDjkbvIezGzzkbPCaxHnAIWeDoOvqnBJss0F1S+uqZ5kNuvp5Rz35bNB9mJGut5lnfUeolFJKKaWUUl6SXwMACyNOWhLjAAAAAElFTkSuQmCC" alt="X" class="w-3.5 h-3.5 object-contain pointer-events-none"></button>
                 </div>
                 <div class="flex justify-between items-center text-xs font-medium text-gray-500 px-1">
                     <span>Seleccionar valores:</span>
@@ -977,7 +986,7 @@
             <div class="p-4 space-y-3">
                 <div class="relative">
                     <input type="text" id="garantia-column-filter-search" placeholder="Buscar valor..." oninput="handleSearchInput(this, 'btn-gar-modal-reset'); filterGarantiaColumnModalValues();" class="w-full bg-gray-50 border border-gray-300 rounded-xl pl-3 pr-14 py-1.5 text-xs focus:ring-2 focus:ring-[#DA291C] focus:outline-none">
-                    <button type="button" id="btn-gar-modal-reset" onclick="clearSearchInput('garantia-column-filter-search', 'btn-gar-modal-reset', filterGarantiaColumnModalValues)" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold uppercase transition-all duration-300 cursor-pointer">Reset</button>
+                    <button type="button" id="btn-gar-modal-reset" onclick="clearSearchInput('garantia-column-filter-search', 'btn-gar-modal-reset', filterGarantiaColumnModalValues)" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-700/80 hover:bg-slate-600 flex items-center justify-center transition-all duration-300 cursor-pointer"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABVklEQVR4nO2asXLCMBBEX2hSpMj/fyZFilRJxQzDkGBLuysz7KsZnfZhg09nKKWUUkoppZRShjl/ff88Y72TYpHLZlISlPWmBdxuwi1BXW9KwF/FXRIc9YYFPCqqluCqNyzg8+P97dFnVBK2rLNlP/eYugUSEpzhQfAj6JTgDg+iv0GHhER4EAkArYRUeBAKAI2EZHgQC4A5CenwYBAAYxJWhAeTANgnYVV4AMui1ygehlzhwXgFXJjdvDM8BATAeAh3eAgJgP1hEuEhKAC2h0qFh7AA5ZOgipgARy+gICLA2Q3OYheQOA+YwSpA9YTnlGATsCf8SgkWASPf/CoJcgEzl/0KCVIBins+LUEmQNnSJiVIZ4P/4egFDjkbvIezGzzkbPCaxHnAIWeDoOvqnBJss0F1S+uqZ5kNuvp5Rz35bNB9mJGut5lnfUeolFJKKaWUUl6SXwMACyNOWhLjAAAAAElFTkSuQmCC" alt="X" class="w-3.5 h-3.5 object-contain pointer-events-none"></button>
                 </div>
                 <div class="flex justify-between items-center text-xs font-medium text-gray-500 px-1">
                     <span>Seleccionar valores:</span>
@@ -1124,7 +1133,7 @@
        NORMALIZACIÓN
        ============================================================ */
     const _norm = s => String(s ?? '')
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
         .toLowerCase().trim();
 
     function validarArchivo(encabezados) {

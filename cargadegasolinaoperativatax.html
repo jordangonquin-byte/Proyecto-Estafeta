@@ -33,9 +33,9 @@
             --estafeta-dark: #1e293b;
             --estafeta-white: #ffffff;
             --header-bg: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
-            --btn-upload-bg: rgba(0, 0, 0, 0.2);
-            --btn-upload-hover: rgba(0, 0, 0, 0.35);
-            --btn-upload-border: rgba(255, 255, 255, 0.2);
+            --btn-upload-bg: transparent;
+            --btn-upload-hover: rgba(255, 255, 255, 0.14);
+            --btn-upload-border: transparent;
             --text-color: #ffffff;
             --subtext-color: #ffcdd2;
             --badge-bg: #ffffff;
@@ -44,10 +44,10 @@
 
         body.dark-mode {
             --header-bg: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
-            --btn-upload-bg: rgba(0, 0, 0, 0.4);
-            --btn-upload-hover: rgba(0, 0, 0, 0.6);
-            --btn-upload-border: rgba(255, 255, 255, 0.1);
-            --text-color: #f1f5f9;
+            --btn-upload-bg: transparent;
+            --btn-upload-hover: rgba(255, 255, 255, 0.12);
+            --btn-upload-border: transparent;
+            --text-color: #f8fafc;
             --subtext-color: #fca5a5;
             --badge-bg: #f8fafc;
             --badge-text: #b91c1c;
@@ -64,6 +64,7 @@
             background: var(--header-bg);
             background-size: 300% 100%;
             animation: gradientShift 15s ease infinite;
+            will-change: background-position;
             color: var(--text-color);
             padding: 12px 24px;
             display: flex;
@@ -137,13 +138,14 @@
             position: relative;
             display: inline-flex;
             align-items: center;
-            background-color: var(--btn-upload-bg);
-            border: 1px solid var(--btn-upload-border);
+            gap: 10px;
+            background-color: transparent;
+            border: none;
             border-radius: 10px;
-            padding: 8px 16px;
+            padding: 8px 12px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(4px);
+            transition: background-color 0.25s ease, transform 0.25s ease;
+            will-change: background-color, transform;
         }
 
         .upload-btn-wrapper:hover {
@@ -151,9 +153,10 @@
             transform: translateY(-1px);
         }
 
-        .upload-btn-wrapper.dragover {
-            background-color: rgba(74, 222, 128, 0.3) !important;
-            border-color: #4ade80 !important;
+        .upload-btn-wrapper.dragover,
+        .upload-btn-wrapper.drag-over {
+            background-color: rgba(74, 222, 128, 0.18) !important;
+            border: 2px dashed #4ade80 !important;
         }
 
         .upload-btn-wrapper input[type="file"] {
@@ -191,8 +194,8 @@
 
         /* --- BOTÓN DE MODO OSCURO/CLARO EN EL BANNER --- */
         #theme-toggle {
-            background: var(--btn-upload-bg);
-            border: 1px solid var(--btn-upload-border);
+            background: transparent;
+            border: none;
             color: var(--text-color);
             width: 42px;
             height: 42px;
@@ -201,9 +204,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(4px);
+            font-size: 1.25rem;
+            transition: background-color 0.25s ease, transform 0.25s ease;
+            will-change: transform;
             flex-shrink: 0;
         }
 
@@ -215,9 +218,9 @@
         /* --- CAMPANA DE NOTIFICACIONES --- */
         #notif-bell {
             position: relative;
-            background: var(--btn-upload-bg);
+            background: transparent;
             color: var(--text-color);
-            border: 1px solid var(--btn-upload-border);
+            border: none;
             width: 42px;
             height: 42px;
             border-radius: 10px;
@@ -225,10 +228,10 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            transition: all 0.2s ease;
+            font-size: 20px;
+            transition: background-color 0.25s ease, transform 0.25s ease;
+            will-change: transform;
             flex-shrink: 0;
-            backdrop-filter: blur(4px);
         }
         #notif-bell:hover { background: var(--btn-upload-hover); transform: translateY(-1px); }
         #notif-badge {
@@ -254,47 +257,223 @@
         #notif-badge.badge-new { animation: badgePulse 0.5s ease-out; }
 
         /* --- ESTILOS EXISTENTES DEL DASHBOARD --- */
-        .multiselect-dropdown { position: relative; width: 100%; max-width: 220px; }
-        .multiselect-header { background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.375rem 0.75rem; font-size: 0.875rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
-        .multiselect-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); max-height: 220px; overflow-y: auto; z-index: 50; display: none; padding: 0.5rem; }
-        .multiselect-list.show { display: block; }
-
-        .ripple-host { position: relative; overflow: hidden; }
-        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.55); transform: scale(0); animation: rippleAnim 0.6s ease-out; pointer-events: none; }
-        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
-
         @keyframes cardEnter { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-enter { animation: cardEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
 
         @keyframes pulseCritical { 0%, 100% { background-color: rgba(220, 38, 38, 0.08); } 50% { background-color: rgba(220, 38, 38, 0.28); } }
         .critical-pulse { animation: pulseCritical 2s ease-in-out infinite; font-weight: 800; color: #dc2626 !important; border-radius: 4px; padding: 2px 6px; display: inline-block; }
 
+        @keyframes pulseEmerald {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); opacity: 1; }
+            50% { transform: scale(1.06); box-shadow: 0 0 10px 2px rgba(16, 185, 129, 0.25); opacity: 0.85; }
+        }
+        @keyframes pulseRed {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); opacity: 1; }
+            50% { transform: scale(1.06); box-shadow: 0 0 10px 2px rgba(239, 68, 68, 0.25); opacity: 0.85; }
+        }
+        @keyframes pulseDark {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(15, 23, 42, 0.5); opacity: 1; }
+            50% { transform: scale(1.06); box-shadow: 0 0 10px 2px rgba(100, 116, 139, 0.35); opacity: 0.85; }
+        }
+        .pulse-cumple { display: inline-block; animation: pulseEmerald 1.8s ease-in-out infinite; will-change: transform, box-shadow; }
+        .pulse-nocumple { display: inline-block; animation: pulseRed 1.8s ease-in-out infinite; will-change: transform, box-shadow; }
+        .pulse-malacaptura { display: inline-block; animation: pulseDark 1.8s ease-in-out infinite; will-change: transform, box-shadow; }
+
         .kpi-bar-track { width: 100%; height: 5px; background: rgba(0, 0, 0, 0.06); border-radius: 999px; overflow: hidden; margin-top: 8px; }
-        .kpi-bar-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .kpi-bar-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); will-change: width; }
 
-        #dashboard-container .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4 > div:hover { box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.15), 0 20px 40px -10px rgba(218, 41, 28, 0.25); }
+        /* Hover de tarjetas KPI optimizado */
+        #dashboard-container .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 > div {
+            transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease, color 0.28s ease;
+            will-change: transform, box-shadow;
+        }
+        #dashboard-container .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 > div:hover {
+            background-color: rgba(254, 226, 226, 0.55) !important;
+            border-color: rgba(239, 68, 68, 0.45) !important;
+            transform: translateY(-4px) scale(1.015) !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14), 0 14px 26px -8px rgba(220, 38, 38, 0.16) !important;
+        }
+        body.dark-mode #dashboard-container .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 > div:hover {
+            background-color: rgba(127, 29, 29, 0.28) !important;
+            border-color: rgba(248, 113, 113, 0.35) !important;
+            transform: translateY(-4px) scale(1.015) !important;
+            box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.14), 0 14px 26px -8px rgba(0, 0, 0, 0.6) !important;
+        }
+        #dashboard-container .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 > div:hover .kpi-bar-track {
+            background: rgba(239, 68, 68, 0.16) !important;
+        }
+        #dashboard-container .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 > div:hover .w-12.h-12.rounded-full {
+            background-color: rgba(239, 68, 68, 0.12) !important;
+        }
 
-        /* --- MODO OSCURO GENERAL --- */
-        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
-        body.dark-mode main, body.dark-mode .bg-white, body.dark-mode .bg-slate-50, body.dark-mode .bg-slate-100 { background-color: #1e293b !important; }
-        body.dark-mode .text-slate-800, body.dark-mode .text-slate-700, body.dark-mode .text-slate-600, body.dark-mode .text-slate-900 { color: #e2e8f0 !important; }
+        /* ============================================================
+           MODO OSCURO GENERAL (CONTRASTE MEJORADO)
+           ============================================================ */
+        body.dark-mode { background-color: #000000 !important; color: #f8fafc; }
+        
+        /* Fondo principal negro */
+        body.dark-mode main { background-color: #000000 !important; }
+        
+        /* Tarjetas blancas -> Gris muy oscuro */
+        body.dark-mode .bg-white { background-color: #111827 !important; }
+        body.dark-mode .bg-slate-50, body.dark-mode .bg-slate-100 { background-color: #1f2937 !important; }
+        
+        /* Textos generales */
+        body.dark-mode .text-slate-800, body.dark-mode .text-slate-700, body.dark-mode .text-slate-600, body.dark-mode .text-slate-900 { color: #f8fafc !important; }
         body.dark-mode .text-slate-500, body.dark-mode .text-slate-400 { color: #94a3b8 !important; }
+        
+        /* Bordes */
         body.dark-mode .border-slate-100, body.dark-mode .border-slate-200, body.dark-mode .border-slate-300 { border-color: #334155 !important; }
         body.dark-mode .divide-slate-200 > * + * { border-color: #334155 !important; }
-        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background-color: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        
+        /* Inputs y Selects */
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { 
+            background-color: #1f2937 !important; 
+            color: #f8fafc !important; 
+            border-color: #374151 !important; 
+        }
+        
+        /* ============================================================
+           TABLA DE DETALLE EN MODO OSCURO
+           ============================================================ */
+        body.dark-mode table thead.bg-slate-50 { 
+            background-color: #1f2937 !important; 
+        }
+        body.dark-mode table thead th {
+            color: #cbd5e1 !important;
+        }
+        body.dark-mode table tbody tr { 
+            background-color: #111827 !important; 
+            border-bottom: 1px solid #1f2937 !important;
+        }
+        body.dark-mode table tbody tr:hover { 
+            background-color: #1f2937 !important; 
+        }
+        
+        /* FIX: Corregir el color del texto de la Plaza (era muy oscuro) */
+        body.dark-mode .text-estafetaDark { 
+            color: #f8fafc !important; 
+        }
+        
+        /* FIX: Corregir el color de los litros */
+        body.dark-mode .text-\[\#DA291C\] {
+            color: #f87171 !important;
+        }
+
+        /* FIX: Rediseño de Badges de Cumplimiento en Modo Oscuro */
+        body.dark-mode .bg-emerald-100 { 
+            background-color: rgba(16, 185, 129, 0.15) !important; 
+            border: 1px solid rgba(16, 185, 129, 0.4) !important;
+        }
+        body.dark-mode .text-emerald-800 { 
+            color: #34d399 !important; /* Verde brillante */
+        }
+        
+        body.dark-mode .bg-red-100 { 
+            background-color: rgba(239, 68, 68, 0.15) !important; 
+            border: 1px solid rgba(239, 68, 68, 0.4) !important;
+        }
+        body.dark-mode .text-red-800 { 
+            color: #f87171 !important; /* Rojo brillante */
+        }
+        
+        body.dark-mode .bg-slate-900 { 
+            background-color: rgba(30, 41, 59, 0.8) !important;
+            border: 1px solid rgba(148, 163, 184, 0.3) !important;
+        }
+
+        /* Badges base (fuera de la tabla, KPI, etc) */
         body.dark-mode .bg-blue-50 { background-color: rgba(30, 58, 138, 0.35) !important; }
         body.dark-mode .bg-emerald-50 { background-color: rgba(20, 83, 45, 0.35) !important; }
         body.dark-mode .bg-amber-50 { background-color: rgba(120, 53, 15, 0.35) !important; }
         body.dark-mode .bg-purple-50 { background-color: rgba(88, 28, 135, 0.35) !important; }
         body.dark-mode .bg-red-50 { background-color: rgba(127, 29, 29, 0.4) !important; }
-        body.dark-mode .bg-emerald-100 { background-color: rgba(20, 83, 45, 0.5) !important; }
-        body.dark-mode .bg-red-100 { background-color: rgba(127, 29, 29, 0.5) !important; }
-        body.dark-mode table thead.bg-slate-50 { background-color: #0f172a !important; }
-        body.dark-mode table tbody tr:hover { background-color: rgba(51, 65, 85, 0.5) !important; }
-        body.dark-mode .multiselect-list { background: #1e293b !important; border-color: #334155 !important; }
-        body.dark-mode .multiselect-header { background-color: #0f172a !important; border-color: #334155 !important; color: #e2e8f0 !important; }
-        body.dark-mode .shadow-sm, body.dark-mode .shadow-md { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important; }
-        body.dark-mode #floatingClearFiltersBtn { background-color: #334155 !important; }
+        
+        body.dark-mode .shadow-sm, body.dark-mode .shadow-md { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.6) !important; }
+        
+        /* Banner archivo histórico */
+        #historical-file-banner {
+            display: none;
+            background: linear-gradient(90deg, #92400e, #b45309, #d97706, #b45309, #92400e);
+            background-size: 200% 100%;
+            animation: gradientShift 12s ease infinite;
+            color: #fffbeb;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(146, 64, 14, 0.35);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            z-index: 40;
+            position: relative;
+        }
+        #historical-file-banner.show { display: flex; }
+        #historical-file-banner i { font-size: 16px; flex-shrink: 0; }
+        #historical-file-banner .banner-text { text-align: center; line-height: 1.35; }
+        #historical-file-banner .banner-file { font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+        body.dark-mode #historical-file-banner {
+            background: linear-gradient(90deg, #78350f, #92400e, #b45309, #92400e, #78350f);
+            background-size: 200% 100%;
+        }
+
+        /* Botones flotantes — compatibles modo claro y oscuro */
+        .float-btn-hidden { opacity: 0; pointer-events: none; transform: scale(0.85); }
+        .float-btn-visible { opacity: 1; pointer-events: auto; transform: scale(1); }
+        #floating-reset-btn, #floating-plaza-btn {
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+            will-change: transform, opacity;
+        }
+        /* Modo claro: botones rojos con texto blanco y sombra visible */
+        #floatingClearFiltersBtn,
+        #floatingPlazaModalBtn {
+            background-color: #dc2626 !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(185, 28, 28, 0.35);
+            box-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.45), 0 4px 10px -2px rgba(0, 0, 0, 0.15);
+        }
+        #floatingClearFiltersBtn:hover,
+        #floatingPlazaModalBtn:hover {
+            background-color: #b91c1c !important;
+            color: #ffffff !important;
+        }
+        #floatingClearFiltersBadge {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            border-color: #ffffff !important;
+        }
+        body.dark-mode #floatingClearFiltersBtn,
+        body.dark-mode #floatingPlazaModalBtn {
+            background-color: #dc2626 !important;
+            color: #ffffff !important;
+            border-color: rgba(248, 250, 252, 0.15);
+            box-shadow: 0 10px 28px -6px rgba(0, 0, 0, 0.55);
+        }
+        body.dark-mode #floatingClearFiltersBtn:hover,
+        body.dark-mode #floatingPlazaModalBtn:hover {
+            background-color: #b91c1c !important;
+        }
+        body.dark-mode #floatingClearFiltersBadge {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+            border-color: #1e293b !important;
+        }
+        /* X del buscador de tabla — visible en modo claro */
+        #btn-table-reset {
+            color: #475569 !important;
+        }
+        #btn-table-reset:hover {
+            color: #dc2626 !important;
+            background-color: rgba(15, 23, 42, 0.08) !important;
+        }
+        body.dark-mode #btn-table-reset {
+            color: #cbd5e1 !important;
+        }
+        body.dark-mode #btn-table-reset:hover {
+            color: #f87171 !important;
+            background-color: rgba(248, 250, 252, 0.12) !important;
+        }
 
         /* ============================================================
            SISTEMA DE NOTIFICACIONES - ESTILOS
@@ -325,11 +504,12 @@
         .notif-toast-close { flex-shrink: 0; color: #9ca3af; background: transparent; border: none; cursor: pointer; font-size: 15px; padding: 2px 6px; border-radius: 4px; transition: all 0.15s; }
         .notif-toast-close:hover { background: #f3f4f6; color: #4b5563; }
         @keyframes notifToastIn { from { opacity: 0; transform: translateX(40px) scale(0.95); } to { opacity: 1; transform: translateX(0) scale(1); } }
-        body.dark-mode .notif-toast { background: #1e293b; color: #f1f5f9; border-color: #334155; border-left-width: 4px; }
-        body.dark-mode .notif-toast-title { color: #f1f5f9; }
+        
+        body.dark-mode .notif-toast { background: #1f2937; color: #f8fafc; border-color: #374151; border-left-width: 4px; }
+        body.dark-mode .notif-toast-title { color: #f8fafc; }
         body.dark-mode .notif-toast-message { color: #cbd5e1; }
         body.dark-mode .notif-toast-message b { color: #fbbf24; }
-        body.dark-mode .notif-toast-close:hover { background: #334155; color: #f1f5f9; }
+        body.dark-mode .notif-toast-close:hover { background: #374151; color: #f8fafc; }
 
         #notif-panel {
             position: fixed; top: 70px; right: 16px; width: 400px; max-width: calc(100vw - 32px);
@@ -370,18 +550,153 @@
         .notif-btn-read:hover { background: #b81810; }
         .notif-btn-clear { background: #e5e7eb; color: #374151; }
         .notif-btn-clear:hover { background: #d1d5db; }
-        body.dark-mode #notif-panel { background: #1e293b; }
-        body.dark-mode .notif-panel-body { background: #1e293b; }
-        body.dark-mode .notif-item:hover { background: #334155; }
+        
+        body.dark-mode #notif-panel { background: #1f2937; }
+        body.dark-mode .notif-panel-body { background: #1f2937; }
+        body.dark-mode .notif-item:hover { background: #374151; }
         body.dark-mode .notif-item.unread { background: rgba(127,29,29,0.3); }
         body.dark-mode .notif-item.unread:hover { background: rgba(127,29,29,0.5); }
-        body.dark-mode .notif-item-title { color: #f1f5f9; }
+        body.dark-mode .notif-item-title { color: #f8fafc; }
         body.dark-mode .notif-item-message { color: #cbd5e1; }
         body.dark-mode .notif-item-message b { color: #fbbf24; }
-        body.dark-mode .notif-item-time { color: #64748b; }
-        body.dark-mode .notif-panel-footer { background: #0f172a; border-top-color: #334155; }
-        body.dark-mode .notif-btn-clear { background: #334155; color: #cbd5e1; }
-        body.dark-mode .notif-empty { color: #64748b; }
+        body.dark-mode .notif-item-time { color: #94a3b8; }
+        body.dark-mode .notif-panel-footer { background: #111827; border-top-color: #374151; }
+        body.dark-mode .notif-btn-clear { background: #374151; color: #cbd5e1; }
+        body.dark-mode .notif-empty { color: #94a3b8; }
+
+        .filter-btn-hidden { opacity: 0; pointer-events: none; transform: translateY(-50%) scale(0.85); }
+        .filter-btn-visible { opacity: 1; pointer-events: auto; transform: translateY(-50%) scale(1); }
+
+        /* Modal backdrop blur for dropdown filter modal */
+        #dropdown-filter-modal.modal-open {
+            display: flex !important;
+            backdrop-filter: blur(4px);
+        }
+
+        #plaza-modal.modal-open {
+            display: flex !important;
+            backdrop-filter: blur(4px);
+            animation: plazaFadeIn 0.2s ease-out;
+        }
+        @keyframes plazaFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        #plaza-modal .plaza-card {
+            animation: plazaCardIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            /* Modo claro (default) */
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+            border-color: #e2e8f0 !important;
+        }
+        body.dark-mode #plaza-modal .plaza-card {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-color: #1e293b !important;
+        }
+        #plaza-modal .plaza-card .border-b {
+            border-color: #e2e8f0 !important;
+        }
+        body.dark-mode #plaza-modal .plaza-card .border-b {
+            border-color: #1e293b !important;
+        }
+        #plaza-modal .plaza-card h3,
+        #plaza-modal .plaza-card .modal-title-text {
+            color: #1e293b !important;
+        }
+        body.dark-mode #plaza-modal .plaza-card h3,
+        body.dark-mode #plaza-modal .plaza-card .modal-title-text {
+            color: #f8fafc !important;
+        }
+        #plaza-modal .plaza-modal-close {
+            color: #94a3b8 !important;
+        }
+        #plaza-modal .plaza-modal-close:hover {
+            color: #0f172a !important;
+        }
+        body.dark-mode #plaza-modal .plaza-modal-close:hover {
+            color: #ffffff !important;
+        }
+        #plaza-modal-search {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #1e293b !important;
+        }
+        #plaza-modal-search::placeholder {
+            color: #94a3b8 !important;
+        }
+        body.dark-mode #plaza-modal-search {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+        #plaza-modal-selection-counter {
+            color: #64748b !important;
+        }
+        body.dark-mode #plaza-modal-selection-counter {
+            color: #94a3b8 !important;
+        }
+        #plaza-modal .btn-modal-cancel {
+            background-color: #f1f5f9 !important;
+            color: #334155 !important;
+        }
+        #plaza-modal .btn-modal-cancel:hover {
+            background-color: #e2e8f0 !important;
+        }
+        body.dark-mode #plaza-modal .btn-modal-cancel {
+            background-color: #1e293b !important;
+            color: #e2e8f0 !important;
+        }
+        body.dark-mode #plaza-modal .btn-modal-cancel:hover {
+            background-color: #334155 !important;
+        }
+        /* Items del listado del modal */
+        #plaza-checkboxes-list .plaza-option-label {
+            color: #1e293b;
+        }
+        #plaza-checkboxes-list .plaza-option-label:hover {
+            background-color: #f1f5f9 !important;
+        }
+        #plaza-checkboxes-list .plaza-option-text {
+            color: #1e293b !important;
+        }
+        #plaza-checkboxes-list .plaza-option-badge {
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+        }
+        #plaza-checkboxes-list .plaza-option-cb {
+            border-color: #cbd5e1 !important;
+            background-color: #ffffff !important;
+        }
+        body.dark-mode #plaza-checkboxes-list .plaza-option-label:hover {
+            background-color: rgba(30, 41, 59, 0.85) !important;
+        }
+        body.dark-mode #plaza-checkboxes-list .plaza-option-text {
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode #plaza-checkboxes-list .plaza-option-badge {
+            background-color: #1e293b !important;
+            color: #94a3b8 !important;
+        }
+        body.dark-mode #plaza-checkboxes-list .plaza-option-cb {
+            border-color: #475569 !important;
+            background-color: #1e293b !important;
+        }
+        #plaza-checkboxes-list .plaza-empty-msg {
+            color: #94a3b8 !important;
+        }
+        @keyframes plazaCardIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        #plaza-checkboxes-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        #plaza-checkboxes-list::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.45);
+            border-radius: 999px;
+        }
+
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans antialiased m-0 p-0">
@@ -405,11 +720,14 @@
             
             <!-- Botón de Carga Excel -->
             <div class="upload-btn-wrapper" id="drop-zone">
-                <input type="file" id="excel-file" accept=".xlsx, .xls, .xlsb, .xlsm, .csv">
-                <i class="fa-solid fa-file-excel upload-btn-icon"></i>
-                <div class="upload-btn-content">
+                <input type="file" id="excel-file" accept=".xlsx,.xls,.xlsm,.xlsb,.csv" class="sr-only" title="Preferible .xlsx (mejor compatibilidad). .xlsb puede fallar.">
+                <div class="relative flex items-center justify-center p-1 upload-btn-icon-box">
+                    <i class="fa-solid fa-cloud text-2xl text-white/80"></i>
+                    <i class="fa-solid fa-file-excel text-sm text-emerald-300 absolute animate-bounce"></i>
+                </div>
+                <div class="upload-btn-content" id="upload-btn-text-group" style="transition: opacity 0.4s ease, max-width 0.4s ease; max-width: 240px; overflow: hidden; white-space: nowrap;">
                     <span class="upload-btn-title" id="file-name">Cargar Excel</span>
-                    <span class="upload-btn-subtitle">Arrastra o clic aquí</span>
+                    <span class="upload-btn-subtitle" id="file-subtitle">Arrastra o clic aquí</span>
                 </div>
             </div>
 
@@ -424,38 +742,41 @@
         </div>
     </header>
 
+    <!-- Banner permanente: archivo histórico / no es del día -->
+    <div id="historical-file-banner" role="status" aria-live="polite">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <div class="banner-text">
+            <span>Archivo histórico cargado</span>
+            — <span class="banner-file" id="historical-banner-filename">—</span>
+            — Este Excel <strong>no corresponde al día de hoy</strong>. Los datos son de un corte anterior.
+        </div>
+    </div>
+
     <main id="dashboard-container" class="max-w-[85%] mx-auto px-4 py-6 space-y-6 hidden">
 
-        <div class="bg-white p-4 rounded-xl shadow-sm flex flex-wrap gap-4 items-center justify-between">
-            <div class="flex flex-wrap gap-3 items-center w-full">
-                <span class="font-semibold text-sm text-slate-700"><i class="fa-solid fa-filter text-[#DA291C] mr-1"></i> Filtros Activos:</span>
-                <select id="filter-regional" class="bg-slate-50 border border-slate-300 text-sm rounded-lg px-3 py-1.5 focus:ring-[#DA291C] focus:border-[#DA291C]">
-                    <option value="">Todas las Regionales</option>
-                </select>
-                <select id="filter-plaza" class="bg-slate-50 border border-slate-300 text-sm rounded-lg px-3 py-1.5 focus:ring-[#DA291C] focus:border-[#DA291C]">
-                    <option value="">Todas las Plazas</option>
-                </select>
-                <div class="multiselect-dropdown" id="multiselect-rutas-container">
-                    <div class="multiselect-header" id="rutas-header">
-                        <span id="rutas-header-text">Rutas (Todas)</span>
-                        <i class="fa-solid fa-chevron-down text-xs text-slate-500"></i>
-                    </div>
-                    <div class="multiselect-list" id="rutas-list-box">
-                        <div class="flex justify-between items-center mb-2 pb-1 border-b border-slate-200 text-xs font-semibold">
-                            <span id="rutas-select-all" class="text-[#DA291C] cursor-pointer hover:underline">Todas</span>
-                            <span id="rutas-clear-all" class="text-slate-500 cursor-pointer hover:underline">Ninguna</span>
-                        </div>
-                        <div id="rutas-checkboxes-container" class="space-y-1">
-                            <div class="text-xs text-slate-400">Sin datos cargados</div>
-                        </div>
-                    </div>
-                </div>
-                <select id="filter-vehiculo" class="bg-slate-50 border border-slate-300 text-sm rounded-lg px-3 py-1.5 focus:ring-[#DA291C] focus:border-[#DA291C]">
-                    <option value="">Todos los Tipos de Vehículo</option>
-                </select>
-                <select id="filter-cumplimiento" class="bg-slate-50 border border-slate-300 text-sm rounded-lg px-3 py-1.5 focus:ring-[#DA291C] focus:border-[#DA291C]">
-                    <option value="">Todo Cumplimiento</option>
-                </select>
+        <div class="bg-white p-4 rounded-xl shadow-sm">
+            <div class="flex flex-nowrap overflow-x-auto gap-3 items-center w-full pb-1">
+                <span class="font-semibold text-sm text-slate-700 whitespace-nowrap flex-shrink-0"><i class="fa-solid fa-filter text-[#DA291C] mr-1"></i> Filtros Activos:</span>
+
+                <button type="button" id="filter-btn-regional" onclick="openMultiFilterModal('regional')" class="bg-slate-50 hover:bg-slate-100 border border-slate-300 text-sm rounded-lg px-3 py-1.5 flex items-center justify-between gap-3 whitespace-nowrap flex-shrink-0 transition cursor-pointer">
+                    <span id="filter-btn-text-regional" class="font-medium text-slate-700">Regionales</span>
+                    <i class="fa-solid fa-chevron-down text-xs text-slate-500"></i>
+                </button>
+
+                <button type="button" id="filter-btn-ruta" onclick="openMultiFilterModal('ruta')" class="bg-slate-50 hover:bg-slate-100 border border-slate-300 text-sm rounded-lg px-3 py-1.5 flex items-center justify-between gap-3 whitespace-nowrap flex-shrink-0 transition cursor-pointer">
+                    <span id="filter-btn-text-ruta" class="font-medium text-slate-700">Económicos</span>
+                    <i class="fa-solid fa-chevron-down text-xs text-slate-500"></i>
+                </button>
+
+                <button type="button" id="filter-btn-vehiculo" onclick="openMultiFilterModal('vehiculo')" class="bg-slate-50 hover:bg-slate-100 border border-slate-300 text-sm rounded-lg px-3 py-1.5 flex items-center justify-between gap-3 whitespace-nowrap flex-shrink-0 transition cursor-pointer">
+                    <span id="filter-btn-text-vehiculo" class="font-medium text-slate-700">Tipos de Vehículo</span>
+                    <i class="fa-solid fa-chevron-down text-xs text-slate-500"></i>
+                </button>
+
+                <button type="button" id="filter-btn-cumplimiento" onclick="openMultiFilterModal('cumplimiento')" class="bg-slate-50 hover:bg-slate-100 border border-slate-300 text-sm rounded-lg px-3 py-1.5 flex items-center justify-between gap-3 whitespace-nowrap flex-shrink-0 transition cursor-pointer">
+                    <span id="filter-btn-text-cumplimiento" class="font-medium text-slate-700">Cumplimiento</span>
+                    <i class="fa-solid fa-chevron-down text-xs text-slate-500"></i>
+                </button>
             </div>
         </div>
 
@@ -517,9 +838,9 @@
 
             <div class="bg-white p-5 rounded-xl shadow-sm flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-700 text-base"><i class="fa-solid fa-table text-[#DA291C] mr-2"></i>Rendimiento X Ruta</h3>
+                    <h3 class="font-bold text-slate-700 text-base"><i class="fa-solid fa-table text-[#DA291C] mr-2"></i>Rendimiento por Económico</h3>
                     <div class="flex items-center space-x-2">
-                        <select id="sort-rendimiento-real" class="bg-slate-50 border border-slate-300 text-xs rounded-lg px-2 py-1 focus:ring-[#DA291C] focus:border-[#DA291C]">
+                        <select id="sort-rendimiento-real" onchange="pageRendimientoXRuta=1; updateRendimientoXRutaTable();" class="bg-slate-50 border border-slate-300 text-xs rounded-lg px-2 py-1 focus:ring-[#DA291C] focus:border-[#DA291C]">
                             <option value="">Ordenar Rend. Real</option>
                             <option value="desc">Mayor a menor</option>
                             <option value="asc">Menor a mayor</option>
@@ -530,9 +851,9 @@
                     <table class="min-w-full divide-y divide-slate-200 text-xs text-left" id="table-rendimiento-x-ruta">
                         <thead class="bg-slate-50 sticky top-0">
                             <tr>
-                                <th class="px-3 py-2 font-semibold text-slate-600" id="th-rendimiento-c">Columna C</th>
-                                <th class="px-3 py-2 font-semibold text-slate-600" id="th-rendimiento-y">Columna Y</th>
-                                <th class="px-3 py-2 font-semibold text-slate-600" id="th-rendimiento-z">Columna Z</th>
+                                <th class="px-3 py-2 font-semibold text-slate-600" id="th-rendimiento-c">Económico</th>
+                                <th class="px-3 py-2 font-semibold text-slate-600" id="th-rendimiento-y">Rend. Objetivo</th>
+                                <th class="px-3 py-2 font-semibold text-slate-600" id="th-rendimiento-z">Rend. Real</th>
                             </tr>
                         </thead>
                         <tbody id="tbody-rendimiento-x-ruta" class="divide-y divide-slate-200 bg-white">
@@ -540,8 +861,9 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3 pt-2 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500">
+                <div class="mt-3 pt-2 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500 gap-2 flex-wrap">
                     <span id="contador-rendimiento-ruta">0 registros</span>
+                    <div id="pagination-rendimiento-x-ruta" class="flex items-center gap-1"></div>
                 </div>
             </div>
 
@@ -557,10 +879,25 @@
         <div class="bg-white p-6 rounded-xl shadow-sm">
             <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
                 <h3 class="font-bold text-slate-800 text-lg"><i class="fa-solid fa-table text-[#DA291C] mr-2"></i>Detalle de Registros de Rendimiento</h3>
-                <div class="flex items-center space-x-2 w-full md:w-auto">
-                    <input type="text" id="table-search" placeholder="Buscar económico, operador, plaza..." class="bg-slate-50 border border-slate-300 text-sm rounded-lg px-3 py-1.5 w-full md:w-64 focus:ring-[#DA291C] focus:border-[#DA291C]">
-                    <button id="export-csv" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition whitespace-nowrap">
-                        <i class="fa-solid fa-file-excel mr-1"></i> Exportar Excel/CSV
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <div class="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5">
+                        <label for="page-size-select" class="font-semibold whitespace-nowrap">Mostrar:</label>
+                        <select id="page-size-select" onchange="changePageSize(this.value)" class="bg-transparent border-0 text-xs font-bold text-slate-800 focus:ring-0 p-0 cursor-pointer">
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    <div class="relative w-full md:w-72">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 pointer-events-none"><i class="fas fa-search text-xs"></i></span>
+                        <input type="text" id="table-search" placeholder="Buscar económico, operador, plaza..." oninput="handleSearchResetVisibility(this)" class="w-full pl-9 pr-9 py-1.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#DA291C] focus:border-[#DA291C] shadow-sm transition-all">
+                        <button type="button" id="btn-table-reset" onclick="clearTableSearch()" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" class="filter-btn-hidden absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 bg-transparent border-0 p-0 flex items-center justify-center rounded-full transition-all duration-200 cursor-pointer">
+                            <i class="fa-solid fa-xmark text-sm pointer-events-none"></i>
+                        </button>
+                    </div>
+                    <button type="button" id="export-csv" onclick="downloadFilteredExcel()" title="Descargar Excel" aria-label="Descargar Excel" class="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white hover:scale-110 transition-all shadow-lg cursor-pointer flex-shrink-0">
+                        <i class="fa-solid fa-file-excel text-base"></i>
                     </button>
                 </div>
             </div>
@@ -569,7 +906,7 @@
                     <thead class="bg-slate-50 sticky top-0">
                         <tr>
                             <th class="px-3 py-3 font-semibold text-slate-600">Fecha</th>
-                            <th id="th-col-c" class="px-3 py-3 font-semibold text-slate-600">Rutas</th>
+                            <th id="th-col-c" class="px-3 py-3 font-semibold text-slate-600">Económico</th>
                             <th class="px-3 py-3 font-semibold text-slate-600">Regional</th>
                             <th class="px-3 py-3 font-semibold text-slate-600">Plaza</th>
                             <th class="px-3 py-3 font-semibold text-slate-600">Vehículo</th>
@@ -593,10 +930,62 @@
     </main>
 
     <!-- Botón flotante para limpiar filtros -->
-    <button id="floatingClearFiltersBtn" onclick="resetAllFilters()" style="position: fixed; bottom: 25px; right: 25px; background-color: #1e293b; color: #ffffff; border: none; padding: 12px 22px; border-radius: 30px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); z-index: 9999; transition: background-color 0.2s ease, transform 0.2s ease;" onmouseover="this.style.backgroundColor='#0f172a'" onmouseout="this.style.backgroundColor='#1e293b'">
-        <i class="fa-solid fa-rotate-left"></i>
-        <span id="floatingClearFiltersText">Limpiar Filtros (0)</span>
-    </button>
+    <div id="floating-reset-btn" class="float-btn-hidden fixed bottom-6 right-6 z-[9999]">
+        <button id="floatingClearFiltersBtn" onclick="resetAllFilters()" class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl hover:bg-red-700 transition cursor-pointer relative" title="Restablecer Filtros" aria-label="Restablecer Filtros">
+            <i class="fa-solid fa-rotate-left text-base"></i>
+            <span id="floatingClearFiltersBadge" class="hidden absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-slate-900 text-white text-[10px] font-extrabold flex items-center justify-center border-2 border-white">0</span>
+        </button>
+    </div>
+
+    <!-- Botón Flotante de Plazas -->
+    <div id="floating-plaza-btn" class="float-btn-hidden fixed bottom-6 left-6 z-[9998]">
+        <button type="button" id="floatingPlazaModalBtn" onclick="openMultiFilterModal('plaza')" class="bg-red-600 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-sm font-semibold hover:bg-red-700 transition cursor-pointer relative" title="Filtrar por Plaza">
+            <i class="fas fa-map-marked-alt"></i>
+            <span id="plaza-modal-btn-text">Plazas</span>
+        </button>
+    </div>
+
+    <!-- Modal Unificado de Selección de Filtros -->
+    <div id="plaza-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden p-4 z-[100001]" onclick="handlePlazaBackdropClick(event)">
+        <div class="plaza-card w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl border">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div class="flex items-center gap-2">
+                    <i id="multi-modal-icon" class="fas fa-map-marked-alt text-red-500"></i>
+                    <h3 id="multi-modal-title" class="font-bold text-sm modal-title-text">Filtrar por Plaza</h3>
+                </div>
+                <button type="button" onclick="closePlazaModal()" class="plaza-modal-close transition cursor-pointer p-1" aria-label="Cerrar modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 pointer-events-none">
+                    <i class="fas fa-search text-xs"></i>
+                </span>
+                <input type="text" id="plaza-modal-search" oninput="filterPlazaModalList(this.value)" placeholder="Buscar..." class="w-full pl-8 pr-8 py-1.5 text-xs border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600">
+                <button type="button" id="btn-plaza-search-clear" onclick="clearPlazaModalSearch()" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600 text-xs cursor-pointer" title="Limpiar búsqueda">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center justify-between text-xs px-1">
+                <span id="plaza-modal-selection-counter">0 seleccionadas</span>
+                <div class="flex items-center gap-3 font-semibold">
+                    <button type="button" onclick="selectAllPlazasInModal()" class="text-red-600 hover:text-red-500 hover:underline cursor-pointer">Todas</button>
+                    <button type="button" onclick="clearAllPlazasInModal()" class="text-slate-500 hover:text-slate-700 hover:underline cursor-pointer">Ninguna</button>
+                </div>
+            </div>
+
+            <div id="plaza-checkboxes-list" class="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                <div class="text-xs plaza-empty-msg py-4 text-center">Carga un archivo Excel para ver las opciones disponibles.</div>
+            </div>
+
+            <div class="pt-2 flex gap-2">
+                <button type="button" onclick="closePlazaModal()" class="btn-modal-cancel w-1/3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Cancelar</button>
+                <button type="button" onclick="applyPlazaModalSelection()" class="w-2/3 bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl text-xs font-bold transition cursor-pointer shadow-lg">Aplicar Selección</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Contenedores del sistema de notificaciones -->
     <div id="notif-toast-container"></div>
@@ -635,20 +1024,47 @@ function debounce(fn, ms = 250) {
 }
 
 /* ============================================================
-   PARSE NÚMEROS ROBUSTO
+   PARSE NÚMEROS ROBUSTO (soporta ES/US y unidades)
    ============================================================ */
 function parseNumero(val) {
     if (val === null || val === undefined || val === '') return 0;
     if (typeof val === 'number') return isNaN(val) ? 0 : val;
     let s = String(val).trim();
     if (s === '') return 0;
-    s = s.replace(/[$,\s]/g, '');
-    s = s.replace(/km\/l|km|Km|KM|L\/km|litros|Litros|L/gi, '');
-    if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) {
-        s = s.replace(/\./g, '').replace(',', '.');
-    } else {
-        s = s.replace(/,/g, '');
+
+    // Eliminar símbolos de moneda
+    s = s.replace(/\$/g, '');
+    // Eliminar unidades conocidas (con límites de palabra para no tocar texto)
+    s = s.replace(/\b(km\s*\/\s*l|km\/l|l\/km|litros?)\b/gi, '');
+    s = s.replace(/\bkm\b/gi, '');
+    s = s.replace(/\bl\b/gi, '');
+    // Eliminar espacios restantes
+    s = s.replace(/\s/g, '');
+    if (s === '') return 0;
+
+    const hasComma = s.includes(',');
+    const hasDot = s.includes('.');
+
+    if (hasComma && hasDot) {
+        // Formato mixto: el último separador es el decimal
+        if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+            // Europeo: 1.500,50
+            s = s.replace(/\./g, '').replace(',', '.');
+        } else {
+            // US: 1,500.50
+            s = s.replace(/,/g, '');
+        }
+    } else if (hasComma) {
+        // Solo coma: decimal si el grupo final tiene 1-2 dígitos
+        const parts = s.split(',');
+        if (parts.length === 2 && parts[1].length <= 2) {
+            s = s.replace(',', '.');
+        } else {
+            s = s.replace(/,/g, '');
+        }
     }
+    // Solo punto: parseFloat estándar
+
     const n = parseFloat(s);
     return isNaN(n) ? 0 : n;
 }
@@ -666,16 +1082,157 @@ let plazaKey = 'Plaza';
 let rutasKey = '';
 let recorridoKey = 'Recorrido';
 let perdidaKey = 'Perdida economica';
-let selectedRutas = new Set();
-let allAvailableRutas = [];
+let regionalKey = 'Regional';
+let vehiculoKey = 'Tipo de Vehiculo';
+let cumplimientoKey = 'Cumplimiento';
+let fechaKey = 'Fecha';
+let operadorKey = 'Nombre de operador';
+let pageRendimientoXRuta = 1;
+const rowsPerPageRendimiento = 15;
+let loadedFileName = '';
+let loadedFileDateHint = '';
+
+const FILTER_CONFIGS = {
+    regional: {
+        title: 'Filtrar por Regional',
+        label: 'Regionales',
+        placeholder: 'Buscar regional...',
+        icon: 'fa-solid fa-globe text-red-500',
+        getValue: row => String(row[regionalKey] || '').trim()
+    },
+    plaza: {
+        title: 'Filtrar por Plaza',
+        label: 'Plazas',
+        placeholder: 'Buscar plaza...',
+        icon: 'fas fa-map-marked-alt text-red-500',
+        getValue: row => String(row[plazaKey] || '').trim()
+    },
+    ruta: {
+        title: 'Filtrar por Económico',
+        label: 'Económicos',
+        placeholder: 'Buscar económico...',
+        icon: 'fa-solid fa-truck-fast text-red-500',
+        getValue: row => String(row[rutasKey] || '').trim()
+    },
+    vehiculo: {
+        title: 'Filtrar por Tipo de Vehículo',
+        label: 'Tipos de Vehículo',
+        placeholder: 'Buscar tipo de vehículo...',
+        icon: 'fa-solid fa-truck text-red-500',
+        getValue: row => String(row[vehiculoKey] || '').trim()
+    },
+    cumplimiento: {
+        title: 'Filtrar por Cumplimiento',
+        label: 'Cumplimiento',
+        placeholder: 'Buscar cumplimiento...',
+        icon: 'fa-solid fa-circle-check text-red-500',
+        getValue: row => String(row[cumplimientoKey] || '').trim()
+    }
+};
+
+/** Limpia valores basura de Excel (#N/A, 0x2a, etc.) */
+function cleanCellValue(v) {
+    if (v === null || v === undefined) return '';
+    const s = String(v).trim();
+    if (!s) return '';
+    const low = s.toLowerCase();
+    if (low === '0x2a' || low === '#n/a' || low === '#na' || low === 'n/a' || low === '#ref!' || low === '#value!' || low === '#div/0!' || low === '#name?' || low === '#null!' || low === '#num!') return '';
+    return s;
+}
+
+/** Detecta si el archivo parece histórico (no del día de hoy) */
+function detectHistoricalFile(fileName, headers, sampleRows) {
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
+    const name = String(fileName || '');
+    // Heurística por nombre: fechas tipo 31OCT26, 2026-10-31, oct26, etc.
+    const nameLooksHistorical = /(?:\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}|\d{1,2}[A-Za-z]{3}\d{2,4}|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)/i.test(name);
+    // Revisar columna Fecha si existe
+    let dataMaxDate = null;
+    const fk = fechaKey || findColumn(headers || [], 'fecha');
+    if (fk && sampleRows && sampleRows.length) {
+        sampleRows.slice(0, 50).forEach(row => {
+            let d = row[fk];
+            if (d instanceof Date && !isNaN(d)) {
+                if (!dataMaxDate || d > dataMaxDate) dataMaxDate = d;
+            } else if (typeof d === 'number' && d > 30000 && d < 60000) {
+                // Excel serial
+                const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                const dt = new Date(excelEpoch.getTime() + d * 86400000);
+                if (!dataMaxDate || dt > dataMaxDate) dataMaxDate = dt;
+            } else if (typeof d === 'string' && d.length >= 8) {
+                const parsed = new Date(d);
+                if (!isNaN(parsed) && (!dataMaxDate || parsed > dataMaxDate)) dataMaxDate = parsed;
+            }
+        });
+    }
+    let isHistorical = nameLooksHistorical;
+    if (dataMaxDate) {
+        const dataDay = dataMaxDate.toISOString().slice(0, 10);
+        if (dataDay < todayStr) isHistorical = true;
+        loadedFileDateHint = dataDay;
+    }
+    // Por defecto, si hay datos de gasolina de corte, mostrar banner (política operativa: siempre avisar)
+    if (!isHistorical && sampleRows && sampleRows.length > 0) isHistorical = true;
+    return isHistorical;
+}
+
+function showHistoricalBanner(fileName, isHistorical) {
+    const banner = document.getElementById('historical-file-banner');
+    const nameEl = document.getElementById('historical-banner-filename');
+    if (!banner) return;
+    if (nameEl) nameEl.textContent = fileName || 'archivo cargado';
+    if (isHistorical) banner.classList.add('show');
+    else banner.classList.remove('show');
+}
+
+let filterState = {
+    regional: { all: [], selected: new Set() },
+    plaza: { all: [], selected: new Set() },
+    ruta: { all: [], selected: new Set() },
+    vehiculo: { all: [], selected: new Set() },
+    cumplimiento: { all: [], selected: new Set() }
+};
+
+let currentModalFilterKey = 'plaza';
+let draftModalSelection = new Set();
 
 let currentPage = 1;
-const rowsPerPage = 10;
-const minRows = 9;
+let rowsPerPage = 10;
+
+function handleSearchResetVisibility(input) {
+    const btn = document.getElementById('btn-table-reset');
+    if (!btn) return;
+    if (input.value.trim() !== "") {
+        btn.classList.remove('filter-btn-hidden');
+        btn.classList.add('filter-btn-visible');
+    } else {
+        btn.classList.remove('filter-btn-visible');
+        btn.classList.add('filter-btn-hidden');
+    }
+}
+
+function clearTableSearch() {
+    const input = document.getElementById('table-search');
+    if (!input) return;
+    input.value = "";
+    handleSearchResetVisibility(input);
+    currentPage = 1;
+    applyFilters();
+}
+
+function changePageSize(val) {
+    const parsed = parseInt(val, 10);
+    rowsPerPage = [10, 20, 30, 50].includes(parsed) ? parsed : 10;
+    currentPage = 1;
+    updateTable();
+}
 
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('excel-file');
 
+// Evitar doble apertura del diálogo: el input cubre todo el wrapper
+fileInput.addEventListener('click', (e) => e.stopPropagation());
 dropZone.addEventListener('click', () => fileInput.click());
 dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
 dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
@@ -707,85 +1264,233 @@ function findColumn(headers, ...keywords) {
     return '';
 }
 
+const _sortWithEmptyLast = (a, b) => {
+    if (a === '' && b === '') return 0;
+    if (a === '') return 1;
+    if (b === '') return -1;
+    return a.localeCompare(b);
+};
+
+function updateFilterButtonsUI() {
+    Object.keys(FILTER_CONFIGS).forEach(key => {
+        const cfg = FILTER_CONFIGS[key];
+        const st = filterState[key];
+        const btn = document.getElementById(`filter-btn-${key}`);
+        const textEl = document.getElementById(`filter-btn-text-${key}`);
+        if (!btn || !textEl) return;
+
+        const total = st.all.length;
+        const count = st.selected.size;
+        const isFiltered = total > 0 && count < total;
+
+        // El botón de Plazas siempre dice solo "Plazas" (se complementa con el botón flotante)
+        if (key === 'plaza') {
+            textEl.textContent = 'Plazas';
+        } else {
+            if (total === 0 || count === total) {
+                textEl.textContent = cfg.label;
+            } else if (count === 0) {
+                textEl.textContent = `${cfg.label} (Ninguna)`;
+            } else if (count === 1) {
+                const only = Array.from(st.selected)[0];
+                textEl.textContent = `${cfg.label}: ${only || '(Sin valor)'}`;
+            } else {
+                textEl.textContent = `${cfg.label} (${count}/${total})`;
+            }
+        }
+
+        if (isFiltered) {
+            btn.classList.add('border-[#DA291C]', 'ring-1', 'ring-[#DA291C]/40');
+        } else {
+            btn.classList.remove('border-[#DA291C]', 'ring-1', 'ring-[#DA291C]/40');
+        }
+    });
+}
+
 function updateFloatingClearFiltersButton() {
     let activeFiltersCount = 0;
-    const regVal = document.getElementById('filter-regional').value;
-    const plazaVal = document.getElementById('filter-plaza').value;
-    const vehiculoVal = document.getElementById('filter-vehiculo').value;
-    const cumplimientoVal = document.getElementById('filter-cumplimiento').value;
     const searchTerm = document.getElementById('table-search').value.trim();
-    if (regVal) activeFiltersCount++;
-    if (plazaVal) activeFiltersCount++;
-    if (vehiculoVal) activeFiltersCount++;
-    if (cumplimientoVal) activeFiltersCount++;
     if (searchTerm) activeFiltersCount++;
-    if (allAvailableRutas.length > 0 && selectedRutas.size < allAvailableRutas.length) activeFiltersCount++;
-    const floatingBtn = document.getElementById('floatingClearFiltersBtn');
-    const floatingText = document.getElementById('floatingClearFiltersText');
-    if (floatingBtn && floatingText) {
-        floatingText.textContent = `Limpiar Filtros (${activeFiltersCount})`;
-        floatingBtn.style.display = activeFiltersCount > 0 ? 'inline-flex' : 'none';
+
+    Object.keys(FILTER_CONFIGS).forEach(key => {
+        const st = filterState[key];
+        if (st.all.length > 0 && st.selected.size < st.all.length) {
+            activeFiltersCount++;
+        }
+    });
+
+    const floatingWrapper = document.getElementById('floating-reset-btn');
+    const floatingBadge = document.getElementById('floatingClearFiltersBadge');
+    if (floatingBadge) {
+        floatingBadge.textContent = String(activeFiltersCount);
+        if (activeFiltersCount > 0) floatingBadge.classList.remove('hidden');
+        else floatingBadge.classList.add('hidden');
+    }
+    if (floatingWrapper) {
+        if (activeFiltersCount > 0) {
+            floatingWrapper.classList.remove('float-btn-hidden');
+            floatingWrapper.classList.add('float-btn-visible');
+        } else {
+            floatingWrapper.classList.remove('float-btn-visible');
+            floatingWrapper.classList.add('float-btn-hidden');
+        }
     }
 }
 
 function resetAllFilters() {
-    document.getElementById('filter-regional').value = '';
-    document.getElementById('filter-plaza').value = '';
-    document.getElementById('filter-vehiculo').value = '';
-    document.getElementById('filter-cumplimiento').value = '';
+    Object.keys(FILTER_CONFIGS).forEach(key => {
+        filterState[key].selected = new Set(filterState[key].all);
+    });
     document.getElementById('table-search').value = '';
+    handleSearchResetVisibility(document.getElementById('table-search'));
     document.getElementById('sort-rendimiento-real').value = '';
-    if (allAvailableRutas.length > 0) selectedRutas = new Set(allAvailableRutas);
-    document.querySelectorAll('#rutas-checkboxes-container input[type="checkbox"]').forEach(cb => cb.checked = true);
-    updateRutasHeaderText();
+    updateFilterButtonsUI();
+    updateFloatingPlazaButton();
     currentPage = 1;
     applyFilters();
 }
 
-const rutasHeader = document.getElementById('rutas-header');
-const rutasListBox = document.getElementById('rutas-list-box');
-rutasHeader.addEventListener('click', (e) => {
-    e.stopPropagation();
-    rutasListBox.classList.toggle('show');
-});
-document.addEventListener('click', (e) => {
-    if (!document.getElementById('multiselect-rutas-container').contains(e.target)) {
-        rutasListBox.classList.remove('show');
-    }
-});
-
 document.getElementById('sort-rendimiento-real').addEventListener('change', updateRendimientoXRutaTable);
 
-function handleFile(file) {
-    document.getElementById('file-name').textContent = file.name;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-        if (jsonRows.length > 0) {
-            const headers = jsonRows[0];
+let hideUploadTextTimer = null;
+function scheduleHideUploadText() {
+    if (hideUploadTextTimer) clearTimeout(hideUploadTextTimer);
+    const grp = document.getElementById('upload-btn-text-group');
+    if (grp) {
+        grp.style.opacity = '1';
+        grp.style.maxWidth = '240px';
+        grp.style.display = 'flex';
+    }
+    hideUploadTextTimer = setTimeout(() => {
+        if (grp) {
+            grp.style.opacity = '0';
+            grp.style.maxWidth = '0px';
+            setTimeout(() => {
+                if (grp && parseFloat(grp.style.opacity) === 0) {
+                    grp.style.display = 'none';
+                }
+            }, 400);
+        }
+    }, 3000);
+}
 
-            if (!validarArchivo(headers)) {
-                alert('El archivo cargado no contiene la estructura o encabezados requeridos ("Estatus", "Estado", "Recorrido").');
+function handleFile(file) {
+    if (!file) return;
+    const lowerName = (file.name || '').toLowerCase();
+    // Aviso proactivo si es .xlsb (soporte limitado en SheetJS community)
+    if (lowerName.endsWith('.xlsb')) {
+        console.warn('Archivo .xlsb detectado. Si falla la lectura, conviértelo a .xlsx.');
+    }
+
+    document.getElementById('file-name').textContent = file.name;
+    loadedFileName = file.name;
+    scheduleHideUploadText();
+    const reader = new FileReader();
+    reader.onerror = function() {
+        alert('Error al leer el archivo seleccionado.');
+        fileInput.value = '';
+        document.getElementById('file-name').textContent = 'Cargar Excel';
+        showHistoricalBanner('', false);
+    };
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            let workbook;
+            try {
+                workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            } catch (readErr) {
+                const msg = (readErr && readErr.message) ? readErr.message : String(readErr);
+                if (lowerName.endsWith('.xlsb')) {
+                    alert('No se pudo leer el archivo .xlsb.\n\nSheetJS (versión libre) tiene soporte limitado para .xlsb.\n\nSolución: abre el archivo en Excel y guárdalo como .xlsx, luego cárgalo de nuevo.\n\nDetalle: ' + msg);
+                } else {
+                    alert('No se pudo leer el archivo Excel: ' + msg);
+                }
                 fileInput.value = '';
+                document.getElementById('file-name').textContent = 'Cargar Excel';
+                showHistoricalBanner('', false);
                 return;
             }
 
-            rutasKey      = findColumn(headers, 'ruta') || headers[2] || '';
-            plazaKey      = findColumn(headers, 'plaza') || headers[5] || 'Plaza';
-            colWKey       = findColumn(headers, 'litros') || findColumn(headers, 'consumo') || headers[22] || 'Litros consumidos';
-            colYKey       = findColumn(headers, 'rendimiento objetivo') || findColumn(headers, 'objetivo') || headers[24] || 'Rendimiento Objetivo';
-            colZKey       = findColumn(headers, 'rendimiento real') || findColumn(headers, 'real') || headers[25] || 'Rendimiento Real';
-            recorridoKey  = findColumn(headers, 'recorrido', 'kilometraje', 'km total', 'distancia total', 'distancia') || 'Recorrido';
-            perdidaKey    = findColumn(headers, 'perdida', 'pérdida', 'monto perdida', 'monto pérdida') || 'Perdida economica';
+            // Preferir hoja "Base" si existe; si no, la primera
+            const sheetNames = workbook.SheetNames || [];
+            let sheetName = sheetNames[0];
+            const baseSheet = sheetNames.find(n => _norm(n) === 'base' || _norm(n).includes('base'));
+            if (baseSheet) sheetName = baseSheet;
 
-            if (rutasKey) {
-                document.getElementById('th-col-c').textContent = rutasKey;
-                const thC = document.getElementById('th-rendimiento-c');
-                if (thC) thC.textContent = rutasKey;
+            const worksheet = workbook.Sheets[sheetName];
+            if (!worksheet) {
+                alert('No se encontró ninguna hoja válida en el archivo.');
+                fileInput.value = '';
+                document.getElementById('file-name').textContent = 'Cargar Excel';
+                return;
             }
+
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+            if (jsonRows.length === 0) {
+                alert('El archivo Excel está vacío.');
+                fileInput.value = '';
+                document.getElementById('file-name').textContent = 'Cargar Excel';
+                return;
+            }
+
+            // Limpiar encabezados vacíos / None
+            const rawHeaders = jsonRows[0].map(h => String(h ?? '').trim());
+            const headers = rawHeaders.filter(h => h !== '');
+
+            if (!validarArchivo(rawHeaders.length ? rawHeaders : headers)) {
+                alert('El archivo cargado no contiene la estructura o encabezados requeridos ("Estatus", "Estado", "Recorrido").\n\nSi es .xlsb y los encabezados salen vacíos, conviértelo a .xlsx.');
+                fileInput.value = '';
+                document.getElementById('file-name').textContent = 'Cargar Excel';
+                showHistoricalBanner('', false);
+                return;
+            }
+
+            // --- Detección robusta de columnas (sin índices invertidos) ---
+            // Económico / Ruta: preferir "economico"; si hay "ruta" usarla
+            rutasKey = findColumn(headers, 'economico')
+                || findColumn(headers, 'ruta')
+                || findColumn(headers, 'id economico', 'id vehículo', 'id vehiculo')
+                || (headers[2] || '');
+
+            plazaKey = findColumn(headers, 'plaza') || 'Plaza';
+            colWKey = findColumn(headers, 'litros consumidos') || findColumn(headers, 'litros') || findColumn(headers, 'consumo') || 'Litros consumidos';
+
+            // Objetivo y Real: detección por nombre (fallbacks con índices CORRECTOS)
+            // En este layout: [24]=Rendimiento Real, [25]=Rendimiento Objetivo
+            colYKey = findColumn(headers, 'rendimiento objetivo')
+                || findColumn(headers, 'objetivo')
+                || (rawHeaders[25] && _norm(rawHeaders[25]).includes('objetivo') ? rawHeaders[25] : '')
+                || (rawHeaders[24] && _norm(rawHeaders[24]).includes('objetivo') ? rawHeaders[24] : '')
+                || 'Rendimiento Objetivo';
+            colZKey = findColumn(headers, 'rendimiento real')
+                || findColumn(headers, 'real')
+                || (rawHeaders[24] && _norm(rawHeaders[24]).includes('real') ? rawHeaders[24] : '')
+                || (rawHeaders[25] && _norm(rawHeaders[25]).includes('real') ? rawHeaders[25] : '')
+                || 'Rendimiento Real';
+
+            recorridoKey = findColumn(headers, 'recorrido', 'kilometraje', 'km total', 'distancia total') || 'Recorrido';
+            // Preferir "recorrido" exacto sobre "recorrido promedio"
+            const recExact = headers.find(h => _norm(h) === 'recorrido');
+            if (recExact) recorridoKey = recExact;
+
+            perdidaKey = findColumn(headers, 'perdida economica', 'pérdida economica', 'perdida', 'pérdida') || 'Perdida economica';
+            regionalKey = findColumn(headers, 'regional', 'region') || 'Regional';
+            vehiculoKey = findColumn(headers, 'tipo de vehiculo') || findColumn(headers, 'tipo vehiculo') || 'Tipo de Vehiculo';
+            cumplimientoKey = findColumn(headers, 'cumplimiento') || 'Cumplimiento';
+
+            // Fecha: preferir "Fecha" exacta, NO "Fecha Val"
+            fechaKey = headers.find(h => _norm(h) === 'fecha')
+                || headers.find(h => _norm(h) === 'fecha ' || (_norm(h).startsWith('fecha') && !_norm(h).includes('val') && !_norm(h).includes('carga')))
+                || findColumn(headers, 'fecha')
+                || 'Fecha';
+
+            operadorKey = findColumn(headers, 'nombre de operador') || findColumn(headers, 'operador') || 'Nombre de operador';
+
+            // Actualizar encabezados de tabla
+            const thColC = document.getElementById('th-col-c');
+            if (thColC) thColC.textContent = rutasKey || 'Económico';
+            const thC = document.getElementById('th-rendimiento-c');
+            if (thC) thC.textContent = rutasKey || 'Económico';
             if (colYKey) {
                 const thY = document.getElementById('th-rendimiento-y');
                 if (thY) thY.textContent = colYKey;
@@ -795,14 +1500,47 @@ function handleFile(file) {
                 if (thZ) thZ.textContent = colZKey;
             }
 
-            rawData = XLSX.utils.sheet_to_json(worksheet, { defval: '', raw: false });
-        } else {
-            rawData = [];
-        }
+            // Cargar datos y limpiar celdas basura (#N/A, 0x2a, etc.)
+            let parsed = XLSX.utils.sheet_to_json(worksheet, { defval: '', raw: false });
+            rawData = parsed.map(row => {
+                const clean = {};
+                Object.keys(row).forEach(k => {
+                    if (!k || String(k).trim() === '') return; // descartar columna vacía
+                    clean[k] = cleanCellValue(row[k]);
+                });
+                return clean;
+            }).filter(row => {
+                // Descartar filas totalmente vacías o de totales
+                const firstVals = Object.values(row).slice(0, 3).map(v => String(v).toLowerCase().trim());
+                if (firstVals.some(v => v === 'total' || v === 'total general')) return false;
+                return Object.values(row).some(v => v !== '' && v !== null && v !== undefined);
+            });
 
-        document.getElementById('dashboard-container').classList.remove('hidden');
-        fileInput.value = '';
-        initializeDashboard();
+            // Banner histórico (siempre visible con este tipo de cortes)
+            const isHist = detectHistoricalFile(file.name, headers, rawData);
+            showHistoricalBanner(file.name, isHist);
+
+            document.getElementById('dashboard-container').classList.remove('hidden');
+            fileInput.value = '';
+            pageRendimientoXRuta = 1;
+            initializeDashboard();
+
+            if (typeof window.refreshGasolinaNotifications === 'function') {
+                window.refreshGasolinaNotifications();
+            }
+        } catch (err) {
+            console.error('Error al procesar el archivo Excel:', err);
+            const isXlsb = lowerName.endsWith('.xlsb');
+            alert(
+                (isXlsb
+                    ? 'Error al procesar el .xlsb. Prueba guardar el archivo como .xlsx en Excel y volver a cargarlo.\n\n'
+                    : 'Ocurrió un error al procesar el archivo Excel:\n\n')
+                + (err && err.message ? err.message : err)
+            );
+            fileInput.value = '';
+            document.getElementById('file-name').textContent = 'Cargar Excel';
+            showHistoricalBanner('', false);
+        }
     };
     reader.readAsArrayBuffer(file);
 }
@@ -810,112 +1548,31 @@ function handleFile(file) {
 function initializeDashboard() {
     filteredData = [...rawData];
     currentPage = 1;
-    allAvailableRutas = [...new Set(rawData.map(row => row[rutasKey]).filter(Boolean))];
-    selectedRutas = new Set(allAvailableRutas);
-    document.getElementById('filter-regional').value = '';
-    document.getElementById('filter-plaza').value = '';
-    document.getElementById('filter-vehiculo').value = '';
-    document.getElementById('filter-cumplimiento').value = '';
+
+    Object.keys(FILTER_CONFIGS).forEach(key => {
+        const getter = FILTER_CONFIGS[key].getValue;
+        // Incluye valores vacíos como '' para poder filtrarlos explícitamente
+        const uniqueVals = [...new Set(rawData.map(getter))].sort(_sortWithEmptyLast);
+        filterState[key].all = uniqueVals;
+        filterState[key].selected = new Set(uniqueVals);
+    });
+
     document.getElementById('table-search').value = '';
-    updateFilterOptions(rawData);
+    handleSearchResetVisibility(document.getElementById('table-search'));
+    const pageSizeEl = document.getElementById('page-size-select');
+    if (pageSizeEl) { pageSizeEl.value = '10'; rowsPerPage = 10; }
+
+    updateFilterButtonsUI();
     updateDashboard();
+    updateFloatingPlazaButton();
     updateFloatingClearFiltersButton();
-}
 
-function updateFilterOptions(currentDataset) {
-    const regVal = document.getElementById('filter-regional').value;
-    const plazaVal = document.getElementById('filter-plaza').value;
-    const vehiculoVal = document.getElementById('filter-vehiculo').value;
-    const cumplimientoVal = document.getElementById('filter-cumplimiento').value;
-    const getUnique = (keySelector) => [...new Set(currentDataset.map(keySelector).filter(Boolean))].sort();
-    const regionales = getUnique(row => row['Regional']);
-    const plazas = getUnique(row => row[plazaKey]);
-    const vehiculos = getUnique(row => row['Tipo de Vehiculo'] || row['Vehiculo']);
-    const cumplimientos = getUnique(row => row['Cumplimiento']);
-    populateSelect('filter-regional', regionales, regVal);
-    populateSelect('filter-plaza', plazas, plazaVal);
-    populateRutasCheckboxes(currentDataset);
-    populateSelect('filter-vehiculo', vehiculos, vehiculoVal);
-    populateSelect('filter-cumplimiento', cumplimientos, cumplimientoVal);
-}
-
-function populateSelect(id, items, currentValue) {
-    const select = document.getElementById(id);
-    const defaultText = select.options[0].text;
-    select.innerHTML = `<option value="">${defaultText}</option>`;
-    items.forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item;
-        opt.textContent = item;
-        if (item === currentValue) opt.selected = true;
-        select.appendChild(opt);
-    });
-}
-
-function populateRutasCheckboxes(currentDataset) {
-    const container = document.getElementById('rutas-checkboxes-container');
-    const uniqueRutas = [...new Set(currentDataset.map(row => row[rutasKey]).filter(Boolean))].sort();
-    if (uniqueRutas.length === 0) {
-        container.innerHTML = `<div class="text-xs text-slate-400">No hay rutas disponibles</div>`;
-        return;
+    // Disparo explícito de notificaciones (por si el MutationObserver no detecta cambios
+    // al cargar un segundo archivo con el dashboard ya visible)
+    if (typeof window.refreshGasolinaNotifications === 'function') {
+        window.refreshGasolinaNotifications();
     }
-    container.innerHTML = '';
-    uniqueRutas.forEach(ruta => {
-        const label = document.createElement('label');
-        label.className = 'flex items-center space-x-2 text-xs py-1 px-1 hover:bg-slate-50 rounded cursor-pointer';
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.value = ruta;
-        checkbox.checked = selectedRutas.has(ruta);
-        checkbox.className = 'rounded border-slate-300 text-[#DA291C] focus:ring-[#DA291C]';
-        checkbox.addEventListener('change', () => {
-            if (checkbox.checked) selectedRutas.add(ruta);
-            else selectedRutas.delete(ruta);
-            updateRutasHeaderText();
-            applyFilters();
-        });
-        const span = document.createElement('span');
-        span.textContent = ruta;
-        span.className = 'text-slate-700 truncate';
-        label.appendChild(checkbox);
-        label.appendChild(span);
-        container.appendChild(label);
-    });
-    updateRutasHeaderText();
 }
-
-function updateRutasHeaderText() {
-    const checkboxes = document.querySelectorAll('#rutas-checkboxes-container input[type="checkbox"]');
-    const totalRutasCount = checkboxes.length;
-    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
-    const headerText = document.getElementById('rutas-header-text');
-    if (checkedCount === 0) headerText.textContent = 'Rutas (Ninguna)';
-    else if (checkedCount === totalRutasCount) headerText.textContent = 'Rutas (Todas)';
-    else headerText.textContent = `Rutas (${checkedCount} sel.)`;
-}
-
-document.getElementById('rutas-select-all').addEventListener('click', () => {
-    document.querySelectorAll('#rutas-checkboxes-container input[type="checkbox"]').forEach(cb => {
-        cb.checked = true;
-        selectedRutas.add(cb.value);
-    });
-    updateRutasHeaderText();
-    applyFilters();
-});
-
-document.getElementById('rutas-clear-all').addEventListener('click', () => {
-    selectedRutas.clear();
-    document.querySelectorAll('#rutas-checkboxes-container input[type="checkbox"]').forEach(cb => {
-        cb.checked = false;
-    });
-    updateRutasHeaderText();
-    applyFilters();
-});
-
-document.getElementById('filter-regional').addEventListener('change', () => { currentPage = 1; applyFilters(); });
-document.getElementById('filter-plaza').addEventListener('change', () => { currentPage = 1; applyFilters(); });
-document.getElementById('filter-vehiculo').addEventListener('change', () => { currentPage = 1; applyFilters(); });
-document.getElementById('filter-cumplimiento').addEventListener('change', () => { currentPage = 1; applyFilters(); });
 
 document.getElementById('table-search').addEventListener('input', debounce(() => {
     currentPage = 1;
@@ -923,81 +1580,34 @@ document.getElementById('table-search').addEventListener('input', debounce(() =>
 }, 300));
 
 function applyFilters() {
-    const regVal = document.getElementById('filter-regional').value;
-    const plazaVal = document.getElementById('filter-plaza').value;
-    const vehiculoVal = document.getElementById('filter-vehiculo').value;
-    const cumplimientoVal = document.getElementById('filter-cumplimiento').value;
     const searchTerm = document.getElementById('table-search').value.toLowerCase();
 
     const doFilter = () => {
         filteredData = rawData.filter(row => {
-            const r = row['Regional'] || '';
-            const p = row[plazaKey] || '';
-            const rt = row[rutasKey] || '';
-            const v = row['Tipo de Vehiculo'] || row['Vehiculo'] || '';
-            const c = row['Cumplimiento'] || '';
-            const matchesRuta = selectedRutas.has(rt);
-            const matchesFilters = (!regVal || r === regVal) && (!plazaVal || p === plazaVal) && matchesRuta && (!vehiculoVal || v === vehiculoVal) && (!cumplimientoVal || c === cumplimientoVal);
-            if (!matchesFilters) return false;
+            for (const key of Object.keys(FILTER_CONFIGS)) {
+                const st = filterState[key];
+                if (st.all.length > 0) {
+                    const val = FILTER_CONFIGS[key].getValue(row);
+                    if (!st.selected.has(val)) return false;
+                }
+            }
             if (searchTerm) {
                 const rowString = Object.values(row).join(' ').toLowerCase();
                 return rowString.includes(searchTerm);
             }
             return true;
         });
-        updateCascadingOptions(regVal, plazaVal, vehiculoVal, cumplimientoVal);
+
+        currentPage = 1;
+        pageRendimientoXRuta = 1;
+        updateFilterButtonsUI();
         updateDashboard();
+        updateFloatingPlazaButton();
         updateFloatingClearFiltersButton();
     };
 
     if (document.startViewTransition) document.startViewTransition(doFilter);
     else doFilter();
-}
-
-function updateCascadingOptions(reg, plaza, vehiculo, cump) {
-    const todasLasRutasSeleccionadas =
-        (allAvailableRutas.length === 0) ||
-        (selectedRutas.size === allAvailableRutas.length);
-
-    const filterByOthers = (excludeField) => {
-        return rawData.filter(row => {
-            const r = row['Regional'] || '';
-            const p = row[plazaKey] || '';
-            const rt = row[rutasKey] || '';
-            const v = row['Tipo de Vehiculo'] || row['Vehiculo'] || '';
-            const c = row['Cumplimiento'] || '';
-            if (excludeField !== 'reg' && reg && r !== reg) return false;
-            if (excludeField !== 'plaza' && plaza && p !== plaza) return false;
-
-            if (excludeField === 'plaza' && todasLasRutasSeleccionadas) {
-                // sin filtro de rutas para el dropdown de plaza
-            } else {
-                if (excludeField !== 'rutas' && selectedRutas.size > 0 && !selectedRutas.has(rt)) return false;
-            }
-
-            if (excludeField !== 'vehiculo' && vehiculo && v !== vehiculo) return false;
-            if (excludeField !== 'cump' && cump && c !== cump) return false;
-            return true;
-        });
-    };
-
-    const getUniqueFromSub = (subData, selectorFn) =>
-        [...new Set(subData.map(selectorFn).filter(Boolean))].sort();
-
-    const subReg = filterByOthers('reg');
-    populateSelect('filter-regional', getUniqueFromSub(subReg, r => r['Regional']), reg);
-
-    const subPlaza = filterByOthers('plaza');
-    populateSelect('filter-plaza', getUniqueFromSub(subPlaza, r => r[plazaKey]), plaza);
-
-    const subRutasData = filterByOthers('rutas');
-    populateRutasCheckboxes(subRutasData);
-
-    const subVeh = filterByOthers('vehiculo');
-    populateSelect('filter-vehiculo', getUniqueFromSub(subVeh, r => r['Tipo de Vehiculo'] || r['Vehiculo']), vehiculo);
-
-    const subCump = filterByOthers('cump');
-    populateSelect('filter-cumplimiento', getUniqueFromSub(subCump, r => r['Cumplimiento']), cump);
 }
 
 function updateDashboard() {
@@ -1007,11 +1617,14 @@ function updateDashboard() {
     updateTable();
 }
 
-function animateNumber(el, to, duration = 800) {
+let kpiAnimToken = 0;
+
+function animateNumber(el, to, duration, token) {
     if (!el) return;
     const from = 0;
     const start = performance.now();
     const step = (now) => {
+        if (token !== kpiAnimToken) return;
         const p = Math.min((now - start) / duration, 1);
         const eased = 1 - Math.pow(1 - p, 3);
         el.textContent = Math.floor(from + (to - from) * eased).toLocaleString();
@@ -1021,23 +1634,21 @@ function animateNumber(el, to, duration = 800) {
 }
 
 function updateKPIs() {
+    const myToken = ++kpiAnimToken;
     let totalRecorrido = 0, totalPerdida = 0;
     let sumRendReal = 0, countRendReal = 0;
     let sumRendObj = 0, countRendObj = 0;
-    let skippedRecorrido = 0, skippedPerdida = 0;
 
     filteredData.forEach(row => {
-        const recVal = parseNumero(row[recorridoKey]);
-        const perdVal = parseNumero(row[perdidaKey]);
-        if (recVal === 0 && row[recorridoKey] !== '' && row[recorridoKey] !== null) skippedRecorrido++;
-        if (perdVal === 0 && row[perdidaKey] !== '' && row[perdidaKey] !== null) skippedPerdida++;
+        const recVal = Math.abs(parseNumero(row[recorridoKey]));
+        const perdVal = Math.abs(parseNumero(row[perdidaKey]));
         totalRecorrido += recVal;
         totalPerdida += perdVal;
 
-        const rendReal = parseNumero(row[colZKey]);
+        const rendReal = Math.abs(parseNumero(row[colZKey]));
         if (rendReal > 0) { sumRendReal += rendReal; countRendReal++; }
 
-        const rendObj = parseNumero(row[colYKey]);
+        const rendObj = Math.abs(parseNumero(row[colYKey]));
         if (rendObj > 0) { sumRendObj += rendObj; countRendObj++; }
     });
 
@@ -1046,33 +1657,46 @@ function updateKPIs() {
 
     const elObj = document.getElementById('kpi-rendimiento-objetivo');
     elObj.textContent = '0.00 Km/L';
-    setTimeout(() => { elObj.textContent = rendObjAvg.toFixed(2) + ' Km/L'; }, 100);
+    setTimeout(() => {
+        if (myToken !== kpiAnimToken) return;
+        elObj.textContent = Math.abs(rendObjAvg).toFixed(2) + ' Km/L';
+    }, 100);
 
     const elRec = document.getElementById('kpi-recorrido');
     elRec.textContent = '0 Km';
-    animateNumber(elRec, Math.round(totalRecorrido), 800);
-    setTimeout(() => { elRec.textContent = totalRecorrido.toLocaleString('es-MX', {maximumFractionDigits: 0}) + ' Km'; }, 850);
+    animateNumber(elRec, Math.round(Math.abs(totalRecorrido)), 800, myToken);
+    setTimeout(() => {
+        if (myToken !== kpiAnimToken) return;
+        elRec.textContent = Math.abs(totalRecorrido).toLocaleString('es-MX', {maximumFractionDigits: 0}) + ' Km';
+    }, 850);
 
     const elPerd = document.getElementById('kpi-perdida');
     elPerd.textContent = '$0.00';
-    setTimeout(() => { elPerd.textContent = '$' + totalPerdida.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }, 100);
+    setTimeout(() => {
+        if (myToken !== kpiAnimToken) return;
+        elPerd.textContent = '$' + Math.abs(totalPerdida).toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }, 100);
 
     const elReal = document.getElementById('kpi-rendimiento-real');
     elReal.textContent = '0.00 Km/L';
-    setTimeout(() => { elReal.textContent = rendRealAvg.toFixed(2) + ' Km/L'; }, 100);
+    setTimeout(() => {
+        if (myToken !== kpiAnimToken) return;
+        elReal.textContent = Math.abs(rendRealAvg).toFixed(2) + ' Km/L';
+    }, 100);
 
-    if (totalPerdida > 10000) elPerd.classList.add('critical-pulse');
+    if (Math.abs(totalPerdida) > 10000) elPerd.classList.add('critical-pulse');
     else elPerd.classList.remove('critical-pulse');
 
     setTimeout(() => {
+        if (myToken !== kpiAnimToken) return;
         const barObj = document.getElementById('bar-rend-obj');
-        if (barObj) barObj.style.width = Math.min(rendObjAvg * 10, 100) + '%';
+        if (barObj) barObj.style.width = Math.min(Math.abs(rendObjAvg) * 10, 100) + '%';
         const barRec = document.getElementById('bar-recorrido');
-        if (barRec) barRec.style.width = '100%';
+        if (barRec) barRec.style.width = Math.abs(totalRecorrido) > 0 ? '100%' : '0%';
         const barPerd = document.getElementById('bar-perdida');
-        if (barPerd) barPerd.style.width = Math.min((totalPerdida / 10000) * 100, 100) + '%';
+        if (barPerd) barPerd.style.width = Math.min((Math.abs(totalPerdida) / 10000) * 100, 100) + '%';
         const barReal = document.getElementById('bar-rend-real');
-        if (barReal) barReal.style.width = Math.min(rendRealAvg * 10, 100) + '%';
+        if (barReal) barReal.style.width = Math.min(Math.abs(rendRealAvg) * 10, 100) + '%';
     }, 200);
 }
 
@@ -1081,41 +1705,66 @@ function updateCharts() {
     if (chartsRenderTimer) clearTimeout(chartsRenderTimer);
     chartsRenderTimer = setTimeout(() => {
         Object.values(charts).forEach(chart => chart.destroy());
-        const chartLabels = [];
-        const valuesZ = [];
-        const valuesY = [];
-        const ruta2Data = filteredData.filter(row => {
-            const rt = String(row[rutasKey] || '').toLowerCase();
-            return rt.includes('ruta 2') || rt === '2' || rt.includes('2');
+        
+        const isDark = document.body.classList.contains('dark-mode');
+        const textColor = isDark ? '#cbd5e1' : '#475569';
+        const gridColor = isDark ? '#334155' : '#e2e8f0';
+
+        // Agregar por Plaza (promedio de Rend. Real y Objetivo) — evita 1000+ barras
+        const plazaAgg = {};
+        filteredData.forEach(row => {
+            const label = String(row[plazaKey] || row[regionalKey] || 'N/D').trim() || 'N/D';
+            if (!plazaAgg[label]) plazaAgg[label] = { sumZ: 0, sumY: 0, count: 0 };
+            plazaAgg[label].sumZ += parseNumero(row[colZKey]);
+            plazaAgg[label].sumY += parseNumero(row[colYKey]);
+            plazaAgg[label].count += 1;
         });
-        const targetRegionalData = ruta2Data.length > 0 ? ruta2Data : filteredData;
-        targetRegionalData.forEach(row => {
-            const label = row[plazaKey] || row['Regional'] || 'N/D';
-            chartLabels.push(label);
-            valuesZ.push(parseNumero(row[colZKey]));
-            valuesY.push(parseNumero(row[colYKey]));
-        });
+        const chartLabels = Object.keys(plazaAgg).sort((a, b) => a.localeCompare(b, 'es'));
+        const valuesZ = chartLabels.map(l => plazaAgg[l].count ? +(plazaAgg[l].sumZ / plazaAgg[l].count).toFixed(2) : 0);
+        const valuesY = chartLabels.map(l => plazaAgg[l].count ? +(plazaAgg[l].sumY / plazaAgg[l].count).toFixed(2) : 0);
+
+        if (charts.regional) { try { charts.regional.destroy(); } catch (e) {} charts.regional = null; }
         charts.regional = new Chart(document.getElementById('chartRegional'), {
             type: 'bar',
             data: {
                 labels: chartLabels,
                 datasets: [
-                    { label: colZKey || 'Rend. Real', data: valuesZ, backgroundColor: '#DA291C', borderRadius: 4 },
-                    { label: colYKey || 'Rend. Objetivo', data: valuesY, backgroundColor: '#1e293b', borderRadius: 4 }
+                    { label: (colZKey || 'Rend. Real') + ' (prom.)', data: valuesZ, backgroundColor: '#DA291C', borderRadius: 4 },
+                    { label: (colYKey || 'Rend. Objetivo') + ' (prom.)', data: valuesY, backgroundColor: isDark ? '#64748b' : '#1e293b', borderRadius: 4 }
                 ]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
+                animation: { duration: 350 },
                 plugins: {
-                    legend: { display: true, position: 'top' },
-                    tooltip: { callbacks: { title: function(tooltipItems) { return `Plaza: ${tooltipItems[0].label}`; } } }
+                    legend: {
+                        display: true, position: 'top',
+                        labels: { color: textColor }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) { return `Plaza: ${tooltipItems[0].label}`; },
+                            afterBody: function(tooltipItems) {
+                                const lbl = tooltipItems[0]?.label;
+                                const n = plazaAgg[lbl]?.count || 0;
+                                return `Registros: ${n}`;
+                            }
+                        },
+                        titleColor: isDark ? '#f8fafc' : '#1e293b',
+                        bodyColor: isDark ? '#cbd5e1' : '#475569'
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                    y: { ticks: { color: textColor }, grid: { color: gridColor }, beginAtZero: true }
                 }
             }
         });
+        
         const cumplimientoData = {};
         filteredData.forEach(row => {
-            let c = row['Cumplimiento'] || 'N/D';
-            const cUpper = c.toUpperCase();
+            let c = row[cumplimientoKey] || 'N/D';
+            const cUpper = String(c).toUpperCase();
             if (cUpper === 'CUMPLE') c = 'Cumple';
             else if (cUpper === 'MALA CAPTURA') c = 'Mala Captura';
             else if (cUpper === 'NO CUMPLE' || cUpper === 'NO-CUMPLE') c = 'No Cumple';
@@ -1128,6 +1777,8 @@ function updateCharts() {
             if (l.includes('no')) return '#ef4444';
             return '#10b981';
         });
+        
+        if (charts.cumplimiento) { try { charts.cumplimiento.destroy(); } catch (e) {} charts.cumplimiento = null; }
         charts.cumplimiento = new Chart(document.getElementById('chartCumplimiento'), {
             type: 'pie',
             data: {
@@ -1136,10 +1787,25 @@ function updateCharts() {
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
+                animation: { duration: 350 },
+                plugins: {
+                    legend: {
+                        labels: { color: textColor }
+                    },
+                    tooltip: {
+                        titleColor: isDark ? '#f8fafc' : '#1e293b',
+                        bodyColor: isDark ? '#cbd5e1' : '#475569'
+                    }
+                },
                 onClick: (e, elements) => {
                     if (elements.length) {
-                        document.getElementById('filter-cumplimiento').value = labelsCumplimiento[elements[0].index];
-                        applyFilters();
+                        const clickedLabel = labelsCumplimiento[elements[0].index];
+                        const matching = filterState.cumplimiento.all.filter(v => _norm(v) === _norm(clickedLabel));
+                        if (matching.length > 0) {
+                            filterState.cumplimiento.selected = new Set(matching);
+                            currentPage = 1;
+                            applyFilters();
+                        }
                     }
                 }
             }
@@ -1149,29 +1815,39 @@ function updateCharts() {
 
 function updateRendimientoXRutaTable() {
     const tbody = document.getElementById('tbody-rendimiento-x-ruta');
+    const pagContainer = document.getElementById('pagination-rendimiento-x-ruta');
     if (!tbody) return;
     tbody.innerHTML = '';
     if (filteredData.length === 0) {
         tbody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-slate-400">No hay registros coincidentes</td></tr>`;
         const counterBadge = document.getElementById('contador-rendimiento-ruta');
         if (counterBadge) counterBadge.textContent = '0 registros';
+        if (pagContainer) pagContainer.innerHTML = '';
         return;
     }
     let dataToDisplay = [...filteredData];
     const sortVal = document.getElementById('sort-rendimiento-real')?.value;
     if (sortVal) {
         dataToDisplay.sort((a, b) => {
-            const valA = parseNumero(a['Rendimiento Real']);
-            const valB = parseNumero(b['Rendimiento Real']);
+            const valA = parseNumero(a[colZKey]);
+            const valB = parseNumero(b[colZKey]);
             if (sortVal === 'desc') return valB - valA;
             else if (sortVal === 'asc') return valA - valB;
             return 0;
         });
     }
-    dataToDisplay.forEach((row, i) => {
+
+    const totalRecords = dataToDisplay.length;
+    const totalPages = Math.ceil(totalRecords / rowsPerPageRendimiento) || 1;
+    if (pageRendimientoXRuta > totalPages) pageRendimientoXRuta = totalPages;
+    if (pageRendimientoXRuta < 1) pageRendimientoXRuta = 1;
+    const startIndex = (pageRendimientoXRuta - 1) * rowsPerPageRendimiento;
+    const pageItems = dataToDisplay.slice(startIndex, startIndex + rowsPerPageRendimiento);
+
+    pageItems.forEach((row, i) => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition card-enter';
-        tr.style.animationDelay = (i * 25) + 'ms';
+        tr.style.animationDelay = (i * 15) + 'ms';
         tr.innerHTML = `
             <td class="px-3 py-2 font-medium">${esc(row[rutasKey] || '')}</td>
             <td class="px-3 py-2 font-semibold text-estafetaDark">${parseNumero(row[colYKey]).toFixed(2)}</td>
@@ -1179,10 +1855,32 @@ function updateRendimientoXRutaTable() {
         `;
         tbody.appendChild(tr);
     });
+
     const counterBadge = document.getElementById('contador-rendimiento-ruta');
     if (counterBadge) {
-        counterBadge.textContent = `${dataToDisplay.length} registro${dataToDisplay.length === 1 ? '' : 's'}`;
+        const from = totalRecords ? startIndex + 1 : 0;
+        const to = Math.min(startIndex + rowsPerPageRendimiento, totalRecords);
+        counterBadge.textContent = `${from}-${to} de ${totalRecords} registro${totalRecords === 1 ? '' : 's'}`;
     }
+
+    if (pagContainer) {
+        if (totalPages <= 1) {
+            pagContainer.innerHTML = '';
+        } else {
+            pagContainer.innerHTML = `
+                <button type="button" onclick="changePageRendimientoXRuta(-1)" ${pageRendimientoXRuta <= 1 ? 'disabled' : ''}
+                    class="px-2 py-0.5 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-[11px]">Ant</button>
+                <span class="px-1 font-medium text-[11px]">${pageRendimientoXRuta}/${totalPages}</span>
+                <button type="button" onclick="changePageRendimientoXRuta(1)" ${pageRendimientoXRuta >= totalPages ? 'disabled' : ''}
+                    class="px-2 py-0.5 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-[11px]">Sig</button>
+            `;
+        }
+    }
+}
+
+function changePageRendimientoXRuta(dir) {
+    pageRendimientoXRuta += dir;
+    updateRendimientoXRutaTable();
 }
 
 function updateTable() {
@@ -1195,8 +1893,8 @@ function updateTable() {
     const startIndex = (currentPage - 1) * rowsPerPage;
     const endIndex = startIndex + rowsPerPage;
     const pageItems = filteredData.slice(startIndex, endIndex);
-    let renderCount = pageItems.length;
-    if (renderCount < minRows) renderCount = minRows;
+    // Rellenar hasta el tamaño de página para mantener altura consistente
+    const renderCount = Math.max(pageItems.length, rowsPerPage);
     for (let i = 0; i < renderCount; i++) {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition';
@@ -1204,26 +1902,26 @@ function updateTable() {
             tr.classList.add('card-enter');
             tr.style.animationDelay = (i * 20) + 'ms';
             const row = pageItems[i];
-            let rawCump = row['Cumplimiento'] || 'N/D';
+            let rawCump = row[cumplimientoKey] || 'N/D';
             let displayCump = rawCump;
-            let badgeClass = 'bg-emerald-100 text-emerald-800';
-            const rawCumpUpper = rawCump.toUpperCase();
-            if (rawCumpUpper === 'CUMPLE') { displayCump = 'Cumple'; badgeClass = 'bg-emerald-100 text-emerald-800'; }
-            else if (rawCumpUpper === 'MALA CAPTURA') { displayCump = 'Mala Captura'; badgeClass = 'bg-slate-900 text-white'; }
-            else if (rawCumpUpper === 'NO CUMPLE' || rawCumpUpper === 'NO-CUMPLE') { displayCump = 'No Cumple'; badgeClass = 'bg-red-100 text-red-800'; }
-            else if (rawCump.toLowerCase().includes('mala')) { displayCump = 'Mala Captura'; badgeClass = 'bg-slate-900 text-white'; }
-            else if (rawCump.toLowerCase().includes('no')) { badgeClass = 'bg-red-100 text-red-800'; }
+            let badgeClass = 'bg-emerald-100 text-emerald-800 pulse-cumple';
+            const rawCumpUpper = String(rawCump).toUpperCase();
+            if (rawCumpUpper === 'CUMPLE') { displayCump = 'Cumple'; badgeClass = 'bg-emerald-100 text-emerald-800 pulse-cumple'; }
+            else if (rawCumpUpper === 'MALA CAPTURA') { displayCump = 'Mala Captura'; badgeClass = 'bg-slate-900 text-white pulse-malacaptura'; }
+            else if (rawCumpUpper === 'NO CUMPLE' || rawCumpUpper === 'NO-CUMPLE') { displayCump = 'No Cumple'; badgeClass = 'bg-red-100 text-red-800 pulse-nocumple'; }
+            else if (String(rawCump).toLowerCase().includes('mala')) { displayCump = 'Mala Captura'; badgeClass = 'bg-slate-900 text-white pulse-malacaptura'; }
+            else if (String(rawCump).toLowerCase().includes('no')) { badgeClass = 'bg-red-100 text-red-800 pulse-nocumple'; }
             tr.innerHTML = `
-                <td class="px-3 py-2.5">${esc(row['Fecha'] || '')}</td>
+                <td class="px-3 py-2.5">${esc(row[fechaKey] || '')}</td>
                 <td class="px-3 py-2.5 font-medium">${esc(row[rutasKey] || '')}</td>
-                <td class="px-3 py-2.5">${esc(row['Regional'] || '')}</td>
+                <td class="px-3 py-2.5">${esc(row[regionalKey] || '')}</td>
                 <td class="px-3 py-2.5 font-semibold text-estafetaDark">${esc(row[plazaKey] || '')}</td>
-                <td class="px-3 py-2.5">${esc(row['Tipo de Vehiculo'] || row['Vehiculo'] || '')}</td>
+                <td class="px-3 py-2.5">${esc(row[vehiculoKey] || '')}</td>
                 <td class="px-3 py-2.5 font-semibold text-[#DA291C]">${parseNumero(row[colWKey]).toLocaleString('es-MX')} L</td>
                 <td class="px-3 py-2.5">${parseNumero(row[colYKey]).toFixed(2)}</td>
                 <td class="px-3 py-2.5">${parseNumero(row[colZKey]).toFixed(2)}</td>
                 <td class="px-3 py-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">${esc(displayCump)}</span></td>
-                <td class="px-3 py-2.5 truncate max-w-[120px]">${esc(row['Nombre de operador'] || '')}</td>
+                <td class="px-3 py-2.5 truncate max-w-[120px]">${esc(row[operadorKey] || '')}</td>
             `;
         } else {
             tr.innerHTML = `<td colspan="10" class="px-3 py-2.5 text-transparent select-none">&nbsp;</td>`;
@@ -1259,34 +1957,17 @@ function renderPaginationControls(totalPages) {
     container.appendChild(next);
 }
 
-document.getElementById('export-csv').addEventListener('click', () => {
+function downloadFilteredExcel() {
     if (!filteredData.length) return alert('No hay datos para exportar');
     const worksheet = XLSX.utils.json_to_sheet(filteredData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Rendimiento Filtrado");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Detalle");
     XLSX.writeFile(workbook, "Reporte_Rendimiento_Estafeta.xlsx");
-});
-
-/* ============================================================
-   EFECTOS VISUALES
-   ============================================================ */
-function initRipple() {
-    document.body.addEventListener('click', (e) => {
-        const btn = e.target.closest('button, .multiselect-header, [onclick], #drop-zone');
-        if (!btn || btn.disabled) return;
-        if (!btn.classList.contains('ripple-host')) btn.classList.add('ripple-host');
-        const rect = btn.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        const ripple = document.createElement('span');
-        ripple.className = 'ripple-effect';
-        ripple.style.width = ripple.style.height = size + 'px';
-        ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
-        ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
-        btn.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 650);
-    }, true);
 }
 
+/* ============================================================
+   EFECTOS VISUALES (Tilt para KPI, sin Ripple)
+   ============================================================ */
 function applyTiltToKPI() {
     if (window.matchMedia('(pointer: coarse)').matches) return;
     document.querySelectorAll('#dashboard-container .border-l-4').forEach(card => {
@@ -1309,10 +1990,14 @@ function aplicarTema(tema) {
     const icon = document.getElementById('theme-toggle-icon');
     if (tema === 'dark') {
         document.body.classList.add('dark-mode');
-        if (icon) icon.className = 'fa-solid fa-sun';
+        if (icon) icon.className = 'fa-solid fa-sun text-amber-400';
     } else {
         document.body.classList.remove('dark-mode');
-        if (icon) icon.className = 'fa-solid fa-moon';
+        if (icon) icon.className = 'fa-solid fa-moon text-white';
+    }
+    // Re-renderizar gráficos para aplicar los colores del tema
+    if (rawData.length > 0) {
+        updateCharts();
     }
 }
 
@@ -1356,7 +2041,6 @@ function initTemaConBoton() {
    ORQUESTADOR
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-    initRipple();
     initTemaConBoton();
     const dash = document.getElementById('dashboard-container');
     if (dash) {
@@ -1370,6 +2054,241 @@ document.addEventListener('DOMContentLoaded', () => {
         obs.observe(dash, { attributes: true, attributeFilter: ['class'] });
     }
 });
+
+/* ============================================================
+   MODAL UNIFICADO PARA TODOS LOS FILTROS
+   ============================================================ */
+function updateFloatingPlazaButton() {
+    const wrapper = document.getElementById('floating-plaza-btn');
+    const btnText = document.getElementById('plaza-modal-btn-text');
+    const dash = document.getElementById('dashboard-container');
+    const hasData = rawData && rawData.length > 0 && dash && !dash.classList.contains('hidden');
+
+    if (!wrapper || !btnText) return;
+
+    if (!hasData) {
+        wrapper.classList.remove('float-btn-visible');
+        wrapper.classList.add('float-btn-hidden');
+        return;
+    }
+
+    wrapper.classList.remove('float-btn-hidden');
+    wrapper.classList.add('float-btn-visible');
+    btnText.textContent = 'Plazas';
+}
+
+function getAvailableItemsForFilter(filterKey) {
+    const baseAll = filterState[filterKey].all;
+    if (!rawData || rawData.length === 0) return baseAll;
+
+    const validSet = new Set();
+    rawData.forEach(row => {
+        for (const otherKey of Object.keys(FILTER_CONFIGS)) {
+            if (otherKey === filterKey) continue;
+            const st = filterState[otherKey];
+            if (st.all.length > 0 && st.selected.size < st.all.length) {
+                const otherVal = FILTER_CONFIGS[otherKey].getValue(row);
+                if (!st.selected.has(otherVal)) return;
+            }
+        }
+        const val = FILTER_CONFIGS[filterKey].getValue(row);
+        validSet.add(val);
+    });
+
+    filterState[filterKey].selected.forEach(v => validSet.add(v));
+    const sorted = Array.from(validSet).sort(_sortWithEmptyLast);
+    return sorted.length > 0 ? sorted : baseAll;
+}
+
+function updatePlazaModalCounter() {
+    const counter = document.getElementById('plaza-modal-selection-counter');
+    if (!counter) return;
+    const total = getAvailableItemsForFilter(currentModalFilterKey).length;
+    const plural = (currentModalFilterKey === 'ruta' || currentModalFilterKey === 'vehiculo') ? 'seleccionados' : 'seleccionadas';
+    counter.textContent = `${draftModalSelection.size} de ${total} ${plural}`;
+}
+
+function renderPlazaModalList(searchQuery = '') {
+    const listContainer = document.getElementById('plaza-checkboxes-list');
+    if (!listContainer) return;
+
+    const cfg = FILTER_CONFIGS[currentModalFilterKey];
+    const items = getAvailableItemsForFilter(currentModalFilterKey);
+    const q = _norm(searchQuery);
+    const matchingItems = items.filter(item => !q || _norm(item).includes(q));
+
+    if (items.length === 0) {
+        listContainer.innerHTML = `<div class="text-xs plaza-empty-msg py-4 text-center">No hay opciones en el archivo cargado.</div>`;
+        updatePlazaModalCounter();
+        return;
+    }
+
+    if (matchingItems.length === 0) {
+        listContainer.innerHTML = `<div class="text-xs plaza-empty-msg py-4 text-center">No se encontraron resultados con "${esc(searchQuery)}".</div>`;
+        updatePlazaModalCounter();
+        return;
+    }
+
+    const countsByItem = {};
+    rawData.forEach(row => {
+        for (const otherKey of Object.keys(FILTER_CONFIGS)) {
+            if (otherKey === currentModalFilterKey) continue;
+            const st = filterState[otherKey];
+            if (st.all.length > 0 && st.selected.size < st.all.length) {
+                const otherVal = FILTER_CONFIGS[otherKey].getValue(row);
+                if (!st.selected.has(otherVal)) return;
+            }
+        }
+        const v = cfg.getValue(row);
+        countsByItem[v] = (countsByItem[v] || 0) + 1;
+    });
+
+    listContainer.innerHTML = '';
+    matchingItems.forEach(item => {
+        const label = document.createElement('label');
+        label.className = 'plaza-option-label flex items-center justify-between gap-2 text-xs py-2 px-2.5 rounded-lg transition cursor-pointer select-none';
+
+        const left = document.createElement('div');
+        left.className = 'flex items-center gap-2.5 min-w-0';
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = item;
+        cb.checked = draftModalSelection.has(item);
+        cb.className = 'plaza-option-cb plaza-cb w-4 h-4 accent-red-600 rounded focus:ring-red-600 cursor-pointer flex-shrink-0';
+        cb.addEventListener('change', () => {
+            if (cb.checked) draftModalSelection.add(item);
+            else draftModalSelection.delete(item);
+            updatePlazaModalCounter();
+        });
+
+        const span = document.createElement('span');
+        span.textContent = item || '(Sin valor)';
+        span.className = 'plaza-option-text font-medium truncate';
+
+        left.appendChild(cb);
+        left.appendChild(span);
+
+        const badge = document.createElement('span');
+        badge.textContent = `${(countsByItem[item] || 0).toLocaleString('es-MX')}`;
+        badge.className = 'plaza-option-badge text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0';
+
+        label.appendChild(left);
+        label.appendChild(badge);
+        listContainer.appendChild(label);
+    });
+
+    updatePlazaModalCounter();
+}
+
+function filterPlazaModalList(val) {
+    const clearBtn = document.getElementById('btn-plaza-search-clear');
+    if (clearBtn) {
+        if (val && val.trim() !== '') clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+    }
+    renderPlazaModalList(val);
+}
+
+function clearPlazaModalSearch() {
+    const input = document.getElementById('plaza-modal-search');
+    if (input) input.value = '';
+    filterPlazaModalList('');
+}
+
+function selectAllPlazasInModal() {
+    const items = getAvailableItemsForFilter(currentModalFilterKey);
+    const q = _norm(document.getElementById('plaza-modal-search')?.value || '');
+    const targets = q ? items.filter(p => _norm(p).includes(q)) : items;
+    targets.forEach(p => draftModalSelection.add(p));
+    renderPlazaModalList(document.getElementById('plaza-modal-search')?.value || '');
+}
+
+function clearAllPlazasInModal() {
+    const items = getAvailableItemsForFilter(currentModalFilterKey);
+    const q = _norm(document.getElementById('plaza-modal-search')?.value || '');
+    if (!q) {
+        draftModalSelection.clear();
+    } else {
+        items.filter(p => _norm(p).includes(q)).forEach(p => draftModalSelection.delete(p));
+    }
+    renderPlazaModalList(document.getElementById('plaza-modal-search')?.value || '');
+}
+
+function openMultiFilterModal(filterKey) {
+    const modal = document.getElementById('plaza-modal');
+    if (!modal || !FILTER_CONFIGS[filterKey]) return;
+
+    currentModalFilterKey = filterKey;
+    const cfg = FILTER_CONFIGS[filterKey];
+
+    const titleEl = document.getElementById('multi-modal-title');
+    if (titleEl) titleEl.textContent = cfg.title;
+
+    const iconEl = document.getElementById('multi-modal-icon');
+    if (iconEl) iconEl.className = cfg.icon;
+
+    draftModalSelection = new Set(filterState[filterKey].selected);
+
+    const searchInput = document.getElementById('plaza-modal-search');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.placeholder = cfg.placeholder;
+    }
+
+    const clearBtn = document.getElementById('btn-plaza-search-clear');
+    if (clearBtn) clearBtn.classList.add('hidden');
+
+    renderPlazaModalList('');
+    modal.classList.remove('hidden');
+    modal.classList.add('modal-open');
+}
+
+function openPlazaModal() {
+    openMultiFilterModal('plaza');
+}
+
+function closePlazaModal() {
+    const modal = document.getElementById('plaza-modal');
+    if (!modal) return;
+    modal.classList.remove('modal-open');
+    modal.classList.add('hidden');
+}
+
+function handlePlazaBackdropClick(event) {
+    if (event.target && event.target.id === 'plaza-modal') {
+        closePlazaModal();
+    }
+}
+
+function applyPlazaModalSelection() {
+    filterState[currentModalFilterKey].selected = new Set(draftModalSelection);
+    updateFilterButtonsUI();
+    updateFloatingPlazaButton();
+    currentPage = 1;
+    applyFilters();
+    closePlazaModal();
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('plaza-modal');
+        if (modal && modal.classList.contains('modal-open')) {
+            closePlazaModal();
+        }
+    }
+});
+
+// Cerrar panel de notificaciones al hacer clic fuera
+document.addEventListener('click', (e) => {
+    const panel = document.getElementById('notif-panel');
+    const bell = document.getElementById('notif-bell');
+    if (!panel || !panel.classList.contains('show')) return;
+    if (panel.contains(e.target)) return;
+    if (bell && bell.contains(e.target)) return;
+    if (typeof window.closeNotifPanel === 'function') window.closeNotifPanel();
+});
+
     </script>
 
     <!-- ============================================================
@@ -1380,8 +2299,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'use strict';
 
         const CONFIG = {
-            dashboardId: 'carga-gasolina',
-            storageKey: 'notif_history_carga-gasolina',
+            dashboardId: 'desempeno-tr2',
+            storageKey: 'notif_history_desempeno-tr2',
             maxHistory: 50
         };
 
@@ -1534,6 +2453,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const fmtMoney = v => '$' + v.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             const perdKey = (typeof perdidaKey !== 'undefined' && perdidaKey) ? perdidaKey : 'Perdida economica';
+            const cumpleKey = (typeof cumplimientoKey !== 'undefined' && cumplimientoKey) ? cumplimientoKey : 'Cumplimiento';
             const pNum = (typeof parseNumero === 'function') ? parseNumero : (v => { const n = Number(v); return isNaN(n) ? 0 : n; });
 
             let totalPerdida = 0;
@@ -1553,7 +2473,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const cumplMap = { 'Cumple': 0, 'No Cumple': 0, 'Mala Captura': 0, 'Otro': 0 };
             data.forEach(r => {
-                const c = String(r['Cumplimiento'] || '').trim().toUpperCase();
+                const c = String(r[cumpleKey] || '').trim().toUpperCase();
                 if (c === 'CUMPLE') cumplMap['Cumple']++;
                 else if (c === 'NO CUMPLE' || c === 'NO-CUMPLE') cumplMap['No Cumple']++;
                 else if (c === 'MALA CAPTURA') cumplMap['Mala Captura']++;
@@ -1589,6 +2509,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(analyzeAndAlert, 800);
             }
         }
+
+        // Exponer forzado de análisis para llamar al cargar un nuevo archivo
+        window.refreshGasolinaNotifications = function() {
+            lastAnalyzed = -1;
+            tryAnalyze();
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             injectBell();
