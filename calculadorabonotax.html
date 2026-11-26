@@ -4,21 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora Operativa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            corePlugins: {
+                preflight: false
+            }
+        };
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --estafeta-red: #DA291C;
             --estafeta-dark: #212121;
-            --estafeta-gray: #F4F6F8;
+            --estafeta-gray: #FFFFFF;
             --table-header-39: #333333;
             --table-header-55: #1976D2;
 
             /* Variables del Banner Maestro - Modo Claro */
             --header-bg: linear-gradient(90deg, #DA291C, #b81810, #e63c2a, #b81810, #DA291C);
-            --btn-upload-bg: rgba(0, 0, 0, 0.2);
-            --btn-upload-hover: rgba(0, 0, 0, 0.35);
-            --btn-upload-border: rgba(255, 255, 255, 0.2);
             --banner-text-color: #ffffff;
             --banner-subtext-color: #ffcdd2;
             --badge-bg: #ffffff;
@@ -27,29 +33,46 @@
 
         /* Variables del Banner Maestro - Modo Oscuro */
         body.dark-mode {
+            --estafeta-gray: #000000;
             --header-bg: linear-gradient(90deg, #991B1B, #7f1d1d, #b91c1c, #7f1d1d, #991B1B);
-            --btn-upload-bg: rgba(0, 0, 0, 0.4);
-            --btn-upload-hover: rgba(0, 0, 0, 0.6);
-            --btn-upload-border: rgba(255, 255, 255, 0.1);
             --banner-text-color: #f1f5f9;
             --banner-subtext-color: #fca5a5;
             --badge-bg: #f8fafc;
             --badge-text: #b91c1c;
         }
 
+        html {
+            background-color: #FFFFFF;
+            transition: background-color 0.3s ease;
+        }
+
+        html.dark, html.dark-mode {
+            background-color: #000000;
+        }
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            background-color: var(--estafeta-gray);
-            color: #333;
+            background-color: #FFFFFF;
+            color: #1e293b;
             position: relative;
             min-height: 100vh;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
+        body.dark-mode {
+            background-color: #000000 !important;
+            color: #f1f5f9;
+        }
+
         @keyframes gradientShift {
             0%, 100% { background-position: 0% 50%; }
             50%      { background-position: 100% 50%; }
+        }
+
+        @keyframes cloudFloat {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50%      { transform: translateY(-4px) scale(1.05); }
         }
 
         /* ============================================================
@@ -119,27 +142,42 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             flex-wrap: wrap;
         }
 
-        /* Botón de Carga Excel estandarizado */
+        /* Botón de Carga Excel transparente tipo icono PNG sin recuadro */
         .upload-btn-wrapper {
             position: relative;
             display: inline-flex;
             align-items: center;
-            background-color: var(--btn-upload-bg);
-            border: 1px solid var(--btn-upload-border);
-            border-radius: 10px;
-            padding: 8px 16px;
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            border-radius: 0;
+            padding: 4px 8px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(4px);
+            gap: 10px;
+            color: var(--banner-text-color);
+            transition: transform 0.25s ease, opacity 0.25s ease;
         }
 
         .upload-btn-wrapper:hover {
-            background-color: var(--btn-upload-hover);
-            transform: translateY(-1px);
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            transform: translateY(-1px) scale(1.03);
+        }
+
+        .upload-btn-wrapper.drag-over {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            transform: scale(1.08);
         }
 
         .upload-btn-wrapper input[type="file"] {
@@ -152,52 +190,92 @@
             cursor: pointer;
         }
 
-        .upload-btn-icon {
+        .cloud-excel-icon-group {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 34px;
+            flex-shrink: 0;
+            animation: cloudFloat 2.8s ease-in-out infinite;
+        }
+
+        .cloud-excel-icon-group .fa-cloud {
+            font-size: 2rem;
+            color: rgba(255, 255, 255, 0.92);
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+        }
+
+        .cloud-excel-icon-group .fa-file-excel {
+            position: absolute;
+            font-size: 0.95rem;
             color: #4ade80;
-            font-size: 1.2rem;
-            margin-right: 10px;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
         }
 
         .upload-btn-content {
             display: flex;
             flex-direction: column;
             text-align: left;
+            overflow: hidden;
+            max-width: 220px;
+            opacity: 1;
+            transition: max-width 0.45s ease, opacity 0.4s ease, margin 0.4s ease;
+        }
+
+        .upload-btn-content.text-hidden {
+            max-width: 0;
+            opacity: 0;
+            margin-left: -10px;
+            pointer-events: none;
         }
 
         .upload-btn-title {
             font-size: 0.85rem;
             font-weight: 700;
             color: var(--banner-text-color);
+            white-space: nowrap;
         }
 
         .upload-btn-subtitle {
-            font-size: 0.65rem;
+            font-size: 0.68rem;
             color: var(--banner-subtext-color);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 180px;
+            max-width: 190px;
         }
 
-        /* Toggle de tema dentro del banner */
-        #banner-theme-toggle {
-            background: var(--btn-upload-bg);
-            border: 1px solid var(--btn-upload-border);
+        /* Toggle de tema transparente sin fondo ni recuadro */
+        #banner-theme-toggle,
+        #theme-toggle {
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
             color: var(--banner-text-color);
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
+            width: 38px;
+            height: 38px;
+            border-radius: 0;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
-            transition: all 0.2s ease;
+            font-size: 1.25rem;
+            transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease;
             flex-shrink: 0;
+            padding: 0;
         }
-        #banner-theme-toggle:hover {
-            background: var(--btn-upload-hover);
-            transform: translateY(-1px);
+
+        #banner-theme-toggle:hover,
+        #theme-toggle:hover {
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            transform: rotate(18deg) scale(1.15);
         }
 
         /* ============================================================
@@ -208,7 +286,7 @@
             padding: 24px;
             max-width: 1400px;
             margin: 0 auto;
-            padding-bottom: 80px;
+            padding-bottom: 100px;
         }
 
         .schemas-wrapper {
@@ -220,24 +298,69 @@
 
         .schema-card {
             flex: 1;
-            min-width: 450px;
+            min-width: 420px;
             background: white;
             border-radius: 6px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             padding: 16px;
             overflow-x: auto;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        .schema-title {
-            text-align: center;
-            font-weight: bold;
+        .schema-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             color: white;
-            padding: 8px;
-            margin: -16px -16px 16px -16px;
+            padding: 8px 14px;
+            margin: -16px -16px 12px -16px;
             border-radius: 6px 6px 0 0;
             font-size: 1rem;
+            font-weight: bold;
         }
+
+        .schema-title-text {
+            text-align: center;
+            flex: 1;
+        }
+
+        .collapse-toggle-btn {
+            background: rgba(255, 255, 255, 0.16) !important;
+            border: 1px solid rgba(255, 255, 255, 0.35) !important;
+            color: #ffffff !important;
+            border-radius: 4px;
+            padding: 3px 9px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: transform 0.25s ease, background-color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .collapse-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.28) !important;
+        }
+
+        .collapse-toggle-btn .bullet-arrow {
+            display: inline-block;
+            transition: transform 0.25s ease;
+        }
+
+        .collapse-toggle-btn.collapsed .bullet-arrow {
+            transform: rotate(-90deg);
+        }
+
+        .schema-collapsible-body {
+            display: block;
+        }
+
+        .schema-collapsible-body.is-minimized {
+            display: none;
+        }
+
         .title-39 { background-color: var(--table-header-39); }
         .title-55 { background-color: var(--table-header-55); }
 
@@ -297,11 +420,35 @@
         .filter-icon-btn:hover { background: #ffcdd2; }
 
         tr:nth-child(even) { background-color: #fafafa; }
+
+        tfoot.concentrado-tfoot tr.concentrado-total-row,
+        tfoot.concentrado-tfoot tr.concentrado-total-row:nth-child(even),
+        tfoot.concentrado-tfoot tr.concentrado-total-row:hover {
+            background-color: #f1f5f9;
+            font-weight: bold;
+            color: #1e293b;
+            border-top: 2px solid #cbd5e1;
+        }
+        tfoot.concentrado-tfoot td.concentrado-total-amount {
+            color: var(--estafeta-red);
+            font-weight: 800;
+        }
+
         tr:hover { background-color: #f3f4f6; }
+
+        tr.total-summary-row,
+        tr.total-summary-row:nth-child(even),
+        tr.total-summary-row:hover {
+            background-color: #fee2e2;
+            font-weight: bold;
+            color: #991b1b;
+            border-top: 2px solid #dc2626;
+            border-bottom: 2px solid #dc2626;
+        }
 
         .table-responsive {
             overflow-x: auto;
-            min-height: 380px;
+            min-height: 220px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -453,7 +600,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             padding: 20px;
             margin-bottom: 30px;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .section-header-flex {
@@ -485,7 +632,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: background-color 0.2s ease;
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
         .download-excel-btn:hover { background-color: #1b5e20; }
 
@@ -493,7 +640,7 @@
             display: flex;
             gap: 20px;
             margin-bottom: 20px;
-            background: var(--estafeta-gray);
+            background: #f8fafc;
             padding: 12px 16px;
             border-radius: 4px;
             flex-wrap: wrap;
@@ -577,26 +724,63 @@
             white-space: nowrap;
         }
 
-        .floating-action-btn {
+        /* Botón Flotante Borrar Filtros con transición y animación */
+        #floating-reset-btn {
             position: fixed;
-            bottom: 25px;
-            right: 25px;
-            background-color: var(--estafeta-red);
-            color: white;
-            border: none;
-            border-radius: 30px;
-            padding: 12px 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            cursor: pointer;
+            bottom: 24px;
+            right: 24px;
             z-index: 9999;
-            display: none;
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .float-btn-hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.85) translateY(8px);
+        }
+        .float-btn-visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1) translateY(0);
+        }
+
+        /* Botón Flotante de Plazas (Menú desplegable) */
+        #plaza-floating-btn {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            background-color: #dc2626;
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 9999px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            z-index: 9998;
             transition: background-color 0.2s ease, transform 0.2s ease;
         }
-        .floating-action-btn:hover { background-color: #b71c1c; transform: translateY(-2px); }
+        #plaza-floating-btn:hover {
+            background-color: #b91c1c;
+            transform: translateY(-2px);
+        }
+
+        #plaza-modal {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 10005;
+        }
+        #plaza-modal.is-open {
+            display: flex;
+        }
 
         .modal-overlay {
             display: none;
@@ -764,56 +948,76 @@
         #mainContent { display: none; }
 
         /* ============ MODO OSCURO ============ */
-        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0; }
+        body.dark-mode { background-color: #000000 !important; color: #e2e8f0; }
         body.dark-mode .schema-card,
         body.dark-mode .dynamic-section,
-        body.dark-mode .kpi-card { background: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important; }
-        body.dark-mode .kpi-card.highlight { background: linear-gradient(to bottom right, #1e293b, #14532d) !important; }
-        body.dark-mode .kpi-card.kpi-red { background: linear-gradient(to bottom right, #1e293b, #450a0a) !important; }
-        body.dark-mode .kpi-card.kpi-orange { background: linear-gradient(to bottom right, #1e293b, #451a03) !important; }
-        body.dark-mode .kpi-card.kpi-green { background: linear-gradient(to bottom right, #1e293b, #14532d) !important; }
-        body.dark-mode .kpi-card.kpi-gray { background: #1e293b !important; }
-        body.dark-mode .kpi-card.kpi-red .kpi-icon { background: rgba(127, 29, 29, 0.4) !important; }
-        body.dark-mode .kpi-card.kpi-orange .kpi-icon { background: rgba(120, 53, 15, 0.4) !important; }
-        body.dark-mode .kpi-card.kpi-green .kpi-icon { background: rgba(20, 83, 45, 0.4) !important; }
+        body.dark-mode .kpi-card { background: #141923 !important; color: #e2e8f0 !important; border-color: #263042 !important; }
+        body.dark-mode .kpi-card.highlight { background: linear-gradient(to bottom right, #141923, #0f2e1d) !important; }
+        body.dark-mode .kpi-card.kpi-red { background: linear-gradient(to bottom right, #141923, #350909) !important; }
+        body.dark-mode .kpi-card.kpi-orange { background: linear-gradient(to bottom right, #141923, #331402) !important; }
+        body.dark-mode .kpi-card.kpi-green { background: linear-gradient(to bottom right, #141923, #0f2e1d) !important; }
+        body.dark-mode .kpi-card.kpi-gray { background: #141923 !important; }
+        body.dark-mode .kpi-card.kpi-red .kpi-icon { background: rgba(127, 29, 29, 0.45) !important; }
+        body.dark-mode .kpi-card.kpi-orange .kpi-icon { background: rgba(120, 53, 15, 0.45) !important; }
+        body.dark-mode .kpi-card.kpi-green .kpi-icon { background: rgba(20, 83, 45, 0.45) !important; }
         body.dark-mode .kpi-card.kpi-red .kpi-value { color: #fca5a5 !important; }
         body.dark-mode .kpi-card.kpi-orange .kpi-value { color: #fcd34d !important; }
         body.dark-mode .kpi-card.kpi-green .kpi-value { color: #86efac !important; }
-        body.dark-mode .kpi-value { color: #f1f5f9 !important; }
+        body.dark-mode .kpi-value { color: #f8fafc !important; }
         body.dark-mode .kpi-title,
         body.dark-mode .kpi-subtext,
         body.dark-mode .sub-table-title { color: #94a3b8 !important; }
-        body.dark-mode .kpi-icon { background: #334155 !important; }
-        body.dark-mode table { background-color: #1e293b !important; }
-        body.dark-mode th { background-color: #0f172a !important; color: #cbd5e1 !important; border-bottom-color: #334155 !important; }
+        body.dark-mode .kpi-icon { background: #1e293b !important; }
+        body.dark-mode table { background-color: #141923 !important; }
+        body.dark-mode th { background-color: #0b0f17 !important; color: #e2e8f0 !important; border-bottom-color: #263042 !important; }
         body.dark-mode th:hover { background-color: #1e293b !important; }
-        body.dark-mode td { border-bottom-color: #334155 !important; color: #cbd5e1 !important; }
-        body.dark-mode tr:nth-child(even) { background-color: #0f172a !important; }
-        body.dark-mode tr:hover { background-color: #334155 !important; }
+        body.dark-mode td { border-bottom-color: #263042 !important; color: #cbd5e1 !important; }
+        body.dark-mode tr:nth-child(even) { background-color: #0d111a !important; }
+        body.dark-mode tr:hover { background-color: #1e293b !important; }
+        body.dark-mode tr.total-summary-row,
+        body.dark-mode tr.total-summary-row:nth-child(even),
+        body.dark-mode tr.total-summary-row:hover,
+        body.dark-mode tfoot tr,
+        body.dark-mode tfoot tr:nth-child(even),
+        body.dark-mode tfoot tr:hover {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-top: 2px solid #475569 !important;
+            border-bottom: 2px solid #475569 !important;
+        }
+        body.dark-mode tfoot td,
+        body.dark-mode tr.total-summary-row td {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-bottom-color: #475569 !important;
+        }
+        body.dark-mode tfoot td:last-child {
+            color: #f87171 !important;
+            font-weight: 800;
+        }
         body.dark-mode .pagination-container { color: #94a3b8 !important; }
-        body.dark-mode .page-btn { background: #1e293b !important; color: #cbd5e1 !important; border-color: #334155 !important; }
-        body.dark-mode .page-btn:hover:not(:disabled) { background: #334155 !important; }
-        body.dark-mode .page-btn:disabled { background: #0f172a !important; color: #475569 !important; }
+        body.dark-mode .page-btn { background: #141923 !important; color: #cbd5e1 !important; border-color: #263042 !important; }
+        body.dark-mode .page-btn:hover:not(:disabled) { background: #1e293b !important; }
+        body.dark-mode .page-btn:disabled { background: #0a0d14 !important; color: #475569 !important; }
         body.dark-mode .page-info { color: #cbd5e1 !important; }
-        body.dark-mode .filters-bar { background: #0f172a !important; }
+        body.dark-mode .filters-bar { background: #0b0f17 !important; }
         body.dark-mode .filter-group label { color: #cbd5e1 !important; }
-        body.dark-mode .searchable-input { background: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
-        body.dark-mode .searchable-list { background: #1e293b !important; border-color: #334155 !important; }
+        body.dark-mode .searchable-input { background: #0b0f17 !important; color: #f1f5f9 !important; border-color: #263042 !important; }
+        body.dark-mode .searchable-list { background: #141923 !important; border-color: #263042 !important; }
         body.dark-mode .searchable-item { color: #cbd5e1 !important; }
-        body.dark-mode .searchable-item:hover { background: #334155 !important; color: #fbbf24 !important; }
-        body.dark-mode .operator-badge { background: rgba(127, 29, 29, 0.4) !important; color: #fca5a5 !important; border-color: #7f1d1d !important; }
-        body.dark-mode .modal-card { background: #1e293b !important; }
-        body.dark-mode .modal-search-box input { background: #0f172a !important; color: #e2e8f0 !important; border-color: #334155 !important; }
-        body.dark-mode .modal-checkbox-list { background: #0f172a !important; border-color: #334155 !important; }
+        body.dark-mode .searchable-item:hover { background: #1e293b !important; color: #fbbf24 !important; }
+        body.dark-mode .operator-badge { background: rgba(127, 29, 29, 0.45) !important; color: #fca5a5 !important; border-color: #7f1d1d !important; }
+        body.dark-mode .modal-card { background: #141923 !important; }
+        body.dark-mode .modal-search-box input { background: #0b0f17 !important; color: #f1f5f9 !important; border-color: #263042 !important; }
+        body.dark-mode .modal-checkbox-list { background: #0b0f17 !important; border-color: #263042 !important; }
         body.dark-mode .modal-checkbox-item { color: #cbd5e1 !important; }
-        body.dark-mode .modal-checkbox-item:hover { background: #334155 !important; }
-        body.dark-mode .modal-footer { background: #0f172a !important; border-top-color: #334155 !important; }
-        body.dark-mode .modal-btn-cancel { background: #334155 !important; color: #cbd5e1 !important; }
-        body.dark-mode .modal-btn-cancel:hover { background: #475569 !important; }
-        body.dark-mode .section-header-flex h2 { color: #f1f5f9 !important; }
-        body.dark-mode .schema-title.title-39 { background: #0f172a !important; }
-        body.dark-mode .schema-title.title-55 { background: #1e40af !important; }
-        body.dark-mode .floating-action-btn { background: #b91c1c !important; }
+        body.dark-mode .modal-checkbox-item:hover { background: #1e293b !important; }
+        body.dark-mode .modal-footer { background: #0b0f17 !important; border-top-color: #263042 !important; }
+        body.dark-mode .modal-btn-cancel { background: #1e293b !important; color: #cbd5e1 !important; }
+        body.dark-mode .modal-btn-cancel:hover { background: #334155 !important; }
+        body.dark-mode .section-header-flex h2 { color: #f8fafc !important; }
+        body.dark-mode .schema-header.title-39 { background: #0b0f17 !important; }
+        body.dark-mode .schema-header.title-55 { background: #1e40af !important; }
 
         button:focus-visible, input:focus-visible, select:focus-visible {
             outline: 2px solid var(--estafeta-red);
@@ -825,6 +1029,7 @@
             .brand-title { font-size: 1rem; }
             .brand-subtitle { font-size: 0.65rem; }
             .upload-btn-subtitle { max-width: 120px; }
+            .schema-card { min-width: 100%; }
         }
     </style>
 </head>
@@ -843,17 +1048,20 @@
         </div>
 
         <div class="header-actions">
-            <!-- Botón de Carga Excel -->
-            <label class="upload-btn-wrapper" for="excelFile" title="Cargar archivo Excel">
+            <!-- Botón de Carga Excel (Nube + Excel transparente sin recuadro) -->
+            <label class="upload-btn-wrapper" id="drop-zone" for="excelFile" title="Cargar archivo Excel">
                 <input type="file" id="excelFile" accept=".xlsx, .xls">
-                <i class="fa-solid fa-file-excel upload-btn-icon"></i>
-                <div class="upload-btn-content">
+                <div class="cloud-excel-icon-group">
+                    <i class="fa-solid fa-cloud"></i>
+                    <i class="fa-solid fa-file-excel animate-bounce"></i>
+                </div>
+                <div class="upload-btn-content" id="uploadTextContent">
                     <span class="upload-btn-title">Cargar Excel</span>
                     <span class="upload-btn-subtitle" id="fileName">Arrastra o clic aquí</span>
                 </div>
             </label>
 
-            <!-- Toggle de Tema dentro del banner -->
+            <!-- Toggle de Tema dentro del banner (transparente sin recuadro) -->
             <button id="banner-theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
                 <i class="fa-solid fa-moon" id="banner-theme-icon"></i>
             </button>
@@ -866,53 +1074,71 @@
     <main class="dashboard-container" id="mainContent">
         <div class="schemas-wrapper">
             <div class="schema-card">
-                <div class="schema-title title-39">Esquema 39</div>
-                <div class="sub-table-title">Productividad</div>
-                <table class="table-39">
-                    <thead><tr><th>Productividad</th><th>% Bono</th><th>Monto</th></tr></thead>
-                    <tbody>
-                        <tr><td>≥ 120</td><td>100%</td><td>$3,000</td></tr>
-                        <tr><td>110-119</td><td>80%</td><td>$2,400</td></tr>
-                        <tr><td>100-109</td><td>70%</td><td>$2,100</td></tr>
-                        <tr><td>90-99</td><td>50%</td><td>$1,500</td></tr>
-                        <tr><td>80-89</td><td>40%</td><td>$1,200</td></tr>
-                        <tr><td>< 80</td><td>0%</td><td>$0</td></tr>
-                    </tbody>
-                </table>
-                <div class="sub-table-title">Eficiencia</div>
-                <table class="table-39">
-                    <thead><tr><th>Eficiencia</th><th>% Bono</th><th>Monto</th></tr></thead>
-                    <tbody>
-                        <tr><td>≥ 98.5%</td><td>100%</td><td>$2,000</td></tr>
-                        <tr><td>98.0%-98.4%</td><td>50%</td><td>$1,000</td></tr>
-                        <tr><td>< 98.0%</td><td>0%</td><td>$0</td></tr>
-                    </tbody>
-                </table>
+                <div class="schema-header title-39">
+                    <button type="button" id="toggleBtn39" class="collapse-toggle-btn collapsed" onclick="toggleSchemaSection('39')" aria-expanded="false" aria-controls="schemaBody39" title="Minimizar o expandir Esquema 39">
+                        <span class="bullet-arrow">▾</span>
+                        <span id="toggleLabel39">Expandir</span>
+                    </button>
+                    <span class="schema-title-text">Esquema 39</span>
+                    <span style="width: 66px;"></span>
+                </div>
+                <div id="schemaBody39" class="schema-collapsible-body is-minimized">
+                    <div class="sub-table-title">Productividad</div>
+                    <table class="table-39">
+                        <thead><tr><th>Productividad</th><th>% Bono</th><th>Monto</th></tr></thead>
+                        <tbody>
+                            <tr><td>≥ 120</td><td>100%</td><td>$3,000</td></tr>
+                            <tr><td>110-119</td><td>80%</td><td>$2,400</td></tr>
+                            <tr><td>100-109</td><td>70%</td><td>$2,100</td></tr>
+                            <tr><td>90-99</td><td>50%</td><td>$1,500</td></tr>
+                            <tr><td>80-89</td><td>40%</td><td>$1,200</td></tr>
+                            <tr><td>< 80</td><td>0%</td><td>$0</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="sub-table-title">Eficiencia</div>
+                    <table class="table-39">
+                        <thead><tr><th>Eficiencia</th><th>% Bono</th><th>Monto</th></tr></thead>
+                        <tbody>
+                            <tr><td>≥ 98.5%</td><td>100%</td><td>$2,000</td></tr>
+                            <tr><td>98.0%-98.4%</td><td>50%</td><td>$1,000</td></tr>
+                            <tr><td>< 98.0%</td><td>0%</td><td>$0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="schema-card">
-                <div class="schema-title title-55">Esquema 55 - 61</div>
-                <div class="sub-table-title">Productividad</div>
-                <table class="table-55">
-                    <thead><tr><th>Productividad</th><th>% Bono</th><th>Pago</th></tr></thead>
-                    <tbody>
-                        <tr><td>≥ 120</td><td>100%</td><td>$750.00</td></tr>
-                        <tr><td>110 - 119</td><td>80%</td><td>$600.00</td></tr>
-                        <tr><td>100 - 109</td><td>70%</td><td>$525.00</td></tr>
-                        <tr><td>90 - 99</td><td>50%</td><td>$375.00</td></tr>
-                        <tr><td>80 - 89</td><td>40%</td><td>$300.00</td></tr>
-                        <tr><td>< 80</td><td>0%</td><td>$0.00</td></tr>
-                    </tbody>
-                </table>
-                <div class="sub-table-title">Eficiencia</div>
-                <table class="table-55">
-                    <thead><tr><th>Eficiencia</th><th>% Bono</th><th>Pago</th></tr></thead>
-                    <tbody>
-                        <tr><td>100% a 98.5%</td><td>100%</td><td>$750.00</td></tr>
-                        <tr><td>98.4% a 98.0%</td><td>50%</td><td>$375.00</td></tr>
-                        <tr><td>Menor de 98%</td><td>0%</td><td>$0.00</td></tr>
-                    </tbody>
-                </table>
+                <div class="schema-header title-55">
+                    <button type="button" id="toggleBtn55" class="collapse-toggle-btn collapsed" onclick="toggleSchemaSection('55')" aria-expanded="false" aria-controls="schemaBody55" title="Minimizar o expandir Esquema 55 - 61">
+                        <span class="bullet-arrow">▾</span>
+                        <span id="toggleLabel55">Expandir</span>
+                    </button>
+                    <span class="schema-title-text">Esquema 55 - 61</span>
+                    <span style="width: 66px;"></span>
+                </div>
+                <div id="schemaBody55" class="schema-collapsible-body is-minimized">
+                    <div class="sub-table-title">Productividad</div>
+                    <table class="table-55">
+                        <thead><tr><th>Productividad</th><th>% Bono</th><th>Pago</th></tr></thead>
+                        <tbody>
+                            <tr><td>≥ 120</td><td>100%</td><td>$750.00</td></tr>
+                            <tr><td>110 - 119</td><td>80%</td><td>$600.00</td></tr>
+                            <tr><td>100 - 109</td><td>70%</td><td>$525.00</td></tr>
+                            <tr><td>90 - 99</td><td>50%</td><td>$375.00</td></tr>
+                            <tr><td>80 - 89</td><td>40%</td><td>$300.00</td></tr>
+                            <tr><td>< 80</td><td>0%</td><td>$0.00</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="sub-table-title">Eficiencia</div>
+                    <table class="table-55">
+                        <thead><tr><th>Eficiencia</th><th>% Bono</th><th>Pago</th></tr></thead>
+                        <tbody>
+                            <tr><td>100% a 98.5%</td><td>100%</td><td>$750.00</td></tr>
+                            <tr><td>98.4% a 98.0%</td><td>50%</td><td>$375.00</td></tr>
+                            <tr><td>Menor de 98%</td><td>0%</td><td>$0.00</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -980,9 +1206,28 @@
 
         <div class="dynamic-section">
             <div class="section-header-flex">
+                <h2>Bono por paquete entregado</h2>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <select id="saturdayDateFilter" onchange="onSaturdayDateFilterChange()" class="searchable-input" style="width: auto; min-width: 210px; padding: 5px 10px; font-size: 0.82rem;" aria-label="Filtrar fechas de sábado">
+                        <option value="">Todos los sábados</option>
+                    </select>
+                    <button id="downloadBonoPaqueteBtn" title="Descargar Excel Bono por Paquete" onclick="downloadBonoPaqueteExcel()" style="display: none;" class="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white hover:scale-105 transition-all shadow cursor-pointer">
+                        <i class="fa-solid fa-file-excel text-xs"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive" id="bonoPaqueteTableContainer">
+                <p style="color: #666; font-style: italic; text-align: center; padding: 20px;">
+                    Cargue un archivo Excel para visualizar los días sábados y el bono por paquete entregado.
+                </p>
+            </div>
+        </div>
+
+        <div class="dynamic-section">
+            <div class="section-header-flex">
                 <h2>Concentrado Bono</h2>
-                <button id="downloadConcentradoBtn" class="download-excel-btn" onclick="downloadConcentradoExcel()" style="display: none;">
-                    📥 Descargar Concentrado en Excel
+                <button id="downloadConcentradoBtn" title="Descargar Excel" onclick="downloadConcentradoExcel()" style="display: none; margin-left: auto;" class="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white hover:scale-105 transition-all shadow cursor-pointer">
+                    <i class="fa-solid fa-file-excel text-xs"></i>
                 </button>
             </div>
             <div class="table-responsive" id="concentradoTableContainer">
@@ -991,17 +1236,63 @@
                 </p>
             </div>
         </div>
+
+        <div class="dynamic-section">
+            <div class="section-header-flex">
+                <h2>Bono Final</h2>
+                <button id="downloadBonoFinalBtn" title="Descargar Excel Bono Final" onclick="downloadBonoFinalExcel()" style="display: none; margin-left: auto;" class="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white hover:scale-105 transition-all shadow cursor-pointer">
+                    <i class="fa-solid fa-file-excel text-xs"></i>
+                </button>
+            </div>
+            <div class="table-responsive" id="bonoFinalTableContainer">
+                <p style="color: #666; font-style: italic; text-align: center; padding: 20px;">
+                    Cargue un archivo Excel para visualizar el Bono Final por Operator.
+                </p>
+            </div>
+        </div>
     </main>
 
-    <button id="floatingFilterBtn" class="floating-action-btn" onclick="clearOperatorFilter()">
-        ✕ Quitar Filtro Operador
+    <!-- ============================================================
+         BOTÓN FLOTANTE DE PLAZAS (MENÚ DESPLEGABLE)
+         ============================================================ -->
+    <button type="button" id="plaza-floating-btn" onclick="openPlazaModal()" style="display: none;">
+        <i class="fas fa-map-marked-alt"></i>
+        <span>Plazas</span>
     </button>
+
+    <div id="plaza-modal" class="hidden">
+        <div class="bg-slate-900 text-white w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-sm m-0">Filtrar por Plaza</h3>
+                <button type="button" onclick="closePlazaModal()" class="text-slate-400 hover:text-white bg-transparent border-0 cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="plaza-checkbox-container" class="space-y-2 max-h-60 overflow-y-auto">
+                <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" value="CDMX" class="plaza-cb text-red-600 rounded"> CDMX Centro</label>
+                <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" value="Guadalajara" class="plaza-cb text-red-600 rounded"> Guadalajara</label>
+                <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" value="Monterrey" class="plaza-cb text-red-600 rounded"> Monterrey</label>
+            </div>
+            <button type="button" onclick="applyPlazaFilters()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl text-xs font-bold border-0 cursor-pointer transition">
+                Aplicar Selección
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         BOTÓN FLOTANTE BORRAR FILTROS (CON DISEÑO Y ANIMACIÓN)
+         ============================================================ -->
+    <div id="floating-reset-btn" class="float-btn-hidden fixed bottom-6 right-6 transition-all duration-300">
+        <button type="button" id="floatingFilterBtn" onclick="clearOperatorFilter()" class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl hover:bg-red-700 transition cursor-pointer border-0" title="Restablecer Filtros" aria-label="Restablecer Filtros">
+            <i class="fa-solid fa-rotate-left"></i>
+        </button>
+    </div>
 
     <div id="areaFilterModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
                 <span>🔴 Filtrar Columna: Área de Personal</span>
-                <button class="close-btn" onclick="closeAreaModal()">✕</button>
+                <button type="button" class="close-btn" onclick="closeAreaModal()">✕</button>
             </div>
             <div class="modal-body">
                 <div class="modal-search-box">
@@ -1015,8 +1306,8 @@
                 <div class="modal-checkbox-list" id="modalAreaCheckboxList"></div>
             </div>
             <div class="modal-footer">
-                <button class="modal-btn modal-btn-cancel" onclick="closeAreaModal()">Cancelar</button>
-                <button class="modal-btn modal-btn-apply" onclick="applyAreaFilterModal()">Aplicar Filtro</button>
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeAreaModal()">Cancelar</button>
+                <button type="button" class="modal-btn modal-btn-apply" onclick="applyAreaFilterModal()">Aplicar Filtro</button>
             </div>
         </div>
     </div>
@@ -1042,17 +1333,61 @@
         let activeHeaders2 = [];
         let currentFilteredData = [];
         let activeAreaFilters = null;
+        let selectedPlazas = [];
         let currentSortColumn = null;
         let currentSortAsc = true;
         let currentPage = 1;
         const rowsPerPage = 10;
         let availableOperatorsList = [];
         let lastConcentradoRows = [];
-        let cachedKeys = { operatorKey: '', nameKey: '', areaKey: '', allHeaders: [] };
+        let cachedKeys = { operatorKey: '', nameKey: '', areaKey: '', plazaKey: '', tiempoOperadoKey: '', allHeaders: [] };
+        let uploadTextHideTimer = null;
 
         const _norm = s => String(s ?? '')
             .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
             .toLowerCase().trim();
+
+        function toggleSchemaSection(schemaId) {
+            const bodyEl = document.getElementById('schemaBody' + schemaId);
+            const btnEl = document.getElementById('toggleBtn' + schemaId);
+            const labelEl = document.getElementById('toggleLabel' + schemaId);
+            if (!bodyEl || !btnEl) return;
+            const isMinimized = bodyEl.classList.toggle('is-minimized');
+            btnEl.classList.toggle('collapsed', isMinimized);
+            btnEl.setAttribute('aria-expanded', String(!isMinimized));
+            if (labelEl) labelEl.textContent = isMinimized ? 'Expandir' : 'Minimizar';
+        }
+
+        function scheduleUploadTextHide() {
+            const textEl = document.getElementById('uploadTextContent');
+            if (!textEl) return;
+            textEl.classList.remove('text-hidden');
+            if (uploadTextHideTimer) clearTimeout(uploadTextHideTimer);
+            uploadTextHideTimer = setTimeout(() => {
+                textEl.classList.add('text-hidden');
+            }, 3000);
+        }
+
+        function resetUploadTextVisibility() {
+            const textEl = document.getElementById('uploadTextContent');
+            if (uploadTextHideTimer) clearTimeout(uploadTextHideTimer);
+            if (textEl) textEl.classList.remove('text-hidden');
+        }
+
+        function setResetButtonVisibility(visible) {
+            const wrapper = document.getElementById('floating-reset-btn');
+            const btn = document.getElementById('floatingFilterBtn');
+            if (!wrapper) return;
+            if (visible) {
+                wrapper.classList.remove('float-btn-hidden');
+                wrapper.classList.add('float-btn-visible');
+                if (btn) btn.style.display = 'flex';
+            } else {
+                wrapper.classList.remove('float-btn-visible');
+                wrapper.classList.add('float-btn-hidden');
+                if (btn) btn.style.display = 'none';
+            }
+        }
 
         function validarArchivo(encabezados) {
             if (!encabezados || encabezados.length === 0) return false;
@@ -1061,83 +1396,221 @@
             return has('dueno', 'ruta') && has('clasificacion', 'rutas', 'tr2') && has('pickup', 'size');
         }
 
-        document.getElementById('excelFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
+        function processExcelFile(file) {
             const fileNameDisplay = document.getElementById('fileName');
-
-            if (file) {
-                fileNameDisplay.textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const data = new Uint8Array(event.target.result);
-                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-                    if (jsonRows.length > 0) {
-                        const headers = jsonRows[0];
-                        if (!validarArchivo(headers)) {
-                            alert('El archivo cargado no contiene la estructura o encabezados requeridos ("Dueño Ruta", "Clasificación Rutas TR2", "Pickup Size").');
-                            document.getElementById('excelFile').value = '';
-                            fileNameDisplay.textContent = 'Arrastra o clic aquí';
-                            document.getElementById('mainContent').style.display = 'none';
-                            document.getElementById('dynamicTableContainer2').innerHTML = '<p style="color: red; text-align: center;">El archivo no cuenta con los encabezados válidos.</p>';
-                            document.getElementById('concentradoTableContainer').innerHTML = '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">Cargue un archivo Excel válido.</p>';
-                            document.getElementById('filtersBar2').style.display = 'none';
-                            document.getElementById('kpiContainer2').style.display = 'none';
-                            document.getElementById('floatingFilterBtn').style.display = 'none';
-                            document.getElementById('downloadConcentradoBtn').style.display = 'none';
-                            return;
-                        }
-                    }
-                    globalRawData = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
-                    if (globalRawData.length > 0) {
-                        currentFilteredData = [...globalRawData];
-                        activeAreaFilters = null;
-                        currentPage = 1;
-                        cachedKeys = getKeys(globalRawData);
-                        setupInitialFiltersAndTable(globalRawData, 2);
-                        renderConcentradoTable(globalRawData);
-                        // ✅ MOSTRAR EL CONTENIDO SOLO CUANDO HAY DATOS VÁLIDOS
-                        document.getElementById('mainContent').style.display = 'block';
-                    } else {
-                        document.getElementById('mainContent').style.display = 'none';
-                        document.getElementById('dynamicTableContainer2').innerHTML = '<p style="color: red; text-align: center;">El archivo Excel no contiene datos legibles.</p>';
-                        document.getElementById('concentradoTableContainer').innerHTML = '<p style="color: red; text-align: center;">El archivo Excel no contiene datos legibles.</p>';
-                        document.getElementById('filtersBar2').style.display = 'none';
-                        document.getElementById('kpiContainer2').style.display = 'none';
-                        document.getElementById('floatingFilterBtn').style.display = 'none';
-                        document.getElementById('downloadConcentradoBtn').style.display = 'none';
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            } else {
+            if (!file) {
                 fileNameDisplay.textContent = 'Arrastra o clic aquí';
+                resetUploadTextVisibility();
                 document.getElementById('mainContent').style.display = 'none';
                 document.getElementById('filtersBar2').style.display = 'none';
                 document.getElementById('kpiContainer2').style.display = 'none';
-                document.getElementById('floatingFilterBtn').style.display = 'none';
+                document.getElementById('plaza-floating-btn').style.display = 'none';
+                setResetButtonVisibility(false);
                 document.getElementById('downloadConcentradoBtn').style.display = 'none';
                 document.getElementById('concentradoTableContainer').innerHTML = '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">Cargue un archivo Excel para generar el concentrado.</p>';
+                selectedSaturdayDate = '';
+                lastBonoPaqueteRows = [];
+                const satSel = document.getElementById('saturdayDateFilter');
+                if (satSel) satSel.innerHTML = '<option value="">Todos los sábados</option>';
+                const dlSatBtn = document.getElementById('downloadBonoPaqueteBtn');
+                if (dlSatBtn) dlSatBtn.style.display = 'none';
+                document.getElementById('bonoPaqueteTableContainer').innerHTML = '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">Cargue un archivo Excel para visualizar los días sábados y el bono por paquete entregado.</p>';
+                lastBonoFinalRows = [];
+                const dlFinalBtn = document.getElementById('downloadBonoFinalBtn');
+                if (dlFinalBtn) dlFinalBtn.style.display = 'none';
+                const finalCont = document.getElementById('bonoFinalTableContainer');
+                if (finalCont) finalCont.innerHTML = '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">Cargue un archivo Excel para visualizar el Bono Final por Operator.</p>';
+                return;
             }
+
+            fileNameDisplay.textContent = file.name;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+                if (jsonRows.length > 0) {
+                    const headers = jsonRows[0];
+                    if (!validarArchivo(headers)) {
+                        alert('El archivo cargado no contiene la estructura o encabezados requeridos ("Dueño Ruta", "Clasificación Rutas TR2", "Pickup Size").');
+                        document.getElementById('excelFile').value = '';
+                        fileNameDisplay.textContent = 'Arrastra o clic aquí';
+                        resetUploadTextVisibility();
+                        document.getElementById('mainContent').style.display = 'none';
+                        document.getElementById('dynamicTableContainer2').innerHTML = '<p style="color: red; text-align: center;">El archivo no cuenta con los encabezados válidos.</p>';
+                        document.getElementById('concentradoTableContainer').innerHTML = '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">Cargue un archivo Excel válido.</p>';
+                        document.getElementById('filtersBar2').style.display = 'none';
+                        document.getElementById('kpiContainer2').style.display = 'none';
+                        document.getElementById('plaza-floating-btn').style.display = 'none';
+                        setResetButtonVisibility(false);
+                        document.getElementById('downloadConcentradoBtn').style.display = 'none';
+                        return;
+                    }
+                }
+                const rawObjects = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
+                const colAHeader = (jsonRows[0] && jsonRows[0][0] !== undefined && String(jsonRows[0][0]).trim() !== '')
+                    ? String(jsonRows[0][0]).trim()
+                    : (Object.keys(rawObjects[0] || {})[0] || 'Columna A');
+                globalRawData = rawObjects.map((obj, idx) => {
+                    const rowArr = jsonRows[idx + 1] || [];
+                    const colAVal = rowArr.length > 0 && rowArr[0] !== undefined && rowArr[0] !== ''
+                        ? rowArr[0]
+                        : (obj[colAHeader] !== undefined ? obj[colAHeader] : obj[Object.keys(obj)[0]]);
+                    return {
+                        ...obj,
+                        __colA__: colAVal !== undefined && colAVal !== null ? String(colAVal).trim() : ''
+                    };
+                });
+                if (globalRawData.length > 0) {
+                    selectedPlazas = [];
+                    activeAreaFilters = null;
+                    currentFilteredData = [...globalRawData];
+                    currentPage = 1;
+                    cachedKeys = getKeys(globalRawData);
+                    populatePlazaModalOptions(globalRawData, cachedKeys.plazaKey);
+                    setupInitialFiltersAndTable(globalRawData, 2);
+                    renderBonoPaqueteTable(globalRawData);
+                    renderConcentradoTable(globalRawData);
+                    document.getElementById('mainContent').style.display = 'block';
+                    document.getElementById('plaza-floating-btn').style.display = 'inline-flex';
+                    scheduleUploadTextHide();
+                } else {
+                    document.getElementById('mainContent').style.display = 'none';
+                    document.getElementById('plaza-floating-btn').style.display = 'none';
+                    document.getElementById('dynamicTableContainer2').innerHTML = '<p style="color: red; text-align: center;">El archivo Excel no contiene datos legibles.</p>';
+                    document.getElementById('concentradoTableContainer').innerHTML = '<p style="color: red; text-align: center;">El archivo Excel no contiene datos legibles.</p>';
+                    document.getElementById('filtersBar2').style.display = 'none';
+                    document.getElementById('kpiContainer2').style.display = 'none';
+                    setResetButtonVisibility(false);
+                    document.getElementById('downloadConcentradoBtn').style.display = 'none';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        document.getElementById('excelFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            processExcelFile(file);
             e.target.value = '';
         });
+
+        const dropZone = document.getElementById('drop-zone');
+        if (dropZone) {
+            ['dragenter', 'dragover'].forEach(evt => {
+                dropZone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.add('drag-over');
+                });
+            });
+            ['dragleave', 'dragend', 'drop'].forEach(evt => {
+                dropZone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove('drag-over');
+                });
+            });
+            dropZone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer && e.dataTransfer.files;
+                if (files && files.length) {
+                    processExcelFile(files[0]);
+                }
+            });
+        }
 
         window.addEventListener('click', function(e) {
             if (!e.target.closest('.searchable-dropdown')) {
                 const list = document.getElementById('operatorSearchList');
                 if (list) list.style.display = 'none';
             }
+            const plazaModal = document.getElementById('plaza-modal');
+            if (plazaModal && e.target === plazaModal) {
+                closePlazaModal();
+            }
         });
+
+        function populatePlazaModalOptions(data, plazaKey) {
+            const container = document.getElementById('plaza-checkbox-container');
+            if (!container) return;
+            const defaultPlazas = ['CDMX', 'Guadalajara', 'Monterrey'];
+            let values = [];
+            if (plazaKey) {
+                values = [...new Set(data.map(r => r[plazaKey] !== undefined ? String(r[plazaKey]).trim() : '').filter(v => v !== ''))];
+                values.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+            }
+            const listToRender = values.length > 0 ? values : defaultPlazas;
+            container.innerHTML = '';
+            listToRender.forEach(val => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center gap-2 text-xs cursor-pointer';
+                label.innerHTML = `<input type="checkbox" value="${esc(val)}" class="plaza-cb text-red-600 rounded"> <span>${esc(val)}</span>`;
+                container.appendChild(label);
+            });
+        }
+
+        function openPlazaModal() {
+            const modal = document.getElementById('plaza-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('is-open');
+            document.querySelectorAll('#plaza-checkbox-container .plaza-cb').forEach(cb => {
+                cb.checked = selectedPlazas.includes(cb.value);
+            });
+        }
+
+        function closePlazaModal() {
+            const modal = document.getElementById('plaza-modal');
+            if (!modal) return;
+            modal.classList.remove('is-open');
+            modal.classList.add('hidden');
+        }
+
+        function applyPlazaFilters() {
+            const checked = Array.from(document.querySelectorAll('#plaza-checkbox-container .plaza-cb:checked')).map(cb => cb.value);
+            selectedPlazas = checked;
+            closePlazaModal();
+            currentPage = 1;
+            applyCurrentFiltersAndRender(2);
+            updateResetButtonState();
+        }
+
+        function getKeys(data) {
+            if (!data || data.length === 0) return { operatorKey: '', nameKey: '', areaKey: '', plazaKey: '', tiempoOperadoKey: '', allHeaders: [] };
+            const allHeaders = Object.keys(data[0]).filter(h => h !== '__colA__');
+            const areaKey = allHeaders.find(h => {
+                const lower = _norm(h);
+                return lower === "area de personal" || lower === "area_de_personal";
+            }) || '';
+            const operatorKey = allHeaders.find(h => {
+                const lower = _norm(h);
+                return lower === "nombre operador" || lower === "nombre_operador" || lower === "operador" || lower === "operator" || lower.includes("empleado");
+            }) || '';
+            const nameKey = allHeaders.find(h => {
+                const lower = _norm(h);
+                return lower.includes("nombre") || (lower.includes("operador") && !lower.includes("empleado"));
+            }) || '';
+            const plazaKey = allHeaders.find(h => {
+                const lower = _norm(h);
+                return lower === "plaza" || lower === "plazas" || lower.includes("plaza");
+            }) || '';
+            const tiempoOperadoKey = allHeaders.find(h => {
+                const lower = _norm(h);
+                return lower === "tiempo operado" || lower === "tiempo_operado" || lower.includes("tiempo operado");
+            }) || '';
+            return { operatorKey, nameKey, areaKey, plazaKey, tiempoOperadoKey, allHeaders };
+        }
 
         function setupInitialFiltersAndTable(data, suffix) {
             const excludedColumns2 = [
-                "Fecha Evento", "Fecha_Evento", "Operator", "Operador", "Nombre Operador", "Nombre_Operador",
+                "Operator", "Operador", "Nombre Operador", "Nombre_Operador",
                 "Numero de Empleado", "Numero_de_Empleado",
                 "Dueño Ruta", "Dueno Ruta", "Dueno_Ruta", "Dueño_Ruta",
                 "Drop Size", "Pickup Size", "Visitas Recolección", "Visitas Excepción",
                 "Visitas Entrega", "Rutas Externas", "Rutas Propias", "Productividad Propio",
+                "Productividad Externos", "Productividad Externo", "Productividad_Externos", "Productividad_Externo",
                 "Desahogos Ruta a COP", "Pendientes", "Excepciones", "Entregado", "Recolección",
-                "Inicio Ruta", "Fin Ruta", "Tiempo operado", "Clasificación Rutas TR2",
+                "Inicio Ruta", "Fin Ruta", "Clasificación Rutas TR2",
                 "% Rojo", "% Amarillo", "% Azul", "% Morado", "% Verde", "% Gris",
                 "Rojo Devoluciones", "Amarillo Devoluciones", "Azul Devoluciones",
                 "Morado Devoluciones", "Verde Devoluciones", "Gris Devoluciones",
@@ -1146,10 +1619,14 @@
                 "A Entrega", "a entrega", "A_Entrega"
             ];
 
-            const allHeaders = Object.keys(data[0]);
+            const allHeaders = Object.keys(data[0]).filter(h => h !== '__colA__');
             const rawHeaders2 = allHeaders.filter(h => {
                 const cleanHeader = h.trim();
-                return !excludedColumns2.some(exc => _norm(exc) === _norm(cleanHeader));
+                const normHeader = _norm(cleanHeader);
+                if (normHeader.includes("productividad") && normHeader.includes("externo")) {
+                    return false;
+                }
+                return !excludedColumns2.some(exc => _norm(exc) === normHeader);
             });
 
             activeHeaders2 = [];
@@ -1157,11 +1634,16 @@
                 const lower = _norm(h);
                 return lower === "area de personal" || lower === "area_de_personal";
             });
+            const tiempoHeader = rawHeaders2.find(h => {
+                const lower = _norm(h);
+                return lower === "tiempo operado" || lower === "tiempo_operado" || lower.includes("tiempo operado");
+            });
 
             rawHeaders2.forEach(h => {
                 const lower = _norm(h);
                 const isArea = (lower === "area de personal" || lower === "area_de_personal");
-                if (!isArea) {
+                const isTiempo = (tiempoHeader && h === tiempoHeader);
+                if (!isArea && !isTiempo) {
                     activeHeaders2.push(h);
                     if (lower.includes("productividad") && areaHeader && !activeHeaders2.includes(areaHeader)) {
                         activeHeaders2.push(areaHeader);
@@ -1170,6 +1652,13 @@
             });
 
             if (areaHeader && !activeHeaders2.includes(areaHeader)) activeHeaders2.push(areaHeader);
+
+            const tiempoColInData = tiempoHeader || allHeaders.find(h => _norm(h).includes("tiempo operado"));
+            if (tiempoColInData && !activeHeaders2.includes(tiempoColInData)) {
+                activeHeaders2.push(tiempoColInData);
+            } else if (!tiempoColInData) {
+                activeHeaders2.push("Tiempo operado");
+            }
 
             const { operatorKey, nameKey } = cachedKeys;
             availableOperatorsList = [];
@@ -1191,29 +1680,11 @@
             document.getElementById('operatorSearchInput').value = '';
             document.getElementById('selectedOperatorValue').value = '';
             document.getElementById('operatorBadge2').style.display = 'none';
-            document.getElementById('floatingFilterBtn').style.display = 'none';
+            setResetButtonVisibility(false);
             document.getElementById('filtersBar2').style.display = 'flex';
             document.getElementById('kpiContainer2').style.display = 'flex';
 
             applyCurrentFiltersAndRender(suffix);
-        }
-
-        function getKeys(data) {
-            if (!data || data.length === 0) return { operatorKey: '', nameKey: '', areaKey: '', allHeaders: [] };
-            const allHeaders = Object.keys(data[0]);
-            const areaKey = allHeaders.find(h => {
-                const lower = _norm(h);
-                return lower === "area de personal" || lower === "area_de_personal";
-            }) || '';
-            const operatorKey = allHeaders.find(h => {
-                const lower = _norm(h);
-                return lower === "nombre operador" || lower === "nombre_operador" || lower === "operador" || lower === "operator" || lower.includes("empleado");
-            }) || '';
-            const nameKey = allHeaders.find(h => {
-                const lower = _norm(h);
-                return lower.includes("nombre") || (lower.includes("operador") && !lower.includes("empleado"));
-            }) || '';
-            return { operatorKey, nameKey, areaKey, allHeaders };
         }
 
         function showOperatorList() {
@@ -1260,7 +1731,15 @@
             const badge = document.getElementById('operatorBadge2');
             badge.textContent = `Empleado: ${labelText}`;
             badge.style.display = 'inline-block';
-            document.getElementById('floatingFilterBtn').style.display = 'flex';
+            updateResetButtonState();
+        }
+
+        function updateResetButtonState() {
+            const hasOp = document.getElementById('selectedOperatorValue').value !== "";
+            const hasArea = activeAreaFilters !== null;
+            const hasPlaza = selectedPlazas.length > 0;
+            const hasSort = currentSortColumn !== null;
+            setResetButtonVisibility(hasOp || hasArea || hasPlaza || hasSort);
         }
 
         function clearOperatorFilter() {
@@ -1268,14 +1747,19 @@
             document.getElementById('selectedOperatorValue').value = '';
             document.getElementById('operatorSearchList').style.display = 'none';
             document.getElementById('operatorBadge2').style.display = 'none';
-            document.getElementById('floatingFilterBtn').style.display = 'none';
+            activeAreaFilters = null;
+            selectedPlazas = [];
+            currentSortColumn = null;
+            currentSortAsc = true;
+            document.querySelectorAll('#plaza-checkbox-container .plaza-cb').forEach(cb => { cb.checked = false; });
+            setResetButtonVisibility(false);
             currentPage = 1;
             applyCurrentFiltersAndRender(2);
         }
 
         function applyCurrentFiltersAndRender(suffix) {
             const selectedOperator = document.getElementById('selectedOperatorValue').value;
-            const { operatorKey, areaKey } = cachedKeys;
+            const { operatorKey, areaKey, plazaKey } = cachedKeys;
 
             const doFilter = () => {
                 let filtered = [...globalRawData];
@@ -1287,6 +1771,19 @@
                         let val = row[areaKey] !== undefined ? String(row[areaKey]) : "";
                         return activeAreaFilters.includes(val);
                     });
+                }
+                if (selectedPlazas.length > 0) {
+                    if (plazaKey) {
+                        filtered = filtered.filter(row => {
+                            const pVal = row[plazaKey] !== undefined ? String(row[plazaKey]).trim() : "";
+                            return selectedPlazas.includes(pVal);
+                        });
+                    } else {
+                        filtered = filtered.filter(row => {
+                            const rowText = Object.values(row).join(' ').toLowerCase();
+                            return selectedPlazas.some(p => rowText.includes(String(p).toLowerCase()));
+                        });
+                    }
                 }
                 if (currentSortColumn !== null) {
                     filtered.sort((a, b) => {
@@ -1300,6 +1797,8 @@
                 }
                 currentFilteredData = filtered;
                 renderTableForSection(currentFilteredData, suffix);
+                renderBonoPaqueteTable(currentFilteredData);
+                updateResetButtonState();
             };
 
             if (document.startViewTransition) document.startViewTransition(doFilter);
@@ -1369,6 +1868,7 @@
             closeAreaModal();
             currentPage = 1;
             applyCurrentFiltersAndRender(2);
+            updateResetButtonState();
         }
 
         function getBonoEsquema39(prod, efi) {
@@ -1472,9 +1972,39 @@
             }
 
             const headers = activeHeaders2;
-            const { areaKey } = cachedKeys;
+            const { areaKey, tiempoOperadoKey } = cachedKeys;
             const prodColumn = headers.find(h => _norm(h).includes('productividad'));
             const efiColumn = findEfficiencyColumn(headers);
+            const tiempoCol = tiempoOperadoKey || headers.find(h => _norm(h).includes('tiempo operado')) || '';
+
+            let totalProdAll = 0;
+            let totalEfiAll = 0;
+            let sumProd = 0, countProd = 0;
+            let sumEfi = 0, countEfi = 0;
+            const areasPresentes = new Set();
+
+            data.forEach(row => {
+                if (prodColumn) {
+                    const n = parseNumber(row[prodColumn]);
+                    if (!isNaN(n)) {
+                        sumProd += n;
+                        countProd++;
+                        totalProdAll += n;
+                    }
+                }
+                if (efiColumn) {
+                    let n = parseNumber(row[efiColumn]);
+                    if (!isNaN(n)) {
+                        if (n <= 1 && n > 0) n = n * 100;
+                        sumEfi += n;
+                        countEfi++;
+                        totalEfiAll += n;
+                    }
+                }
+                if (areaKey && row[areaKey] !== undefined) {
+                    areasPresentes.add(String(row[areaKey]).trim().toLowerCase());
+                }
+            });
 
             const totalPages = Math.ceil(data.length / rowsPerPage) || 1;
             if (currentPage > totalPages) currentPage = totalPages;
@@ -1485,15 +2015,13 @@
 
             let html = '<div style="flex: 1;"><table><thead><tr>';
             headers.forEach(h => {
-                let sortIconSymbol = '↕';
-                if (currentSortColumn === h) sortIconSymbol = currentSortAsc ? '▲' : '▼';
                 const lowerH = _norm(h);
                 const isAreaCol = areaKey && (lowerH === _norm(areaKey) || lowerH.includes("area"));
-                html += `<th>`;
+                html += `<th style="cursor: default;">`;
                 html += `<div class="th-content">`;
-                html += `<span onclick="sortTable('${esc(h).replace(/'/g, "\\'")}')" style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">${esc(h)} <span class="sort-icon">${sortIconSymbol}</span></span>`;
+                html += `<span style="display: inline-flex; align-items: center; gap: 4px;">${esc(h)}</span>`;
                 if (isAreaCol) {
-                    html += `<button class="filter-icon-btn" onclick="event.stopPropagation(); openAreaModal()" title="Filtrar Área de Personal" aria-label="Filtrar Área">🔻</button>`;
+                    html += `<button type="button" class="filter-icon-btn" onclick="event.stopPropagation(); openAreaModal()" title="Filtrar Área de Personal" aria-label="Filtrar Área">🔻</button>`;
                 }
                 html += `</div></th>`;
             });
@@ -1510,20 +2038,31 @@
                             if (display <= 1 && display > 0) display = display * 100;
                             val = display.toFixed(2) + '%';
                         }
+                    } else if (tiempoCol && h === tiempoCol) {
+                        val = row[tiempoCol] !== undefined && String(row[tiempoCol]).trim() !== '' ? row[tiempoCol] : '--';
                     }
                     html += `<td>${esc(val)}</td>`;
                 });
                 html += '</tr>';
             });
 
-            const rowsToPad = rowsPerPage - paginatedData.length;
-            if (paginatedData.length < rowsPerPage && currentPage === 1) {
-                for (let i = 0; i < rowsToPad && data.length < rowsPerPage; i++) {
-                    html += '<tr style="visibility: hidden;">';
-                    headers.forEach(() => { html += '<td>&nbsp;</td>'; });
-                    html += '</tr>';
+            // Fila Total al final de la tabla Bono por Operador: dividido entre todos los datos mostrados (data)
+            const totalDisplayedRows = data.length || 1;
+            const avgShownProd = countProd > 0 ? (totalProdAll / totalDisplayedRows) : 0;
+            const avgShownEfi = countEfi > 0 ? (totalEfiAll / totalDisplayedRows) : 0;
+            html += `<tr class="total-summary-row">`;
+            headers.forEach((h, idx) => {
+                if (idx === 0) {
+                    html += `<td>Total</td>`;
+                } else if (h === prodColumn) {
+                    html += `<td>${prodColumn && countProd > 0 ? avgShownProd.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'}</td>`;
+                } else if (h === efiColumn) {
+                    html += `<td>${efiColumn && countEfi > 0 ? avgShownEfi.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%' : '--'}</td>`;
+                } else {
+                    html += `<td></td>`;
                 }
-            }
+            });
+            html += `</tr>`;
             html += '</tbody></table></div>';
 
             if (data.length > rowsPerPage) {
@@ -1531,9 +2070,9 @@
                     <div class="pagination-container">
                         <span>Mostrando registros ${startIndex + 1} a ${Math.min(endIndex, data.length)} de ${data.length}</span>
                         <div class="pagination-buttons">
-                            <button class="page-btn" onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>
+                            <button type="button" class="page-btn" onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>
                             <span class="page-info">Página ${currentPage} de ${totalPages}</span>
-                            <button class="page-btn" onclick="changePage(1)" ${currentPage === totalPages ? 'disabled' : ''}>Siguiente</button>
+                            <button type="button" class="page-btn" onclick="changePage(1)" ${currentPage === totalPages ? 'disabled' : ''}>Siguiente</button>
                         </div>
                     </div>
                 `;
@@ -1542,28 +2081,6 @@
 
             const selectedOperator = document.getElementById('selectedOperatorValue').value;
             const isFiltered = selectedOperator !== "";
-
-            let sumProd = 0, countProd = 0;
-            let sumEfi = 0, countEfi = 0;
-            const areasPresentes = new Set();
-
-            data.forEach(row => {
-                if (prodColumn) {
-                    const n = parseNumber(row[prodColumn]);
-                    if (!isNaN(n)) { sumProd += n; countProd++; }
-                }
-                if (efiColumn) {
-                    let n = parseNumber(row[efiColumn]);
-                    if (!isNaN(n)) {
-                        if (n <= 1 && n > 0) n = n * 100;
-                        sumEfi += n;
-                        countEfi++;
-                    }
-                }
-                if (areaKey && row[areaKey] !== undefined) {
-                    areasPresentes.add(String(row[areaKey]).trim().toLowerCase());
-                }
-            });
 
             const avgProd = countProd > 0 ? (sumProd / countProd) : 0;
             const avgEfi = countEfi > 0 ? (sumEfi / countEfi) : 0;
@@ -1644,6 +2161,371 @@
         }
 
         let concentradoRenderTimer = null;
+
+        function parseDateValue(val) {
+            if (val === undefined || val === null || val === '') return null;
+            if (val instanceof Date && !isNaN(val.getTime())) {
+                return new Date(val.getFullYear(), val.getMonth(), val.getDate());
+            }
+            if (typeof val === 'number' && !isNaN(val)) {
+                const parsed = XLSX.SSF && XLSX.SSF.parse_date_code ? XLSX.SSF.parse_date_code(val) : null;
+                if (parsed && parsed.y && parsed.m && parsed.d) {
+                    return new Date(parsed.y, parsed.m - 1, parsed.d);
+                }
+                const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                const dt = new Date(excelEpoch.getTime() + val * 86400000);
+                if (!isNaN(dt.getTime())) {
+                    return new Date(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
+                }
+            }
+            const raw = String(val).trim();
+            if (!raw) return null;
+
+            let m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+.*)?$/);
+            if (m) {
+                let d = parseInt(m[1], 10);
+                let mo = parseInt(m[2], 10) - 1;
+                let y = parseInt(m[3], 10);
+                if (y < 100) y += 2000;
+                const dt = new Date(y, mo, d);
+                if (dt.getFullYear() === y && dt.getMonth() === mo && dt.getDate() === d) return dt;
+            }
+
+            m = raw.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})(?:[T\s].*)?$/);
+            if (m) {
+                let y = parseInt(m[1], 10);
+                let mo = parseInt(m[2], 10) - 1;
+                let d = parseInt(m[3], 10);
+                const dt = new Date(y, mo, d);
+                if (dt.getFullYear() === y && dt.getMonth() === mo && dt.getDate() === d) return dt;
+            }
+
+            const fallback = new Date(raw);
+            if (!isNaN(fallback.getTime())) {
+                return new Date(fallback.getFullYear(), fallback.getMonth(), fallback.getDate());
+            }
+            return null;
+        }
+
+        function formatDateDMY(dt) {
+            if (!dt) return '';
+            const d = String(dt.getDate()).padStart(2, '0');
+            const m = String(dt.getMonth() + 1).padStart(2, '0');
+            const y = dt.getFullYear();
+            return `${d}/${m}/${y}`;
+        }
+
+        let selectedSaturdayDate = '';
+        let lastBonoPaqueteRows = [];
+
+        function getStrictSaturdayDate(val) {
+            if (val === undefined || val === null || val === '') return null;
+            if (val instanceof Date && !isNaN(val.getTime())) {
+                const dt = new Date(val.getFullYear(), val.getMonth(), val.getDate());
+                return dt.getDay() === 6 ? dt : null;
+            }
+            if (typeof val === 'number' && !isNaN(val)) {
+                if (val < 1 || val > 200000) return null;
+                const parsed = XLSX.SSF && XLSX.SSF.parse_date_code ? XLSX.SSF.parse_date_code(val) : null;
+                if (parsed && parsed.y >= 1990 && parsed.y <= 2100 && parsed.m >= 1 && parsed.m <= 12 && parsed.d >= 1 && parsed.d <= 31) {
+                    const dt = new Date(parsed.y, parsed.m - 1, parsed.d);
+                    if (dt.getFullYear() === parsed.y && dt.getMonth() === parsed.m - 1 && dt.getDate() === parsed.d) {
+                        return dt.getDay() === 6 ? dt : null;
+                    }
+                }
+                const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                const utcDt = new Date(excelEpoch.getTime() + val * 86400000);
+                if (!isNaN(utcDt.getTime()) && utcDt.getUTCFullYear() >= 1990 && utcDt.getUTCFullYear() <= 2100) {
+                    const dt = new Date(utcDt.getUTCFullYear(), utcDt.getUTCMonth(), utcDt.getUTCDate());
+                    return dt.getDay() === 6 ? dt : null;
+                }
+                return null;
+            }
+            const raw = String(val).trim();
+            if (!raw) return null;
+            if (/^[+-]?\d+([.,]\d+)?$/.test(raw)) return null;
+
+            let m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:\s+.*)?$/);
+            if (m) {
+                const d = parseInt(m[1], 10);
+                const mo = parseInt(m[2], 10) - 1;
+                const y = parseInt(m[3], 10);
+                if (y >= 1990 && y <= 2100 && mo >= 0 && mo <= 11 && d >= 1 && d <= 31) {
+                    const dt = new Date(y, mo, d);
+                    if (dt.getFullYear() === y && dt.getMonth() === mo && dt.getDate() === d) {
+                        return dt.getDay() === 6 ? dt : null;
+                    }
+                }
+                return null;
+            }
+
+            m = raw.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})(?:[T\s].*)?$/);
+            if (m) {
+                const y = parseInt(m[1], 10);
+                const mo = parseInt(m[2], 10) - 1;
+                const d = parseInt(m[3], 10);
+                if (y >= 1990 && y <= 2100 && mo >= 0 && mo <= 11 && d >= 1 && d <= 31) {
+                    const dt = new Date(y, mo, d);
+                    if (dt.getFullYear() === y && dt.getMonth() === mo && dt.getDate() === d) {
+                        return dt.getDay() === 6 ? dt : null;
+                    }
+                }
+                return null;
+            }
+
+            return null;
+        }
+
+        function formatDateISO(dt) {
+            if (!dt) return '';
+            const y = dt.getFullYear();
+            const m = String(dt.getMonth() + 1).padStart(2, '0');
+            const d = String(dt.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function formatDateDMY(dt) {
+            if (!dt) return '';
+            const d = String(dt.getDate()).padStart(2, '0');
+            const m = String(dt.getMonth() + 1).padStart(2, '0');
+            const y = dt.getFullYear();
+            return `${d}/${m}/${y}`;
+        }
+
+        function findColumnByNorm(headers, targetNorms, partialCheck) {
+            for (let t of targetNorms) {
+                const exact = headers.find(h => _norm(h) === _norm(t));
+                if (exact) return exact;
+            }
+            if (partialCheck) {
+                return headers.find(h => partialCheck(_norm(h))) || '';
+            }
+            return '';
+        }
+
+        function onSaturdayDateFilterChange() {
+            const sel = document.getElementById('saturdayDateFilter');
+            selectedSaturdayDate = sel ? sel.value : '';
+            const sourceData = currentFilteredData && currentFilteredData.length > 0 ? currentFilteredData : globalRawData;
+            renderBonoPaqueteTable(sourceData);
+        }
+
+        function resolveOperatorFromRow(row, headers) {
+            const candidates = [
+                'operator', 'operador', 'numero de empleado', 'numero_de_empleado',
+                'num empleado', 'num_empleado', 'no empleado', 'no_empleado',
+                'id operador', 'id_operador', 'nombre operador', 'nombre_operador', 'empleado'
+            ];
+            let opCol = cachedKeys.operatorKey || '';
+            if (!opCol) {
+                for (const c of candidates) {
+                    const match = headers.find(h => _norm(h) === _norm(c));
+                    if (match) { opCol = match; break; }
+                }
+            }
+            if (!opCol) {
+                opCol = headers.find(h => {
+                    const n = _norm(h);
+                    return n.includes('operator') || n.includes('operador') || n.includes('empleado');
+                }) || '';
+            }
+            if (opCol && row[opCol] !== undefined && String(row[opCol]).trim() !== '') {
+                return String(row[opCol]).trim();
+            }
+            // Respaldo: buscar si alguna clave del objeto normalizada coincide con operator/operador/empleado
+            for (const key of Object.keys(row || {})) {
+                if (key === '__colA__') continue;
+                const nk = _norm(key);
+                if (nk === 'operator' || nk === 'operador' || nk.includes('empleado')) {
+                    if (row[key] !== undefined && String(row[key]).trim() !== '') {
+                        return String(row[key]).trim();
+                    }
+                }
+            }
+            if (row.__colA__ !== undefined && String(row.__colA__).trim() !== '') {
+                return String(row.__colA__).trim();
+            }
+            return '--';
+        }
+
+        function renderBonoPaqueteTable(data) {
+            const container = document.getElementById('bonoPaqueteTableContainer');
+            const sel = document.getElementById('saturdayDateFilter');
+            const dlBtn = document.getElementById('downloadBonoPaqueteBtn');
+            if (!container) return;
+
+            if (!data || data.length === 0) {
+                lastBonoPaqueteRows = [];
+                if (sel) sel.innerHTML = '<option value="">Todos los sábados</option>';
+                if (dlBtn) dlBtn.style.display = 'none';
+                container.innerHTML = '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">No hay registros disponibles para calcular Bono por paquete entregado.</p>';
+                renderBonoFinalTable();
+                return;
+            }
+
+            const headers = Object.keys(data[0] || {}).filter(h => h !== '__colA__');
+            const fechaCol = findColumnByNorm(
+                headers,
+                ['fecha evento', 'fecha_evento', 'fecha'],
+                n => n.includes('fecha') && n.includes('evento')
+            ) || headers[3] || '';
+
+            const aEntregaCol = findColumnByNorm(
+                headers,
+                ['a entrega', 'a_entrega'],
+                n => n === 'a entrega' || n.includes('a entrega')
+            );
+            const entregadoCol = findColumnByNorm(
+                headers,
+                ['entregado', 'entregados', 'paquetes entregados'],
+                n => n.includes('entregad') && !n.includes('bono') && !n.includes('paquete')
+            );
+            const excepcionesCol = findColumnByNorm(
+                headers,
+                ['excepciones', 'excepcion'],
+                n => n.includes('excepcion')
+            );
+
+            const bonoFdsRate = 5.28;
+            const allSaturdayRows = [];
+            const satDateMap = new Map();
+
+            data.forEach((row, idx) => {
+                const satDate = fechaCol ? getStrictSaturdayDate(row[fechaCol]) : null;
+                if (satDate) {
+                    const isoKey = formatDateISO(satDate);
+                    const dmyLabel = formatDateDMY(satDate);
+                    if (!satDateMap.has(isoKey)) {
+                        satDateMap.set(isoKey, dmyLabel);
+                    }
+
+                    const operatorVal = resolveOperatorFromRow(row, headers);
+                    const aEntregaVal = aEntregaCol ? parseNumber(row[aEntregaCol]) : 0;
+                    const entregadoVal = entregadoCol ? parseNumber(row[entregadoCol]) : 0;
+                    const excepcionesVal = excepcionesCol ? parseNumber(row[excepcionesCol]) : 0;
+
+                    const numAEntrega = isNaN(aEntregaVal) ? 0 : aEntregaVal;
+                    const numEntregado = isNaN(entregadoVal) ? 0 : entregadoVal;
+                    const numExcepciones = isNaN(excepcionesVal) ? 0 : excepcionesVal;
+                    const bonoCalc = numEntregado * bonoFdsRate;
+
+                    allSaturdayRows.push({
+                        idx,
+                        dateIso: isoKey,
+                        dateLabel: dmyLabel,
+                        operator: operatorVal,
+                        aEntrega: numAEntrega,
+                        entregado: numEntregado,
+                        excepciones: numExcepciones,
+                        bonoFds: bonoFdsRate,
+                        bono: bonoCalc
+                    });
+                }
+            });
+
+            if (sel) {
+                const sortedDates = Array.from(satDateMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+                if (selectedSaturdayDate && !satDateMap.has(selectedSaturdayDate)) {
+                    selectedSaturdayDate = '';
+                }
+                let optsHtml = '<option value="">Todos los sábados</option>';
+                sortedDates.forEach(([isoVal, labelVal]) => {
+                    const selectedAttr = selectedSaturdayDate === isoVal ? ' selected' : '';
+                    optsHtml += `<option value="${esc(isoVal)}"${selectedAttr}>Sábado ${esc(labelVal)}</option>`;
+                });
+                sel.innerHTML = optsHtml;
+            }
+
+            const filteredSaturdayRows = selectedSaturdayDate
+                ? allSaturdayRows.filter(r => r.dateIso === selectedSaturdayDate)
+                : allSaturdayRows;
+
+            lastBonoPaqueteRows = filteredSaturdayRows;
+
+            if (filteredSaturdayRows.length === 0) {
+                if (dlBtn) dlBtn.style.display = 'none';
+                container.innerHTML = '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">No se identificaron días sábados en los datos cargados.</p>';
+                renderBonoFinalTable();
+                return;
+            }
+
+            let sumAEntrega = 0;
+            let sumEntregado = 0;
+            let sumExcepciones = 0;
+            let sumBono = 0;
+
+            filteredSaturdayRows.forEach(r => {
+                sumAEntrega += r.aEntrega;
+                sumEntregado += r.entregado;
+                sumExcepciones += r.excepciones;
+                sumBono += r.bono;
+            });
+
+            let html = `<table>
+                <thead><tr>
+                    <th>Operator</th>
+                    <th>A Entrega</th>
+                    <th>Entregado</th>
+                    <th>Excepciones</th>
+                    <th>Bono FDS</th>
+                    <th>Bono</th>
+                </tr></thead><tbody>`;
+
+            filteredSaturdayRows.forEach((item, i) => {
+                html += `<tr class="row-enter" style="animation-delay:${i * 20}ms">
+                    <td>${esc(item.operator)}</td>
+                    <td>${item.aEntrega.toLocaleString('es-MX', { maximumFractionDigits: 2 })}</td>
+                    <td>${item.entregado.toLocaleString('es-MX', { maximumFractionDigits: 2 })}</td>
+                    <td>${item.excepciones.toLocaleString('es-MX', { maximumFractionDigits: 2 })}</td>
+                    <td>$${item.bonoFds.toFixed(2)}</td>
+                    <td>$${item.bono.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>`;
+            });
+
+            html += `</tbody><tfoot class="concentrado-tfoot">
+                <tr class="concentrado-total-row">
+                    <td style="text-align: right; font-weight: bold;">Total Sábados:</td>
+                    <td>${sumAEntrega.toLocaleString('es-MX', { maximumFractionDigits: 2 })}</td>
+                    <td>${sumEntregado.toLocaleString('es-MX', { maximumFractionDigits: 2 })}</td>
+                    <td>${sumExcepciones.toLocaleString('es-MX', { maximumFractionDigits: 2 })}</td>
+                    <td>$${bonoFdsRate.toFixed(2)}</td>
+                    <td class="concentrado-total-amount" style="font-weight: bold;">$${sumBono.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+            </tfoot></table>`;
+
+            container.innerHTML = html;
+            if (dlBtn) dlBtn.style.display = 'inline-flex';
+            renderBonoFinalTable();
+        }
+
+        function downloadBonoPaqueteExcel() {
+            if (!lastBonoPaqueteRows || lastBonoPaqueteRows.length === 0) return;
+            const exportData = lastBonoPaqueteRows.map(item => ({
+                "Operator": item.operator,
+                "A Entrega": item.aEntrega,
+                "Entregado": item.entregado,
+                "Excepciones": item.excepciones,
+                "Bono FDS": item.bonoFds,
+                "Bono": Number(item.bono.toFixed(2))
+            }));
+            const totalA = lastBonoPaqueteRows.reduce((acc, r) => acc + r.aEntrega, 0);
+            const totalE = lastBonoPaqueteRows.reduce((acc, r) => acc + r.entregado, 0);
+            const totalX = lastBonoPaqueteRows.reduce((acc, r) => acc + r.excepciones, 0);
+            const totalB = lastBonoPaqueteRows.reduce((acc, r) => acc + r.bono, 0);
+            exportData.push({
+                "Operator": "TOTAL SÁBADOS",
+                "A Entrega": totalA,
+                "Entregado": totalE,
+                "Excepciones": totalX,
+                "Bono FDS": 5.28,
+                "Bono": Number(totalB.toFixed(2))
+            });
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Bono Paquete Entregado");
+            XLSX.writeFile(workbook, "Bono_Paquete_Entregado_Sabados.xlsx");
+        }
+
         function renderConcentradoTable(data) {
             if (concentradoRenderTimer) clearTimeout(concentradoRenderTimer);
             concentradoRenderTimer = setTimeout(() => {
@@ -1723,15 +2605,146 @@
                         <td>$${item.bonoTotal.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                     </tr>`;
                 });
-                html += `</tbody><tfoot>
-                    <tr style="background-color: #f1f1f1; font-weight: bold;">
-                        <td colspan="5" style="text-align: right;">Total General Bonos Estimados:</td>
-                        <td style="color: var(--estafeta-red);">$${totalGeneralBono.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                html += `</tbody><tfoot class="concentrado-tfoot">
+                    <tr class="concentrado-total-row">
+                        <td colspan="5" style="text-align: right; font-weight: bold;">Total General Bonos Estimados:</td>
+                        <td class="concentrado-total-amount" style="font-weight: bold;">$${totalGeneralBono.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                     </tr>
                 </tfoot></table>`;
                 container.innerHTML = html;
                 document.getElementById('downloadConcentradoBtn').style.display = 'inline-flex';
+                renderBonoFinalTable();
             }, 200);
+        }
+
+        let lastBonoFinalRows = [];
+
+        function renderBonoFinalTable() {
+            const container = document.getElementById('bonoFinalTableContainer');
+            const dlBtn = document.getElementById('downloadBonoFinalBtn');
+            if (!container) return;
+
+            const hasPaquete = Array.isArray(lastBonoPaqueteRows) && lastBonoPaqueteRows.length > 0;
+            const hasConcentrado = Array.isArray(lastConcentradoRows) && lastConcentradoRows.length > 0;
+
+            if (!hasPaquete && !hasConcentrado) {
+                lastBonoFinalRows = [];
+                if (dlBtn) dlBtn.style.display = 'none';
+                container.innerHTML = '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">No hay datos de bonos disponibles para calcular el Bono Final.</p>';
+                return;
+            }
+
+            const operatorMap = new Map();
+
+            const ensureOperator = (opKey, opName = '') => {
+                const cleanKey = String(opKey ?? '').trim() || '--';
+                if (!operatorMap.has(cleanKey)) {
+                    operatorMap.set(cleanKey, {
+                        operator: cleanKey,
+                        opName: opName || '',
+                        bonoPaquete: 0,
+                        bonoConcentrado: 0,
+                        bonoFinal: 0
+                    });
+                } else if (opName && !operatorMap.get(cleanKey).opName) {
+                    operatorMap.get(cleanKey).opName = opName;
+                }
+                return operatorMap.get(cleanKey);
+            };
+
+            if (hasConcentrado) {
+                lastConcentradoRows.forEach(item => {
+                    const entry = ensureOperator(item.opId, item.opName || '');
+                    entry.bonoConcentrado += Number(item.bonoTotal) || 0;
+                });
+            }
+
+            if (hasPaquete) {
+                lastBonoPaqueteRows.forEach(item => {
+                    const entry = ensureOperator(item.operator, '');
+                    entry.bonoPaquete += Number(item.bono) || 0;
+                });
+            }
+
+            const rows = Array.from(operatorMap.values()).map(r => {
+                const total = (Number(r.bonoPaquete) || 0) + (Number(r.bonoConcentrado) || 0);
+                return {
+                    operator: r.operator,
+                    opName: r.opName,
+                    bonoPaquete: Number((Number(r.bonoPaquete) || 0).toFixed(2)),
+                    bonoConcentrado: Number((Number(r.bonoConcentrado) || 0).toFixed(2)),
+                    bonoFinal: Number(total.toFixed(2))
+                };
+            });
+
+            rows.sort((a, b) => String(a.operator).localeCompare(String(b.operator), undefined, { numeric: true, sensitivity: 'base' }));
+            lastBonoFinalRows = rows;
+
+            let sumPaquete = 0;
+            let sumConcentrado = 0;
+            let sumFinal = 0;
+
+            rows.forEach(r => {
+                sumPaquete += r.bonoPaquete;
+                sumConcentrado += r.bonoConcentrado;
+                sumFinal += r.bonoFinal;
+            });
+
+            let html = `<table>
+                <thead><tr>
+                    <th>Operator</th>
+                    <th>Nombre Operador</th>
+                    <th>Bono por paquete entregado</th>
+                    <th>Concentrado Bono</th>
+                    <th>Bono Final</th>
+                </tr></thead><tbody>`;
+
+            rows.forEach((item, i) => {
+                html += `<tr class="row-enter" style="animation-delay:${i * 15}ms">
+                    <td>${esc(item.operator)}</td>
+                    <td>${esc(item.opName) || '--'}</td>
+                    <td>$${item.bonoPaquete.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>$${item.bonoConcentrado.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style="font-weight: bold;">$${item.bonoFinal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>`;
+            });
+
+            html += `</tbody><tfoot class="concentrado-tfoot">
+                <tr class="concentrado-total-row">
+                    <td colspan="2" style="text-align: right; font-weight: bold;">Total Bono Final:</td>
+                    <td>$${sumPaquete.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>$${sumConcentrado.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="concentrado-total-amount" style="font-weight: bold;">$${sumFinal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+            </tfoot></table>`;
+
+            container.innerHTML = html;
+            if (dlBtn) dlBtn.style.display = 'inline-flex';
+        }
+
+        function downloadBonoFinalExcel() {
+            if (!lastBonoFinalRows || lastBonoFinalRows.length === 0) return;
+            const exportData = lastBonoFinalRows.map(item => ({
+                "Operator": item.operator,
+                "Nombre Operador": item.opName || '--',
+                "Bono por paquete entregado ($)": item.bonoPaquete,
+                "Concentrado Bono ($)": item.bonoConcentrado,
+                "Bono Final ($)": item.bonoFinal
+            }));
+            const totalP = lastBonoFinalRows.reduce((acc, r) => acc + r.bonoPaquete, 0);
+            const totalC = lastBonoFinalRows.reduce((acc, r) => acc + r.bonoConcentrado, 0);
+            const totalF = lastBonoFinalRows.reduce((acc, r) => acc + r.bonoFinal, 0);
+            exportData.push({
+                "Operator": "TOTAL BONO FINAL",
+                "Nombre Operador": "",
+                "Bono por paquete entregado ($)": Number(totalP.toFixed(2)),
+                "Concentrado Bono ($)": Number(totalC.toFixed(2)),
+                "Bono Final ($)": Number(totalF.toFixed(2))
+            });
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Bono Final");
+            XLSX.writeFile(workbook, "Bono_Final_Por_Operator.xlsx");
         }
 
         function downloadConcentradoExcel() {
@@ -1761,6 +2774,7 @@
             document.body.addEventListener('click', (e) => {
                 const btn = e.target.closest('button, .file-upload-btn, .searchable-item, [onclick]');
                 if (!btn || btn.disabled) return;
+                if (btn.closest('#banner-theme-toggle, #drop-zone, .upload-btn-wrapper')) return;
                 if (!btn.classList.contains('ripple-host')) btn.classList.add('ripple-host');
                 const rect = btn.getBoundingClientRect();
                 const size = Math.max(rect.width, rect.height);
@@ -1793,9 +2807,13 @@
             const icon = document.getElementById('banner-theme-icon');
             if (tema === 'dark') {
                 document.body.classList.add('dark-mode');
-                if (icon) icon.className = 'fa-solid fa-sun';
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.add('dark-mode');
+                if (icon) icon.className = 'fa-solid fa-sun text-amber-400';
             } else {
                 document.body.classList.remove('dark-mode');
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.remove('dark-mode');
                 if (icon) icon.className = 'fa-solid fa-moon';
             }
         }
@@ -1808,6 +2826,7 @@
                 const next = isDark ? 'light' : 'dark';
                 aplicarTema(next);
                 localStorage.setItem('panel-theme', next);
+                localStorage.setItem('theme', next);
                 try {
                     if (window.parent && window.parent !== window) {
                         window.parent.postMessage({ theme: next }, '*');
@@ -1821,7 +2840,7 @@
         });
 
         (function initTema() {
-            const t = localStorage.getItem('panel-theme');
+            const t = localStorage.getItem('panel-theme') || localStorage.getItem('theme');
             const shouldBeDark = t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
             aplicarTema(shouldBeDark ? 'dark' : 'light');
         })();
