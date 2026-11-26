@@ -177,18 +177,18 @@
         }
         #notif-badge.hidden { display: none !important; }
 
-        #fullscreen-btn-ruta {
+        #fullscreen-btn-ruta, #fullscreen-btn-estado {
             border-color: var(--border-color);
             color: var(--text-main);
         }
-        #fullscreen-btn-ruta:hover {
+        #fullscreen-btn-ruta:hover, #fullscreen-btn-estado:hover {
             background-color: var(--table-hover);
         }
-        body.dark-mode #fullscreen-btn-ruta {
+        body.dark-mode #fullscreen-btn-ruta, body.dark-mode #fullscreen-btn-estado {
             border-color: #DA291C;
             color: #DA291C;
         }
-        body.dark-mode #fullscreen-btn-ruta:hover {
+        body.dark-mode #fullscreen-btn-ruta:hover, body.dark-mode #fullscreen-btn-estado:hover {
             background-color: rgba(218, 41, 28, 0.15);
         }
 
@@ -564,13 +564,29 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="adaptive-card p-5 rounded-xl shadow-sm border flex flex-col">
-                    <h3 class="font-bold text-sm mb-3"><i class="fas fa-table mr-2 text-estafeta-red"></i>Distribución por Estado</h3>
-                    <div class="overflow-x-auto flex-grow" style="max-height: 250px;">
-                        <table class="w-full text-xs text-left border-collapse">
-                            <thead><tr><th class="p-2">Estado</th><th class="p-2 text-right">Cantidad</th></tr></thead>
-                            <tbody id="tableEstadoBody"><tr><td colspan="2" class="p-4 text-center" style="color: var(--text-muted);">Sin datos</td></tr></tbody>
-                        </table>
+                <div id="estadoCardContainer" class="adaptive-card p-5 rounded-xl shadow-sm border flex flex-col transition-all duration-300">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-sm"><i class="fas fa-chart-pie mr-2 text-estafeta-red"></i>Distribución por Estado</h3>
+                        <button onclick="toggleFullscreenEstado()" id="fullscreen-btn-estado" class="w-9 h-9 rounded-full border flex items-center justify-center transition cursor-pointer" title="Expandir a Pantalla Completa">
+                            <i id="fullscreen-icon-estado" class="fa-solid fa-expand text-xs"></i>
+                        </button>
+                    </div>
+                    <div id="estadoContentWrapper" class="flex-grow flex flex-col gap-3 overflow-y-auto" style="max-height: 255px; transition: max-height 0.3s ease;">
+                        <div class="flex flex-col sm:flex-row items-center gap-3 flex-grow">
+                            <div id="estadoChartBox" class="relative flex items-center justify-center flex-shrink-0 mx-auto" style="width: 145px; height: 145px;">
+                                <canvas id="chartEstadoDonut"></canvas>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-2">
+                                    <span id="estadoDonutTotal" class="text-2xl font-black leading-none" style="color: var(--text-main);">0</span>
+                                    <span class="text-[10px] font-medium mt-1" style="color: var(--text-muted);">OR totales</span>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto w-full flex-grow">
+                                <table class="w-full text-xs text-left border-collapse">
+                                    <thead><tr><th class="p-2">Estado</th><th class="p-2 text-right">Cantidad</th></tr></thead>
+                                    <tbody id="tableEstadoBody"><tr><td colspan="2" class="p-4 text-center" style="color: var(--text-muted);">Sin datos</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -721,6 +737,7 @@
         let filteredData = [];
         let availableDates = new Set();
         let chartTipo = null;
+        let chartEstadoDonut = null;
         let sortDirections = {};
         let calendarCurrentDate = new Date();
         let selectedFilterDate = null;
@@ -728,6 +745,7 @@
         let rowsPerPage = 20;
         let activeModalType = null;
         let isRutaFullscreen = false;
+        let isEstadoFullscreen = false;
         let hideUploadLabelsTimer = null;
 
         function scheduleHideUploadLabels(delayMs = 2000) {
@@ -992,6 +1010,7 @@
 
         function initDashboard(data) {
             if (chartTipo) { chartTipo.destroy(); chartTipo = null; }
+            if (chartEstadoDonut) { chartEstadoDonut.destroy(); chartEstadoDonut = null; }
             filteredData = [...data];
             currentPage = 1;
             renderCalendar();
@@ -1281,23 +1300,247 @@
             updateMainTable();
         }
 
+        function getEstadoChartColor(estado, index) {
+            const est = _norm(estado);
+            if (est.includes('recolectado')) return '#16a34a';
+            if (est.includes('enrutado')) return '#eab308';
+            if (est.includes('excepcion')) return '#dc2626';
+            if (est.includes('cancelad')) return '#64748b';
+            if (est.includes('desasignad')) return '#6366f1';
+            const fallbackPalette = ['#183747', '#0284c7', '#f97316', '#14b8a6', '#8b5cf6', '#ec4899'];
+            return fallbackPalette[index % fallbackPalette.length];
+        }
+
+        function toggleFullscreenEstado() {
+            const card = document.getElementById('estadoCardContainer');
+            const icon = document.getElementById('fullscreen-icon-estado');
+            const wrapper = document.getElementById('estadoContentWrapper');
+
+            if (!card.classList.contains('fixed')) {
+                card.classList.add('fixed', 'inset-0', 'z-50', 'm-6', 'rounded-2xl', 'p-8', 'shadow-2xl', 'overflow-y-auto');
+                card.classList.remove('p-5');
+                wrapper.style.maxHeight = 'calc(100vh - 150px)';
+                icon.className = 'fa-solid fa-compress text-xs';
+                isEstadoFullscreen = true;
+            } else {
+                card.classList.remove('fixed', 'inset-0', 'z-50', 'm-6', 'rounded-2xl', 'p-8', 'shadow-2xl', 'overflow-y-auto');
+                card.classList.add('p-5');
+                wrapper.style.maxHeight = '255px';
+                icon.className = 'fa-solid fa-expand text-xs';
+                isEstadoFullscreen = false;
+            }
+            updateEstadoTable();
+        }
+
         function updateEstadoTable() {
             const counts = {};
+            const packagesByEstado = {};
             filteredData.forEach(d => {
                 const est = d.Estado || 'DESCONOCIDO';
                 counts[est] = (counts[est] || 0) + 1;
+                packagesByEstado[est] = (packagesByEstado[est] || 0) + (Number(d.Cantidad) || 1);
             });
-            const tbody = document.getElementById('tableEstadoBody');
-            tbody.innerHTML = '';
-            const keys = Object.keys(counts);
+
+            const wrapper = document.getElementById('estadoContentWrapper');
+            const keys = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+            const totalOR = filteredData.length;
+            const totalPaquetes = filteredData.reduce((acc, d) => acc + (Number(d.Cantidad) || 1), 0);
+            const isDark = document.body.classList.contains('dark-mode');
+
+            if (chartEstadoDonut) {
+                chartEstadoDonut.destroy();
+                chartEstadoDonut = null;
+            }
+
             if (keys.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="2" class="p-4 text-center" style="color: var(--text-muted);">Sin datos</td></tr>`;
+                wrapper.innerHTML = `
+                    <div class="flex flex-col sm:flex-row items-center gap-3 flex-grow">
+                        <div class="relative flex items-center justify-center flex-shrink-0 mx-auto" style="width: 145px; height: 145px;">
+                            <canvas id="chartEstadoDonut"></canvas>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-2">
+                                <span id="estadoDonutTotal" class="text-2xl font-black leading-none" style="color: var(--text-main);">0</span>
+                                <span class="text-[10px] font-medium mt-1" style="color: var(--text-muted);">OR totales</span>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto w-full flex-grow">
+                            <table class="w-full text-xs text-left border-collapse">
+                                <thead><tr><th class="p-2">Estado</th><th class="p-2 text-right">Cantidad</th></tr></thead>
+                                <tbody id="tableEstadoBody"><tr><td colspan="2" class="p-4 text-center" style="color: var(--text-muted);">Sin datos</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                const ctxEmpty = document.getElementById('chartEstadoDonut').getContext('2d');
+                chartEstadoDonut = new Chart(ctxEmpty, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Sin datos'],
+                        datasets: [{ data: [1], backgroundColor: [isDark ? '#334155' : '#e2e8f0'], borderWidth: 0 }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '72%',
+                        plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: false } }
+                    }
+                });
                 return;
             }
-            keys.forEach(est => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td class="p-2 font-medium">${esc(est)}</td><td class="p-2 text-right font-bold text-estafeta-red">${counts[est].toLocaleString()}</td>`;
-                tbody.appendChild(tr);
+
+            const chartColors = keys.length === 1
+                ? [isDark ? '#38bdf8' : '#183747']
+                : keys.map((k, idx) => getEstadoChartColor(k, idx));
+            const dataValues = keys.map(k => counts[k]);
+
+            if (!isEstadoFullscreen) {
+                let rowsHtml = '';
+                keys.forEach((est, idx) => {
+                    const color = chartColors[idx];
+                    rowsHtml += `
+                        <tr>
+                            <td class="p-2 font-medium">
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0" style="background-color: ${color};"></span>
+                                    <span>${esc(est)}</span>
+                                </span>
+                            </td>
+                            <td class="p-2 text-right font-bold text-estafeta-red">${counts[est].toLocaleString()}</td>
+                        </tr>`;
+                });
+
+                wrapper.innerHTML = `
+                    <div class="flex flex-col sm:flex-row items-center gap-3 flex-grow">
+                        <div id="estadoChartBox" class="relative flex items-center justify-center flex-shrink-0 mx-auto" style="width: 145px; height: 145px;">
+                            <canvas id="chartEstadoDonut"></canvas>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-2">
+                                <span id="estadoDonutTotal" class="text-2xl font-black leading-none" style="color: var(--text-main);">${totalOR.toLocaleString()}</span>
+                                <span class="text-[10px] font-medium mt-1" style="color: var(--text-muted);">OR totales</span>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto w-full flex-grow">
+                            <table class="w-full text-xs text-left border-collapse">
+                                <thead><tr><th class="p-2">Estado</th><th class="p-2 text-right">Cantidad</th></tr></thead>
+                                <tbody id="tableEstadoBody">${rowsHtml}</tbody>
+                            </table>
+                        </div>
+                    </div>`;
+            } else {
+                let cardsHtml = '';
+                let fullRowsHtml = '';
+
+                keys.forEach((est, idx) => {
+                    const color = chartColors[idx];
+                    const count = counts[est];
+                    const pkgs = packagesByEstado[est] || 0;
+                    const pct = totalOR > 0 ? ((count / totalOR) * 100).toFixed(1) : '0.0';
+
+                    cardsHtml += `
+                        <div class="p-4 rounded-xl border flex flex-col justify-between gap-2 shadow-xs" style="border-color: var(--border-color); background-color: var(--modal-item-bg);">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="inline-flex items-center gap-2 font-bold text-xs truncate" title="${esc(est)}">
+                                    <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${color};"></span>
+                                    <span class="truncate">${esc(est)}</span>
+                                </span>
+                                <span class="text-xs font-extrabold px-2 py-0.5 rounded-md record-badge">${pct}%</span>
+                            </div>
+                            <div class="flex items-baseline justify-between mt-1">
+                                <span class="text-2xl font-black">${count.toLocaleString()} <span class="text-[11px] font-normal" style="color: var(--text-muted);">OR</span></span>
+                                <span class="text-xs font-semibold" style="color: var(--text-muted);">${pkgs.toLocaleString()} paq.</span>
+                            </div>
+                            <div class="w-full h-1.5 rounded-full overflow-hidden" style="background-color: var(--border-color);">
+                                <div class="h-full rounded-full" style="width: ${pct}%; background-color: ${color};"></div>
+                            </div>
+                        </div>`;
+
+                    fullRowsHtml += `
+                        <tr>
+                            <td class="p-3 font-semibold">
+                                <span class="inline-flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full inline-block" style="background-color: ${color};"></span>
+                                    <span>${esc(est)}</span>
+                                </span>
+                            </td>
+                            <td class="p-3 text-right font-bold text-estafeta-red">${count.toLocaleString()}</td>
+                            <td class="p-3 text-right font-semibold">${pkgs.toLocaleString()}</td>
+                            <td class="p-3 text-right font-bold">${pct}%</td>
+                        </tr>`;
+                });
+
+                wrapper.innerHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center p-2">
+                        <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 rounded-2xl border" style="border-color: var(--border-color); background-color: var(--modal-item-bg);">
+                            <div class="relative flex items-center justify-center" style="width: 260px; height: 260px;">
+                                <canvas id="chartEstadoDonut"></canvas>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4">
+                                    <span id="estadoDonutTotal" class="text-5xl font-black leading-none" style="color: var(--text-main);">${totalOR.toLocaleString()}</span>
+                                    <span class="text-sm font-medium mt-2" style="color: var(--text-muted);">OR totales</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex flex-wrap justify-center gap-4 text-xs font-semibold" style="color: var(--text-muted);">
+                                <span><strong style="color: var(--text-main);">${keys.length}</strong> estados activos</span>
+                                <span>•</span>
+                                <span><strong style="color: var(--text-main);">${totalPaquetes.toLocaleString()}</strong> paquetes totales</span>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-7 flex flex-col gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                                ${cardsHtml}
+                            </div>
+                            <div class="overflow-x-auto rounded-xl border" style="border-color: var(--border-color);">
+                                <table class="w-full text-xs text-left border-collapse">
+                                    <thead>
+                                        <tr>
+                                            <th class="p-3">Estado</th>
+                                            <th class="p-3 text-right">Órdenes (OR)</th>
+                                            <th class="p-3 text-right">Paquetes</th>
+                                            <th class="p-3 text-right">Participación</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableEstadoBody">${fullRowsHtml}</tbody>
+                                    <tfoot>
+                                        <tr class="font-bold" style="background-color: var(--bg-main);">
+                                            <td class="p-3">Total General</td>
+                                            <td class="p-3 text-right text-estafeta-red">${totalOR.toLocaleString()}</td>
+                                            <td class="p-3 text-right">${totalPaquetes.toLocaleString()}</td>
+                                            <td class="p-3 text-right">100.0%</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            const ctxEstado = document.getElementById('chartEstadoDonut').getContext('2d');
+            chartEstadoDonut = new Chart(ctxEstado, {
+                type: 'doughnut',
+                data: {
+                    labels: keys,
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: chartColors,
+                        borderColor: isDark ? '#1e293b' : '#ffffff',
+                        borderWidth: keys.length > 1 ? 2 : 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '72%',
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    const val = ctx.parsed || 0;
+                                    const pct = totalOR > 0 ? ((val / totalOR) * 100).toFixed(1) : '0.0';
+                                    return ` ${ctx.label}: ${val.toLocaleString()} OR (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
             });
         }
 
@@ -1566,8 +1809,9 @@
                 document.body.classList.remove('dark-mode');
                 if (icon) icon.className = 'fa-solid fa-moon text-white';
             }
-            if (typeof filteredData !== 'undefined' && filteredData && filteredData.length >= 0 && typeof updateTipoChart === 'function') {
-                try { if (chartTipo || (filteredData && filteredData.length)) updateTipoChart(); } catch (e) {}
+            if (typeof filteredData !== 'undefined' && filteredData && filteredData.length >= 0) {
+                try { if (typeof updateTipoChart === 'function' && (chartTipo || filteredData.length)) updateTipoChart(); } catch (e) {}
+                try { if (typeof updateEstadoTable === 'function' && (chartEstadoDonut || filteredData.length)) updateEstadoTable(); } catch (e) {}
             }
         }
 
@@ -1743,6 +1987,8 @@
                 closeNotifPanel();
                 document.getElementById('datePickerPopup').classList.add('hidden');
                 closeModal();
+                if (isEstadoFullscreen) toggleFullscreenEstado();
+                if (isRutaFullscreen) toggleFullscreenRuta();
             }
         });
 
