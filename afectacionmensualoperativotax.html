@@ -26,7 +26,7 @@
             --badge-bg: #f8fafc;
             --badge-text: #b91c1c;
         }
-        body { background-color: #000000; color: #1e293b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
+        body { background-color: #ffffff; color: #1e293b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
         
         table *::selection { background: transparent; }
         table { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -1045,7 +1045,7 @@
         if(e.target.files.length) handleFile(e.target.files[0]);
     });
 
-    const _norm = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const _norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
     function validarArchivo(encabezados) {
         if (!encabezados || encabezados.length === 0) return false;
