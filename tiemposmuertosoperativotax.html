@@ -163,10 +163,10 @@
 
         .fullscreen-section #gps-map { height: calc(100vh - 220px) !important; }
         .fullscreen-section #crono-map { height: calc(100vh - 280px) !important; }
-        #map-card.fullscreen, #gps-map-section-card.fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; border-radius: 0 !important; padding: 16px !important; background-color: white !important; box-shadow: none !important; display: flex; flex-direction: column; }
-        body.dark-mode #map-card.fullscreen, body.dark-mode #gps-map-section-card.fullscreen { background-color: #0f172a !important; }
+        #map-card.fullscreen, #gps-map-card.fullscreen, #gps-map-section-card.fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; border-radius: 0 !important; padding: 16px !important; background-color: white !important; box-shadow: none !important; display: flex; flex-direction: column; }
+        body.dark-mode #map-card.fullscreen, body.dark-mode #gps-map-card.fullscreen, body.dark-mode #gps-map-section-card.fullscreen { background-color: #0f172a !important; }
 
-        #map-card.fullscreen #map, #gps-map-section-card.fullscreen #gps-map { flex-grow: 1 !important; height: auto !important; }
+        #map-card.fullscreen #map, #gps-map-card.fullscreen #gps-map, #gps-map-section-card.fullscreen #gps-map { flex-grow: 1 !important; height: auto !important; }
         #custom-filter-modal { z-index: 10000 !important; }
 
         button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid #DA291C; outline-offset: 2px; border-radius: 4px; }
@@ -420,7 +420,7 @@
             --border-hairline: #cbd5e1;
         }
         body:not(.dark-mode) {
-            background-color: #ffffff !important;
+            background-color: #f1f5f9 !important;
             color: #0f172a !important;
         }
         body:not(.dark-mode) .bg-white {
@@ -453,21 +453,6 @@
         body.dark-mode main > div > div {
             background-color: #111827 !important;
             color: #f8fafc !important;
-        }
-        body.dark-mode .bg-gray-50\/70,
-        body.dark-mode #avance-route-tracking-card > div {
-            background-color: #0f172a !important;
-            border-color: #263248 !important;
-            color: #f8fafc !important;
-        }
-        body:not(.dark-mode) #avance-route-tracking-card > div {
-            background-color: #f8fafc !important;
-            border-color: #e2e8f0 !important;
-            color: #0f172a !important;
-        }
-        body:not(.dark-mode) #avance-route-table-scroll {
-            background-color: #ffffff !important;
-            border-color: #cbd5e1 !important;
         }
         body.dark-mode .border-gray-100,
         body.dark-mode .border-gray-200,
@@ -541,115 +526,29 @@
             border-radius: 0.2rem !important;
             cursor: pointer !important;
         }
-    
-        /* Refuerzo de fondo blanco y contraste en ventanas flotantes y emergentes para Modo Claro */
-        body:not(.dark-mode) #plaza-modal-card {
-            background-color: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            color: #0f172a !important;
-            border-radius: 1.25rem !important;
-            box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.22) !important;
+
+        .seq-pin-marker {
+            background: #DA291C;
+            color: #ffffff;
+            border: 2px solid #ffffff;
+            border-radius: 9999px;
+            font-weight: 800;
+            font-size: 11px;
+            line-height: 1;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+            cursor: pointer;
+            transition: transform 0.15s ease;
         }
-        body:not(.dark-mode) #plaza-modal-card h3 {
-            color: #0f172a !important;
+        .seq-pin-marker:hover {
+            transform: scale(1.18);
+            z-index: 1000 !important;
         }
-        body:not(.dark-mode) #plaza-modal-card #plaza-modal-search {
-            background-color: #f8fafc !important;
-            border: 1px solid #cbd5e1 !important;
-            color: #0f172a !important;
-        }
-        body:not(.dark-mode) #plaza-modal-card #plaza-list-container {
-            background-color: #f8fafc !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 0.9rem !important;
-            padding: 0.65rem !important;
-        }
-        body:not(.dark-mode) #plaza-modal-card #plaza-list-container label {
-            background-color: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            color: #0f172a !important;
-            border-radius: 0.7rem !important;
-            padding: 0.7rem 0.9rem !important;
-        }
-        body:not(.dark-mode) #plaza-modal-card #plaza-list-container label span.text-white,
-        body:not(.dark-mode) #plaza-modal-card #plaza-list-container label span {
-            color: #0f172a !important;
-        }
-        body:not(.dark-mode) #plaza-modal-card #plaza-list-container label span.rounded-full {
-            background-color: #f1f5f9 !important;
-            color: #334155 !important;
-            border-color: #cbd5e1 !important;
-        }
-        body:not(.dark-mode) #plaza-modal-card #plaza-list-container label:hover {
-            background-color: #fef2f2 !important;
-            border-color: #f87171 !important;
-        }
-        body:not(.dark-mode) #plaza-modal-card button.bg-\[\#182235\] {
-            background-color: #f1f5f9 !important;
-            border-color: #cbd5e1 !important;
-            color: #0f172a !important;
-        }
-        body:not(.dark-mode) #plaza-modal-card button.bg-\[\#182235\]:hover {
-            background-color: #e2e8f0 !important;
-        }
-        body:not(.dark-mode) #card-modal > div,
-        body:not(.dark-mode) #qr-modal-card,
-        body:not(.dark-mode) #custom-filter-modal > div,
-        body:not(.dark-mode) #dt-route-dropdown-panel {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
-            border: 1px solid #cbd5e1 !important;
-            box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.22) !important;
-        }
-        body:not(.dark-mode) #custom-filter-modal h3,
-        body:not(.dark-mode) #qr-modal-card h3,
-        body:not(.dark-mode) #dt-route-dropdown-panel span.text-gray-700 {
-            color: #0f172a !important;
-        }
-        body:not(.dark-mode) #custom-filter-modal input,
-        body:not(.dark-mode) #dt-route-dropdown-panel input {
-            background-color: #f8fafc !important;
-            color: #0f172a !important;
-            border-color: #cbd5e1 !important;
-        }
-        body:not(.dark-mode) #custom-options-container {
-            background-color: #f8fafc !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 0.75rem !important;
-            padding: 0.5rem !important;
-        }
-        body:not(.dark-mode) #custom-options-container label {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
-            border-color: #e2e8f0 !important;
-        }
-        body:not(.dark-mode) #custom-options-container label:hover {
-            background-color: #fef2f2 !important;
-            border-color: #f87171 !important;
-        }
-        body:not(.dark-mode) #custom-options-container label span.rounded-full {
-            background-color: #f1f5f9 !important;
-            color: #334155 !important;
-        }
-        body:not(.dark-mode) #notif-panel {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
-            border: 1px solid #cbd5e1 !important;
-            box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.22) !important;
-        }
-        body:not(.dark-mode) #notif-list {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
-        }
-        body:not(.dark-mode) .notif-toast {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
-            border: 1px solid #e2e8f0 !important;
-            box-shadow: 0 14px 30px -6px rgba(15, 23, 42, 0.18) !important;
-        }
-</style>
+    </style>
 </head>
-<body class="bg-white font-sans antialiased min-h-screen flex flex-col relative pb-20">
+<body class="bg-gray-100 font-sans antialiased min-h-screen flex flex-col relative pb-20">
 
     <header class="master-header">
         <div class="header-brand">
@@ -735,7 +634,7 @@
                 </div>
                 <!-- Gráfica y Tabla de Seguimiento por Ruta (Entregados, Pendientes y Recolecciones) -->
                 <div id="avance-route-tracking-card" class="pt-3 border-t border-gray-100 space-y-3">
-                    <div class="bg-gray-50/70 dark:bg-slate-900/90 border border-gray-200 dark:border-slate-700/80 rounded-xl p-4 space-y-3">
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
                         <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-gray-200/80">
                             <div>
                                 <h4 class="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -983,7 +882,7 @@
                     <div id="dead-times-section-body" class="space-y-5 pt-1">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs text-gray-600 border-collapse">
-                                <thead><tr class="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase"><th class="p-3">#</th><th class="p-3">Ruta</th><th class="p-3 text-center">Total Eventos</th><th class="p-3 text-center">Tiempo Muerto Promedio</th><th class="p-3 text-center">Tiempo Muerto Máximo</th><th class="p-3 text-center">Tiempo Muerto Total (Suma)</th></tr></thead>
+                                <thead><tr class="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase"><th class="p-3">#</th><th class="p-3">Ruta</th><th class="p-3 text-center">Total Eventos</th><th class="p-3 text-center">Tiempo Muerto Promedio</th><th class="p-3 text-center">Tiempo Muerto Máximo</th><th class="p-3 text-center">Tiempo en Ruta (Total)</th></tr></thead>
                                 <tbody id="dead-times-tbody" class="divide-y divide-gray-100"></tbody>
                             </table>
                         </div>
@@ -1161,11 +1060,12 @@
                             </div>
                         </div>
 
-                        <div class="bg-white p-4 rounded-xl border border-gray-200/90 shadow-sm">
+                        <div id="gps-map-card" class="bg-white p-6 rounded-xl shadow-sm transition-all duration-300 border border-gray-200/90">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-                                <h3 class="text-base font-bold text-gray-800 flex items-center"><i class="fa-solid fa-map-location-dot estafeta-red-text mr-2"></i> Secuencia Cronológica y Ubicaciones en Mapa GPS</h3>
+                                <h3 class="text-lg font-bold text-gray-800 flex items-center"><i class="fa-solid fa-map-location-dot estafeta-red-text mr-2"></i> Ubicaciones en Mapa GPS</h3>
                                 <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                                     <button id="toggle-gps-lines-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 shadow-sm"><i id="gps-lines-icon" class="fa-solid fa-eye-slash"></i><span id="gps-lines-text">Mostrar Líneas</span></button>
+                                    <button id="toggle-gps-fullscreen-btn" title="Pantalla completa" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 w-9 h-9 rounded-lg text-sm font-medium transition-all flex items-center justify-center shadow-sm"><i id="gps-fullscreen-icon" class="fa-solid fa-expand"></i></button>
                                 </div>
                             </div>
                             <div id="gps-map" class="h-96 rounded-lg w-full z-10"></div>
@@ -3563,6 +3463,18 @@
             });
         }
 
+        function createNumberedSeqMarker(coords, seqNum) {
+            const label = String(seqNum ?? '');
+            const size = label.length >= 3 ? 30 : 26;
+            const icon = L.divIcon({
+                className: '',
+                html: `<div class="seq-pin-marker" style="width:${size}px;height:${size}px;">${esc(label)}</div>`,
+                iconSize: [size, size],
+                iconAnchor: [size / 2, size / 2]
+            });
+            return L.marker(coords, { icon });
+        }
+
         function renderTimelineMap(items) {
             if (!timelineMapInstance) {
                 timelineMapInstance = L.map('map').setView([19.4326, -99.1332], 6);
@@ -3576,7 +3488,7 @@
                 if (coordKeyName && item.originalRow) {
                     let coords = parseCoordinates(item.originalRow[coordKeyName]);
                     if (coords) {
-                        let m = L.circleMarker(coords, { radius: 7, color: '#B91C1C', fillColor: '#DA291C', fillOpacity: 0.9 });
+                        let m = createNumberedSeqMarker(coords, item.seq);
                         m.on('click', (ev) => {
                             if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
                             const timeOnly = item.timeStr && item.timeStr !== '—' ? `${String(item.timeStr).split(' ')[1] || item.timeStr} hrs` : '';
@@ -3698,12 +3610,12 @@
             gpsClusterGroup = L.markerClusterGroup();
             let latLngs = [];
             items.forEach(item => {
-                let m = L.circleMarker(item.coords, { radius: 7, color: '#B91C1C', fillColor: '#DA291C', fillOpacity: 0.9 });
+                let m = createNumberedSeqMarker(item.coords, item.seq);
                 m.on('click', (ev) => {
                     if (ev && ev.originalEvent) L.DomEvent.stopPropagation(ev.originalEvent);
                     const timeOnly = item.timeStr && item.timeStr !== '—' ? `${String(item.timeStr).split(' ')[1] || item.timeStr} hrs` : '';
                     openCardModal(item.originalRow, {
-                        mapName: 'Mapa GPS',
+                        mapName: 'Ubicaciones en Mapa GPS',
                         sequenceNumber: item.seq,
                         timeOnly: timeOnly,
                         guideOr: item.guide || item.originalRow[guideKeyName] || '—',
@@ -3728,6 +3640,14 @@
             document.getElementById('gps-lines-icon').className = showGpsRouteLines ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
             document.getElementById('gps-lines-text').innerText = showGpsRouteLines ? 'Ocultar Líneas' : 'Mostrar Líneas';
             renderGpsMap(cachedGpsMapList);
+        });
+
+        document.getElementById('toggle-gps-fullscreen-btn').addEventListener('click', () => {
+            const card = document.getElementById('gps-map-card');
+            card.classList.toggle('fullscreen');
+            const isFs = card.classList.contains('fullscreen');
+            document.getElementById('gps-fullscreen-icon').className = isFs ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+            setTimeout(() => { if (gpsMapInstance) gpsMapInstance.invalidateSize(); }, 150);
         });
 
         /* =====================================================================
@@ -3773,7 +3693,7 @@
                 let rawSt = row[statusKeyName] !== undefined && row[statusKeyName] !== null ? String(row[statusKeyName]).trim() : '';
                 let upperSt = rawSt.toUpperCase();
                 let guideVal = row[guideKeyName] !== undefined && row[guideKeyName] !== null ? String(row[guideKeyName]).trim().toUpperCase() : '';
-                let isOR = guideVal.startsWith('OR') || (progKeyName && String(row[progKeyName] || '').toUpperCase().includes('RECOLECT'));
+                let isOR = guideVal.startsWith('OR') || upperSt.includes('RECOLECT') || (progKeyName && String(row[progKeyName] || '').toUpperCase().includes('RECOLECT'));
                 if (isOR) countOR++;
                 if (upperSt.includes('CONFIRMAD')) countConfirmados++;
                 else if (upperSt.includes('EXCEPCION')) countExcepcionados++;
